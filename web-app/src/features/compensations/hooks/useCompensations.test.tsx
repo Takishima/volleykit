@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import type { CompensationRecord } from '@/api/client'
+import type { CompensationRecord, Assignment } from '@/api/client'
 
 import {
   useCompensations,
@@ -291,6 +291,306 @@ describe('useCompensations', () => {
         ],
       })
     )
+  })
+})
+
+describe('useCompensations cache-first strategy', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
+    return {
+      __identity: 'assignment-1',
+      refereeGame: {
+        game: {
+          number: 12345,
+          startingDateTime: '2025-01-15T18:00:00Z',
+          encounter: {
+            teamHome: { name: 'Team A' },
+            teamAway: { name: 'Team B' },
+          },
+        },
+      },
+      refereeConvocationStatus: 'active',
+      refereePosition: 'first_head_referee',
+      convocationCompensation: {
+        __identity: 'comp-1',
+        paymentDone: false,
+        distanceInMetres: 25000,
+        transportationMode: 'car',
+      },
+      ...overrides,
+    } as Assignment
+  }
+
+  it('uses cached assignments data when cache is fresh', async () => {
+    const mockSearchCompensations = vi.fn().mockResolvedValue({
+      items: [],
+      totalItemsCount: 0,
+    })
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    // Create a query client with fresh assignments data
+    const queryClient = createQueryClient()
+    const mockAssignment = createMockAssignment()
+
+    // Seed the cache with assignments data
+    queryClient.setQueryData(
+      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
+      { items: [mockAssignment], totalItemsCount: 1 }
+    )
+    // Set the query state to be fresh (updated just now)
+    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    if (queryState) {
+      queryState.dataUpdatedAt = Date.now()
+    }
+
+    // Mock activeOccupationId to match the cached data
+    const { useAuthStore } = await import('@/shared/stores/auth')
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ dataSource: 'api', activeOccupationId: 'test-occupation' })
+    )
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should NOT call the API since we have fresh cached data
+    expect(mockSearchCompensations).not.toHaveBeenCalled()
+
+    // Should return data derived from assignments
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data![0]!.__identity).toBe('assignment-1')
+  })
+
+  it('calls API when assignments cache is empty', async () => {
+    const mockSearchCompensations = vi.fn().mockResolvedValue({
+      items: [createMockCompensation()],
+      totalItemsCount: 1,
+    })
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    // Create a query client with no cached data
+    const queryClient = createQueryClient()
+
+    const { useAuthStore } = await import('@/shared/stores/auth')
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ dataSource: 'api', activeOccupationId: 'test-occupation' })
+    )
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should call the API since cache is empty
+    expect(mockSearchCompensations).toHaveBeenCalled()
+  })
+
+  it('calls API when assignments cache is stale', async () => {
+    const mockSearchCompensations = vi.fn().mockResolvedValue({
+      items: [createMockCompensation()],
+      totalItemsCount: 1,
+    })
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    // Create a query client with stale assignments data
+    const queryClient = createQueryClient()
+    const mockAssignment = createMockAssignment()
+
+    // Seed the cache with assignments data
+    queryClient.setQueryData(
+      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
+      { items: [mockAssignment], totalItemsCount: 1 }
+    )
+    // Set the query state to be stale (updated 10 minutes ago)
+    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    if (queryState) {
+      queryState.dataUpdatedAt = Date.now() - 10 * 60 * 1000 // 10 minutes ago
+    }
+
+    const { useAuthStore } = await import('@/shared/stores/auth')
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ dataSource: 'api', activeOccupationId: 'test-occupation' })
+    )
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should call the API since cache is stale
+    expect(mockSearchCompensations).toHaveBeenCalled()
+  })
+
+  it('filters cached assignments without compensation data', async () => {
+    const mockSearchCompensations = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const queryClient = createQueryClient()
+
+    // Create assignments with and without compensation data
+    const assignmentWithCompensation = createMockAssignment({ __identity: 'with-comp' })
+    const assignmentWithoutCompensation = createMockAssignment({
+      __identity: 'without-comp',
+      convocationCompensation: undefined,
+    })
+
+    queryClient.setQueryData(
+      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
+      { items: [assignmentWithCompensation, assignmentWithoutCompensation], totalItemsCount: 2 }
+    )
+    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    if (queryState) {
+      queryState.dataUpdatedAt = Date.now()
+    }
+
+    const { useAuthStore } = await import('@/shared/stores/auth')
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ dataSource: 'api', activeOccupationId: 'test-occupation' })
+    )
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should only include assignments with compensation data
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data![0]!.__identity).toBe('with-comp')
+  })
+
+  it('applies paid filter to cached assignments data', async () => {
+    const mockSearchCompensations = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const queryClient = createQueryClient()
+
+    const paidAssignment = createMockAssignment({
+      __identity: 'paid',
+      convocationCompensation: { __identity: 'c1', paymentDone: true },
+    })
+    const unpaidAssignment = createMockAssignment({
+      __identity: 'unpaid',
+      convocationCompensation: { __identity: 'c2', paymentDone: false },
+    })
+
+    queryClient.setQueryData(
+      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
+      { items: [paidAssignment, unpaidAssignment], totalItemsCount: 2 }
+    )
+    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    if (queryState) {
+      queryState.dataUpdatedAt = Date.now()
+    }
+
+    const { useAuthStore } = await import('@/shared/stores/auth')
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ dataSource: 'api', activeOccupationId: 'test-occupation' })
+    )
+
+    // Request only paid compensations
+    const { result } = renderHook(() => useCompensations(true), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should only return paid compensations
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data![0]!.__identity).toBe('paid')
+  })
+
+  it('deduplicates assignments from multiple cache entries', async () => {
+    const mockSearchCompensations = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const queryClient = createQueryClient()
+    const mockAssignment = createMockAssignment({ __identity: 'same-id' })
+
+    // Seed multiple cache entries with the same assignment
+    queryClient.setQueryData(
+      ['assignments', 'list', { offset: 0, period: 'upcoming' }, 'test-occupation'],
+      { items: [mockAssignment], totalItemsCount: 1 }
+    )
+    queryClient.setQueryData(
+      ['assignments', 'list', { offset: 0, period: 'past' }, 'test-occupation'],
+      { items: [mockAssignment], totalItemsCount: 1 }
+    )
+
+    // Set both as fresh
+    for (const key of [
+      ['assignments', 'list', { offset: 0, period: 'upcoming' }, 'test-occupation'],
+      ['assignments', 'list', { offset: 0, period: 'past' }, 'test-occupation'],
+    ]) {
+      const state = queryClient.getQueryState(key)
+      if (state) {
+        state.dataUpdatedAt = Date.now()
+      }
+    }
+
+    const { useAuthStore } = await import('@/shared/stores/auth')
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector({ dataSource: 'api', activeOccupationId: 'test-occupation' })
+    )
+
+    const { result } = renderHook(() => useCompensations(), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should deduplicate - only 1 result even though same assignment is in 2 cache entries
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data![0]!.__identity).toBe('same-id')
   })
 })
 

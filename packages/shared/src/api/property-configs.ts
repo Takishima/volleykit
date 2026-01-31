@@ -61,6 +61,9 @@ export const ASSIGNMENT_PROPERTIES = [
   // Distance and travel data for compensation editing
   'convocationCompensation.distanceInMetres',
   'convocationCompensation.transportationMode',
+  // Compensation amounts for display in cards
+  'convocationCompensation.gameCompensation',
+  'convocationCompensation.travelExpenses',
   // Validation status for swipe button color.
   // Parent object must be requested before nested property to ensure
   // the API populates the nested structure correctly.
