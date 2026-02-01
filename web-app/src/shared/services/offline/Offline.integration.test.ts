@@ -113,10 +113,8 @@ describe('Offline Action Queue', () => {
       })
 
       const batchAction = await createAction('batchUpdateCompensations', {
-        updates: [
-          { compensationId: 'comp-2', data: { distanceInMetres: 2000 } },
-          { compensationId: 'comp-3', data: { distanceInMetres: 3000 } },
-        ],
+        compensationIds: ['comp-2', 'comp-3'],
+        data: { distanceInMetres: 2000 },
       })
 
       const applyAction = await createAction('applyForExchange', {
@@ -275,16 +273,16 @@ describe('Offline Action Queue', () => {
     })
 
     it('creates batchUpdateCompensations action', async () => {
+      // Batch updates apply the same data to multiple compensations
+      // (there's no batch API endpoint - it loops through individual updates)
       const action = await createAction('batchUpdateCompensations', {
-        updates: [
-          { compensationId: 'comp-1', data: { distanceInMetres: 1000 } },
-          { compensationId: 'comp-2', data: { distanceInMetres: 2000 } },
-          { compensationId: 'comp-3', data: { distanceInMetres: 3000 } },
-        ],
+        compensationIds: ['comp-1', 'comp-2', 'comp-3'],
+        data: { distanceInMetres: 5000 },
       })
 
       expect(action?.type).toBe('batchUpdateCompensations')
-      expect(action?.payload.updates).toHaveLength(3)
+      expect(action?.payload.compensationIds).toHaveLength(3)
+      expect(action?.payload.data).toEqual({ distanceInMetres: 5000 })
     })
 
     it('stores batch update action with correct payload', async () => {
@@ -296,16 +294,18 @@ describe('Offline Action Queue', () => {
       expect(comp2).toBeDefined()
 
       await createAction('batchUpdateCompensations', {
-        updates: [
-          { compensationId: comp1!, data: { distanceInMetres: 1000 } },
-          { compensationId: comp2!, data: { distanceInMetres: 2000 } },
-        ],
+        compensationIds: [comp1!, comp2!],
+        data: { distanceInMetres: 10000, correctionReason: 'Batch update' },
       })
 
       const pending = await getPendingActions()
       expect(pending.length).toBe(1)
       expect(pending[0]?.type).toBe('batchUpdateCompensations')
-      expect(pending[0]?.payload.updates).toHaveLength(2)
+      expect(pending[0]?.payload.compensationIds).toHaveLength(2)
+      expect(pending[0]?.payload.data).toEqual({
+        distanceInMetres: 10000,
+        correctionReason: 'Batch update',
+      })
     })
   })
 
