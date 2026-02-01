@@ -122,7 +122,7 @@ describe('Offline Action Queue', () => {
       })
 
       const addAction = await createAction('addToExchange', {
-        assignmentId: 'assignment-1',
+        convocationId: 'convocation-1',
       })
 
       expect(compensationAction?.type).toBe('updateCompensation')
@@ -243,11 +243,11 @@ describe('Offline Action Queue', () => {
 
     it('creates addToExchange action', async () => {
       const action = await createAction('addToExchange', {
-        assignmentId: 'assignment-123',
+        convocationId: 'convocation-123',
       })
 
       expect(action?.type).toBe('addToExchange')
-      expect(action?.payload).toEqual({ assignmentId: 'assignment-123' })
+      expect(action?.payload).toEqual({ convocationId: 'convocation-123' })
     })
 
     it('stores exchange apply action with correct payload', async () => {

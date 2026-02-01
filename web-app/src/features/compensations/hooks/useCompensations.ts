@@ -21,6 +21,7 @@ import { createAction } from '@/shared/services/offline/action-store'
 import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
+import type { OfflineMutationResult } from '@/shared/types/mutation'
 import { createLogger } from '@/shared/utils/logger'
 
 const log = createLogger('useCompensations')
@@ -217,30 +218,6 @@ export function useUnpaidCompensations() {
 export interface CompensationUpdateData {
   distanceInMetres?: number
   correctionReason?: string
-}
-
-/**
- * Mutation options with callbacks (compatible with TanStack Query).
- */
-export interface MutationCallbacks<TData> {
-  onSuccess?: (data: TData) => void
-  onError?: (error: Error) => void
-}
-
-/**
- * Result type for offline-aware mutation hooks.
- * Compatible with TanStack Query's UseMutationResult pattern.
- */
-export interface OfflineMutationResult<TData, TVariables> {
-  mutate: (variables: TVariables, options?: MutationCallbacks<TData>) => void
-  mutateAsync: (variables: TVariables) => Promise<TData>
-  isPending: boolean
-  isSuccess: boolean
-  isError: boolean
-  error: Error | null
-  reset: () => void
-  /** Whether the last operation was queued offline */
-  wasQueued: boolean
 }
 
 /**

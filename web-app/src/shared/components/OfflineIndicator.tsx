@@ -17,19 +17,13 @@ import { WifiOff, X } from './icons'
  *
  * Features:
  * - Shows automatically when going offline
- * - Can be dismissed (reappears when going back online then offline again)
+ * - Can be dismissed (stays dismissed for the session)
  * - Accessible with proper ARIA attributes
  */
 export function OfflineIndicator() {
   const isOnline = useNetworkStatus()
   const { t } = useTranslation()
   const [isDismissed, setIsDismissed] = useState(false)
-
-  // Reset dismissed state when going back online (so it shows again next time offline)
-  // This is done synchronously during render which is safe for this use case
-  if (isDismissed && isOnline) {
-    setIsDismissed(false)
-  }
 
   const handleDismiss = useCallback(() => {
     setIsDismissed(true)
