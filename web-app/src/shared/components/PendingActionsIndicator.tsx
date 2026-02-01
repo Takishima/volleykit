@@ -45,28 +45,32 @@ function useAutoSync() {
     if (!wasOnline && isOnline && pendingCount > 0) {
       log.info('Connectivity restored, syncing pending actions:', { count: pendingCount })
 
-      sync().then((result) => {
-        if (result) {
-          if (result.succeeded > 0) {
-            addToast({
-              type: 'success',
-              message: tInterpolate('offline.syncComplete', { count: result.succeeded }),
-            })
+      sync()
+        .then((result) => {
+          if (result) {
+            if (result.succeeded > 0) {
+              addToast({
+                type: 'success',
+                message: tInterpolate('offline.syncComplete', { count: result.succeeded }),
+              })
+            }
+            if (result.failed > 0) {
+              addToast({
+                type: 'error',
+                message: tInterpolate('offline.syncFailed', { count: result.failed }),
+              })
+            }
+            if (result.requiresReauth) {
+              addToast({
+                type: 'warning',
+                message: t('offline.sessionExpired'),
+              })
+            }
           }
-          if (result.failed > 0) {
-            addToast({
-              type: 'error',
-              message: tInterpolate('offline.syncFailed', { count: result.failed }),
-            })
-          }
-          if (result.requiresReauth) {
-            addToast({
-              type: 'warning',
-              message: t('offline.sessionExpired'),
-            })
-          }
-        }
-      })
+        })
+        .catch((error) => {
+          log.error('Failed to sync pending actions:', error)
+        })
     }
   }, [isOnline, pendingCount, sync, addToast, t, tInterpolate])
 

@@ -16,6 +16,7 @@ import { createAction } from '@/shared/services/offline/action-store'
 import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
+import type { OfflineMutationResult } from '@/shared/types/mutation'
 import { MS_PER_MINUTE } from '@/shared/utils/constants'
 import { getSeasonDateRange } from '@/shared/utils/date-helpers'
 import { createLogger } from '@/shared/utils/logger'
@@ -126,22 +127,6 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
     // This prevents loading flash since both tabs share the same cached query.
     placeholderData: (prev) => prev,
   })
-}
-
-/**
- * Result type for offline-aware mutation hooks.
- * Compatible with TanStack Query's UseMutationResult pattern.
- */
-export interface OfflineMutationResult<TData, TVariables> {
-  mutate: (variables: TVariables) => void
-  mutateAsync: (variables: TVariables) => Promise<TData>
-  isPending: boolean
-  isSuccess: boolean
-  isError: boolean
-  error: Error | null
-  reset: () => void
-  /** Whether the last operation was queued offline */
-  wasQueued: boolean
 }
 
 /**
