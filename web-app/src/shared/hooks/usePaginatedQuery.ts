@@ -1,5 +1,5 @@
 import { api, type SearchConfiguration, type Assignment } from '@/api/client'
-import { MS_PER_MINUTE, MS_PER_HOUR } from '@/shared/utils/constants'
+import { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '@/shared/utils/constants'
 import { createLogger } from '@/shared/utils/logger'
 
 import type { UseQueryResult } from '@tanstack/react-query'
@@ -41,6 +41,10 @@ export const SETTINGS_STALE_TIME_MS = STALE_TIME.SETTINGS * MS_PER_MINUTE
 
 /** Stale time for active season (1 hour) - season changes infrequently */
 export const SEASON_STALE_TIME_MS = MS_PER_HOUR
+
+/** Garbage collection time for offline cache (7 days) - keep cached data for offline viewing */
+const OFFLINE_CACHE_DAYS = 7
+export const OFFLINE_GC_TIME_MS = OFFLINE_CACHE_DAYS * MS_PER_DAY
 
 /**
  * Cache duration for validation-closed assignments (15 minutes).

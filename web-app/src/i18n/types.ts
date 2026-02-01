@@ -239,6 +239,7 @@ export interface Translations {
     withdrawSuccess: string
     withdrawError: string
     addedToExchangeSuccess: string
+    addedToExchangeQueued: string
     addedToExchangeError: string
     cannotExchangeValidatedGame: string
     submittedBy: string
@@ -446,6 +447,28 @@ export interface Translations {
     reloadAriaLabel: string
     dismissAriaLabel: string
     closeAriaLabel: string
+  }
+  offline: {
+    youAreOffline: string
+    cachedDataAvailable: string
+    justNow: string
+    oneMinuteAgo: string
+    minutesAgo: string
+    oneHourAgo: string
+    hoursAgo: string
+    dismissAriaLabel: string
+    pendingActions: string
+    syncing: string
+    syncComplete: string
+    syncFailed: string
+    sessionExpired: string
+    actions: {
+      updateCompensation: string
+      batchUpdateCompensations: string
+      applyForExchange: string
+      withdrawFromExchange: string
+      addToExchange: string
+    }
   }
   pdf: {
     exportTitle: string

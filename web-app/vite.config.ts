@@ -406,22 +406,59 @@ export default defineConfig(({ mode }) => {
               /\.pdf$/,
             ],
             // Runtime caching for API responses
+            // Strategy: NetworkFirst with short timeout for fast offline fallback
+            // - 5s timeout ensures responsive UX on slow connections
+            // - 500 max entries supports typical user's assignment list + details
+            // - 7 day expiration aligns with IndexedDB query cache
             runtimeCaching: [
               {
-                // Cache API responses with NetworkFirst strategy
-                // This ensures fresh data when online, cached data when offline/deploying
+                // Cache direct API responses (development/direct access)
                 urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: 'api-cache',
                   expiration: {
-                    maxEntries: 100,
-                    maxAgeSeconds: 60 * 60 * 24, // 24 hours
+                    maxEntries: 500,
+                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
                   },
                   cacheableResponse: {
                     statuses: [0, 200],
                   },
-                  networkTimeoutSeconds: 10,
+                  // Reduced from 10s to 5s for faster offline fallback
+                  networkTimeoutSeconds: 5,
+                },
+              },
+              {
+                // Cache CORS proxy responses (production)
+                // Uses same strategy as direct API for consistency
+                urlPattern: /^https:\/\/api\.volleykit\.ch\/.*/i,
+                handler: 'NetworkFirst',
+                options: {
+                  cacheName: 'proxy-api-cache',
+                  expiration: {
+                    maxEntries: 500,
+                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
+                  networkTimeoutSeconds: 5,
+                },
+              },
+              {
+                // Cache static assets from CDNs (fonts, icons) with StaleWhileRevalidate
+                // These rarely change, so serving stale while revalidating is optimal
+                urlPattern: /^https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com)\/.*/i,
+                handler: 'StaleWhileRevalidate',
+                options: {
+                  cacheName: 'google-fonts',
+                  expiration: {
+                    maxEntries: 30,
+                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                  },
+                  cacheableResponse: {
+                    statuses: [0, 200],
+                  },
                 },
               },
             ],

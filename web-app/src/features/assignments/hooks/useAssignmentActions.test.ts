@@ -44,11 +44,13 @@ vi.mock('@/shared/stores/toast', () => ({
 }))
 
 // Mock the useAddToExchange mutation hook
-const mockMutate = vi.fn()
+const mockMutateAsync = vi.fn()
 vi.mock('@/features/exchanges', () => ({
   useAddToExchange: () => ({
-    mutate: mockMutate,
+    mutate: vi.fn(),
+    mutateAsync: mockMutateAsync,
     isPending: false,
+    wasQueued: false,
   }),
 }))
 vi.mock('@/shared/hooks/useTranslation', () => ({
@@ -100,7 +102,7 @@ describe('useAssignmentActions', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockMutate.mockReset()
+    mockMutateAsync.mockReset()
 
     // Default: not in demo mode, safe mode disabled
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -370,19 +372,19 @@ describe('useAssignmentActions', () => {
     expect(result.current.pdfReportModal.assignment).toBeNull()
   })
 
-  it('should handle add to exchange action', () => {
-    // Mock mutate to immediately call onSuccess
-    mockMutate.mockImplementation((_id: string, options?: { onSuccess?: () => void }) => {
-      options?.onSuccess?.()
-    })
+  it('should handle add to exchange action', async () => {
+    // Mock mutateAsync to resolve immediately
+    mockMutateAsync.mockResolvedValue(undefined)
 
     const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() })
 
-    act(() => {
+    await act(async () => {
       result.current.handleAddToExchange(mockAssignment)
+      // Wait for the promise to resolve
+      await Promise.resolve()
     })
 
-    expect(mockMutate).toHaveBeenCalledWith(mockAssignment.__identity, expect.any(Object))
+    expect(mockMutateAsync).toHaveBeenCalledWith(mockAssignment.__identity)
     expect(toast.success).toHaveBeenCalledWith('exchange.addedToExchangeSuccess')
   })
 

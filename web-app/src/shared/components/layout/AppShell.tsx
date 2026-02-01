@@ -14,6 +14,8 @@ import {
   ChevronDown,
   Calendar,
 } from '@/shared/components/icons'
+import { OfflineIndicator } from '@/shared/components/OfflineIndicator'
+import { PendingActionsIndicator } from '@/shared/components/PendingActionsIndicator'
 import { TourModeBanner } from '@/shared/components/tour/TourModeBanner'
 import { prefetchAllTabData } from '@/shared/hooks/usePrefetchTabData'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -249,6 +251,9 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
+                {/* Pending actions indicator */}
+                <PendingActionsIndicator />
+
                 {/* Calendar Mode Indicator */}
                 {dataSource === 'calendar' && (
                   <div
@@ -396,6 +401,9 @@ export function AppShell() {
 
       {/* Spacer to account for fixed header height plus safe area inset */}
       <div className="header-spacer" aria-hidden="true" />
+
+      {/* Offline indicator - shows when network is unavailable */}
+      <OfflineIndicator />
 
       {/* Demo mode banner */}
       {dataSource === 'demo' && (

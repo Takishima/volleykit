@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, lazy, Suspense } from 'react'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -13,10 +14,12 @@ import { LoadingState } from '@/shared/components/LoadingSpinner'
 import { PageErrorBoundary } from '@/shared/components/PageErrorBoundary'
 import { ReloadPrompt } from '@/shared/components/ReloadPrompt'
 import { ToastContainer } from '@/shared/components/Toast'
-import { ASSIGNMENTS_STALE_TIME_MS, SETTINGS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { useCacheWarming } from '@/shared/hooks/useCacheWarming'
+import { ASSIGNMENTS_STALE_TIME_MS, OFFLINE_GC_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
+import { persistOptions, clearPersistedCache, clearAllActions } from '@/shared/services/offline'
 import { useAuthStore, registerCacheCleanup } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
 import { useSettingsStore } from '@/shared/stores/settings'
@@ -85,8 +88,8 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       // Cache data for 5 minutes before considering it stale
       staleTime: ASSIGNMENTS_STALE_TIME_MS,
-      // Keep unused data in cache for 30 minutes
-      gcTime: SETTINGS_STALE_TIME_MS,
+      // Keep unused data in cache for 7 days (offline persistence)
+      gcTime: OFFLINE_GC_TIME_MS,
     },
     mutations: {
       // Log mutation errors globally with context
@@ -114,6 +117,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   )
   const { t } = useTranslation()
   const isDemoMode = dataSource === 'demo'
+
+  // Warm cache with critical data after login for offline support
+  useCacheWarming()
+
   // Only verify session for API mode - demo and calendar modes don't need server verification
   const shouldVerifySession = status === 'authenticated' && dataSource === 'api'
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession)
@@ -261,6 +268,9 @@ export default function App() {
     // preventing any race conditions with React re-renders.
     const unregisterCacheCleanup = registerCacheCleanup(() => {
       queryClient.resetQueries()
+      // Also clear the persisted IndexedDB cache and action queue (async, but fire-and-forget is fine here)
+      clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
+      clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
     })
 
     // Track state to detect changes
@@ -297,7 +307,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <PWAProvider>
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
           <BrowserRouter basename={BASE_PATH}>
             <QueryErrorHandler>
               <Routes>
@@ -376,7 +386,7 @@ export default function App() {
           </BrowserRouter>
           <ReloadPrompt />
           <ToastContainer />
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
       </PWAProvider>
     </ErrorBoundary>
   )

@@ -175,16 +175,20 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         game: `${homeTeam} vs ${awayTeam}`,
       })
 
-      addToExchangeMutation.mutate(assignment.__identity, {
-        onSuccess: () => {
+      addToExchangeMutation
+        .mutateAsync(assignment.__identity)
+        .then(() => {
           log.debug('Successfully added to exchange:', assignment.__identity)
-          toast.success(t('exchange.addedToExchangeSuccess'))
-        },
-        onError: (error) => {
+          if (addToExchangeMutation.wasQueued) {
+            toast.success(t('exchange.addedToExchangeQueued'))
+          } else {
+            toast.success(t('exchange.addedToExchangeSuccess'))
+          }
+        })
+        .catch((error: Error) => {
           log.error('Failed to add to exchange:', error)
           toast.error(t('exchange.addedToExchangeError'))
-        },
-      })
+        })
     },
     [guard, isDemoMode, addAssignmentToExchange, queryClient, t, addToExchangeMutation]
   )
