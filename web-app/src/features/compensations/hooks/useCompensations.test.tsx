@@ -771,6 +771,59 @@ describe('useUpdateCompensation', () => {
       queryKey: ['compensations', 'list'],
     })
   })
+
+  it('calls onSuccess callback after successful mutation', async () => {
+    const mockUpdateCompensation = vi.fn().mockResolvedValue(undefined)
+    const onSuccess = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: vi.fn(),
+      updateCompensation: mockUpdateCompensation,
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const { result } = renderHook(() => useUpdateCompensation(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      result.current.mutate(
+        { compensationId: 'comp-1', data: { distanceInMetres: 5000 } },
+        { onSuccess }
+      )
+    })
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalled()
+    })
+  })
+
+  it('calls onError callback after failed mutation', async () => {
+    const mockError = new Error('Update failed')
+    const mockUpdateCompensation = vi.fn().mockRejectedValue(mockError)
+    const onError = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: vi.fn(),
+      updateCompensation: mockUpdateCompensation,
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const { result } = renderHook(() => useUpdateCompensation(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      result.current.mutate(
+        { compensationId: 'comp-1', data: { distanceInMetres: 5000 } },
+        { onError }
+      )
+    })
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(mockError)
+    })
+  })
 })
 
 describe('useUpdateAssignmentCompensation', () => {
