@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
-import { useQuery, useQueryClient, useMutation, type UseMutationResult } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { startOfDay, endOfDay, format } from 'date-fns'
 
 import {
@@ -227,20 +227,98 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
 
 /**
  * Mutation hook to remove your own assignment from the exchange marketplace.
+ * Supports offline mode - queues the action when offline and syncs when back online.
+ * This moves the assignment back from the exchange to your assignments.
  */
-export function useRemoveOwnExchange(): UseMutationResult<void, Error, string> {
+export function useRemoveOwnExchange(): OfflineMutationResult<void, string> {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
+  const isOnline = useNetworkStatus()
+  const { refresh: refreshActionQueue } = useActionQueueStore()
   const apiClient = getApiClient(dataSource)
 
-  return useMutation({
-    mutationFn: (convocationId: string) => apiClient.removeOwnExchange(convocationId),
-    onSuccess: () => {
-      // Invalidate both exchanges and assignments since the assignment moves back
-      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
-      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+  const [isPending, setIsPending] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [wasQueued, setWasQueued] = useState(false)
+
+  const reset = useCallback(() => {
+    setIsPending(false)
+    setIsSuccess(false)
+    setIsError(false)
+    setError(null)
+    setWasQueued(false)
+  }, [])
+
+  const mutateAsync = useCallback(
+    async (convocationId: string): Promise<void> => {
+      reset()
+      setIsPending(true)
+
+      try {
+        if (isOnline) {
+          // Online: execute immediately
+          log.debug('Removing own exchange (online):', { convocationId })
+          await apiClient.removeOwnExchange(convocationId)
+
+          // Invalidate both exchanges and assignments since the assignment moves back
+          await queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
+          await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+
+          setIsSuccess(true)
+          setWasQueued(false)
+        } else {
+          // Offline: queue the action
+          log.debug('Queueing remove own exchange (offline):', { convocationId })
+          const action = await createAction('removeOwnExchange', { convocationId })
+
+          if (!action) {
+            throw new Error('Failed to queue action - IndexedDB unavailable')
+          }
+
+          // Refresh action queue store to update badge count
+          await refreshActionQueue()
+
+          setIsSuccess(true)
+          setWasQueued(true)
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to remove own exchange:', error)
+        setIsError(true)
+        setError(error)
+        throw error
+      } finally {
+        setIsPending(false)
+      }
     },
-  })
+    [isOnline, apiClient, queryClient, refreshActionQueue, reset]
+  )
+
+  const mutate = useCallback(
+    (convocationId: string, options?: MutationCallbacks<void>) => {
+      mutateAsync(convocationId)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
+    },
+    [mutateAsync]
+  )
+
+  return {
+    mutate,
+    mutateAsync,
+    isPending,
+    isSuccess,
+    isError,
+    error,
+    reset,
+    wasQueued,
+  }
 }
 
 /**

@@ -614,6 +614,7 @@ const fr: Translations = {
       batchUpdateCompensations: 'Mettre à jour les indemnisations',
       applyForExchange: 'Postuler pour un échange',
       addToExchange: "Ajouter à l'échange",
+      removeOwnExchange: "Retirer de l'échange",
     },
   },
   pdf: {

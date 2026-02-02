@@ -469,6 +469,7 @@ export interface Translations {
       batchUpdateCompensations: string
       applyForExchange: string
       addToExchange: string
+      removeOwnExchange: string
     }
   }
   pdf: {

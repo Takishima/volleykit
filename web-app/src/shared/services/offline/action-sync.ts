@@ -111,6 +111,10 @@ async function executeAction(action: OfflineAction): Promise<void> {
       await api.addToExchange(action.payload.convocationId)
       break
 
+    case 'removeOwnExchange':
+      await api.removeOwnExchange(action.payload.convocationId)
+      break
+
     default: {
       // TypeScript exhaustiveness check
       const _exhaustive: never = action

@@ -94,6 +94,19 @@ export interface AddToExchangeAction extends BaseAction {
 }
 
 /**
+ * Remove own assignment from exchange marketplace action.
+ * Uses convocation ID to identify the exchange to remove.
+ */
+export interface RemoveOwnExchangeAction extends BaseAction {
+  type: 'removeOwnExchange'
+  payload: {
+    convocationId: string
+    /** Game number for display/conflict detection */
+    gameNumber?: number
+  }
+}
+
+/**
  * Union type of all possible offline actions.
  */
 export type OfflineAction =
@@ -102,6 +115,7 @@ export type OfflineAction =
   | BatchUpdateCompensationsAction
   | ApplyForExchangeAction
   | AddToExchangeAction
+  | RemoveOwnExchangeAction
 
 /**
  * Action type discriminator values.

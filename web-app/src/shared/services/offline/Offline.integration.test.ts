@@ -241,6 +241,15 @@ describe('Offline Action Queue', () => {
       expect(action?.payload).toEqual({ convocationId: 'convocation-123' })
     })
 
+    it('creates removeOwnExchange action', async () => {
+      const action = await createAction('removeOwnExchange', {
+        convocationId: 'convocation-123',
+      })
+
+      expect(action?.type).toBe('removeOwnExchange')
+      expect(action?.payload).toEqual({ convocationId: 'convocation-123' })
+    })
+
     it('stores exchange apply action with correct payload', async () => {
       const exchanges = useDemoStore.getState().exchanges
       const exchangeId = exchanges[0]?.__identity

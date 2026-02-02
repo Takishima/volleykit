@@ -619,6 +619,7 @@ const de: Translations = {
       batchUpdateCompensations: 'Entschädigungen aktualisieren',
       applyForExchange: 'Für Tausch bewerben',
       addToExchange: 'Zum Tausch hinzufügen',
+      removeOwnExchange: 'Vom Tausch entfernen',
     },
   },
   pdf: {

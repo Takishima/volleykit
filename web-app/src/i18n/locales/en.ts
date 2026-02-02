@@ -596,6 +596,7 @@ const en: Translations = {
       batchUpdateCompensations: 'Update compensations',
       applyForExchange: 'Apply for exchange',
       addToExchange: 'Add to exchange',
+      removeOwnExchange: 'Remove from exchange',
     },
   },
   pdf: {

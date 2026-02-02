@@ -609,6 +609,7 @@ const it: Translations = {
       batchUpdateCompensations: 'Aggiorna compensi',
       applyForExchange: 'Candidati per lo scambio',
       addToExchange: 'Aggiungi allo scambio',
+      removeOwnExchange: 'Rimuovi dallo scambio',
     },
   },
   pdf: {
