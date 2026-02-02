@@ -40,7 +40,11 @@ function createMockExchange(): GameExchange {
   return {
     __identity: 'test-exchange-1',
     status: 'open',
+    refereePosition: 'head-one',
     refereeGame: {
+      activeRefereeConvocationFirstHeadReferee: {
+        __identity: 'test-convocation-1',
+      },
       game: {
         startingDateTime: '2025-12-15T18:00:00Z',
         encounter: {
@@ -61,7 +65,7 @@ const MOCK_ASYNC_OPERATION_DELAY_MS = 100
 
 describe('useExchangeActions', () => {
   const mockApplyMutate = vi.fn()
-  const mockWithdrawMutate = vi.fn()
+  const mockRemoveOwnMutate = vi.fn()
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -82,8 +86,8 @@ describe('useExchangeActions', () => {
       mutateAsync: mockApplyMutate,
     } as unknown as UseMutationResult<void, Error, string>)
 
-    vi.mocked(useConvocations.useWithdrawFromExchange).mockReturnValue({
-      mutateAsync: mockWithdrawMutate,
+    vi.mocked(useConvocations.useRemoveOwnExchange).mockReturnValue({
+      mutateAsync: mockRemoveOwnMutate,
     } as unknown as UseMutationResult<void, Error, string>)
   })
 
@@ -240,7 +244,7 @@ describe('useExchangeActions', () => {
 
   it('should handle remove from exchange action successfully', async () => {
     vi.useRealTimers()
-    mockWithdrawMutate.mockResolvedValue(undefined)
+    mockRemoveOwnMutate.mockResolvedValue(undefined)
 
     const { result } = renderHook(() => useExchangeActions())
 
@@ -248,13 +252,14 @@ describe('useExchangeActions', () => {
       await result.current.handleRemoveFromExchange(mockExchange)
     })
 
-    expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity)
-    expect(toast.success).toHaveBeenCalledWith('exchange.withdrawSuccess')
+    // Should use convocation ID from the exchange
+    expect(mockRemoveOwnMutate).toHaveBeenCalledWith('test-convocation-1')
+    expect(toast.success).toHaveBeenCalledWith('exchange.removeSuccess')
   })
 
   it('should handle remove from exchange action failure', async () => {
     vi.useRealTimers()
-    mockWithdrawMutate.mockRejectedValue(new Error('Network error'))
+    mockRemoveOwnMutate.mockRejectedValue(new Error('Network error'))
 
     const { result } = renderHook(() => useExchangeActions())
 
@@ -262,8 +267,26 @@ describe('useExchangeActions', () => {
       await result.current.handleRemoveFromExchange(mockExchange)
     })
 
-    expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity)
-    expect(toast.error).toHaveBeenCalledWith('exchange.withdrawError')
+    expect(mockRemoveOwnMutate).toHaveBeenCalledWith('test-convocation-1')
+    expect(toast.error).toHaveBeenCalledWith('exchange.removeError')
+  })
+
+  it('should handle remove from exchange when convocation ID is missing', async () => {
+    vi.useRealTimers()
+    const exchangeWithoutConvocation = {
+      ...mockExchange,
+      refereePosition: undefined,
+    } as GameExchange
+
+    const { result } = renderHook(() => useExchangeActions())
+
+    await act(async () => {
+      await result.current.handleRemoveFromExchange(exchangeWithoutConvocation)
+    })
+
+    // Should show error because convocation ID could not be found
+    expect(mockRemoveOwnMutate).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith('exchange.removeError')
   })
 
   it('should prevent duplicate take over actions', async () => {
@@ -288,7 +311,7 @@ describe('useExchangeActions', () => {
 
   it('should prevent duplicate remove from exchange actions', async () => {
     vi.useRealTimers()
-    mockWithdrawMutate.mockImplementation(
+    mockRemoveOwnMutate.mockImplementation(
       () => new Promise((resolve) => setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS))
     )
 
@@ -303,7 +326,7 @@ describe('useExchangeActions', () => {
     })
 
     // Should only be called once
-    expect(mockWithdrawMutate).toHaveBeenCalledTimes(1)
+    expect(mockRemoveOwnMutate).toHaveBeenCalledTimes(1)
   })
 
   it('should handle rapid open/close cycles correctly', () => {
@@ -371,7 +394,7 @@ describe('useExchangeActions', () => {
 
       // In the new architecture, demo mode uses the same mutations
       // which are routed to the mock API via getApiClient
-      expect(mockWithdrawMutate).toHaveBeenCalledWith(mockExchange.__identity)
+      expect(mockRemoveOwnMutate).toHaveBeenCalledWith('test-convocation-1')
     })
 
     it('should close modal after demo mode take over', async () => {
@@ -438,7 +461,7 @@ describe('useExchangeActions', () => {
         await result.current.handleRemoveFromExchange(mockExchange)
       })
 
-      expect(mockWithdrawMutate).not.toHaveBeenCalled()
+      expect(mockRemoveOwnMutate).not.toHaveBeenCalled()
       expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
     })
 

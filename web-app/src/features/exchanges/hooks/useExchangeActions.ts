@@ -1,19 +1,13 @@
 import { useCallback } from 'react'
 
 import type { GameExchange } from '@/api/client'
-import {
-  getConvocationIdFromExchange,
-  isExchangeOwner,
-} from '@/features/exchanges/utils/exchange-actions'
+import { getConvocationIdFromExchange } from '@/features/exchanges/utils/exchange-actions'
 import {
   useApplyForExchange,
-  useWithdrawFromExchange,
   useRemoveOwnExchange,
 } from '@/features/validation/hooks/useConvocations'
 import { useModalState } from '@/shared/hooks/useModalState'
 import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { DEMO_USER_PERSON_IDENTITY, useDemoStore } from '@/shared/stores/demo'
 
 interface UseExchangeActionsResult {
   takeOverModal: {
@@ -36,16 +30,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
   const takeOverModal = useModalState<GameExchange>()
   const removeFromExchangeModal = useModalState<GameExchange>()
 
-  // Get current user identity for determining action type
-  const dataSource = useAuthStore((state) => state.dataSource)
-  const userId = useAuthStore((state) => state.user?.id)
-  const demoUserId = useDemoStore((state) =>
-    state.activeAssociationCode ? DEMO_USER_PERSON_IDENTITY : undefined
-  )
-  const currentUserIdentity = dataSource === 'demo' ? demoUserId : userId
-
   const applyMutation = useApplyForExchange()
-  const withdrawMutation = useWithdrawFromExchange()
   const removeOwnMutation = useRemoveOwnExchange()
 
   const takeOverMutation = useSafeMutation(
@@ -60,24 +45,6 @@ export function useExchangeActions(): UseExchangeActionsResult {
       safeGuard: { context: 'useExchangeActions', action: 'taking exchange' },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => takeOverModal.close(),
-    }
-  )
-
-  const withdrawSafeMutation = useSafeMutation(
-    async (exchange: GameExchange, log) => {
-      await withdrawMutation.mutateAsync(exchange.__identity)
-      log.debug('Successfully withdrawn from exchange:', exchange.__identity)
-    },
-    {
-      logContext: 'useExchangeActions',
-      successMessage: 'exchange.withdrawSuccess',
-      errorMessage: 'exchange.withdrawError',
-      safeGuard: {
-        context: 'useExchangeActions',
-        action: 'withdrawing from exchange',
-      },
-      skipSuccessToastInDemoMode: true,
-      onSuccess: () => removeFromExchangeModal.close(),
     }
   )
 
@@ -112,16 +79,10 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      // Determine which API to use based on whether this is the user's own exchange
-      if (isExchangeOwner(exchange, currentUserIdentity)) {
-        // User's own exchange - use deleteFromRefereeGameExchange with convocation ID
-        await removeOwnSafeMutation.execute(exchange)
-      } else {
-        // Someone else's exchange - use withdrawFromExchange with exchange ID
-        await withdrawSafeMutation.execute(exchange)
-      }
+      // Remove own exchange using deleteFromRefereeGameExchange with convocation ID
+      await removeOwnSafeMutation.execute(exchange)
     },
-    [currentUserIdentity, removeOwnSafeMutation, withdrawSafeMutation]
+    [removeOwnSafeMutation]
   )
 
   return {

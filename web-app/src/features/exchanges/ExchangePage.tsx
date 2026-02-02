@@ -31,7 +31,7 @@ import { extractCoordinates } from '@/shared/utils/geo-location'
 import type { SwipeConfig } from '@/types/swipe'
 
 import { useExchangeActions } from './hooks/useExchangeActions'
-import { createExchangeActions, canWithdrawApplication } from './utils/exchange-actions'
+import { createExchangeActions } from './utils/exchange-actions'
 
 const TakeOverExchangeModal = lazy(() =>
   import('@/features/exchanges/components/TakeOverExchangeModal').then((m) => ({
@@ -309,34 +309,16 @@ export function ExchangePage() {
         return { right: [actions.removeFromExchange] }
       }
 
-      // "open" tab: actions for other users' exchanges depend on status
-      switch (exchange.status) {
-        case 'open':
-          // Open exchanges: swipe left to take over
-          // Swipe left reveals: [Take Over] <- card
-          return { left: [actions.takeOver] }
-        case 'applied':
-          // Applied exchanges: only show withdraw if current user applied
-          // This prevents 400 errors when trying to withdraw from exchanges
-          // the user never applied to
-          if (canWithdrawApplication(exchange, currentUserIdentity)) {
-            // Swipe right reveals: card -> [Remove]
-            return { right: [actions.removeFromExchange] }
-          }
-          // User didn't apply to this exchange, no actions available
-          return {}
-        default:
-          // No swipe actions for other statuses
-          return {}
+      // "open" tab: only open exchanges (not applied/closed) are actionable
+      if (exchange.status === 'open') {
+        // Swipe left reveals: [Take Over] <- card
+        return { left: [actions.takeOver] }
       }
+
+      // No swipe actions for applied/closed statuses
+      return {}
     },
-    [
-      takeOverModal.open,
-      removeFromExchangeModal.open,
-      statusFilter,
-      isOwnExchange,
-      currentUserIdentity,
-    ]
+    [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange]
   )
 
   const tabs = [
