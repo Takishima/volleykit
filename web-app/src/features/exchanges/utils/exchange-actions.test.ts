@@ -4,7 +4,12 @@ import { describe, it, expect, vi } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
 
-import { createExchangeActions } from './exchange-actions'
+import {
+  createExchangeActions,
+  isExchangeOwner,
+  canRemoveExchange,
+  getConvocationIdFromExchange,
+} from './exchange-actions'
 
 const mockExchange: GameExchange = {
   __identity: 'test-exchange-1',
@@ -90,5 +95,117 @@ describe('createExchangeActions', () => {
     expect(actions.removeFromExchange.shortLabel).toBe('Remove')
     expect(actions.removeFromExchange.color).toBe('bg-danger-500')
     expect(isValidElement(actions.removeFromExchange.icon)).toBe(true)
+  })
+})
+
+describe('isExchangeOwner', () => {
+  it('returns false when userId is undefined', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(isExchangeOwner(exchange, undefined)).toBe(false)
+  })
+
+  it('returns false when submittedByPerson does not match userId', () => {
+    const exchange = { submittedByPerson: { __identity: 'other-user' } } as GameExchange
+    expect(isExchangeOwner(exchange, 'user-1')).toBe(false)
+  })
+
+  it('returns true when submittedByPerson matches userId', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(isExchangeOwner(exchange, 'user-1')).toBe(true)
+  })
+})
+
+describe('canRemoveExchange', () => {
+  it('returns false when userId is undefined', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(canRemoveExchange(exchange, undefined)).toBe(false)
+  })
+
+  it('returns false when user is not the owner', () => {
+    const exchange = { submittedByPerson: { __identity: 'other-user' } } as GameExchange
+    expect(canRemoveExchange(exchange, 'user-1')).toBe(false)
+  })
+
+  it('returns true when user is the owner', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(canRemoveExchange(exchange, 'user-1')).toBe(true)
+  })
+})
+
+describe('getConvocationIdFromExchange', () => {
+  it('returns undefined when refereePosition is missing', () => {
+    const exchange = { refereeGame: {} } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+
+  it('returns undefined when refereeGame is missing', () => {
+    const exchange = { refereePosition: 'head-one' } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+
+  it('returns undefined when convocation field is not populated', () => {
+    const exchange = {
+      refereePosition: 'head-one',
+      refereeGame: {},
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+
+  it('returns convocation ID for head-one position', () => {
+    const exchange = {
+      refereePosition: 'head-one',
+      refereeGame: {
+        activeRefereeConvocationFirstHeadReferee: { __identity: 'convocation-123' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-123')
+  })
+
+  it('returns convocation ID for head-two position', () => {
+    const exchange = {
+      refereePosition: 'head-two',
+      refereeGame: {
+        activeRefereeConvocationSecondHeadReferee: { __identity: 'convocation-456' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-456')
+  })
+
+  it('returns convocation ID for linesman-one position', () => {
+    const exchange = {
+      refereePosition: 'linesman-one',
+      refereeGame: {
+        activeRefereeConvocationFirstLinesman: { __identity: 'convocation-789' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-789')
+  })
+
+  it('returns convocation ID for linesman-two position', () => {
+    const exchange = {
+      refereePosition: 'linesman-two',
+      refereeGame: {
+        activeRefereeConvocationSecondLinesman: { __identity: 'convocation-abc' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-abc')
+  })
+
+  it('returns convocation ID for standby-head position', () => {
+    const exchange = {
+      refereePosition: 'standby-head',
+      refereeGame: {
+        activeRefereeConvocationStandbyHeadReferee: { __identity: 'convocation-def' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-def')
+  })
+
+  it('returns undefined for unknown position', () => {
+    const exchange = {
+      refereePosition: 'unknown-position',
+      refereeGame: {},
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
   })
 })

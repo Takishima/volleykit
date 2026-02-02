@@ -15,7 +15,6 @@ import {
   useCompensations,
   useGameExchanges,
   useApplyForExchange,
-  useWithdrawFromExchange,
 } from './useConvocations'
 
 // Mock API methods
@@ -25,7 +24,6 @@ const mockApi = {
   searchCompensations: vi.fn(),
   searchExchanges: vi.fn(),
   applyForExchange: vi.fn(),
-  withdrawFromExchange: vi.fn(),
 }
 
 vi.mock('@/api/client', () => ({
@@ -355,24 +353,6 @@ describe('useConvocations - API Client Routing', () => {
       await result.current.mutateAsync('test-exchange-id')
 
       expect(mockApi.applyForExchange).toHaveBeenCalledWith('test-exchange-id')
-    })
-  })
-
-  describe('useWithdrawFromExchange', () => {
-    it('should call API with exchange ID', async () => {
-      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ dataSource: 'api' } as ReturnType<typeof authStore.useAuthStore.getState>)
-      )
-
-      mockApi.withdrawFromExchange.mockResolvedValue(undefined)
-
-      const { result } = renderHook(() => useWithdrawFromExchange(), {
-        wrapper: createWrapper(),
-      })
-
-      await result.current.mutateAsync('test-exchange-id')
-
-      expect(mockApi.withdrawFromExchange).toHaveBeenCalledWith('test-exchange-id')
     })
   })
 })

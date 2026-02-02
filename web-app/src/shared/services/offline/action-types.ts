@@ -82,20 +82,23 @@ export interface ApplyForExchangeAction extends BaseAction {
 }
 
 /**
- * Withdraw from exchange action.
- */
-export interface WithdrawFromExchangeAction extends BaseAction {
-  type: 'withdrawFromExchange'
-  payload: {
-    exchangeId: string
-  }
-}
-
-/**
  * Add assignment to exchange marketplace action.
  */
 export interface AddToExchangeAction extends BaseAction {
   type: 'addToExchange'
+  payload: {
+    convocationId: string
+    /** Game number for display/conflict detection */
+    gameNumber?: number
+  }
+}
+
+/**
+ * Remove own assignment from exchange marketplace action.
+ * Uses convocation ID to identify the exchange to remove.
+ */
+export interface RemoveOwnExchangeAction extends BaseAction {
+  type: 'removeOwnExchange'
   payload: {
     convocationId: string
     /** Game number for display/conflict detection */
@@ -111,8 +114,8 @@ export type OfflineAction =
   | UpdateAssignmentCompensationAction
   | BatchUpdateCompensationsAction
   | ApplyForExchangeAction
-  | WithdrawFromExchangeAction
   | AddToExchangeAction
+  | RemoveOwnExchangeAction
 
 /**
  * Action type discriminator values.

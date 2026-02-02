@@ -302,13 +302,6 @@ export const api = {
     )
   },
 
-  async withdrawFromExchange(exchangeId: string): Promise<void> {
-    return apiRequest('/indoorvolleyball.refadmin/api%5crefereegameexchange', 'PUT', {
-      __identity: exchangeId,
-      withdrawApplication: '1',
-    })
-  },
-
   /**
    * Add an assignment to the exchange marketplace (bourse aux arbitrages).
    * This puts your own assignment on the exchange so another referee can take it over.
@@ -322,6 +315,23 @@ export const api = {
       'POST',
       {
         refereeConvocation: convocationId,
+      }
+    )
+  },
+
+  /**
+   * Remove your own assignment from the exchange marketplace.
+   * This withdraws your assignment from the bourse, making it no longer available for others.
+   *
+   * @param convocationId - The UUID of the referee convocation (assignment) to remove from exchange
+   * @returns Promise that resolves when the assignment is removed from the exchange
+   */
+  async removeOwnExchange(convocationId: string): Promise<void> {
+    return apiRequest(
+      '/indoorvolleyball.refadmin/api%5crefereeconvocation/deleteFromRefereeGameExchange',
+      'POST',
+      {
+        'refereeConvocations[0][__identity]': convocationId,
       }
     )
   },

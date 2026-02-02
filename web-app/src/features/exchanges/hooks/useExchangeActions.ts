@@ -1,9 +1,10 @@
 import { useCallback } from 'react'
 
 import type { GameExchange } from '@/api/client'
+import { getConvocationIdFromExchange } from '@/features/exchanges/utils/exchange-actions'
 import {
   useApplyForExchange,
-  useWithdrawFromExchange,
+  useRemoveOwnExchange,
 } from '@/features/validation/hooks/useConvocations'
 import { useModalState } from '@/shared/hooks/useModalState'
 import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
@@ -30,7 +31,7 @@ export function useExchangeActions(): UseExchangeActionsResult {
   const removeFromExchangeModal = useModalState<GameExchange>()
 
   const applyMutation = useApplyForExchange()
-  const withdrawMutation = useWithdrawFromExchange()
+  const removeOwnMutation = useRemoveOwnExchange()
 
   const takeOverMutation = useSafeMutation(
     async (exchange: GameExchange, log) => {
@@ -47,18 +48,22 @@ export function useExchangeActions(): UseExchangeActionsResult {
     }
   )
 
-  const withdrawSafeMutation = useSafeMutation(
+  const removeOwnSafeMutation = useSafeMutation(
     async (exchange: GameExchange, log) => {
-      await withdrawMutation.mutateAsync(exchange.__identity)
-      log.debug('Successfully withdrawn from exchange:', exchange.__identity)
+      const convocationId = getConvocationIdFromExchange(exchange)
+      if (!convocationId) {
+        throw new Error('Could not find convocation ID for this exchange')
+      }
+      await removeOwnMutation.mutateAsync(convocationId)
+      log.debug('Successfully removed own exchange, convocation:', convocationId)
     },
     {
       logContext: 'useExchangeActions',
-      successMessage: 'exchange.withdrawSuccess',
-      errorMessage: 'exchange.withdrawError',
+      successMessage: 'exchange.removeSuccess',
+      errorMessage: 'exchange.removeError',
       safeGuard: {
         context: 'useExchangeActions',
-        action: 'withdrawing from exchange',
+        action: 'removing own exchange',
       },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => removeFromExchangeModal.close(),
@@ -74,9 +79,10 @@ export function useExchangeActions(): UseExchangeActionsResult {
 
   const handleRemoveFromExchange = useCallback(
     async (exchange: GameExchange) => {
-      await withdrawSafeMutation.execute(exchange)
+      // Remove own exchange using deleteFromRefereeGameExchange with convocation ID
+      await removeOwnSafeMutation.execute(exchange)
     },
-    [withdrawSafeMutation]
+    [removeOwnSafeMutation]
   )
 
   return {

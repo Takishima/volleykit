@@ -107,12 +107,12 @@ async function executeAction(action: OfflineAction): Promise<void> {
       await api.applyForExchange(action.payload.exchangeId)
       break
 
-    case 'withdrawFromExchange':
-      await api.withdrawFromExchange(action.payload.exchangeId)
-      break
-
     case 'addToExchange':
       await api.addToExchange(action.payload.convocationId)
+      break
+
+    case 'removeOwnExchange':
+      await api.removeOwnExchange(action.payload.convocationId)
       break
 
     default: {

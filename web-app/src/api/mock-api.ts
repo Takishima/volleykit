@@ -7,7 +7,7 @@
  * ensuring demo mode behavior matches production.
  */
 
-import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
+import { useDemoStore } from '@/shared/stores/demo'
 import { BYTES_PER_KB } from '@/shared/utils/constants'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
@@ -401,29 +401,27 @@ export const mockApi = {
     }
   },
 
-  async withdrawFromExchange(exchangeId: string): Promise<void> {
-    await delay(MOCK_MUTATION_DELAY_MS)
-
-    const store = useDemoStore.getState()
-
-    // Check if this is the user's own exchange (they submitted it)
-    const exchange = store.exchanges.find((e) => e.__identity === exchangeId)
-    const isOwnExchange = exchange?.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY
-
-    if (isOwnExchange) {
-      // Remove own exchange - restores original assignment
-      store.removeOwnExchange(exchangeId)
-    } else {
-      // Withdraw application from someone else's exchange
-      store.withdrawFromExchange(exchangeId)
-    }
-  },
-
   async addToExchange(convocationId: string): Promise<void> {
     await delay(MOCK_MUTATION_DELAY_MS)
 
     const store = useDemoStore.getState()
     store.addAssignmentToExchange(convocationId)
+  },
+
+  async removeOwnExchange(convocationId: string): Promise<void> {
+    await delay(MOCK_MUTATION_DELAY_MS)
+
+    const store = useDemoStore.getState()
+    // Find the exchange that has this convocation and remove it
+    const exchange = store.exchanges.find((e) => {
+      // Match by finding the assignment with this convocation ID
+      const assignment = store.exchangedAssignments[e.__identity]
+      return assignment?.__identity === convocationId
+    })
+
+    if (exchange) {
+      store.removeOwnExchange(exchange.__identity)
+    }
   },
 
   async getAssociationSettings(): Promise<AssociationSettings> {

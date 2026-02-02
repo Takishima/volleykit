@@ -238,6 +238,8 @@ export interface Translations {
     applyError: string
     withdrawSuccess: string
     withdrawError: string
+    removeSuccess: string
+    removeError: string
     addedToExchangeSuccess: string
     addedToExchangeQueued: string
     addedToExchangeError: string
@@ -466,8 +468,8 @@ export interface Translations {
       updateCompensation: string
       batchUpdateCompensations: string
       applyForExchange: string
-      withdrawFromExchange: string
       addToExchange: string
+      removeOwnExchange: string
     }
   }
   pdf: {

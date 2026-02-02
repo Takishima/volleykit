@@ -12,7 +12,7 @@
  *
  * Features NOT supported in calendar mode (will throw errors):
  * - Compensations (searchCompensations, getCompensationDetails, updateCompensation)
- * - Exchanges (searchExchanges, applyForExchange, withdrawFromExchange)
+ * - Exchanges (searchExchanges, applyForExchange, addToExchange, removeOwnExchange)
  * - Nominations (getPossiblePlayerNominations, updateNominationList, finalizeNominationList)
  * - Scoresheet operations (getGameWithScoresheet, submitScorer, finalizeScoresheet, uploadResource)
  * - Person search (searchPersons)
@@ -223,12 +223,12 @@ export const calendarApi = {
     throw new CalendarModeNotSupportedError('Exchange applications')
   },
 
-  async withdrawFromExchange(): Promise<void> {
-    throw new CalendarModeNotSupportedError('Exchange withdrawals')
-  },
-
   async addToExchange(): Promise<void> {
     throw new CalendarModeNotSupportedError('Adding to exchange')
+  },
+
+  async removeOwnExchange(): Promise<void> {
+    throw new CalendarModeNotSupportedError('Removing own exchange')
   },
 
   // Settings - return mock data for UI compatibility

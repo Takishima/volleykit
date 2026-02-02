@@ -137,7 +137,6 @@ export interface DemoState
 
   // Exchange operations
   applyForExchange: (exchangeId: string) => void
-  withdrawFromExchange: (exchangeId: string) => void
   addAssignmentToExchange: (assignmentId: string) => void
   removeOwnExchange: (exchangeId: string) => void
 

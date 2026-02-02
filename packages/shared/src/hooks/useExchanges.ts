@@ -29,7 +29,7 @@ export interface ExchangesApiClient {
     config: SearchConfiguration
   ) => Promise<{ items: GameExchange[]; totalItemsCount: number }>
   applyForExchange?: (exchangeId: string) => Promise<void>
-  withdrawFromExchange?: (exchangeId: string) => Promise<void>
+  removeOwnExchange?: (convocationId: string) => Promise<void>
 }
 
 /** Stable empty array for React Query selectors */

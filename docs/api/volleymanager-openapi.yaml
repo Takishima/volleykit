@@ -323,39 +323,8 @@ paths:
                 $ref: '#/components/schemas/ExchangesResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /indoorvolleyball.refadmin/api\refereegameexchange:
-    put:
-      tags: [Exchanges]
-      summary: Apply for or withdraw from exchange
-      description: Apply to take over a referee position or withdraw an application
-      operationId: manageExchangeApplication
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              required: [__identity, __csrfToken]
-              properties:
-                __identity:
-                  type: string
-                  format: uuid
-                  description: Exchange ID
-                __csrfToken:
-                  type: string
-                apply:
-                  type: string
-                  enum: ["1"]
-                  description: Set to "1" to apply for exchange
-                withdrawApplication:
-                  type: string
-                  enum: ["1"]
-                  description: Set to "1" to withdraw application
-      responses:
-        '200':
-          description: Operation successful
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+  # Note: The generic PUT to /refereegameexchange is deprecated.
+  # Use /pickFromRefereeGameExchange for taking over exchanges instead.
   /indoorvolleyball.refadmin/api\refereegameexchange/pickFromRefereeGameExchange:
     put:
       tags: [Exchanges]
@@ -386,6 +355,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickExchangeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeconvocation/putRefereeConvocationIntoRefereeGameExchange:
+    post:
+      tags: [Exchanges]
+      summary: Add assignment to exchange marketplace
+      description: |
+        Posts a referee assignment (convocation) to the exchange marketplace (bourse aux arbitrages).
+        This allows other referees to apply for the position.
+
+        **Note:** This endpoint uses the convocation UUID, not the exchange UUID.
+      operationId: addToExchange
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [refereeConvocation, __csrfToken]
+              properties:
+                refereeConvocation:
+                  type: string
+                  format: uuid
+                  description: The convocation (assignment) UUID to add to exchange
+                __csrfToken:
+                  type: string
+                  description: CSRF token for request validation
+      responses:
+        '200':
+          description: Assignment successfully added to exchange
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeconvocation/deleteFromRefereeGameExchange:
+    post:
+      tags: [Exchanges]
+      summary: Remove assignment from exchange marketplace
+      description: |
+        Removes a referee assignment (convocation) from the exchange marketplace.
+        This withdraws the assignment from the bourse, making it no longer available for other referees.
+
+        **Important:**
+        - Uses the convocation (assignment) UUID, not the exchange UUID
+        - Supports batch removal via array format
+        - Only the referee who submitted the exchange can remove it
+      operationId: removeFromExchange
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [refereeConvocations, __csrfToken]
+              properties:
+                refereeConvocations[0][__identity]:
+                  type: string
+                  format: uuid
+                  description: The convocation (assignment) UUID to remove from exchange
+                __csrfToken:
+                  type: string
+                  description: CSRF token for request validation
+      responses:
+        '200':
+          description: Assignment successfully removed from exchange
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /sportmanager.indoorvolleyball/api\indoorseason/getActiveIndoorSeason:
@@ -1480,6 +1516,17 @@ components:
               error:
                 type: string
                 example: "Access denied"
+    BadRequest:
+      description: |
+        Invalid request. Common causes:
+        - "No resource specified" - The requested resource ID does not exist or is no longer valid
+        - Missing or invalid required parameters
+      content:
+        text/html:
+          schema:
+            type: string
+            description: Error message in HTML format
+            example: "No resource specified"
   schemas:
     # ==================== Authentication Schemas ====================
     AuthenticationRequest:
@@ -2426,6 +2473,27 @@ components:
           type: string
         activeSecondLinesmanRefereeName:
           type: string
+        activeThirdLinesmanRefereeName:
+          type: string
+        activeFourthLinesmanRefereeName:
+          type: string
+        # Convocation references with __identity for deleteFromRefereeGameExchange
+        activeRefereeConvocationFirstHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationSecondHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationFirstLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationSecondLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationThirdLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationFourthLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationStandbyHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationStandbyLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
     Game:
       type: object
       properties:

@@ -204,26 +204,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/indoorvolleyball.refadmin/api\\refereegameexchange": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Apply for or withdraw from exchange
-         * @description Apply to take over a referee position or withdraw an application
-         */
-        put: operations["manageExchangeApplication"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/indoorvolleyball.refadmin/api\\refereegameexchange/pickFromRefereeGameExchange": {
         parameters: {
             query?: never;
@@ -239,6 +219,55 @@ export interface paths {
          */
         put: operations["pickFromRefereeGameExchange"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/indoorvolleyball.refadmin/api\\refereeconvocation/putRefereeConvocationIntoRefereeGameExchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add assignment to exchange marketplace
+         * @description Posts a referee assignment (convocation) to the exchange marketplace (bourse aux arbitrages).
+         *     This allows other referees to apply for the position.
+         *
+         *     **Note:** This endpoint uses the convocation UUID, not the exchange UUID.
+         */
+        post: operations["addToExchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/indoorvolleyball.refadmin/api\\refereeconvocation/deleteFromRefereeGameExchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove assignment from exchange marketplace
+         * @description Removes a referee assignment (convocation) from the exchange marketplace.
+         *     This withdraws the assignment from the bourse, making it no longer available for other referees.
+         *
+         *     **Important:**
+         *     - Uses the convocation (assignment) UUID, not the exchange UUID
+         *     - Supports batch removal via array format
+         *     - Only the referee who submitted the exchange can remove it
+         */
+        post: operations["removeFromExchange"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1754,6 +1783,16 @@ export interface components {
             activeSecondHeadRefereeName?: string;
             activeFirstLinesmanRefereeName?: string;
             activeSecondLinesmanRefereeName?: string;
+            activeThirdLinesmanRefereeName?: string;
+            activeFourthLinesmanRefereeName?: string;
+            activeRefereeConvocationFirstHeadReferee?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationSecondHeadReferee?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationFirstLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationSecondLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationThirdLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationFourthLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationStandbyHeadReferee?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationStandbyLinesman?: components["schemas"]["RefereeConvocationRef"];
         };
         Game: {
             /** Format: uuid */
@@ -4581,6 +4620,19 @@ export interface components {
                 };
             };
         };
+        /**
+         * @description Invalid request. Common causes:
+         *     - "No resource specified" - The requested resource ID does not exist or is no longer valid
+         *     - Missing or invalid required parameters
+         */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "text/html": string;
+            };
+        };
     };
     parameters: never;
     requestBodies: never;
@@ -4840,46 +4892,6 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
         };
     };
-    manageExchangeApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": {
-                    /**
-                     * Format: uuid
-                     * @description Exchange ID
-                     */
-                    __identity: string;
-                    __csrfToken: string;
-                    /**
-                     * @description Set to "1" to apply for exchange
-                     * @enum {string}
-                     */
-                    apply?: "1";
-                    /**
-                     * @description Set to "1" to withdraw application
-                     * @enum {string}
-                     */
-                    withdrawApplication?: "1";
-                };
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            401: components["responses"]["Unauthorized"];
-        };
-    };
     pickFromRefereeGameExchange: {
         parameters: {
             query?: never;
@@ -4910,6 +4922,70 @@ export interface operations {
                     "application/json": components["schemas"]["PickExchangeResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    addToExchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: uuid
+                     * @description The convocation (assignment) UUID to add to exchange
+                     */
+                    refereeConvocation: string;
+                    /** @description CSRF token for request validation */
+                    __csrfToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Assignment successfully added to exchange */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    removeFromExchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: uuid
+                     * @description The convocation (assignment) UUID to remove from exchange
+                     */
+                    "refereeConvocations[0][__identity]"?: string;
+                    /** @description CSRF token for request validation */
+                    __csrfToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Assignment successfully removed from exchange */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
         };
     };

@@ -90,6 +90,8 @@ export const EXCHANGE_PROPERTIES = [
   'requiredRefereeLevel',
   'requiredRefereeLevelGradationValue',
   'appliedBy.indoorReferee.person.displayName',
+  // Request appliedBy identity for validation (checking who applied to an exchange)
+  'appliedBy.indoorReferee.person.__identity',
   'appliedAt',
   'refereeGame.game.number',
   'refereeGame.game.group.phase.league.leagueCategory.name',
@@ -120,14 +122,23 @@ export const EXCHANGE_PROPERTIES = [
   'refereeGame.openThirdLinesmanRefereeName',
   'refereeGame.activeFourthLinesmanRefereeName',
   'refereeGame.openFourthLinesmanRefereeName',
+  // Request convocation objects (parent must be requested before nested __identity)
   'refereeGame.activeRefereeConvocationFirstHeadReferee',
+  'refereeGame.activeRefereeConvocationFirstHeadReferee.__identity',
   'refereeGame.activeRefereeConvocationSecondHeadReferee',
+  'refereeGame.activeRefereeConvocationSecondHeadReferee.__identity',
   'refereeGame.activeRefereeConvocationFirstLinesman',
+  'refereeGame.activeRefereeConvocationFirstLinesman.__identity',
   'refereeGame.activeRefereeConvocationSecondLinesman',
+  'refereeGame.activeRefereeConvocationSecondLinesman.__identity',
   'refereeGame.activeRefereeConvocationThirdLinesman',
+  'refereeGame.activeRefereeConvocationThirdLinesman.__identity',
   'refereeGame.activeRefereeConvocationFourthLinesman',
+  'refereeGame.activeRefereeConvocationFourthLinesman.__identity',
   'refereeGame.activeRefereeConvocationStandbyHeadReferee',
+  'refereeGame.activeRefereeConvocationStandbyHeadReferee.__identity',
   'refereeGame.activeRefereeConvocationStandbyLinesman',
+  'refereeGame.activeRefereeConvocationStandbyLinesman.__identity',
 ]
 
 /**

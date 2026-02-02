@@ -309,20 +309,14 @@ export function ExchangePage() {
         return { right: [actions.removeFromExchange] }
       }
 
-      // "open" tab: actions for other users' exchanges depend on status
-      switch (exchange.status) {
-        case 'open':
-          // Open exchanges: swipe left to take over
-          // Swipe left reveals: [Take Over] <- card
-          return { left: [actions.takeOver] }
-        case 'applied':
-          // Applied exchanges: swipe right to remove
-          // Swipe right reveals: card -> [Remove]
-          return { right: [actions.removeFromExchange] }
-        default:
-          // No swipe actions for other statuses
-          return {}
+      // "open" tab: only open exchanges (not applied/closed) are actionable
+      if (exchange.status === 'open') {
+        // Swipe left reveals: [Take Over] <- card
+        return { left: [actions.takeOver] }
       }
+
+      // No swipe actions for applied/closed statuses
+      return {}
     },
     [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange]
   )

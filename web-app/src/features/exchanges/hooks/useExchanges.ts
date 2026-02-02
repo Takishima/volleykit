@@ -226,10 +226,11 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
 }
 
 /**
- * Mutation hook to withdraw from an exchange.
- * Supports offline mode - queues the withdrawal when offline and syncs when back online.
+ * Mutation hook to remove your own assignment from the exchange marketplace.
+ * Supports offline mode - queues the action when offline and syncs when back online.
+ * This moves the assignment back from the exchange to your assignments.
  */
-export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
+export function useRemoveOwnExchange(): OfflineMutationResult<void, string> {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isOnline = useNetworkStatus()
@@ -251,25 +252,26 @@ export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
   }, [])
 
   const mutateAsync = useCallback(
-    async (exchangeId: string): Promise<void> => {
+    async (convocationId: string): Promise<void> => {
       reset()
       setIsPending(true)
 
       try {
         if (isOnline) {
           // Online: execute immediately
-          log.debug('Withdrawing from exchange (online):', { exchangeId })
-          await apiClient.withdrawFromExchange(exchangeId)
+          log.debug('Removing own exchange (online):', { convocationId })
+          await apiClient.removeOwnExchange(convocationId)
 
-          // Invalidate queries to refetch fresh data
+          // Invalidate both exchanges and assignments since the assignment moves back
           await queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
+          await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
 
           setIsSuccess(true)
           setWasQueued(false)
         } else {
           // Offline: queue the action
-          log.debug('Queueing exchange withdrawal (offline):', { exchangeId })
-          const action = await createAction('withdrawFromExchange', { exchangeId })
+          log.debug('Queueing remove own exchange (offline):', { convocationId })
+          const action = await createAction('removeOwnExchange', { convocationId })
 
           if (!action) {
             throw new Error('Failed to queue action - IndexedDB unavailable')
@@ -283,7 +285,7 @@ export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to withdraw from exchange:', error)
+        log.error('Failed to remove own exchange:', error)
         setIsError(true)
         setError(error)
         throw error
@@ -295,8 +297,8 @@ export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
   )
 
   const mutate = useCallback(
-    (exchangeId: string, options?: MutationCallbacks<void>) => {
-      mutateAsync(exchangeId)
+    (convocationId: string, options?: MutationCallbacks<void>) => {
+      mutateAsync(convocationId)
         .then(() => {
           options?.onSuccess?.()
         })
