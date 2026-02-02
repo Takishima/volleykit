@@ -78,30 +78,37 @@ const createMockExchange = (id: string, submittedByIdentity?: string): GameExcha
     },
   }) as GameExchange
 
-describe('useGameExchanges', () => {
-  let queryClient: QueryClient
+// Shared test utilities
+let queryClient: QueryClient
 
-  function createWrapper() {
-    return function Wrapper({ children }: { children: ReactNode }) {
-      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    }
+function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  })
+}
+
+function createWrapper() {
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   }
+}
 
+function resetMockAuthStore() {
+  mockAuthStore.dataSource = 'api'
+  mockAuthStore.user = { id: 'user-123' }
+  mockAuthStore.activeOccupationId = 'occupation-1'
+}
+
+describe('useGameExchanges', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-        },
-      },
-    })
-
-    // Reset mock store to API mode
-    mockAuthStore.dataSource = 'api'
-    mockAuthStore.user = { id: 'user-123' }
-    mockAuthStore.activeOccupationId = 'occupation-1'
+    queryClient = createQueryClient()
+    resetMockAuthStore()
   })
 
   describe('status filtering', () => {
@@ -261,30 +268,11 @@ describe('useGameExchanges', () => {
 })
 
 describe('useApplyForExchange', () => {
-  let queryClient: QueryClient
-
-  function createWrapper() {
-    return function Wrapper({ children }: { children: ReactNode }) {
-      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    }
-  }
-
   beforeEach(() => {
     vi.clearAllMocks()
     mockIsOnline = true
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-        },
-      },
-    })
-
-    // Reset mock store to API mode
-    mockAuthStore.dataSource = 'api'
-    mockAuthStore.user = { id: 'user-123' }
-    mockAuthStore.activeOccupationId = 'occupation-1'
+    queryClient = createQueryClient()
+    resetMockAuthStore()
   })
 
   it('calls onSuccess callback after successful mutation', async () => {
