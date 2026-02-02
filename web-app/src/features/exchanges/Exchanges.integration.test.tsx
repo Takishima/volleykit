@@ -17,7 +17,6 @@ import { ExchangePage } from './ExchangePage'
  * Tests the exchange workflow including:
  * - Viewing available exchanges from demo store
  * - Applying for an exchange (taking over assignment)
- * - Withdrawing from an exchange
  * - Store updates after exchange operations
  * - Query invalidation after mutations
  */
@@ -25,7 +24,6 @@ import { ExchangePage } from './ExchangePage'
 // Save original functions before any spying
 const originalSearchExchanges = mockApi.searchExchanges.bind(mockApi)
 const originalApplyForExchange = mockApi.applyForExchange.bind(mockApi)
-const originalWithdrawFromExchange = mockApi.withdrawFromExchange.bind(mockApi)
 
 describe('Exchanges Integration', () => {
   let queryClient: QueryClient
@@ -43,11 +41,9 @@ describe('Exchanges Integration', () => {
     // Restore original functions and create fresh spies
     mockApi.searchExchanges = originalSearchExchanges
     mockApi.applyForExchange = originalApplyForExchange
-    mockApi.withdrawFromExchange = originalWithdrawFromExchange
 
     vi.spyOn(mockApi, 'searchExchanges')
     vi.spyOn(mockApi, 'applyForExchange')
-    vi.spyOn(mockApi, 'withdrawFromExchange')
 
     // Reset stores to initial state
     useAuthStore.setState({
@@ -208,38 +204,6 @@ describe('Exchanges Integration', () => {
       const newState = useDemoStore.getState()
       expect(newState.exchanges.length).toBe(exchangeCountBefore)
       expect(newState.assignments.length).toBe(assignmentCountBefore)
-    })
-  })
-
-  describe('withdraw from exchange flow', () => {
-    beforeEach(() => {
-      useAuthStore.getState().setDemoAuthenticated()
-      useDemoStore.getState().initializeDemoData('SV')
-    })
-
-    it('restores exchange status when withdrawing', async () => {
-      const initialState = useDemoStore.getState()
-
-      // Find an exchange with status 'open' that we can modify
-      const exchange = initialState.exchanges.find(
-        (e) => e.submittedByPerson?.__identity !== DEMO_USER_PERSON_IDENTITY && e.status === 'open'
-      )
-
-      // Demo data should include open exchanges from other users
-      expect(exchange).toBeDefined()
-      if (!exchange) return // Type guard for TypeScript
-
-      const exchangeId = exchange.__identity
-
-      // Withdraw from the exchange
-      await mockApi.withdrawFromExchange(exchangeId)
-
-      expect(mockApi.withdrawFromExchange).toHaveBeenCalledWith(exchangeId)
-
-      // Exchange status should remain open (withdrawal clears applied state)
-      const newState = useDemoStore.getState()
-      const updatedExchange = newState.exchanges.find((e) => e.__identity === exchangeId)
-      expect(updatedExchange?.status).toBe('open')
     })
   })
 

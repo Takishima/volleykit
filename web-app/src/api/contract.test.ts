@@ -373,19 +373,6 @@ describe('Exchange mutation endpoints', () => {
     // A new assignment should be created
     expect(updatedAssignments.length).toBe(initialAssignmentCount + 1)
   })
-
-  it('withdrawFromExchange changes status back to open', async () => {
-    const { exchanges } = useDemoStore.getState()
-    const appliedExchange = exchanges.find((e) => e.status === 'applied')
-    expect(appliedExchange).toBeDefined()
-
-    await mockApi.withdrawFromExchange(appliedExchange!.__identity)
-
-    const { exchanges: updated } = useDemoStore.getState()
-    const withdrawn = updated.find((e) => e.__identity === appliedExchange!.__identity)
-    expect(withdrawn?.status).toBe('open')
-    expect(withdrawn?.appliedBy).toBeUndefined()
-  })
 })
 
 describe('Add assignment to exchange mutation', () => {

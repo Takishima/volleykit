@@ -18,7 +18,6 @@ import type { StateCreator } from 'zustand'
 
 export interface ExchangesSlice extends DemoExchangesState {
   applyForExchange: (exchangeId: string) => void
-  withdrawFromExchange: (exchangeId: string) => void
   addAssignmentToExchange: (assignmentId: string) => void
   removeOwnExchange: (exchangeId: string) => void
 }
@@ -67,20 +66,6 @@ export const createExchangesSlice: StateCreator<DemoState, [], [], ExchangesSlic
         assignments: [...state.assignments, newAssignment],
       }
     }),
-
-  withdrawFromExchange: (exchangeId: string) =>
-    set((state) => ({
-      exchanges: state.exchanges.map((exchange) =>
-        exchange.__identity === exchangeId
-          ? {
-              ...exchange,
-              status: 'open' as const,
-              appliedAt: undefined,
-              appliedBy: undefined,
-            }
-          : exchange
-      ),
-    })),
 
   addAssignmentToExchange: (assignmentId: string) =>
     set((state) => {

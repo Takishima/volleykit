@@ -519,12 +519,6 @@ describe('calendar-client', () => {
       await expect(calendarApi.applyForExchange()).rejects.toThrow(CalendarModeNotSupportedError)
     })
 
-    it('withdrawFromExchange throws CalendarModeNotSupportedError', async () => {
-      await expect(calendarApi.withdrawFromExchange()).rejects.toThrow(
-        CalendarModeNotSupportedError
-      )
-    })
-
     it('getPossiblePlayerNominations throws CalendarModeNotSupportedError', async () => {
       await expect(calendarApi.getPossiblePlayerNominations()).rejects.toThrow(
         CalendarModeNotSupportedError

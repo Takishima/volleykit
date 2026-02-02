@@ -5,7 +5,7 @@ export { ExchangePage } from './ExchangePage'
 export {
   useGameExchanges,
   useApplyForExchange,
-  useWithdrawFromExchange,
+  useRemoveOwnExchange,
   useAddToExchange,
 } from './hooks/useExchanges'
 export { useExchangeActions } from './hooks/useExchangeActions'

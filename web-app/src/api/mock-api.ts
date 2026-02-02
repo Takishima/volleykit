@@ -401,24 +401,6 @@ export const mockApi = {
     }
   },
 
-  async withdrawFromExchange(exchangeId: string): Promise<void> {
-    await delay(MOCK_MUTATION_DELAY_MS)
-
-    const store = useDemoStore.getState()
-
-    // Check if this is the user's own exchange (they submitted it)
-    const exchange = store.exchanges.find((e) => e.__identity === exchangeId)
-    const isOwnExchange = exchange?.submittedByPerson?.__identity === DEMO_USER_PERSON_IDENTITY
-
-    if (isOwnExchange) {
-      // Remove own exchange - restores original assignment
-      store.removeOwnExchange(exchangeId)
-    } else {
-      // Withdraw application from someone else's exchange
-      store.withdrawFromExchange(exchangeId)
-    }
-  },
-
   async addToExchange(convocationId: string): Promise<void> {
     await delay(MOCK_MUTATION_DELAY_MS)
 

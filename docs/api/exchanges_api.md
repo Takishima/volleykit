@@ -120,31 +120,31 @@ JSON response with structure:
 
 ## Actions
 
-### Apply for Exchange
+### Take Over Exchange (Confirmed)
+
+See [exchange_actions.md](captures/exchange_actions.md) for confirmed API documentation.
 
 ```
-PUT /api/indoorvolleyball.refadmin/api\refereegameexchange
+PUT /api/indoorvolleyball.refadmin/api\refereegameexchange/pickFromRefereeGameExchange
 ```
 
 Form data:
 
 ```
-__identity: <exchange_id>
-apply: 1
+refereeGameExchange[__identity]: <exchange_uuid>
 __csrfToken: <token>
 ```
 
-### Withdraw Application
+### Remove Own Exchange (Confirmed)
 
 ```
-PUT /api/indoorvolleyball.refadmin/api\refereegameexchange
+POST /api/indoorvolleyball.refadmin/api\refereeconvocation/deleteFromRefereeGameExchange
 ```
 
 Form data:
 
 ```
-__identity: <exchange_id>
-withdrawApplication: 1
+refereeConvocations[0][__identity]: <convocation_uuid>
 __csrfToken: <token>
 ```
 
@@ -156,4 +156,4 @@ __csrfToken: <token>
 - No default sorting (propertyOrderings is empty)
 - Shows exchanges where referees can take over positions
 - Filtered by required qualification level (referee can only see exchanges they're qualified for)
-- Multiple referees can apply for the same exchange
+- When a referee takes over an exchange, it becomes theirs immediately

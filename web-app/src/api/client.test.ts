@@ -399,25 +399,6 @@ describe('API Client', () => {
     })
   })
 
-  describe('withdrawFromExchange', () => {
-    it('sends PUT request with __identity and withdrawApplication=1 per OpenAPI spec', async () => {
-      let capturedBody: URLSearchParams | null = null
-
-      server.use(
-        http.put('*/api%5crefereegameexchange', async ({ request }) => {
-          const text = await request.text()
-          capturedBody = new URLSearchParams(text)
-          return HttpResponse.json({})
-        })
-      )
-
-      await api.withdrawFromExchange('exchange-456')
-
-      expect(capturedBody?.get('__identity')).toBe('exchange-456')
-      expect(capturedBody?.get('withdrawApplication')).toBe('1')
-    })
-  })
-
   describe('searchPersons', () => {
     it('uses GET method for person search', async () => {
       let capturedMethod: string | null = null

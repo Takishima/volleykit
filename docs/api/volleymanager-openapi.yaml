@@ -323,50 +323,8 @@ paths:
                 $ref: '#/components/schemas/ExchangesResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /indoorvolleyball.refadmin/api\refereegameexchange:
-    put:
-      tags: [Exchanges]
-      summary: Apply for or withdraw from exchange
-      description: Apply to take over a referee position or withdraw an application
-      operationId: manageExchangeApplication
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              required: [__identity, __csrfToken]
-              properties:
-                __identity:
-                  type: string
-                  format: uuid
-                  description: Exchange ID
-                __csrfToken:
-                  type: string
-                apply:
-                  type: string
-                  enum: ["1"]
-                  description: Set to "1" to apply for exchange
-                withdrawApplication:
-                  type: string
-                  enum: ["1"]
-                  description: Set to "1" to withdraw application
-      responses:
-        '200':
-          description: Operation successful
-        '400':
-          description: |
-            Bad request. Possible causes:
-            - "No resource specified" - The exchange ID is invalid or the exchange no longer exists
-            - Exchange status is 'closed' (already completed)
-            - User has not applied to this exchange (when withdrawing)
-          content:
-            text/html:
-              schema:
-                type: string
-                example: "No resource specified"
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+  # Note: The generic PUT to /refereegameexchange is deprecated.
+  # Use /pickFromRefereeGameExchange for taking over exchanges instead.
   /indoorvolleyball.refadmin/api\refereegameexchange/pickFromRefereeGameExchange:
     put:
       tags: [Exchanges]
@@ -443,8 +401,6 @@ paths:
         - Uses the convocation (assignment) UUID, not the exchange UUID
         - Supports batch removal via array format
         - Only the referee who submitted the exchange can remove it
-
-        **Note:** This is different from `withdrawFromExchange` which withdraws an *application* to someone else's exchange.
       operationId: removeFromExchange
       requestBody:
         required: true

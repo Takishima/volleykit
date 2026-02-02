@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation, type UseMutationResult } from '@tanstack/react-query'
 import { startOfDay, endOfDay, format } from 'date-fns'
 
 import {
@@ -226,102 +226,7 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
 }
 
 /**
- * Mutation hook to withdraw from an exchange.
- * Supports offline mode - queues the withdrawal when offline and syncs when back online.
- */
-export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
-  const queryClient = useQueryClient()
-  const dataSource = useAuthStore((state) => state.dataSource)
-  const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
-  const apiClient = getApiClient(dataSource)
-
-  const [isPending, setIsPending] = useState(false)
-  const [isSuccess, setIsSuccess] = useState(false)
-  const [isError, setIsError] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
-  const [wasQueued, setWasQueued] = useState(false)
-
-  const reset = useCallback(() => {
-    setIsPending(false)
-    setIsSuccess(false)
-    setIsError(false)
-    setError(null)
-    setWasQueued(false)
-  }, [])
-
-  const mutateAsync = useCallback(
-    async (exchangeId: string): Promise<void> => {
-      reset()
-      setIsPending(true)
-
-      try {
-        if (isOnline) {
-          // Online: execute immediately
-          log.debug('Withdrawing from exchange (online):', { exchangeId })
-          await apiClient.withdrawFromExchange(exchangeId)
-
-          // Invalidate queries to refetch fresh data
-          await queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
-
-          setIsSuccess(true)
-          setWasQueued(false)
-        } else {
-          // Offline: queue the action
-          log.debug('Queueing exchange withdrawal (offline):', { exchangeId })
-          const action = await createAction('withdrawFromExchange', { exchangeId })
-
-          if (!action) {
-            throw new Error('Failed to queue action - IndexedDB unavailable')
-          }
-
-          // Refresh action queue store to update badge count
-          await refreshActionQueue()
-
-          setIsSuccess(true)
-          setWasQueued(true)
-        }
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to withdraw from exchange:', error)
-        setIsError(true)
-        setError(error)
-        throw error
-      } finally {
-        setIsPending(false)
-      }
-    },
-    [isOnline, apiClient, queryClient, refreshActionQueue, reset]
-  )
-
-  const mutate = useCallback(
-    (exchangeId: string, options?: MutationCallbacks<void>) => {
-      mutateAsync(exchangeId)
-        .then(() => {
-          options?.onSuccess?.()
-        })
-        .catch((err) => {
-          options?.onError?.(err)
-        })
-    },
-    [mutateAsync]
-  )
-
-  return {
-    mutate,
-    mutateAsync,
-    isPending,
-    isSuccess,
-    isError,
-    error,
-    reset,
-    wasQueued,
-  }
-}
-
-/**
  * Mutation hook to remove your own assignment from the exchange marketplace.
- * This is different from withdrawFromExchange which withdraws an application.
  */
 export function useRemoveOwnExchange(): UseMutationResult<void, Error, string> {
   const queryClient = useQueryClient()

@@ -204,26 +204,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/indoorvolleyball.refadmin/api\\refereegameexchange": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Apply for or withdraw from exchange
-         * @description Apply to take over a referee position or withdraw an application
-         */
-        put: operations["manageExchangeApplication"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/indoorvolleyball.refadmin/api\\refereegameexchange/pickFromRefereeGameExchange": {
         parameters: {
             query?: never;
@@ -286,8 +266,6 @@ export interface paths {
          *     - Uses the convocation (assignment) UUID, not the exchange UUID
          *     - Supports batch removal via array format
          *     - Only the referee who submitted the exchange can remove it
-         *
-         *     **Note:** This is different from `withdrawFromExchange` which withdraws an *application* to someone else's exchange.
          */
         post: operations["removeFromExchange"];
         delete?: never;
@@ -4909,60 +4887,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ExchangesResponse"];
-                };
-            };
-            401: components["responses"]["Unauthorized"];
-        };
-    };
-    manageExchangeApplication: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": {
-                    /**
-                     * Format: uuid
-                     * @description Exchange ID
-                     */
-                    __identity: string;
-                    __csrfToken: string;
-                    /**
-                     * @description Set to "1" to apply for exchange
-                     * @enum {string}
-                     */
-                    apply?: "1";
-                    /**
-                     * @description Set to "1" to withdraw application
-                     * @enum {string}
-                     */
-                    withdrawApplication?: "1";
-                };
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /**
-             * @description Bad request. Possible causes:
-             *     - "No resource specified" - The exchange ID is invalid or the exchange no longer exists
-             *     - Exchange status is 'closed' (already completed)
-             *     - User has not applied to this exchange (when withdrawing)
-             */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/html": string;
                 };
             };
             401: components["responses"]["Unauthorized"];

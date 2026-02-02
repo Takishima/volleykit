@@ -189,30 +189,6 @@ describe('useDemoStore', () => {
       })
     })
 
-    describe('withdrawFromExchange', () => {
-      it('sets exchange status back to open', () => {
-        const { exchanges } = useDemoStore.getState()
-        const exchange = exchanges[0]
-
-        useDemoStore.getState().withdrawFromExchange(exchange!.__identity)
-
-        const updatedExchange = useDemoStore
-          .getState()
-          .exchanges.find((e) => e.__identity === exchange!.__identity)
-
-        expect(updatedExchange?.status).toBe('open')
-      })
-
-      it('handles non-existent exchange ID gracefully', () => {
-        const { exchanges } = useDemoStore.getState()
-
-        useDemoStore.getState().withdrawFromExchange('non-existent-id')
-
-        // Exchanges should remain unchanged (same length)
-        expect(useDemoStore.getState().exchanges.length).toBe(exchanges.length)
-      })
-    })
-
     describe('addAssignmentToExchange', () => {
       it('moves an assignment to the exchange list', () => {
         const { assignments, exchanges } = useDemoStore.getState()

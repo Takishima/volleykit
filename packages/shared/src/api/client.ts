@@ -90,8 +90,8 @@ export interface ApiClient {
   // Exchanges
   searchExchanges(config: SearchConfiguration): Promise<PaginatedResponse<GameExchange>>
   applyForExchange(exchangeId: string): Promise<PickExchangeResponse>
-  withdrawFromExchange(exchangeId: string): Promise<void>
   addToExchange(assignmentId: string, reason?: string): Promise<void>
+  removeOwnExchange(convocationId: string): Promise<void>
 
   // Settings
   getAssociationSettings(): Promise<AssociationSettings>

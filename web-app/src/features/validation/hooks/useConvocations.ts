@@ -43,7 +43,6 @@ export {
   type ExchangeStatus,
   useGameExchanges,
   useApplyForExchange,
-  useWithdrawFromExchange,
   useRemoveOwnExchange,
 } from '@/features/exchanges/hooks/useExchanges'
 
