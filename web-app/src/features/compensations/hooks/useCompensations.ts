@@ -21,7 +21,7 @@ import { createAction } from '@/shared/services/offline/action-store'
 import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
-import type { OfflineMutationResult } from '@/shared/types/mutation'
+import type { MutationCallbacks, OfflineMutationResult } from '@/shared/types/mutation'
 import { createLogger } from '@/shared/utils/logger'
 
 const log = createLogger('useCompensations')
@@ -295,10 +295,17 @@ export function useUpdateCompensation(): OfflineMutationResult<
   )
 
   const mutate = useCallback(
-    (variables: { compensationId: string; data: CompensationUpdateData }) => {
-      mutateAsync(variables).catch(() => {
-        // Error is already handled in mutateAsync
-      })
+    (
+      variables: { compensationId: string; data: CompensationUpdateData },
+      options?: MutationCallbacks<void>
+    ) => {
+      mutateAsync(variables)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
     [mutateAsync]
   )
@@ -434,10 +441,17 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
   )
 
   const mutate = useCallback(
-    (variables: { compensationIds: string[]; data: CompensationUpdateData }) => {
-      mutateAsync(variables).catch(() => {
-        // Error is already handled in mutateAsync
-      })
+    (
+      variables: { compensationIds: string[]; data: CompensationUpdateData },
+      options?: MutationCallbacks<BatchUpdateResult>
+    ) => {
+      mutateAsync(variables)
+        .then((result) => {
+          options?.onSuccess?.(result)
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
     [mutateAsync]
   )
@@ -648,10 +662,17 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
   )
 
   const mutate = useCallback(
-    (variables: { assignmentId: string; data: CompensationUpdateData }) => {
-      mutateAsync(variables).catch(() => {
-        // Error is already handled in mutateAsync
-      })
+    (
+      variables: { assignmentId: string; data: CompensationUpdateData },
+      options?: MutationCallbacks<void>
+    ) => {
+      mutateAsync(variables)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
     [mutateAsync]
   )

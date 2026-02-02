@@ -16,7 +16,7 @@ import { createAction } from '@/shared/services/offline/action-store'
 import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
-import type { OfflineMutationResult } from '@/shared/types/mutation'
+import type { MutationCallbacks, OfflineMutationResult } from '@/shared/types/mutation'
 import { MS_PER_MINUTE } from '@/shared/utils/constants'
 import { getSeasonDateRange } from '@/shared/utils/date-helpers'
 import { createLogger } from '@/shared/utils/logger'
@@ -201,10 +201,14 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
   )
 
   const mutate = useCallback(
-    (exchangeId: string) => {
-      mutateAsync(exchangeId).catch(() => {
-        // Error is already handled in mutateAsync
-      })
+    (exchangeId: string, options?: MutationCallbacks<PickExchangeResponse>) => {
+      mutateAsync(exchangeId)
+        .then((result) => {
+          options?.onSuccess?.(result)
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
     [mutateAsync]
   )
@@ -291,10 +295,14 @@ export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
   )
 
   const mutate = useCallback(
-    (exchangeId: string) => {
-      mutateAsync(exchangeId).catch(() => {
-        // Error is already handled in mutateAsync
-      })
+    (exchangeId: string, options?: MutationCallbacks<void>) => {
+      mutateAsync(exchangeId)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
     [mutateAsync]
   )
@@ -383,10 +391,14 @@ export function useAddToExchange(): OfflineMutationResult<void, string> {
   )
 
   const mutate = useCallback(
-    (convocationId: string) => {
-      mutateAsync(convocationId).catch(() => {
-        // Error is already handled in mutateAsync
-      })
+    (convocationId: string, options?: MutationCallbacks<void>) => {
+      mutateAsync(convocationId)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
     [mutateAsync]
   )
