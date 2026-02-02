@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
@@ -6,13 +6,15 @@ import type { ReactNode } from 'react'
 import type { GameExchange } from '@/api/client'
 import { DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
 
-import { useGameExchanges } from './useExchanges'
+import { useGameExchanges, useApplyForExchange } from './useExchanges'
 
 // Mock API client
 const mockSearchExchanges = vi.fn()
+const mockApplyForExchange = vi.fn()
 vi.mock('@/api/client', () => ({
   getApiClient: () => ({
     searchExchanges: mockSearchExchanges,
+    applyForExchange: mockApplyForExchange,
   }),
 }))
 
@@ -47,6 +49,19 @@ vi.mock('@/api/queryKeys', () => ({
       lists: () => ['exchanges', 'list'],
     },
   },
+}))
+
+// Mock network status - default to online
+let mockIsOnline = true
+vi.mock('@/shared/hooks/useNetworkStatus', () => ({
+  useNetworkStatus: () => mockIsOnline,
+}))
+
+// Mock action queue store
+vi.mock('@/shared/stores/action-queue', () => ({
+  useActionQueueStore: () => ({
+    refresh: vi.fn(),
+  }),
 }))
 
 const createMockExchange = (id: string, submittedByIdentity?: string): GameExchange =>
@@ -241,6 +256,70 @@ describe('useGameExchanges', () => {
       expect(config.limit).toBeDefined()
       expect(config.propertyFilters).toBeDefined()
       expect(config.propertyOrderings).toBeDefined()
+    })
+  })
+})
+
+describe('useApplyForExchange', () => {
+  let queryClient: QueryClient
+
+  function createWrapper() {
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    }
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockIsOnline = true
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          gcTime: 0,
+        },
+      },
+    })
+
+    // Reset mock store to API mode
+    mockAuthStore.dataSource = 'api'
+    mockAuthStore.user = { id: 'user-123' }
+    mockAuthStore.activeOccupationId = 'occupation-1'
+  })
+
+  it('calls onSuccess callback after successful mutation', async () => {
+    const mockResponse = { refereeGameExchange: { __identity: 'ex-1', status: 'applied' } }
+    mockApplyForExchange.mockResolvedValue(mockResponse)
+    const onSuccess = vi.fn()
+
+    const { result } = renderHook(() => useApplyForExchange(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      result.current.mutate('exchange-123', { onSuccess })
+    })
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledWith(mockResponse)
+    })
+  })
+
+  it('calls onError callback after failed mutation', async () => {
+    const mockError = new Error('Apply failed')
+    mockApplyForExchange.mockRejectedValue(mockError)
+    const onError = vi.fn()
+
+    const { result } = renderHook(() => useApplyForExchange(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      result.current.mutate('exchange-123', { onError })
+    })
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(mockError)
     })
   })
 })
