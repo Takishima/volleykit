@@ -341,12 +341,17 @@ describe('useCompensations cache-first strategy', () => {
     const mockAssignment = createMockAssignment()
 
     // Seed the cache with assignments data
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [mockAssignment], totalItemsCount: 1 }
-    )
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [mockAssignment],
+      totalItemsCount: 1,
+    })
     // Set the query state to be fresh (updated just now)
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now()
     }
@@ -422,12 +427,17 @@ describe('useCompensations cache-first strategy', () => {
     const mockAssignment = createMockAssignment()
 
     // Seed the cache with assignments data
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [mockAssignment], totalItemsCount: 1 }
-    )
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [mockAssignment],
+      totalItemsCount: 1,
+    })
     // Set the query state to be stale (updated 10 minutes ago)
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now() - 10 * 60 * 1000 // 10 minutes ago
     }
@@ -467,11 +477,16 @@ describe('useCompensations cache-first strategy', () => {
       convocationCompensation: undefined,
     })
 
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [assignmentWithCompensation, assignmentWithoutCompensation], totalItemsCount: 2 }
-    )
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [assignmentWithCompensation, assignmentWithoutCompensation],
+      totalItemsCount: 2,
+    })
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now()
     }
@@ -514,11 +529,16 @@ describe('useCompensations cache-first strategy', () => {
       convocationCompensation: { __identity: 'c2', paymentDone: false },
     })
 
-    queryClient.setQueryData(
-      ['assignments', 'list', { offset: 0 }, 'test-occupation'],
-      { items: [paidAssignment, unpaidAssignment], totalItemsCount: 2 }
-    )
-    const queryState = queryClient.getQueryState(['assignments', 'list', { offset: 0 }, 'test-occupation'])
+    queryClient.setQueryData(['assignments', 'list', { offset: 0 }, 'test-occupation'], {
+      items: [paidAssignment, unpaidAssignment],
+      totalItemsCount: 2,
+    })
+    const queryState = queryClient.getQueryState([
+      'assignments',
+      'list',
+      { offset: 0 },
+      'test-occupation',
+    ])
     if (queryState) {
       queryState.dataUpdatedAt = Date.now()
     }
@@ -751,6 +771,59 @@ describe('useUpdateCompensation', () => {
       queryKey: ['compensations', 'list'],
     })
   })
+
+  it('calls onSuccess callback after successful mutation', async () => {
+    const mockUpdateCompensation = vi.fn().mockResolvedValue(undefined)
+    const onSuccess = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: vi.fn(),
+      updateCompensation: mockUpdateCompensation,
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const { result } = renderHook(() => useUpdateCompensation(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      result.current.mutate(
+        { compensationId: 'comp-1', data: { distanceInMetres: 5000 } },
+        { onSuccess }
+      )
+    })
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalled()
+    })
+  })
+
+  it('calls onError callback after failed mutation', async () => {
+    const mockError = new Error('Update failed')
+    const mockUpdateCompensation = vi.fn().mockRejectedValue(mockError)
+    const onError = vi.fn()
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: vi.fn(),
+      updateCompensation: mockUpdateCompensation,
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const { result } = renderHook(() => useUpdateCompensation(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      result.current.mutate(
+        { compensationId: 'comp-1', data: { distanceInMetres: 5000 } },
+        { onError }
+      )
+    })
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(mockError)
+    })
+  })
 })
 
 describe('useUpdateAssignmentCompensation', () => {
@@ -790,7 +863,7 @@ describe('useUpdateAssignmentCompensation', () => {
     })
   })
 
-  it('invalidates both assignment and compensation queries on success', async () => {
+  it('updates demo store directly in demo mode (no query invalidation)', async () => {
     const mockDemoUpdate = vi.fn()
     const { useAuthStore } = await import('@/shared/stores/auth')
     const { useDemoStore } = await import('@/shared/stores/demo')
@@ -820,8 +893,9 @@ describe('useUpdateAssignmentCompensation', () => {
       })
     })
 
-    // Should invalidate assignment detail, assignment lists, and compensation lists
-    expect(invalidateSpy).toHaveBeenCalledTimes(3)
+    // Demo mode updates the demo store directly, no query invalidation
+    expect(mockDemoUpdate).toHaveBeenCalledWith('assignment-1', { distanceInMetres: 5000 })
+    expect(invalidateSpy).not.toHaveBeenCalled()
   })
 })
 

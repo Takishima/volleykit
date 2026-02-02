@@ -55,6 +55,9 @@ export { Clock } from 'lucide-react'
 export { Lock } from 'lucide-react'
 export { Inbox } from 'lucide-react'
 export { Info } from 'lucide-react'
+export { WifiOff } from 'lucide-react'
+export { Wifi } from 'lucide-react'
+export { CloudUpload } from 'lucide-react'
 
 // App branding
 export { Volleyball } from 'lucide-react'

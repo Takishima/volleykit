@@ -358,6 +358,7 @@ const de: Translations = {
     withdrawSuccess: 'Erfolgreich vom Tausch zurückgezogen',
     withdrawError: 'Rückzug vom Tausch fehlgeschlagen. Bitte erneut versuchen.',
     addedToExchangeSuccess: 'Einsatz zur Tauschbörse hinzugefügt',
+    addedToExchangeQueued: 'Einsatz wird zur Tauschbörse hinzugefügt, sobald online',
     addedToExchangeError: 'Einsatz konnte nicht zur Tauschbörse hinzugefügt werden',
     cannotExchangeValidatedGame:
       'Bereits validierte Spiele können nicht zur Tauschbörse hinzugefügt werden',
@@ -595,6 +596,29 @@ const de: Translations = {
     reloadAriaLabel: 'Anwendung neu laden, um auf die neueste Version zu aktualisieren',
     dismissAriaLabel: 'Update-Benachrichtigung schliessen',
     closeAriaLabel: 'Benachrichtigung schliessen',
+  },
+  offline: {
+    youAreOffline: 'Sie sind offline',
+    cachedDataAvailable: 'Gespeicherte Daten werden angezeigt',
+    justNow: 'gerade eben',
+    oneMinuteAgo: 'vor 1 Minute',
+    minutesAgo: 'vor {minutes} Minuten',
+    oneHourAgo: 'vor 1 Stunde',
+    hoursAgo: 'vor {hours} Stunden',
+    dismissAriaLabel: 'Offline-Benachrichtigung schliessen',
+    pendingActions: '{count} ausstehende Änderungen',
+    syncing: 'Wird synchronisiert...',
+    syncComplete: '{count} Änderungen erfolgreich synchronisiert',
+    syncFailed: '{count} Änderungen konnten nicht synchronisiert werden',
+    sessionExpired:
+      'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
+    actions: {
+      updateCompensation: 'Entschädigung aktualisieren',
+      batchUpdateCompensations: 'Entschädigungen aktualisieren',
+      applyForExchange: 'Für Tausch bewerben',
+      withdrawFromExchange: 'Vom Tausch zurückziehen',
+      addToExchange: 'Zum Tausch hinzufügen',
+    },
   },
   pdf: {
     exportTitle: 'Hallenrapport erstellen',

@@ -1,12 +1,6 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  type UseMutationResult,
-  type QueryClient,
-} from '@tanstack/react-query'
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 
 import {
   api,
@@ -16,14 +10,18 @@ import {
   type Assignment,
 } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
 import {
   DEFAULT_PAGE_SIZE,
   COMPENSATION_LOOKUP_LIMIT,
   COMPENSATIONS_STALE_TIME_MS,
   ASSIGNMENTS_STALE_TIME_MS,
 } from '@/shared/hooks/usePaginatedQuery'
+import { createAction } from '@/shared/services/offline/action-store'
+import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
+import type { MutationCallbacks, OfflineMutationResult } from '@/shared/types/mutation'
 import { createLogger } from '@/shared/utils/logger'
 
 const log = createLogger('useCompensations')
@@ -224,37 +222,104 @@ export interface CompensationUpdateData {
 
 /**
  * Mutation hook to update a compensation record directly.
+ * Supports offline mode - queues changes when offline and syncs when back online.
  * Used when editing from the compensations tab where we have the compensation ID.
  */
-export function useUpdateCompensation(): UseMutationResult<
+export function useUpdateCompensation(): OfflineMutationResult<
   void,
-  Error,
   { compensationId: string; data: CompensationUpdateData }
 > {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
+  const isOnline = useNetworkStatus()
+  const { refresh: refreshActionQueue } = useActionQueueStore()
   const apiClient = getApiClient(dataSource)
 
-  return useMutation({
-    mutationFn: async ({
-      compensationId,
-      data,
-    }: {
-      compensationId: string
-      data: CompensationUpdateData
-    }) => {
-      log.debug('Updating compensation:', {
-        compensationId,
-        data,
-        dataSource,
-      })
-      await apiClient.updateCompensation(compensationId, data)
+  const [isPending, setIsPending] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [wasQueued, setWasQueued] = useState(false)
+
+  const reset = useCallback(() => {
+    setIsPending(false)
+    setIsSuccess(false)
+    setIsError(false)
+    setError(null)
+    setWasQueued(false)
+  }, [])
+
+  const mutateAsync = useCallback(
+    async ({ compensationId, data }: { compensationId: string; data: CompensationUpdateData }) => {
+      reset()
+      setIsPending(true)
+
+      try {
+        if (isOnline) {
+          // Online: execute immediately
+          log.debug('Updating compensation (online):', { compensationId, data, dataSource })
+          await apiClient.updateCompensation(compensationId, data)
+
+          // Invalidate queries to refetch fresh data
+          await queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
+          await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+
+          setIsSuccess(true)
+          setWasQueued(false)
+        } else {
+          // Offline: queue the action
+          log.debug('Queueing compensation update (offline):', { compensationId, data })
+          const action = await createAction('updateCompensation', { compensationId, data })
+
+          if (!action) {
+            throw new Error('Failed to queue action - IndexedDB unavailable')
+          }
+
+          // Refresh action queue store to update badge count
+          await refreshActionQueue()
+
+          setIsSuccess(true)
+          setWasQueued(true)
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to update compensation:', error)
+        setIsError(true)
+        setError(error)
+        throw error
+      } finally {
+        setIsPending(false)
+      }
     },
-    onSuccess: () => {
-      // Invalidate compensation lists (not details) to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
+    [isOnline, dataSource, apiClient, queryClient, refreshActionQueue, reset]
+  )
+
+  const mutate = useCallback(
+    (
+      variables: { compensationId: string; data: CompensationUpdateData },
+      options?: MutationCallbacks<void>
+    ) => {
+      mutateAsync(variables)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
-  })
+    [mutateAsync]
+  )
+
+  return {
+    mutate,
+    mutateAsync,
+    isPending,
+    isSuccess,
+    isError,
+    error,
+    reset,
+    wasQueued,
+  }
 }
 
 /**
@@ -268,56 +333,139 @@ export interface BatchUpdateResult {
 
 /**
  * Mutation hook to update multiple compensations in a batch.
+ * Supports offline mode - queues changes when offline and syncs when back online.
  * Used for updating all compensations at the same hall with the same distance.
  */
-export function useBatchUpdateCompensations(): UseMutationResult<
+export function useBatchUpdateCompensations(): OfflineMutationResult<
   BatchUpdateResult,
-  Error,
   { compensationIds: string[]; data: CompensationUpdateData }
 > {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
+  const isOnline = useNetworkStatus()
+  const { refresh: refreshActionQueue } = useActionQueueStore()
   const apiClient = getApiClient(dataSource)
 
-  return useMutation({
-    mutationFn: async ({
+  const [isPending, setIsPending] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [wasQueued, setWasQueued] = useState(false)
+
+  const reset = useCallback(() => {
+    setIsPending(false)
+    setIsSuccess(false)
+    setIsError(false)
+    setError(null)
+    setWasQueued(false)
+  }, [])
+
+  const mutateAsync = useCallback(
+    async ({
       compensationIds,
       data,
     }: {
       compensationIds: string[]
       data: CompensationUpdateData
     }): Promise<BatchUpdateResult> => {
-      log.debug('Batch updating compensations:', {
-        count: compensationIds.length,
-        data,
-        dataSource,
-      })
+      reset()
+      setIsPending(true)
 
-      let successCount = 0
-      let failedCount = 0
+      try {
+        if (isOnline) {
+          // Online: execute immediately
+          log.debug('Batch updating compensations (online):', {
+            count: compensationIds.length,
+            data,
+            dataSource,
+          })
 
-      // Update each compensation sequentially to avoid overwhelming the API
-      for (const compensationId of compensationIds) {
-        try {
-          await apiClient.updateCompensation(compensationId, data)
-          successCount++
-        } catch (error) {
-          log.error('Failed to update compensation in batch:', { compensationId, error })
-          failedCount++
+          let successCount = 0
+          let failedCount = 0
+
+          // Update each compensation sequentially to avoid overwhelming the API
+          for (const compensationId of compensationIds) {
+            try {
+              await apiClient.updateCompensation(compensationId, data)
+              successCount++
+            } catch (err) {
+              log.error('Failed to update compensation in batch:', { compensationId, error: err })
+              failedCount++
+            }
+          }
+
+          // Invalidate queries to refetch fresh data
+          await queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
+          await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+
+          setIsSuccess(true)
+          setWasQueued(false)
+
+          return { successCount, failedCount, totalCount: compensationIds.length }
+        } else {
+          // Offline: queue the action as a single batch
+          log.debug('Queueing batch compensation update (offline):', {
+            count: compensationIds.length,
+            data,
+          })
+          const action = await createAction('batchUpdateCompensations', { compensationIds, data })
+
+          if (!action) {
+            throw new Error('Failed to queue action - IndexedDB unavailable')
+          }
+
+          // Refresh action queue store to update badge count
+          await refreshActionQueue()
+
+          setIsSuccess(true)
+          setWasQueued(true)
+
+          // Return optimistic result (will be verified on sync)
+          return {
+            successCount: compensationIds.length,
+            failedCount: 0,
+            totalCount: compensationIds.length,
+          }
         }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to batch update compensations:', error)
+        setIsError(true)
+        setError(error)
+        throw error
+      } finally {
+        setIsPending(false)
       }
+    },
+    [isOnline, dataSource, apiClient, queryClient, refreshActionQueue, reset]
+  )
 
-      return {
-        successCount,
-        failedCount,
-        totalCount: compensationIds.length,
-      }
+  const mutate = useCallback(
+    (
+      variables: { compensationIds: string[]; data: CompensationUpdateData },
+      options?: MutationCallbacks<BatchUpdateResult>
+    ) => {
+      mutateAsync(variables)
+        .then((result) => {
+          options?.onSuccess?.(result)
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
-    onSuccess: () => {
-      // Invalidate compensation lists to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
-    },
-  })
+    [mutateAsync]
+  )
+
+  return {
+    mutate,
+    mutateAsync,
+    isPending,
+    isSuccess,
+    isError,
+    error,
+    reset,
+    wasQueued,
+  }
 }
 
 /**
@@ -381,116 +529,162 @@ async function fetchCompensationByGameNumber(
 }
 
 /**
- * Finds the corresponding compensation record for an assignment by matching game numbers.
- * This is needed because assignments don't have the convocationCompensation.__identity
- * required by the compensation update API.
- *
- * @param assignmentId - The assignment's __identity (convocation ID)
- * @param queryClient - TanStack Query client for cache access
- * @param apiClient - The API client to use for fetching compensations
- * @returns The matching CompensationRecord
- * @throws Error if assignment or compensation cannot be found
- */
-async function findCompensationForAssignment(
-  assignmentId: string,
-  queryClient: ReturnType<typeof useQueryClient>,
-  apiClient: typeof api
-): Promise<CompensationRecord> {
-  // Find the assignment in cache to get its game number
-  const assignment = findAssignmentInCache(assignmentId, queryClient)
-
-  if (!assignment?.refereeGame?.game?.number) {
-    throw new Error(COMPENSATION_ERROR_KEYS.ASSIGNMENT_NOT_FOUND)
-  }
-
-  const gameNumber = assignment.refereeGame.game.number
-
-  // Try to find compensation in cache first
-  const cachedComp = findCompensationInCache(gameNumber, queryClient)
-  if (cachedComp) {
-    log.debug('Found compensation in cache:', {
-      gameNumber,
-      compensationId: cachedComp.convocationCompensation?.__identity,
-    })
-    return cachedComp
-  }
-
-  // Fetch from API if not in cache
-  const fetchedComp = await fetchCompensationByGameNumber(gameNumber, apiClient)
-  if (fetchedComp) {
-    log.debug('Found compensation via API:', {
-      gameNumber,
-      compensationId: fetchedComp.convocationCompensation?.__identity,
-    })
-    return fetchedComp
-  }
-
-  throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_NOT_FOUND)
-}
-
-/**
  * Mutation hook to update compensation from an assignment context.
+ * Supports offline mode - resolves compensation ID from cache and queues if offline.
  * Used when editing compensation from the assignments tab (where we have an Assignment, not a CompensationRecord).
  * Handles the lookup of the corresponding compensation record.
  */
-export function useUpdateAssignmentCompensation(): UseMutationResult<
+export function useUpdateAssignmentCompensation(): OfflineMutationResult<
   void,
-  Error,
   { assignmentId: string; data: CompensationUpdateData }
 > {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
+  const isOnline = useNetworkStatus()
+  const { refresh: refreshActionQueue } = useActionQueueStore()
   const updateAssignmentCompensation = useDemoStore((state) => state.updateAssignmentCompensation)
   const apiClient = getApiClient(dataSource)
 
-  return useMutation({
-    mutationFn: async ({
-      assignmentId,
-      data,
-    }: {
-      assignmentId: string
-      data: CompensationUpdateData
-    }) => {
-      if (isDemoMode) {
-        // Demo mode: update the demo store directly
-        updateAssignmentCompensation(assignmentId, data)
-        return
+  const [isPending, setIsPending] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [wasQueued, setWasQueued] = useState(false)
+
+  const reset = useCallback(() => {
+    setIsPending(false)
+    setIsSuccess(false)
+    setIsError(false)
+    setError(null)
+    setWasQueued(false)
+  }, [])
+
+  const mutateAsync = useCallback(
+    async ({ assignmentId, data }: { assignmentId: string; data: CompensationUpdateData }) => {
+      reset()
+      setIsPending(true)
+
+      try {
+        if (isDemoMode) {
+          // Demo mode: update the demo store directly (always works, no network needed)
+          updateAssignmentCompensation(assignmentId, data)
+          setIsSuccess(true)
+          setWasQueued(false)
+          return
+        }
+
+        // Find the assignment in cache to get game number for compensation lookup
+        const assignment = findAssignmentInCache(assignmentId, queryClient)
+        if (!assignment?.refereeGame?.game?.number) {
+          throw new Error(COMPENSATION_ERROR_KEYS.ASSIGNMENT_NOT_FOUND)
+        }
+
+        const gameNumber = assignment.refereeGame.game.number
+
+        // Try to find compensation ID in cache first
+        const cachedComp = findCompensationInCache(gameNumber, queryClient)
+        let compensationId = cachedComp?.convocationCompensation?.__identity
+
+        if (isOnline) {
+          // Online: can fetch from API if not in cache
+          if (!compensationId) {
+            log.debug('Compensation not in cache, fetching from API:', { gameNumber })
+            const fetchedComp = await fetchCompensationByGameNumber(gameNumber, apiClient)
+            compensationId = fetchedComp?.convocationCompensation?.__identity
+          }
+
+          if (!compensationId) {
+            throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_NOT_FOUND)
+          }
+
+          log.debug('Updating compensation via API (online):', {
+            assignmentId,
+            compensationId,
+            data,
+          })
+
+          await apiClient.updateCompensation(compensationId, data)
+
+          // Invalidate queries
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.assignments.detail(assignmentId),
+          })
+          await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+          await queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
+
+          setIsSuccess(true)
+          setWasQueued(false)
+        } else {
+          // Offline: must have compensation ID from cache
+          if (!compensationId) {
+            throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_NOT_FOUND)
+          }
+
+          log.debug('Queueing compensation update (offline):', {
+            assignmentId,
+            compensationId,
+            data,
+          })
+
+          // Queue as a direct compensation update since we resolved the ID
+          const action = await createAction('updateCompensation', { compensationId, data })
+
+          if (!action) {
+            throw new Error('Failed to queue action - IndexedDB unavailable')
+          }
+
+          // Refresh action queue store to update badge count
+          await refreshActionQueue()
+
+          setIsSuccess(true)
+          setWasQueued(true)
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to update assignment compensation:', error)
+        setIsError(true)
+        setError(error)
+        throw error
+      } finally {
+        setIsPending(false)
       }
-
-      // Non-demo mode: find the corresponding compensation record and update it via API
-      log.debug('Looking up compensation for assignment:', {
-        assignmentId,
-        data,
-      })
-
-      // findCompensationForAssignment throws if assignment or compensation not found
-      const compensation = await findCompensationForAssignment(assignmentId, queryClient, apiClient)
-      const compensationId = compensation.convocationCompensation?.__identity
-
-      if (!compensationId) {
-        throw new Error(COMPENSATION_ERROR_KEYS.COMPENSATION_MISSING_ID)
-      }
-
-      log.debug('Updating compensation via API:', {
-        assignmentId,
-        compensationId,
-        data,
-        dataSource,
-      })
-
-      await apiClient.updateCompensation(compensationId, data)
     },
-    onSuccess: (_data, variables) => {
-      // Invalidate targeted queries to refetch fresh data while avoiding unnecessary refetches
-      // 1. Invalidate the specific assignment detail (if cached)
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.assignments.detail(variables.assignmentId),
-      })
-      // 2. Invalidate assignment lists (compensation data is embedded in list items)
-      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
-      // 3. Invalidate compensation lists
-      queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
+    [
+      isDemoMode,
+      isOnline,
+      queryClient,
+      apiClient,
+      updateAssignmentCompensation,
+      refreshActionQueue,
+      reset,
+    ]
+  )
+
+  const mutate = useCallback(
+    (
+      variables: { assignmentId: string; data: CompensationUpdateData },
+      options?: MutationCallbacks<void>
+    ) => {
+      mutateAsync(variables)
+        .then(() => {
+          options?.onSuccess?.()
+        })
+        .catch((err) => {
+          options?.onError?.(err)
+        })
     },
-  })
+    [mutateAsync]
+  )
+
+  return {
+    mutate,
+    mutateAsync,
+    isPending,
+    isSuccess,
+    isError,
+    error,
+    reset,
+    wasQueued,
+  }
 }
