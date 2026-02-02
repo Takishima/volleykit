@@ -9,6 +9,7 @@ import {
   canWithdrawApplication,
   isExchangeOwner,
   getRemoveActionType,
+  getConvocationIdFromExchange,
 } from './exchange-actions'
 
 const mockExchange: GameExchange = {
@@ -192,5 +193,83 @@ describe('getRemoveActionType', () => {
       appliedBy: { indoorReferee: { person: { __identity: 'user-1' } } },
     } as GameExchange
     expect(getRemoveActionType(exchange, 'user-1')).toBe('remove-own-exchange')
+  })
+})
+
+describe('getConvocationIdFromExchange', () => {
+  it('returns undefined when refereePosition is missing', () => {
+    const exchange = { refereeGame: {} } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+
+  it('returns undefined when refereeGame is missing', () => {
+    const exchange = { refereePosition: 'head-one' } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+
+  it('returns undefined when convocation field is not populated', () => {
+    const exchange = {
+      refereePosition: 'head-one',
+      refereeGame: {},
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+
+  it('returns convocation ID for head-one position', () => {
+    const exchange = {
+      refereePosition: 'head-one',
+      refereeGame: {
+        activeRefereeConvocationFirstHeadReferee: { __identity: 'convocation-123' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-123')
+  })
+
+  it('returns convocation ID for head-two position', () => {
+    const exchange = {
+      refereePosition: 'head-two',
+      refereeGame: {
+        activeRefereeConvocationSecondHeadReferee: { __identity: 'convocation-456' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-456')
+  })
+
+  it('returns convocation ID for linesman-one position', () => {
+    const exchange = {
+      refereePosition: 'linesman-one',
+      refereeGame: {
+        activeRefereeConvocationFirstLinesman: { __identity: 'convocation-789' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-789')
+  })
+
+  it('returns convocation ID for linesman-two position', () => {
+    const exchange = {
+      refereePosition: 'linesman-two',
+      refereeGame: {
+        activeRefereeConvocationSecondLinesman: { __identity: 'convocation-abc' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-abc')
+  })
+
+  it('returns convocation ID for standby-head position', () => {
+    const exchange = {
+      refereePosition: 'standby-head',
+      refereeGame: {
+        activeRefereeConvocationStandbyHeadReferee: { __identity: 'convocation-def' },
+      },
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBe('convocation-def')
+  })
+
+  it('returns undefined for unknown position', () => {
+    const exchange = {
+      refereePosition: 'unknown-position',
+      refereeGame: {},
+    } as GameExchange
+    expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
   })
 })

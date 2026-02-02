@@ -44,6 +44,7 @@ export {
   useGameExchanges,
   useApplyForExchange,
   useWithdrawFromExchange,
+  useRemoveOwnExchange,
 } from '@/features/exchanges/hooks/useExchanges'
 
 // Settings hooks

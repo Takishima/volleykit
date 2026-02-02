@@ -358,6 +358,8 @@ const fr: Translations = {
     applyError: 'Échec de la candidature. Veuillez réessayer.',
     withdrawSuccess: "Retrait de l'échange réussi",
     withdrawError: "Échec du retrait de l'échange. Veuillez réessayer.",
+    removeSuccess: 'Désignation retirée de la bourse aux échanges',
+    removeError: 'Échec du retrait de la bourse. Veuillez réessayer.',
     addedToExchangeSuccess: 'Désignation ajoutée à la bourse aux échanges',
     addedToExchangeQueued: 'La désignation sera ajoutée à la bourse une fois en ligne',
     addedToExchangeError: "Impossible d'ajouter la désignation à la bourse",

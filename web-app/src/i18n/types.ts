@@ -238,6 +238,8 @@ export interface Translations {
     applyError: string
     withdrawSuccess: string
     withdrawError: string
+    removeSuccess: string
+    removeError: string
     addedToExchangeSuccess: string
     addedToExchangeQueued: string
     addedToExchangeError: string

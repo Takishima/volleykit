@@ -2517,6 +2517,27 @@ components:
           type: string
         activeSecondLinesmanRefereeName:
           type: string
+        activeThirdLinesmanRefereeName:
+          type: string
+        activeFourthLinesmanRefereeName:
+          type: string
+        # Convocation references with __identity for deleteFromRefereeGameExchange
+        activeRefereeConvocationFirstHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationSecondHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationFirstLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationSecondLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationThirdLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationFourthLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationStandbyHeadReferee:
+          $ref: '#/components/schemas/RefereeConvocationRef'
+        activeRefereeConvocationStandbyLinesman:
+          $ref: '#/components/schemas/RefereeConvocationRef'
     Game:
       type: object
       properties:

@@ -357,6 +357,8 @@ const de: Translations = {
     applyError: 'Bewerbung für Tausch fehlgeschlagen. Bitte erneut versuchen.',
     withdrawSuccess: 'Erfolgreich vom Tausch zurückgezogen',
     withdrawError: 'Rückzug vom Tausch fehlgeschlagen. Bitte erneut versuchen.',
+    removeSuccess: 'Erfolgreich von der Tauschbörse entfernt',
+    removeError: 'Entfernen von der Tauschbörse fehlgeschlagen. Bitte erneut versuchen.',
     addedToExchangeSuccess: 'Einsatz zur Tauschbörse hinzugefügt',
     addedToExchangeQueued: 'Einsatz wird zur Tauschbörse hinzugefügt, sobald online',
     addedToExchangeError: 'Einsatz konnte nicht zur Tauschbörse hinzugefügt werden',

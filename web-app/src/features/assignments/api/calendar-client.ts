@@ -231,6 +231,10 @@ export const calendarApi = {
     throw new CalendarModeNotSupportedError('Adding to exchange')
   },
 
+  async removeOwnExchange(): Promise<void> {
+    throw new CalendarModeNotSupportedError('Removing own exchange')
+  },
+
   // Settings - return mock data for UI compatibility
   async getAssociationSettings(): Promise<AssociationSettings> {
     // Return sensible defaults for calendar mode

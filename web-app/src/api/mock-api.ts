@@ -426,6 +426,22 @@ export const mockApi = {
     store.addAssignmentToExchange(convocationId)
   },
 
+  async removeOwnExchange(convocationId: string): Promise<void> {
+    await delay(MOCK_MUTATION_DELAY_MS)
+
+    const store = useDemoStore.getState()
+    // Find the exchange that has this convocation and remove it
+    const exchange = store.exchanges.find((e) => {
+      // Match by finding the assignment with this convocation ID
+      const assignment = store.exchangedAssignments[e.__identity]
+      return assignment?.__identity === convocationId
+    })
+
+    if (exchange) {
+      store.removeOwnExchange(exchange.__identity)
+    }
+  },
+
   async getAssociationSettings(): Promise<AssociationSettings> {
     await delay(MOCK_NETWORK_DELAY_MS)
 

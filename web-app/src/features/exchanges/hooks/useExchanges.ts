@@ -320,6 +320,25 @@ export function useWithdrawFromExchange(): OfflineMutationResult<void, string> {
 }
 
 /**
+ * Mutation hook to remove your own assignment from the exchange marketplace.
+ * This is different from withdrawFromExchange which withdraws an application.
+ */
+export function useRemoveOwnExchange(): UseMutationResult<void, Error, string> {
+  const queryClient = useQueryClient()
+  const dataSource = useAuthStore((state) => state.dataSource)
+  const apiClient = getApiClient(dataSource)
+
+  return useMutation({
+    mutationFn: (convocationId: string) => apiClient.removeOwnExchange(convocationId),
+    onSuccess: () => {
+      // Invalidate both exchanges and assignments since the assignment moves back
+      queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+    },
+  })
+}
+
+/**
  * Mutation hook to add an assignment to the exchange marketplace.
  * Supports offline mode - queues the action when offline and syncs when back online.
  * This moves the assignment from your assignments to the exchange.

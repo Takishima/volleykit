@@ -355,6 +355,8 @@ const it: Translations = {
     applyError: 'Candidatura fallita. Riprova.',
     withdrawSuccess: 'Ritiro dallo scambio riuscito',
     withdrawError: 'Ritiro dallo scambio fallito. Riprova.',
+    removeSuccess: 'Designazione rimossa dalla borsa scambi',
+    removeError: 'Rimozione dalla borsa fallita. Riprova.',
     addedToExchangeSuccess: 'Designazione aggiunta alla borsa scambi',
     addedToExchangeQueued: 'La designazione verrà aggiunta alla borsa quando online',
     addedToExchangeError: 'Impossibile aggiungere la designazione alla borsa',

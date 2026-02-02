@@ -1805,6 +1805,16 @@ export interface components {
             activeSecondHeadRefereeName?: string;
             activeFirstLinesmanRefereeName?: string;
             activeSecondLinesmanRefereeName?: string;
+            activeThirdLinesmanRefereeName?: string;
+            activeFourthLinesmanRefereeName?: string;
+            activeRefereeConvocationFirstHeadReferee?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationSecondHeadReferee?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationFirstLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationSecondLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationThirdLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationFourthLinesman?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationStandbyHeadReferee?: components["schemas"]["RefereeConvocationRef"];
+            activeRefereeConvocationStandbyLinesman?: components["schemas"]["RefereeConvocationRef"];
         };
         Game: {
             /** Format: uuid */
