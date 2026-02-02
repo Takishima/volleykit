@@ -7,7 +7,7 @@
  * ensuring demo mode behavior matches production.
  */
 
-import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
+import { useDemoStore } from '@/shared/stores/demo'
 import { BYTES_PER_KB } from '@/shared/utils/constants'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'

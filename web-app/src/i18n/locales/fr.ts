@@ -613,7 +613,6 @@ const fr: Translations = {
       updateCompensation: "Mettre à jour l'indemnisation",
       batchUpdateCompensations: 'Mettre à jour les indemnisations',
       applyForExchange: 'Postuler pour un échange',
-      withdrawFromExchange: "Se retirer de l'échange",
       addToExchange: "Ajouter à l'échange",
     },
   },

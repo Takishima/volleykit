@@ -608,7 +608,6 @@ const it: Translations = {
       updateCompensation: 'Aggiorna compenso',
       batchUpdateCompensations: 'Aggiorna compensi',
       applyForExchange: 'Candidati per lo scambio',
-      withdrawFromExchange: 'Ritirati dallo scambio',
       addToExchange: 'Aggiungi allo scambio',
     },
   },

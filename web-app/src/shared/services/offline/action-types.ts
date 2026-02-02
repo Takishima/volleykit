@@ -82,16 +82,6 @@ export interface ApplyForExchangeAction extends BaseAction {
 }
 
 /**
- * Withdraw from exchange action.
- */
-export interface WithdrawFromExchangeAction extends BaseAction {
-  type: 'withdrawFromExchange'
-  payload: {
-    exchangeId: string
-  }
-}
-
-/**
  * Add assignment to exchange marketplace action.
  */
 export interface AddToExchangeAction extends BaseAction {
@@ -111,7 +101,6 @@ export type OfflineAction =
   | UpdateAssignmentCompensationAction
   | BatchUpdateCompensationsAction
   | ApplyForExchangeAction
-  | WithdrawFromExchangeAction
   | AddToExchangeAction
 
 /**

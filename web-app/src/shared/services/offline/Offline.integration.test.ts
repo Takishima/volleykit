@@ -232,15 +232,6 @@ describe('Offline Action Queue', () => {
       expect(action?.payload).toEqual({ exchangeId: 'exchange-123' })
     })
 
-    it('creates withdrawFromExchange action', async () => {
-      const action = await createAction('withdrawFromExchange', {
-        exchangeId: 'exchange-123',
-      })
-
-      expect(action?.type).toBe('withdrawFromExchange')
-      expect(action?.payload).toEqual({ exchangeId: 'exchange-123' })
-    })
-
     it('creates addToExchange action', async () => {
       const action = await createAction('addToExchange', {
         convocationId: 'convocation-123',

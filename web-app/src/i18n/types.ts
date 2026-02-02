@@ -468,7 +468,6 @@ export interface Translations {
       updateCompensation: string
       batchUpdateCompensations: string
       applyForExchange: string
-      withdrawFromExchange: string
       addToExchange: string
     }
   }

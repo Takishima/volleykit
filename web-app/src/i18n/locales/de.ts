@@ -618,7 +618,6 @@ const de: Translations = {
       updateCompensation: 'Entschädigung aktualisieren',
       batchUpdateCompensations: 'Entschädigungen aktualisieren',
       applyForExchange: 'Für Tausch bewerben',
-      withdrawFromExchange: 'Vom Tausch zurückziehen',
       addToExchange: 'Zum Tausch hinzufügen',
     },
   },
