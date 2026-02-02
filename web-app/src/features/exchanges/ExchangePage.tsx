@@ -31,7 +31,7 @@ import { extractCoordinates } from '@/shared/utils/geo-location'
 import type { SwipeConfig } from '@/types/swipe'
 
 import { useExchangeActions } from './hooks/useExchangeActions'
-import { createExchangeActions } from './utils/exchange-actions'
+import { createExchangeActions, canWithdrawApplication } from './utils/exchange-actions'
 
 const TakeOverExchangeModal = lazy(() =>
   import('@/features/exchanges/components/TakeOverExchangeModal').then((m) => ({
@@ -316,15 +316,27 @@ export function ExchangePage() {
           // Swipe left reveals: [Take Over] <- card
           return { left: [actions.takeOver] }
         case 'applied':
-          // Applied exchanges: swipe right to remove
-          // Swipe right reveals: card -> [Remove]
-          return { right: [actions.removeFromExchange] }
+          // Applied exchanges: only show withdraw if current user applied
+          // This prevents 400 errors when trying to withdraw from exchanges
+          // the user never applied to
+          if (canWithdrawApplication(exchange, currentUserIdentity)) {
+            // Swipe right reveals: card -> [Remove]
+            return { right: [actions.removeFromExchange] }
+          }
+          // User didn't apply to this exchange, no actions available
+          return {}
         default:
           // No swipe actions for other statuses
           return {}
       }
     },
-    [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange]
+    [
+      takeOverModal.open,
+      removeFromExchangeModal.open,
+      statusFilter,
+      isOwnExchange,
+      currentUserIdentity,
+    ]
   )
 
   const tabs = [

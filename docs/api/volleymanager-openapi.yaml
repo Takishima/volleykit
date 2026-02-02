@@ -354,6 +354,17 @@ paths:
       responses:
         '200':
           description: Operation successful
+        '400':
+          description: |
+            Bad request. Possible causes:
+            - "No resource specified" - The exchange ID is invalid or the exchange no longer exists
+            - Exchange status is 'closed' (already completed)
+            - User has not applied to this exchange (when withdrawing)
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "No resource specified"
         '401':
           $ref: '#/components/responses/Unauthorized'
   /indoorvolleyball.refadmin/api\refereegameexchange/pickFromRefereeGameExchange:
@@ -386,6 +397,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PickExchangeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeconvocation/putRefereeConvocationIntoRefereeGameExchange:
+    post:
+      tags: [Exchanges]
+      summary: Add assignment to exchange marketplace
+      description: |
+        Posts a referee assignment (convocation) to the exchange marketplace (bourse aux arbitrages).
+        This allows other referees to apply for the position.
+
+        **Note:** This endpoint uses the convocation UUID, not the exchange UUID.
+      operationId: addToExchange
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [refereeConvocation, __csrfToken]
+              properties:
+                refereeConvocation:
+                  type: string
+                  format: uuid
+                  description: The convocation (assignment) UUID to add to exchange
+                __csrfToken:
+                  type: string
+                  description: CSRF token for request validation
+      responses:
+        '200':
+          description: Assignment successfully added to exchange
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeconvocation/deleteFromRefereeGameExchange:
+    post:
+      tags: [Exchanges]
+      summary: Remove assignment from exchange marketplace
+      description: |
+        Removes a referee assignment (convocation) from the exchange marketplace.
+        This withdraws the assignment from the bourse, making it no longer available for other referees.
+
+        **Important:**
+        - Uses the convocation (assignment) UUID, not the exchange UUID
+        - Supports batch removal via array format
+        - Only the referee who submitted the exchange can remove it
+
+        **Note:** This is different from `withdrawFromExchange` which withdraws an *application* to someone else's exchange.
+      operationId: removeFromExchange
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [refereeConvocations, __csrfToken]
+              properties:
+                refereeConvocations[0][__identity]:
+                  type: string
+                  format: uuid
+                  description: The convocation (assignment) UUID to remove from exchange
+                __csrfToken:
+                  type: string
+                  description: CSRF token for request validation
+      responses:
+        '200':
+          description: Assignment successfully removed from exchange
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
   /sportmanager.indoorvolleyball/api\indoorseason/getActiveIndoorSeason:
@@ -1480,6 +1560,17 @@ components:
               error:
                 type: string
                 example: "Access denied"
+    BadRequest:
+      description: |
+        Invalid request. Common causes:
+        - "No resource specified" - The requested resource ID does not exist or is no longer valid
+        - Missing or invalid required parameters
+      content:
+        text/html:
+          schema:
+            type: string
+            description: Error message in HTML format
+            example: "No resource specified"
   schemas:
     # ==================== Authentication Schemas ====================
     AuthenticationRequest:

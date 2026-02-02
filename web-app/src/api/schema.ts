@@ -245,6 +245,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/indoorvolleyball.refadmin/api\\refereeconvocation/putRefereeConvocationIntoRefereeGameExchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add assignment to exchange marketplace
+         * @description Posts a referee assignment (convocation) to the exchange marketplace (bourse aux arbitrages).
+         *     This allows other referees to apply for the position.
+         *
+         *     **Note:** This endpoint uses the convocation UUID, not the exchange UUID.
+         */
+        post: operations["addToExchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/indoorvolleyball.refadmin/api\\refereeconvocation/deleteFromRefereeGameExchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove assignment from exchange marketplace
+         * @description Removes a referee assignment (convocation) from the exchange marketplace.
+         *     This withdraws the assignment from the bourse, making it no longer available for other referees.
+         *
+         *     **Important:**
+         *     - Uses the convocation (assignment) UUID, not the exchange UUID
+         *     - Supports batch removal via array format
+         *     - Only the referee who submitted the exchange can remove it
+         *
+         *     **Note:** This is different from `withdrawFromExchange` which withdraws an *application* to someone else's exchange.
+         */
+        post: operations["removeFromExchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sportmanager.indoorvolleyball/api\\indoorseason/getActiveIndoorSeason": {
         parameters: {
             query?: never;
@@ -4581,6 +4632,19 @@ export interface components {
                 };
             };
         };
+        /**
+         * @description Invalid request. Common causes:
+         *     - "No resource specified" - The requested resource ID does not exist or is no longer valid
+         *     - Missing or invalid required parameters
+         */
+        BadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "text/html": string;
+            };
+        };
     };
     parameters: never;
     requestBodies: never;
@@ -4877,6 +4941,20 @@ export interface operations {
                 };
                 content?: never;
             };
+            /**
+             * @description Bad request. Possible causes:
+             *     - "No resource specified" - The exchange ID is invalid or the exchange no longer exists
+             *     - Exchange status is 'closed' (already completed)
+             *     - User has not applied to this exchange (when withdrawing)
+             */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
             401: components["responses"]["Unauthorized"];
         };
     };
@@ -4910,6 +4988,70 @@ export interface operations {
                     "application/json": components["schemas"]["PickExchangeResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    addToExchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: uuid
+                     * @description The convocation (assignment) UUID to add to exchange
+                     */
+                    refereeConvocation: string;
+                    /** @description CSRF token for request validation */
+                    __csrfToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Assignment successfully added to exchange */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    removeFromExchange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": {
+                    /**
+                     * Format: uuid
+                     * @description The convocation (assignment) UUID to remove from exchange
+                     */
+                    "refereeConvocations[0][__identity]"?: string;
+                    /** @description CSRF token for request validation */
+                    __csrfToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Assignment successfully removed from exchange */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
         };
     };

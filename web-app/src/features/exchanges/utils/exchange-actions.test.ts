@@ -4,7 +4,12 @@ import { describe, it, expect, vi } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
 
-import { createExchangeActions } from './exchange-actions'
+import {
+  createExchangeActions,
+  canWithdrawApplication,
+  isExchangeOwner,
+  getRemoveActionType,
+} from './exchange-actions'
 
 const mockExchange: GameExchange = {
   __identity: 'test-exchange-1',
@@ -90,5 +95,102 @@ describe('createExchangeActions', () => {
     expect(actions.removeFromExchange.shortLabel).toBe('Remove')
     expect(actions.removeFromExchange.color).toBe('bg-danger-500')
     expect(isValidElement(actions.removeFromExchange.icon)).toBe(true)
+  })
+})
+
+describe('canWithdrawApplication', () => {
+  it('returns false when userId is undefined', () => {
+    const exchange = {
+      status: 'applied',
+      appliedBy: { indoorReferee: { person: { __identity: 'user-1' } } },
+    } as GameExchange
+    expect(canWithdrawApplication(exchange, undefined)).toBe(false)
+  })
+
+  it('returns false when status is not applied', () => {
+    const exchange = {
+      status: 'open',
+      appliedBy: { indoorReferee: { person: { __identity: 'user-1' } } },
+    } as GameExchange
+    expect(canWithdrawApplication(exchange, 'user-1')).toBe(false)
+  })
+
+  it('returns false when appliedBy does not match userId', () => {
+    const exchange = {
+      status: 'applied',
+      appliedBy: { indoorReferee: { person: { __identity: 'other-user' } } },
+    } as GameExchange
+    expect(canWithdrawApplication(exchange, 'user-1')).toBe(false)
+  })
+
+  it('returns true when status is applied and user is the one who applied', () => {
+    const exchange = {
+      status: 'applied',
+      appliedBy: { indoorReferee: { person: { __identity: 'user-1' } } },
+    } as GameExchange
+    expect(canWithdrawApplication(exchange, 'user-1')).toBe(true)
+  })
+
+  it('returns false when appliedBy is null', () => {
+    const exchange = { status: 'applied', appliedBy: null } as GameExchange
+    expect(canWithdrawApplication(exchange, 'user-1')).toBe(false)
+  })
+})
+
+describe('isExchangeOwner', () => {
+  it('returns false when userId is undefined', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(isExchangeOwner(exchange, undefined)).toBe(false)
+  })
+
+  it('returns false when submittedByPerson does not match userId', () => {
+    const exchange = { submittedByPerson: { __identity: 'other-user' } } as GameExchange
+    expect(isExchangeOwner(exchange, 'user-1')).toBe(false)
+  })
+
+  it('returns true when submittedByPerson matches userId', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(isExchangeOwner(exchange, 'user-1')).toBe(true)
+  })
+})
+
+describe('getRemoveActionType', () => {
+  it('returns null when userId is undefined', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
+    expect(getRemoveActionType(exchange, undefined)).toBeNull()
+  })
+
+  it('returns remove-own-exchange when user is owner', () => {
+    const exchange = { submittedByPerson: { __identity: 'user-1' }, status: 'open' } as GameExchange
+    expect(getRemoveActionType(exchange, 'user-1')).toBe('remove-own-exchange')
+  })
+
+  it('returns withdraw-application when user applied to open exchange', () => {
+    const exchange = {
+      submittedByPerson: { __identity: 'other-user' },
+      status: 'applied',
+      appliedBy: { indoorReferee: { person: { __identity: 'user-1' } } },
+    } as GameExchange
+    expect(getRemoveActionType(exchange, 'user-1')).toBe('withdraw-application')
+  })
+
+  it('returns null when user is neither owner nor applicant', () => {
+    const exchange = {
+      submittedByPerson: { __identity: 'owner' },
+      status: 'applied',
+      appliedBy: { indoorReferee: { person: { __identity: 'other-user' } } },
+    } as GameExchange
+    expect(getRemoveActionType(exchange, 'user-1')).toBeNull()
+  })
+
+  it('prefers remove-own-exchange when user is both owner and could withdraw', () => {
+    // This edge case shouldn't happen in practice (can't apply to own exchange)
+    // but tests the priority of the logic
+    const exchange = {
+      submittedByPerson: { __identity: 'user-1' },
+      status: 'applied',
+      appliedBy: { indoorReferee: { person: { __identity: 'user-1' } } },
+    } as GameExchange
+    expect(getRemoveActionType(exchange, 'user-1')).toBe('remove-own-exchange')
   })
 })

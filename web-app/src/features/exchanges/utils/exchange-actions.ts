@@ -8,6 +8,70 @@ import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 const ICON_CHECK = createElement(Check, { size: SWIPE_ACTION_ICON_SIZE })
 const ICON_X = createElement(X, { size: SWIPE_ACTION_ICON_SIZE })
 
+/**
+ * Checks if a user can withdraw their application from an exchange.
+ *
+ * To withdraw an application:
+ * 1. The exchange must be in 'applied' status
+ * 2. The current user must be the one who applied (appliedBy matches userId)
+ *
+ * @param exchange - The exchange to check
+ * @param userId - The current user's person identity
+ * @returns true if the user can withdraw their application
+ */
+export function canWithdrawApplication(
+  exchange: GameExchange,
+  userId: string | undefined
+): boolean {
+  if (!userId) return false
+  if (exchange.status !== 'applied') return false
+
+  // Check if the current user is the one who applied
+  const appliedByIdentity = exchange.appliedBy?.indoorReferee?.person?.__identity
+  return appliedByIdentity === userId
+}
+
+/**
+ * Checks if an exchange is owned by the specified user (they submitted it).
+ *
+ * @param exchange - The exchange to check
+ * @param userId - The current user's person identity
+ * @returns true if the user submitted this exchange
+ */
+export function isExchangeOwner(exchange: GameExchange, userId: string | undefined): boolean {
+  if (!userId) return false
+  return exchange.submittedByPerson?.__identity === userId
+}
+
+/**
+ * Determines the type of "remove" action available for an exchange.
+ *
+ * - 'withdraw-application': User applied to someone else's exchange and can withdraw
+ * - 'remove-own-exchange': User's own exchange, can remove from marketplace
+ * - null: No remove action available
+ *
+ * @param exchange - The exchange to check
+ * @param userId - The current user's person identity
+ */
+export function getRemoveActionType(
+  exchange: GameExchange,
+  userId: string | undefined
+): 'withdraw-application' | 'remove-own-exchange' | null {
+  if (!userId) return null
+
+  // User's own exchange - can remove from marketplace
+  if (isExchangeOwner(exchange, userId)) {
+    return 'remove-own-exchange'
+  }
+
+  // User applied to this exchange - can withdraw application
+  if (canWithdrawApplication(exchange, userId)) {
+    return 'withdraw-application'
+  }
+
+  return null
+}
+
 export interface ExchangeActionConfig {
   takeOver: SwipeAction
   removeFromExchange: SwipeAction
