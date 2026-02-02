@@ -201,7 +201,7 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
   )
 
   const mutate = useCallback(
-    (exchangeId: string, options?: MutationCallbacks<PickExchangeResponse>) => {
+    (exchangeId: string, options?: MutationCallbacks<PickExchangeResponse | null>) => {
       mutateAsync(exchangeId)
         .then((result) => {
           options?.onSuccess?.(result)
