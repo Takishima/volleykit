@@ -169,10 +169,29 @@ function getRetryDelay(retryCount: number): number {
 }
 
 /**
- * Sleep for a specified duration.
+ * Sleep for a specified duration with optional abort support.
+ *
+ * Note: In React Native, timers pause when the app is backgrounded and resume
+ * when foregrounded. This is acceptable for retry delays since the sync will
+ * complete when the user returns to the app.
+ *
+ * @param ms - Duration in milliseconds
+ * @param signal - Optional AbortSignal for cancellation
  */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException('Aborted', 'AbortError'))
+      return
+    }
+
+    const timeoutId = setTimeout(resolve, ms)
+
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timeoutId)
+      reject(new DOMException('Aborted', 'AbortError'))
+    })
+  })
 }
 
 /**

@@ -27,18 +27,33 @@ import {
 /** Animation duration for pulse effect */
 const PULSE_DURATION_MS = 1000
 
+/** Icon size for the badge */
+const BADGE_ICON_SIZE = 14
+
+/** Spacing between icon and count text */
+const BADGE_ICON_MARGIN = 4
+
 /**
  * Hook to sync pending actions when coming back online.
+ * Uses refs to prevent race conditions during sync operations.
  */
 function useAutoSync() {
   const { isOnline, isKnown } = useNetwork()
   const wasOnlineRef = useRef(isOnline)
+  const syncTriggeredRef = useRef(false)
   const { sync, pendingCount, isSyncing } = useActionQueueStore()
 
   // Initialize store on mount
   useEffect(() => {
     initializeActionQueueStore()
   }, [])
+
+  // Reset sync trigger when sync completes
+  useEffect(() => {
+    if (!isSyncing) {
+      syncTriggeredRef.current = false
+    }
+  }, [isSyncing])
 
   // Sync when coming back online
   useEffect(() => {
@@ -48,7 +63,9 @@ function useAutoSync() {
     wasOnlineRef.current = isOnline
 
     // Detect transition from offline to online
-    if (!wasOnline && isOnline && pendingCount > 0) {
+    // Guard against re-triggering during pendingCount updates with syncTriggeredRef
+    if (!wasOnline && isOnline && pendingCount > 0 && !syncTriggeredRef.current && !isSyncing) {
+      syncTriggeredRef.current = true
       console.info(
         '[PendingActionsIndicator] Connectivity restored, syncing pending actions:',
         pendingCount
@@ -61,6 +78,7 @@ function useAutoSync() {
               console.info('[PendingActionsIndicator] Sync complete:', result.succeeded)
             }
             if (result.failed > 0) {
+              // TODO: Consider surfacing failed syncs to user via toast notification
               console.warn('[PendingActionsIndicator] Sync failed:', result.failed)
             }
             if (result.requiresReauth) {
@@ -69,10 +87,11 @@ function useAutoSync() {
           }
         })
         .catch((error) => {
+          // TODO: Consider surfacing critical sync failures to user
           console.error('[PendingActionsIndicator] Failed to sync pending actions:', error)
         })
     }
-  }, [isOnline, isKnown, pendingCount, sync])
+  }, [isOnline, isKnown, pendingCount, sync, isSyncing])
 
   return { isSyncing }
 }
@@ -134,9 +153,9 @@ export function PendingActionsBadge({ style }: PendingActionsBadgeProps): JSX.El
       <View className="flex-row items-center bg-amber-100 rounded-full px-2.5 py-1">
         <Feather
           name="upload-cloud"
-          size={14}
+          size={BADGE_ICON_SIZE}
           color={COLORS.amber600}
-          style={{ marginRight: 4 }}
+          style={{ marginRight: BADGE_ICON_MARGIN }}
         />
         <Text className="text-amber-800 text-xs font-medium">{pendingCount}</Text>
         {isSyncing && (

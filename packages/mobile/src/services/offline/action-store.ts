@@ -19,6 +19,39 @@ const RANDOM_STRING_START = 2
 /** End index for slicing random string (9 chars total) */
 const RANDOM_STRING_END = 11
 
+/** Valid action types for runtime validation */
+const VALID_ACTION_TYPES = new Set([
+  'updateCompensation',
+  'applyForExchange',
+  'addToExchange',
+  'removeOwnExchange',
+])
+
+/** Valid action statuses for runtime validation */
+const VALID_STATUSES = new Set(['pending', 'syncing', 'failed'])
+
+/**
+ * Validate that an object has the basic structure of an OfflineAction.
+ * Returns true if valid, false if not.
+ */
+function isValidAction(action: unknown): action is OfflineAction {
+  if (typeof action !== 'object' || action === null) return false
+
+  const obj = action as Record<string, unknown>
+
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.type === 'string' &&
+    VALID_ACTION_TYPES.has(obj.type) &&
+    typeof obj.createdAt === 'number' &&
+    typeof obj.status === 'string' &&
+    VALID_STATUSES.has(obj.status) &&
+    typeof obj.retryCount === 'number' &&
+    typeof obj.payload === 'object' &&
+    obj.payload !== null
+  )
+}
+
 /**
  * Generate a unique ID for an action.
  */
@@ -28,12 +61,37 @@ function generateActionId(): string {
 
 /**
  * Get all actions from storage.
+ * Validates each action and filters out any corrupted/invalid entries.
  */
 async function getAllActions(): Promise<OfflineAction[]> {
   try {
     const json = await AsyncStorage.getItem(STORAGE_KEY)
     if (!json) return []
-    return JSON.parse(json) as OfflineAction[]
+
+    const parsed: unknown = JSON.parse(json)
+    if (!Array.isArray(parsed)) {
+      console.warn('[action-store] Storage data is not an array, resetting')
+      return []
+    }
+
+    // Filter and validate each action
+    const validActions = parsed.filter((item) => {
+      if (!isValidAction(item)) {
+        console.warn('[action-store] Skipping invalid action:', item)
+        return false
+      }
+      return true
+    })
+
+    // If we filtered out any invalid actions, save the cleaned list
+    if (validActions.length !== parsed.length) {
+      console.info(
+        `[action-store] Cleaned ${parsed.length - validActions.length} invalid actions from storage`
+      )
+      await saveAllActions(validActions)
+    }
+
+    return validActions
   } catch (error) {
     console.error('[action-store] Failed to get actions:', error)
     return []
