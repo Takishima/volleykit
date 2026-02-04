@@ -302,6 +302,7 @@ const it: Translations = {
     syncing: 'Sincronizzazione...',
     syncComplete: '{count} modifiche sincronizzate con successo',
     syncFailed: '{count} modifiche non sono state sincronizzate',
+    syncError: 'Sincronizzazione fallita. Riprova più tardi.',
     sessionExpired: 'Sessione scaduta. Accedi nuovamente per sincronizzare le modifiche.',
     actions: {
       updateCompensation: 'Aggiorna compenso',

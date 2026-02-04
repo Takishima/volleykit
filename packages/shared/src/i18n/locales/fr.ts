@@ -303,6 +303,7 @@ const fr: Translations = {
     syncing: 'Synchronisation...',
     syncComplete: '{count} modifications synchronisées avec succès',
     syncFailed: '{count} modifications ont échoué lors de la synchronisation',
+    syncError: 'Échec de la synchronisation. Veuillez réessayer plus tard.',
     sessionExpired: 'Session expirée. Veuillez vous reconnecter pour synchroniser les modifications.',
     actions: {
       updateCompensation: 'Mettre à jour l\'indemnisation',
