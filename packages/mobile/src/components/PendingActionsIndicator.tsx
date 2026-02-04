@@ -4,6 +4,7 @@
  * Shows:
  * - Badge with count of pending actions
  * - Toast notification when actions are synced
+ * - Failed action notifications
  *
  * Also handles automatic sync when connectivity is restored.
  */
@@ -23,6 +24,7 @@ import {
   useActionQueueStore,
   initializeActionQueueStore,
 } from '../services/offline/action-queue-store'
+import { useToastStore } from '../stores/toast'
 
 /** Animation duration for pulse effect */
 const PULSE_DURATION_MS = 1000
@@ -42,6 +44,8 @@ function useAutoSync() {
   const wasOnlineRef = useRef(isOnline)
   const syncTriggeredRef = useRef(false)
   const { sync, pendingCount, isSyncing } = useActionQueueStore()
+  const { addToast } = useToastStore()
+  const { t } = useTranslation()
 
   // Initialize store on mount
   useEffect(() => {
@@ -76,22 +80,36 @@ function useAutoSync() {
           if (result) {
             if (result.succeeded > 0) {
               console.info('[PendingActionsIndicator] Sync complete:', result.succeeded)
+              addToast({
+                type: 'success',
+                message: t('offline.syncComplete', { count: result.succeeded }),
+              })
             }
             if (result.failed > 0) {
-              // TODO: Consider surfacing failed syncs to user via toast notification
               console.warn('[PendingActionsIndicator] Sync failed:', result.failed)
+              addToast({
+                type: 'error',
+                message: t('offline.syncFailed', { count: result.failed }),
+              })
             }
             if (result.requiresReauth) {
               console.warn('[PendingActionsIndicator] Session expired during sync')
+              addToast({
+                type: 'warning',
+                message: t('offline.sessionExpired'),
+              })
             }
           }
         })
         .catch((error) => {
-          // TODO: Consider surfacing critical sync failures to user
           console.error('[PendingActionsIndicator] Failed to sync pending actions:', error)
+          addToast({
+            type: 'error',
+            message: t('offline.syncFailed', { count: pendingCount }),
+          })
         })
     }
-  }, [isOnline, isKnown, pendingCount, sync, isSyncing])
+  }, [isOnline, isKnown, pendingCount, sync, isSyncing, addToast, t])
 
   return { isSyncing }
 }
