@@ -28,3 +28,6 @@ export * from './adapters'
 
 // Auth exports
 export * from './auth'
+
+// Note: Offline types are available via '@volleykit/shared/offline'
+// Not re-exported here to avoid naming conflicts with api/client.ts

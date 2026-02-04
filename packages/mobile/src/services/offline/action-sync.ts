@@ -79,12 +79,7 @@ function isConflictError(error: unknown): boolean {
 async function executeAction(action: OfflineAction): Promise<void> {
   switch (action.type) {
     case 'updateCompensation':
-      await realApiClient.updateCompensation(action.payload.compensationId, {
-        distanceInMetres: action.payload.data.kilometers
-          ? action.payload.data.kilometers * 1000
-          : undefined,
-        correctionReason: action.payload.data.reason,
-      })
+      await realApiClient.updateCompensation(action.payload.compensationId, action.payload.data)
       break
 
     case 'applyForExchange':

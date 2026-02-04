@@ -51,6 +51,11 @@
       "types": "./src/adapters/index.ts",
       "import": "./src/adapters/index.ts",
       "default": "./src/adapters/index.ts"
+    },
+    "./offline": {
+      "types": "./src/offline/index.ts",
+      "import": "./src/offline/index.ts",
+      "default": "./src/offline/index.ts"
     }
   },
   "scripts": {

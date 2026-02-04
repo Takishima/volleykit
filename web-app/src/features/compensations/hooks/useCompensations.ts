@@ -214,11 +214,9 @@ export function useUnpaidCompensations() {
   return useCompensations(false)
 }
 
-// Compensation update types
-export interface CompensationUpdateData {
-  distanceInMetres?: number
-  correctionReason?: string
-}
+// Import and re-export CompensationUpdateData from shared for backward compatibility
+import type { CompensationUpdateData } from '@volleykit/shared/offline'
+export type { CompensationUpdateData }
 
 /**
  * Mutation hook to update a compensation record directly.
