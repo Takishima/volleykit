@@ -1,5 +1,23 @@
 # @volleykit/shared
 
+## 1.14.0
+
+### Patch Changes
+
+- [#894](https://github.com/Takishima/volleykit/pull/894) [`1f875f9`](https://github.com/Takishima/volleykit/commit/1f875f994749ca21ad65957c6aa6a29aeedfa415) Thanks [@Takishima](https://github.com/Takishima)! - Add comprehensive offline mode support with action queue for mobile app
+  - Add offline action queue system using AsyncStorage for persistent storage
+  - Support queuing mutations (updateCompensation, applyForExchange, addToExchange, removeOwnExchange) when offline
+  - Automatically sync pending actions when connectivity is restored
+  - Add PendingActionsIndicator component showing pending action count in header
+  - Add missing API mutation methods (applyForExchange, removeOwnExchange, updateCompensation)
+  - Add offline-related translations for all 4 languages (de/en/fr/it)
+  - Clear action queue on logout
+
+- [#897](https://github.com/Takishima/volleykit/pull/897) [`f71fff3`](https://github.com/Takishima/volleykit/commit/f71fff30ddc3fa1750d7e4eb095cd8eef8694d7e) Thanks [@Takishima](https://github.com/Takishima)! - Show alert notifications when offline sync fails
+  - Display alert dialog when some changes fail to sync after reconnecting
+  - Display alert dialog for critical sync errors (unexpected exceptions)
+  - Add `offline.syncError` translation key for critical sync failure messages
+
 ## 1.13.0
 
 ### Minor Changes
