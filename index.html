@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/volleykit/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/volleykit/favicon.svg" sizes="any" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/volleykit/apple-touch-icon-180x180.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff6b00" />
+    <meta name="description" content="VolleyKit - Swiss Volleyball Referee Management PWA" />
+
+    <!-- Resource hints for faster API connections -->
+    <link rel="preconnect" href="https://volleymanager.volleyball.ch" crossorigin="use-credentials" />
+    <link rel="dns-prefetch" href="https://volleymanager.volleyball.ch" />
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="VolleyKit" />
+
+    <title>VolleyKit</title>
+  <script>
+    // GitHub Pages SPA redirect restoration
+    // If we were redirected from 404.html, restore the intended path
+    (function() {
+      const redirectPath = sessionStorage.getItem('redirectPath');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectPath');
+        history.replaceState(null, '', redirectPath);
+      }
+    })();
+  </script>
+    <script type="module" crossorigin src="/volleykit/assets/index-BR_noxYm.js"></script>
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-state-CZJejFfH.js">
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-router-CqUdIx6-.js">
+    <link rel="modulepreload" crossorigin href="/volleykit/assets/chunk-validation-Cdg1t4SS.js">
+    <link rel="stylesheet" crossorigin href="/volleykit/assets/index-KyjH_G7Q.css">
+  
+    <script>
+      // PWA Force Update: Check if cached version matches deployed version
+      // Worker version changes require session clear (auth logic may have changed)
+      // Web app only changes allow reload without losing login session
+      (function() {
+        var BUNDLED_GIT_HASH = 'f71fff3';
+        var BASE_PATH = '/volleykit/';
+        var API_PROXY_URL = 'https://volleykit-proxy.ngn-damien.workers.dev';
+        var WORKER_VERSION_KEY = 'volleykit-worker-version';
+        var WORKER_VERSION_FETCH_TIMEOUT_MS = 5000;
+
+        async function checkVersion() {
+          try {
+            // Fetch web app version
+            var appRes = await fetch(BASE_PATH + 'version.json?t=' + Date.now());
+            if (!appRes.ok) return;
+            var appData = await appRes.json();
+
+            // Check if web app version changed
+            var appVersionChanged = BUNDLED_GIT_HASH !== appData.gitHash;
+            if (!appVersionChanged) return; // No update needed
+
+            // Prevent infinite reload loop: track attempted updates in sessionStorage
+            var reloadKey = 'pwa-update-attempted-' + appData.gitHash;
+            if (sessionStorage.getItem(reloadKey)) {
+              console.warn('[PWA] Already attempted update to ' + appData.gitHash + ', skipping to prevent loop');
+              return;
+            }
+
+            // Check worker version to determine if session should be cleared
+            var workerVersionChanged = false;
+            var storedWorkerVersion = null;
+            try {
+              storedWorkerVersion = localStorage.getItem(WORKER_VERSION_KEY);
+            } catch (e) {
+              // localStorage may not be available
+            }
+
+            // Fetch worker version (with timeout to not block updates if worker is unreachable)
+            if (API_PROXY_URL) {
+              try {
+                var controller = new AbortController();
+                var timeoutId = setTimeout(function() { controller.abort(); }, WORKER_VERSION_FETCH_TIMEOUT_MS);
+                var workerRes = await fetch(API_PROXY_URL + '/version?t=' + Date.now(), {
+                  signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (workerRes.ok) {
+                  var workerData = await workerRes.json();
+                  var currentWorkerVersion = workerData.workerGitHash;
+
+                  // Store the new worker version
+                  try {
+                    localStorage.setItem(WORKER_VERSION_KEY, currentWorkerVersion);
+                  } catch (e) {
+                    // localStorage may not be available
+                  }
+
+                  // Check if worker version changed (or first time seeing it)
+                  if (storedWorkerVersion && storedWorkerVersion !== currentWorkerVersion) {
+                    workerVersionChanged = true;
+                    console.log('[PWA] Worker version changed: ' + storedWorkerVersion + ' → ' + currentWorkerVersion);
+                  }
+                }
+              } catch (e) {
+                // Worker unreachable - fall back to clearing session for safety
+                // This ensures we don't keep stale sessions if we can't verify worker version
+                if (storedWorkerVersion) {
+                  console.warn('[PWA] Could not fetch worker version, clearing session for safety');
+                  workerVersionChanged = true;
+                }
+              }
+            }
+
+            sessionStorage.setItem(reloadKey, '1');
+            console.log('[PWA] App version mismatch: ' + BUNDLED_GIT_HASH + ' → ' + appData.gitHash + ', forcing update...');
+
+            var reg = await navigator.serviceWorker?.getRegistration();
+            if (reg?.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+
+            // Clear service worker caches
+            var cacheNames = await caches?.keys() || [];
+            await Promise.all(cacheNames.map(function(name) { return caches.delete(name); }));
+
+            // Only clear session if worker version changed (or couldn't be verified)
+            // This allows web-app-only updates without forcing users to re-login
+            if (workerVersionChanged) {
+              console.log('[PWA] Worker changed, clearing session tokens...');
+              try {
+                localStorage.removeItem('volleykit-session-token');
+                localStorage.removeItem('volleykit-auth');
+              } catch (e) {
+                // localStorage may not be available, ignore
+              }
+            } else {
+              console.log('[PWA] Web app only update, preserving session');
+            }
+
+            // Use cache-busting URL to bypass Safari's aggressive memory cache.
+            // Safari PWAs can serve stale content from memory even after reload().
+            // Adding a timestamp query parameter forces a fresh network request.
+            var url = new URL(location.href);
+            url.searchParams.set('_pwa_update', Date.now().toString());
+            location.replace(url.href);
+          } catch (e) {
+            // Network errors are expected when offline - ignore silently
+            // Log other errors for debugging
+            if (!(e instanceof TypeError)) {
+              console.warn('[PWA] Version check failed:', e);
+            }
+          }
+        }
+
+        // Run version check on page load
+        checkVersion();
+
+        // Also check on visibility change (iOS PWA resume from background)
+        // iOS Safari PWAs resume from suspended state without a full page reload,
+        // so the initial version check doesn't run. This ensures stale cached apps
+        // are detected and updated when the user returns to the app.
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'visible') {
+            checkVersion();
+          }
+        });
+      })();
+    </script>
+  <link rel="manifest" href="/volleykit/manifest.webmanifest"></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
