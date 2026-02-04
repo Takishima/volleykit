@@ -383,6 +383,36 @@ export const mobileApiClient = {
     await delay(MOCK_NETWORK_DELAY_MS)
     // Mock implementation - just simulates success
   },
+
+  /**
+   * Apply for (pick) an exchange (mock).
+   * In demo mode, this just simulates success.
+   */
+  async applyForExchange(_exchangeId: string): Promise<void> {
+    await delay(MOCK_NETWORK_DELAY_MS)
+    // Mock implementation - just simulates success
+  },
+
+  /**
+   * Remove own assignment from exchange marketplace (mock).
+   * In demo mode, this just simulates success.
+   */
+  async removeOwnExchange(_convocationId: string): Promise<void> {
+    await delay(MOCK_NETWORK_DELAY_MS)
+    // Mock implementation - just simulates success
+  },
+
+  /**
+   * Update compensation record (mock).
+   * In demo mode, this just simulates success.
+   */
+  async updateCompensation(
+    _compensationId: string,
+    _data: { distanceInMetres?: number; correctionReason?: string }
+  ): Promise<void> {
+    await delay(MOCK_NETWORK_DELAY_MS)
+    // Mock implementation - just simulates success
+  },
 }
 
 export type MobileApiClient = typeof mobileApiClient

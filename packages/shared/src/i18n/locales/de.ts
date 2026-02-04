@@ -296,6 +296,20 @@ const de: Translations = {
     tryAgain: 'Erneut versuchen',
     refreshPage: 'App neu starten',
   },
+  offline: {
+    youAreOffline: 'Sie sind offline',
+    pendingActions: '{count} ausstehende Änderungen',
+    syncing: 'Synchronisieren...',
+    syncComplete: '{count} Änderungen erfolgreich synchronisiert',
+    syncFailed: '{count} Änderungen konnten nicht synchronisiert werden',
+    sessionExpired: 'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
+    actions: {
+      updateCompensation: 'Entschädigung aktualisieren',
+      applyForExchange: 'Für Börse bewerben',
+      addToExchange: 'Zur Börse hinzufügen',
+      removeOwnExchange: 'Von Börse entfernen',
+    },
+  },
 }
 
 export default de

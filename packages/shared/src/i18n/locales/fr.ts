@@ -297,6 +297,20 @@ const fr: Translations = {
     tryAgain: 'Réessayer',
     refreshPage: "Redémarrer l'application",
   },
+  offline: {
+    youAreOffline: 'Vous êtes hors ligne',
+    pendingActions: '{count} modifications en attente',
+    syncing: 'Synchronisation...',
+    syncComplete: '{count} modifications synchronisées avec succès',
+    syncFailed: '{count} modifications ont échoué lors de la synchronisation',
+    sessionExpired: 'Session expirée. Veuillez vous reconnecter pour synchroniser les modifications.',
+    actions: {
+      updateCompensation: 'Mettre à jour l\'indemnisation',
+      applyForExchange: 'Postuler pour un échange',
+      addToExchange: 'Ajouter à la bourse',
+      removeOwnExchange: 'Retirer de la bourse',
+    },
+  },
 }
 
 export default fr

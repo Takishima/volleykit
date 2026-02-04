@@ -291,6 +291,58 @@ export const realApiClient = {
       }
     )
   },
+
+  /**
+   * Apply for (pick) an exchange - take over the assignment from another referee.
+   */
+  async applyForExchange(exchangeId: string): Promise<void> {
+    await apiRequest(
+      '/indoorvolleyball.refadmin/api%5crefereegameexchange/pickFromRefereeGameExchange',
+      'PUT',
+      {
+        'refereeGameExchange[__identity]': exchangeId,
+      }
+    )
+  },
+
+  /**
+   * Remove own assignment from the exchange marketplace.
+   * Uses convocation ID to identify the exchange to remove.
+   */
+  async removeOwnExchange(convocationId: string): Promise<void> {
+    await apiRequest(
+      '/indoorvolleyball.refadmin/api%5crefereeconvocation/deleteFromRefereeGameExchange',
+      'POST',
+      {
+        'refereeConvocations[0][__identity]': convocationId,
+      }
+    )
+  },
+
+  /**
+   * Update compensation record (travel expenses).
+   */
+  async updateCompensation(
+    compensationId: string,
+    data: { distanceInMetres?: number; correctionReason?: string }
+  ): Promise<void> {
+    // Build the compensation update object
+    const convocationCompensation: Record<string, unknown> = {
+      __identity: compensationId,
+    }
+
+    if (data.distanceInMetres !== undefined) {
+      convocationCompensation.distanceInMetres = data.distanceInMetres
+    }
+
+    if (data.correctionReason !== undefined) {
+      convocationCompensation.correctionReason = data.correctionReason
+    }
+
+    await apiRequest('/indoorvolleyball.refadmin/api%5cconvocationcompensation', 'PUT', {
+      convocationCompensation,
+    })
+  },
 }
 
 export type RealApiClient = typeof realApiClient

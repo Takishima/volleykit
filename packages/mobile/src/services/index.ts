@@ -4,3 +4,4 @@
 
 export * from './authService'
 export * from './calendarSync'
+export * from './offline'

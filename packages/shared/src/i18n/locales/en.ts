@@ -292,6 +292,20 @@ const en: Translations = {
     tryAgain: 'Try Again',
     refreshPage: 'Restart App',
   },
+  offline: {
+    youAreOffline: 'You are offline',
+    pendingActions: '{count} pending changes',
+    syncing: 'Syncing...',
+    syncComplete: '{count} changes synced successfully',
+    syncFailed: '{count} changes failed to sync',
+    sessionExpired: 'Session expired. Please log in again to sync changes.',
+    actions: {
+      updateCompensation: 'Update compensation',
+      applyForExchange: 'Apply for exchange',
+      addToExchange: 'Add to exchange',
+      removeOwnExchange: 'Remove from exchange',
+    },
+  },
 }
 
 export default en
