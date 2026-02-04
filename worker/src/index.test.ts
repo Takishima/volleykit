@@ -42,6 +42,7 @@ import {
   AUTH_LOCKOUT_MAX_DURATION_SECONDS,
   type AuthLockoutKV,
   type AuthLockoutState,
+  CORS_PREFLIGHT_MAX_AGE_SECONDS,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
   OCR_MAX_FILE_SIZE_BYTES,
   VOLLEYKIT_USER_AGENT,
@@ -470,7 +471,7 @@ describe('CORS Headers', () => {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Accept',
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400',
+    'Access-Control-Max-Age': String(CORS_PREFLIGHT_MAX_AGE_SECONDS),
   })
 
   it('sets correct Allow-Origin header', () => {
@@ -490,7 +491,7 @@ describe('CORS Headers', () => {
 
   it('sets max age for preflight caching', () => {
     const headers = corsHeaders('https://example.com')
-    expect(headers['Access-Control-Max-Age']).toBe('86400')
+    expect(headers['Access-Control-Max-Age']).toBe(String(CORS_PREFLIGHT_MAX_AGE_SECONDS))
   })
 })
 
