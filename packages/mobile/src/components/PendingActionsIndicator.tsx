@@ -11,7 +11,7 @@
 import type { JSX } from 'react'
 import { useEffect, useRef } from 'react'
 
-import { View, Text, Animated } from 'react-native'
+import { View, Text, Animated, Alert } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 
@@ -38,6 +38,7 @@ const BADGE_ICON_MARGIN = 4
  * Uses refs to prevent race conditions during sync operations.
  */
 function useAutoSync() {
+  const { t } = useTranslation()
   const { isOnline, isKnown } = useNetwork()
   const wasOnlineRef = useRef(isOnline)
   const syncTriggeredRef = useRef(false)
@@ -78,8 +79,10 @@ function useAutoSync() {
               console.info('[PendingActionsIndicator] Sync complete:', result.succeeded)
             }
             if (result.failed > 0) {
-              // TODO: Consider surfacing failed syncs to user via toast notification
               console.warn('[PendingActionsIndicator] Sync failed:', result.failed)
+              Alert.alert(t('common.error'), t('offline.syncFailed', { count: result.failed }), [
+                { text: t('common.close') },
+              ])
             }
             if (result.requiresReauth) {
               console.warn('[PendingActionsIndicator] Session expired during sync')
@@ -87,11 +90,11 @@ function useAutoSync() {
           }
         })
         .catch((error) => {
-          // TODO: Consider surfacing critical sync failures to user
           console.error('[PendingActionsIndicator] Failed to sync pending actions:', error)
+          Alert.alert(t('common.error'), t('offline.syncError'), [{ text: t('common.close') }])
         })
     }
-  }, [isOnline, isKnown, pendingCount, sync, isSyncing])
+  }, [isOnline, isKnown, pendingCount, sync, isSyncing, t])
 
   return { isSyncing }
 }

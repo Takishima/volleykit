@@ -298,6 +298,7 @@ const en: Translations = {
     syncing: 'Syncing...',
     syncComplete: '{count} changes synced successfully',
     syncFailed: '{count} changes failed to sync',
+    syncError: 'Failed to sync changes. Please try again later.',
     sessionExpired: 'Session expired. Please log in again to sync changes.',
     actions: {
       updateCompensation: 'Update compensation',

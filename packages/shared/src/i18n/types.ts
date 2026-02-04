@@ -307,6 +307,7 @@ export interface Translations {
     syncing: string
     syncComplete: string
     syncFailed: string
+    syncError: string
     sessionExpired: string
     actions: {
       updateCompensation: string
