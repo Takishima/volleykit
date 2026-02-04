@@ -2,9 +2,13 @@
  * Bottom tab navigator for main app screens
  */
 
+import { View } from 'react-native'
+
 import { Feather } from '@expo/vector-icons'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 
+import { OfflineIndicator } from '../components/OfflineBanner'
+import { PendingActionsIndicator } from '../components/PendingActionsIndicator'
 import { COLORS, TAB_ICON_SIZE } from '../constants'
 import { AssignmentsScreen } from '../screens/AssignmentsScreen'
 import { CompensationsScreen } from '../screens/CompensationsScreen'
@@ -15,6 +19,18 @@ import type { MainTabParamList } from './types'
 
 const Tab = createBottomTabNavigator<MainTabParamList>()
 
+/**
+ * Header right component showing offline status and pending actions.
+ */
+function HeaderRight() {
+  return (
+    <View className="flex-row items-center gap-2 mr-4">
+      <PendingActionsIndicator />
+      <OfflineIndicator />
+    </View>
+  )
+}
+
 export function TabNavigator() {
   return (
     <Tab.Navigator
@@ -22,6 +38,7 @@ export function TabNavigator() {
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray500,
         headerShown: true,
+        headerRight: () => <HeaderRight />,
       }}
     >
       <Tab.Screen

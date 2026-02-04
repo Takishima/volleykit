@@ -301,6 +301,20 @@ export interface Translations {
     tryAgain: string
     refreshPage: string
   }
+  offline: {
+    youAreOffline: string
+    pendingActions: string
+    syncing: string
+    syncComplete: string
+    syncFailed: string
+    sessionExpired: string
+    actions: {
+      updateCompensation: string
+      applyForExchange: string
+      addToExchange: string
+      removeOwnExchange: string
+    }
+  }
 }
 
 /**

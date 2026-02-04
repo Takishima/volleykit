@@ -15,6 +15,7 @@ import { useAuthStore } from '@volleykit/shared/stores'
 import { setSessionToken, setCsrfToken, clearTokens, getSessionToken } from '../api'
 import { SESSION_TOKEN_HEADER } from '../constants'
 import { secureStorage } from '../platform/secureStorage'
+import { useActionQueueStore } from './offline/action-queue-store'
 
 /**
  * API base URL for authentication requests.
@@ -195,6 +196,14 @@ export async function logout(): Promise<void> {
 
   // Clear session token
   clearSessionToken()
+
+  // Clear offline action queue
+  try {
+    await useActionQueueStore.getState().clearAll()
+    logger.info('Offline action queue cleared')
+  } catch (error) {
+    logger.warn('Failed to clear offline action queue:', error)
+  }
 
   // Clear auth store
   store.logout()
