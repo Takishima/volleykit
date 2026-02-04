@@ -86,6 +86,9 @@ function useAutoSync() {
             }
             if (result.requiresReauth) {
               console.warn('[PendingActionsIndicator] Session expired during sync')
+              Alert.alert(t('common.error'), t('offline.sessionExpired'), [
+                { text: t('common.close') },
+              ])
             }
           }
         })
