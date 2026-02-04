@@ -9,16 +9,29 @@ import { locales } from './locales'
 import type { TranslationKey, Language, Translations } from './types'
 
 /**
+ * Type representing possible intermediate values during nested object traversal.
+ * More type-safe than `any` while still allowing dynamic property access.
+ */
+type TranslationSection = Translations[keyof Translations]
+type NestedValue =
+  | Translations
+  | TranslationSection
+  | TranslationSection[keyof TranslationSection]
+  | string
+  | undefined
+
+/**
  * Get a nested value from an object using dot notation.
  */
 function getNestedValue(obj: Translations, path: string): string | undefined {
   const keys = path.split('.')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let current: any = obj
+  let current: NestedValue = obj
 
   for (const key of keys) {
-    if (current === undefined || current === null) return undefined
-    current = current[key]
+    if (current === undefined || typeof current === 'string') {
+      return undefined
+    }
+    current = (current as Record<string, unknown>)[key] as NestedValue
   }
 
   return typeof current === 'string' ? current : undefined
