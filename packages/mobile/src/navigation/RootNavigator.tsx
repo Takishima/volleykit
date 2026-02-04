@@ -15,6 +15,7 @@ import { useTranslation } from '@volleykit/shared/i18n'
 import { TabNavigator } from './TabNavigator'
 import { BiometricPrompt } from '../components/BiometricPrompt'
 import { OfflineBanner } from '../components/OfflineBanner'
+import { ToastContainer } from '../components/Toast'
 import { MAX_BIOMETRIC_ATTEMPTS } from '../constants'
 import { useSessionMonitorContext } from '../contexts'
 import { useBiometricAuth } from '../hooks/useBiometricAuth'
@@ -155,6 +156,9 @@ export function RootNavigator() {
         onFallbackToPassword={handleFallbackToPassword}
         onCancel={handleCancel}
       />
+
+      {/* Global toast notifications */}
+      <ToastContainer />
     </NavigationContainer>
   )
 }
