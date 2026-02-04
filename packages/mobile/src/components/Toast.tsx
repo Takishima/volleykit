@@ -13,6 +13,7 @@ import { View, Text, Animated, Pressable, StyleSheet } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { useTranslation } from '@volleykit/shared/i18n'
 
 import { useToastStore, DEFAULT_TOAST_DURATION_MS, type Toast, type ToastType } from '../stores/toast'
 
@@ -72,6 +73,7 @@ interface ToastItemProps {
  * Individual toast item with auto-dismiss.
  */
 function ToastItem({ toast }: ToastItemProps): JSX.Element {
+  const { t } = useTranslation()
   const removeToast = useToastStore((state) => state.removeToast)
   const opacityAnim = useRef(new Animated.Value(0)).current
   const translateYAnim = useRef(new Animated.Value(-20)).current
@@ -172,7 +174,7 @@ function ToastItem({ toast }: ToastItemProps): JSX.Element {
           onPress={handleDismiss}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss"
+          accessibilityLabel={t('common.close')}
         >
           <Feather
             name="x"
