@@ -203,6 +203,16 @@ async function apiRequest<T>(
   }
 }
 
+/** Properties requested from the Elasticsearch person search endpoint */
+const PERSON_SEARCH_PROPERTIES = [
+  'displayName',
+  'firstName',
+  'lastName',
+  'associationId',
+  'birthday',
+  'gender',
+] as const
+
 // API Methods
 export const api = {
   // Assignments
@@ -368,27 +378,60 @@ export const api = {
     filters: PersonSearchFilter,
     options?: { offset?: number; limit?: number }
   ): Promise<PersonSearchResponse> {
-    const propertyFilters: Array<{ propertyName: string; text: string }> = []
-
     const { firstName, lastName, yearOfBirth } = filters
 
-    if (firstName && !lastName) {
-      propertyFilters.push(
-        { propertyName: 'firstName', text: firstName },
-        { propertyName: 'lastName', text: firstName }
-      )
-    } else if (lastName && !firstName) {
-      propertyFilters.push(
-        { propertyName: 'firstName', text: lastName },
-        { propertyName: 'lastName', text: lastName }
-      )
-    } else {
-      if (firstName) {
-        propertyFilters.push({ propertyName: 'firstName', text: firstName })
+    // When both firstName and lastName are provided, search both orderings
+    // in parallel so "Bühler Renee" finds the same results as "Renee Bühler".
+    if (firstName && lastName) {
+      const makeRequest = (fn: string, ln: string) => {
+        const propertyFilters: Array<{ propertyName: string; text: string }> = [
+          { propertyName: 'firstName', text: fn },
+          { propertyName: 'lastName', text: ln },
+        ]
+        if (yearOfBirth) {
+          propertyFilters.push({ propertyName: 'yearOfBirth', text: yearOfBirth })
+        }
+        return apiRequest<PersonSearchResponse>(
+          '/sportmanager.core/api%5celasticsearchperson/search',
+          'GET',
+          {
+            searchConfiguration: {
+              propertyFilters,
+              offset: options?.offset ?? 0,
+              limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
+            },
+            propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
+          }
+        )
       }
-      if (lastName) {
-        propertyFilters.push({ propertyName: 'lastName', text: lastName })
+
+      const [original, swapped] = await Promise.all([
+        makeRequest(firstName, lastName),
+        makeRequest(lastName, firstName),
+      ])
+
+      // Merge and deduplicate results by __identity, preserving original order first
+      const seen = new Set<string>()
+      const merged: PersonSearchResult[] = []
+      for (const item of [...(original.items ?? []), ...(swapped.items ?? [])]) {
+        const id = item.__identity
+        if (id && !seen.has(id)) {
+          seen.add(id)
+          merged.push(item)
+        }
       }
+
+      return { items: merged, totalItemsCount: merged.length }
+    }
+
+    // Single-term search: search both firstName and lastName fields
+    const propertyFilters: Array<{ propertyName: string; text: string }> = []
+    const singleTerm = firstName ?? lastName
+    if (singleTerm) {
+      propertyFilters.push(
+        { propertyName: 'firstName', text: singleTerm },
+        { propertyName: 'lastName', text: singleTerm }
+      )
     }
 
     if (yearOfBirth) {
@@ -409,14 +452,7 @@ export const api = {
       'GET',
       {
         searchConfiguration: searchConfig,
-        propertyRenderConfiguration: [
-          'displayName',
-          'firstName',
-          'lastName',
-          'associationId',
-          'birthday',
-          'gender',
-        ],
+        propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
       }
     )
   },

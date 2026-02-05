@@ -382,6 +382,22 @@ describe('useScorerSearch - integration with mock API', () => {
     expect(result.current.data![0]!.displayName).toBe('Hans Müller')
   })
 
+  it('handles swapped name order (last name first)', async () => {
+    // User types "Müller Hans" → firstName=Müller, lastName=Hans
+    const { result } = renderHook(
+      () => useScorerSearch({ firstName: 'Müller', lastName: 'Hans' }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined()
+    })
+
+    expect(result.current.isError).toBe(false)
+    expect(result.current.data!.length).toBe(1)
+    expect(result.current.data![0]!.displayName).toBe('Hans Müller')
+  })
+
   it('handles accent-insensitive search', async () => {
     const { result } = renderHook(() => useScorerSearch({ lastName: 'muller' }), {
       wrapper: createWrapper(),

@@ -18,9 +18,8 @@ import { useAuthStore } from '@/shared/stores/auth'
  * - Four-digit number at end: treated as yearOfBirth
  *
  * Note: When two name tokens are provided, the first is treated as firstName
- * and the second as lastName. This follows common Western conventions, but
- * Elasticsearch's fuzzy matching typically handles reversed order (e.g.,
- * "Müller Hans" vs "Hans Müller") well since both fields are searched.
+ * and the second as lastName. The API layer searches both orderings in parallel,
+ * so "Müller Hans" and "Hans Müller" produce the same results.
  *
  * @example
  * parseSearchInput("müller") // { lastName: "müller" }

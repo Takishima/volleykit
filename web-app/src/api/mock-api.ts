@@ -482,31 +482,30 @@ export const mockApi = {
       const scorerLastName = normalizeForSearch(scorer.lastName ?? '')
       const scorerYear = scorer.birthday ? new Date(scorer.birthday).getFullYear().toString() : ''
 
-      if (firstName && !scorerFirstName.includes(normalizeForSearch(firstName))) {
-        return false
-      }
-
-      if (lastName) {
+      if (firstName && lastName) {
+        // Two terms: match in either order (e.g., "Bühler Renee" or "Renee Bühler")
+        const normFirst = normalizeForSearch(firstName)
+        const normLast = normalizeForSearch(lastName)
+        const originalOrder =
+          scorerFirstName.includes(normFirst) && scorerLastName.includes(normLast)
+        const swappedOrder =
+          scorerFirstName.includes(normLast) && scorerLastName.includes(normFirst)
+        if (!originalOrder && !swappedOrder) {
+          return false
+        }
+      } else if (isSingleTermSearch && lastName) {
+        // Single term: match against either firstName or lastName
         const searchTerm = normalizeForSearch(lastName)
-        if (isSingleTermSearch) {
-          // Single term: match against either firstName or lastName
-          const matchesFirstName = scorerFirstName.includes(searchTerm)
-          const matchesLastName = scorerLastName.includes(searchTerm)
-          if (!matchesFirstName && !matchesLastName) {
-            return false
-          }
-        } else {
-          // Two terms provided: lastName must match lastName field
-          if (!scorerLastName.includes(searchTerm)) {
-            return false
-          }
+        if (!scorerFirstName.includes(searchTerm) && !scorerLastName.includes(searchTerm)) {
+          return false
+        }
+      } else if (firstName) {
+        if (!scorerFirstName.includes(normalizeForSearch(firstName))) {
+          return false
         }
       }
 
-      if (yearOfBirth && !scorerYear.includes(yearOfBirth)) {
-        return false
-      }
-      return true
+      return !yearOfBirth || scorerYear.includes(yearOfBirth)
     })
 
     const offset = options?.offset ?? 0
