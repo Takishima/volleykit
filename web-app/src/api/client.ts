@@ -134,7 +134,8 @@ export function clearSession() {
 async function apiRequest<T>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
+  requestContentType?: string
 ): Promise<T> {
   let url = `${API_BASE}${endpoint}`
 
@@ -149,7 +150,7 @@ async function apiRequest<T>(
   }
 
   if (method !== 'GET' && body) {
-    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
   }
 
   const response = await fetch(url, {
@@ -587,7 +588,8 @@ export const api = {
     return apiRequest<NominationList>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist',
       'PUT',
-      body
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
@@ -634,7 +636,8 @@ export const api = {
     return apiRequest<NominationListFinalizeResponse>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist/finalize',
       'POST',
-      body
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
@@ -642,15 +645,27 @@ export const api = {
     scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    isSimpleScoresheet: boolean = false
+    isSimpleScoresheet: boolean = false,
+    fileResourceId?: string
   ): Promise<Scoresheet> {
-    return apiRequest<Scoresheet>('/sportmanager.indoorvolleyball/api%5cscoresheet', 'PUT', {
+    const body: Record<string, unknown> = {
       'scoresheet[__identity]': scoresheetId,
       'scoresheet[game][__identity]': gameId,
       'scoresheet[writerPerson][__identity]': scorerPersonId,
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
-      'scoresheet[hasFile]': 'false',
-    })
+      'scoresheet[hasFile]': fileResourceId ? 'true' : 'false',
+    }
+
+    if (fileResourceId) {
+      body['scoresheet[file][__identity]'] = fileResourceId
+    }
+
+    return apiRequest<Scoresheet>(
+      '/sportmanager.indoorvolleyball/api%5cscoresheet',
+      'PUT',
+      body,
+      'text/plain;charset=UTF-8'
+    )
   },
 
   async finalizeScoresheet(
@@ -680,7 +695,8 @@ export const api = {
     return apiRequest<Scoresheet>(
       '/sportmanager.indoorvolleyball/api%5cscoresheet/finalize',
       'POST',
-      body
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
@@ -697,7 +713,7 @@ export const api = {
     }
 
     const formData = new FormData()
-    formData.append('resource', file)
+    formData.append('scoresheetFile[]', file)
     const csrfToken = getCsrfToken()
     if (csrfToken) {
       formData.append('__csrfToken', csrfToken)

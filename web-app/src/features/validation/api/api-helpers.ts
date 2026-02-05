@@ -142,12 +142,13 @@ export async function saveRosterModifications(
   )
 }
 
-/** Saves scoresheet with scorer selection. */
+/** Saves scoresheet with scorer selection and optional file reference. */
 export async function saveScorerSelection(
   apiClient: ReturnType<typeof getApiClient>,
   gameId: string,
   scoresheet: ScoresheetForApi | undefined,
-  scorerId: string | undefined
+  scorerId: string | undefined,
+  fileResourceId?: string
 ): Promise<void> {
   if (!scorerId || !scoresheet?.__identity) {
     logger.debug('[VS] skip scorer save: no scorer or scoresheet ID')
@@ -158,7 +159,8 @@ export async function saveScorerSelection(
     scoresheet.__identity,
     gameId,
     scorerId,
-    scoresheet.isSimpleScoresheet ?? false
+    scoresheet.isSimpleScoresheet ?? false,
+    fileResourceId
   )
 }
 
