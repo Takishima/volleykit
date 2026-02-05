@@ -573,4 +573,93 @@ describe('ValidateGameModal', () => {
       expect(screen.getByRole('button', { name: /Validate/i, hidden: true })).toBeInTheDocument()
     })
   })
+
+  describe('validated state from assignment data', () => {
+    it('shows validated mode when assignment has closedAt even if game details query is stale', () => {
+      // Simulate: game details query returns stale data (isValidated: false)
+      // but the assignment list already has closedAt set (validated externally on volleymanager)
+      vi.mocked(useValidationStateModule.useValidationState).mockReturnValue({
+        state: {
+          homeRoster: {
+            reviewed: false,
+            playerModifications: { added: [], removed: [] },
+            coachModifications: { added: new Map(), removed: new Set() },
+          },
+          awayRoster: {
+            reviewed: false,
+            playerModifications: { added: [], removed: [] },
+            coachModifications: { added: new Map(), removed: new Set() },
+          },
+          scorer: { selected: null },
+          scoresheet: { file: null, uploaded: false },
+        },
+        isDirty: false,
+        completionStatus: {
+          homeRoster: false,
+          awayRoster: false,
+          scorer: false,
+          scoresheet: true,
+        },
+        isAllRequiredComplete: false,
+        isValidated: false, // Stale game details - doesn't know it's validated yet
+        validatedInfo: null,
+        pendingScorer: null,
+        scoresheetNotRequired: false,
+        setHomeRosterModifications: vi.fn(),
+        setAwayRosterModifications: vi.fn(),
+        setScorer: vi.fn(),
+        setScoresheet: vi.fn(),
+        reset: vi.fn(),
+        saveProgress: vi.fn().mockResolvedValue(undefined),
+        finalizeValidation: vi.fn().mockResolvedValue(undefined),
+        isSaving: false,
+        isFinalizing: false,
+        isLoadingGameDetails: false,
+        gameDetailsError: null,
+        homeNominationList: null,
+        awayNominationList: null,
+      })
+
+      // Assignment has closedAt from the assignments list (fresh data)
+      const assignmentWithClosedAt = createMockAssignment({
+        refereeGame: {
+          game: {
+            __identity: 'game-1',
+            startingDateTime: '2025-12-15T14:00:00Z',
+            encounter: {
+              teamHome: { name: 'VBC Zürich' },
+              teamAway: { name: 'VBC Basel' },
+            },
+            hall: {
+              name: 'Sporthalle Zürich',
+              primaryPostalAddress: { city: 'Zürich' },
+            },
+            scoresheet: {
+              closedAt: '2025-12-15T16:00:00Z',
+            },
+          },
+        },
+      } as Partial<Assignment>)
+
+      render(
+        <ValidateGameModal
+          assignment={assignmentWithClosedAt}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() }
+      )
+
+      // Should show "Already Validated" banner
+      expect(screen.getByRole('status', { hidden: true })).toBeInTheDocument()
+      expect(screen.getByText('This game has already been validated')).toBeInTheDocument()
+
+      // Should show validated mode buttons (Next instead of Cancel/Validate on step 1)
+      expect(screen.getByRole('button', { name: 'Next', hidden: true })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Cancel', hidden: true })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Validate', hidden: true })
+      ).not.toBeInTheDocument()
+    })
+  })
 })
