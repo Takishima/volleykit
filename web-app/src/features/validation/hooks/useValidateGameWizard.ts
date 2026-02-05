@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 
+import { useQueryClient } from '@tanstack/react-query'
+
 import type { Assignment, NominationList } from '@/api/client'
+import { queryKeys } from '@/api/queryKeys'
+import type { ValidatedGameInfo } from '@/features/validation/hooks/types'
 import { useValidationState } from '@/features/validation/hooks/useValidationState'
 import {
   validateBothRosters,
@@ -128,14 +132,15 @@ export function useValidateGameWizard({
   const isInSafeMode = dataSource !== 'demo' && isSafeModeEnabled
   const useSafeValidation = dataSource !== 'demo' && isSafeValidationEnabled
 
+  const queryClient = useQueryClient()
   const gameId = assignment.refereeGame?.game?.__identity
 
   const {
     state: validationState,
     isDirty,
     completionStatus,
-    isValidated,
-    validatedInfo,
+    isValidated: isValidatedFromQuery,
+    validatedInfo: validatedInfoFromQuery,
     pendingScorer,
     scoresheetNotRequired,
     setHomeRosterModifications,
@@ -152,6 +157,26 @@ export function useValidateGameWizard({
     homeNominationList,
     awayNominationList,
   } = useValidationState(gameId)
+
+  // The assignment list data may be fresher than the cached game details query.
+  // When a game is validated externally on volleymanager, the assignment list
+  // reflects closedAt immediately, but the game details query cache may still
+  // have stale data. Check both sources to determine validated state.
+  const assignmentClosedAt = assignment.refereeGame?.game?.scoresheet?.closedAt
+  const isValidated = isValidatedFromQuery || !!assignmentClosedAt
+
+  // Provide fallback validatedInfo from assignment data while game details refetch.
+  // Once the game details query returns fresh data, validatedInfoFromQuery takes over.
+  const validatedInfo: ValidatedGameInfo | null =
+    validatedInfoFromQuery ??
+    (assignmentClosedAt
+      ? {
+          validatedAt: assignmentClosedAt,
+          scorerName: '—',
+          scorerBirthday: undefined,
+          hasScoresheet: false,
+        }
+      : null)
 
   // Compute roster validation status
   const rosterValidation = useMemo<RosterValidationStatus>(() => {
@@ -229,6 +254,12 @@ export function useValidateGameWizard({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
+      // Invalidate game details cache so we fetch fresh data. The assignment list
+      // may already reflect an external validation that happened on volleymanager,
+      // but the game details cache could still have stale data.
+      if (gameId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
+      }
       setSaveError(null)
       setSuccessToast(null)
       setShowRosterWarningDialog(false)
@@ -236,7 +267,7 @@ export function useValidateGameWizard({
       reset()
       resetToStart()
     }
-  }, [isOpen, reset, resetToStart])
+  }, [isOpen, reset, resetToStart, gameId, queryClient])
 
   // Computed values
   const canMarkCurrentStepDone = useMemo(() => {
