@@ -410,7 +410,9 @@ export const api = {
         makeRequest(lastName, firstName),
       ])
 
-      // Merge and deduplicate results by __identity, preserving original order first
+      // Merge and deduplicate results by __identity, preserving original order first.
+      // Cap at the requested limit to keep pagination behavior predictable.
+      const limit = options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT
       const seen = new Set<string>()
       const merged: PersonSearchResult[] = []
       for (const item of [...(original.items ?? []), ...(swapped.items ?? [])]) {
@@ -418,6 +420,7 @@ export const api = {
         if (id && !seen.has(id)) {
           seen.add(id)
           merged.push(item)
+          if (merged.length >= limit) break
         }
       }
 
