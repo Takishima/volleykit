@@ -56,7 +56,7 @@ jobs:
           additional_permissions: |
             actions: read
           # Use opus model for higher quality responses
-          claude_args: '--model opus'
+          claude_args: '--model claude-opus-4-6'
           # Allow Claude to use npm commands for running tests, builds, and linting
           allowed_tools: |
             Bash(npm:*)
