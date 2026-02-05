@@ -23,44 +23,57 @@ PUT /api/sportmanager.indoorvolleyball/api\nominationlist
 
 ### Request
 
-Content-Type: `application/x-www-form-urlencoded`
+Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
-| Parameter                                                | Type     | Description                      |
-| -------------------------------------------------------- | -------- | -------------------------------- |
-| nominationList[\_\_identity]                             | UUID     | The nomination list identifier   |
-| nominationList[game][\_\_identity]                       | UUID     | The game identifier              |
-| nominationList[team][\_\_identity]                       | UUID     | The team identifier              |
-| nominationList[coachPerson][\_\_identity]                | UUID     | Head coach person ID             |
-| nominationList[firstAssistantCoachPerson][\_\_identity]  | UUID     | First assistant coach (optional) |
-| nominationList[secondAssistantCoachPerson]               | string   | Second assistant coach or empty  |
-| nominationList[indoorPlayerNominations][N][\_\_identity] | UUID     | Player nomination IDs (array)    |
-| nominationList[closed]                                   | boolean  | Whether the list is closed       |
-| nominationList[closedAt]                                 | datetime | When closed (empty if open)      |
-| nominationList[closedBy]                                 | string   | Who closed it (empty if open)    |
-| nominationList[checked]                                  | boolean  | Whether checked by referee       |
-| nominationList[isClosedForTeam]                          | boolean  | Whether team can still edit      |
-| nominationList[nominationListValidation][\_\_identity]   | UUID     | Validation record                |
-| \_\_csrfToken                                            | string   | CSRF protection token            |
+| Parameter                                                                    | Type     | Description                                  |
+| ---------------------------------------------------------------------------- | -------- | -------------------------------------------- |
+| nominationList[\_\_identity]                                                 | UUID     | The nomination list identifier               |
+| nominationList[game][\_\_identity]                                           | UUID     | The game identifier                          |
+| nominationList[team][\_\_identity]                                           | UUID     | The team identifier                          |
+| nominationList[coachPerson][\_\_identity]                                    | UUID     | Head coach person ID                         |
+| nominationList[firstAssistantCoachPerson][\_\_identity]                      | UUID     | First assistant coach (optional)             |
+| nominationList[firstAssistantCoachPerson]                                    | string   | Empty string when no assistant coach         |
+| nominationList[secondAssistantCoachPerson]                                   | string   | Second assistant coach UUID or empty         |
+| nominationList[indoorPlayerNominations][N][\_\_identity]                     | UUID     | Player nomination IDs (array)                |
+| nominationList[closed]                                                       | boolean  | Whether the list is closed                   |
+| nominationList[closedAt]                                                     | datetime | When closed (empty if open)                  |
+| nominationList[closedBy]                                                     | string   | Who closed it (empty if open)                |
+| nominationList[checked]                                                      | boolean  | Whether checked by referee                   |
+| nominationList[checkedAt]                                                    | datetime | When checked (empty if not checked)          |
+| nominationList[checkedBy]                                                    | string   | Who checked it (empty if not checked)        |
+| nominationList[isClosedForTeam]                                              | boolean  | Whether team can still edit                  |
+| nominationList[isSubsequentGameForTeamInTournamentGroup]                     | boolean  | Whether second/third game in tournament      |
+| nominationList[lastUpdatedByRealUser]                                        | boolean  | Marks update as user-initiated               |
+| nominationList[nominationListValidation][\_\_identity]                       | UUID     | Validation record                            |
+| nominationList[notFoundButNominatedPersons]                                  | string   | Unmatched persons (empty if none)            |
+| nominationList[persistenceObjectIdentifier]                                  | UUID     | Same as \_\_identity (Neos Flow internal)    |
+| \_\_csrfToken                                                                | string   | CSRF protection token                        |
 
 ### Example Request (URL-decoded)
 
 ```
 nominationList[__identity]=<nomination-list-uuid>
-nominationList[game][__identity]=<game-uuid>
-nominationList[team][__identity]=<team-uuid>
+nominationList[checked]=false
+nominationList[checkedAt]=
+nominationList[checkedBy]=
+nominationList[closed]=false
+nominationList[closedAt]=
+nominationList[closedBy]=
 nominationList[coachPerson][__identity]=<coach-person-uuid>
-nominationList[firstAssistantCoachPerson][__identity]=<assistant-coach-uuid>
-nominationList[secondAssistantCoachPerson]=
+nominationList[firstAssistantCoachPerson]=
+nominationList[game][__identity]=<game-uuid>
 nominationList[indoorPlayerNominations][0][__identity]=<player-nomination-0-uuid>
 nominationList[indoorPlayerNominations][1][__identity]=<player-nomination-1-uuid>
 nominationList[indoorPlayerNominations][2][__identity]=<player-nomination-2-uuid>
 ...
-nominationList[closed]=false
-nominationList[closedAt]=
-nominationList[closedBy]=
-nominationList[checked]=false
 nominationList[isClosedForTeam]=true
+nominationList[isSubsequentGameForTeamInTournamentGroup]=false
+nominationList[lastUpdatedByRealUser]=true
 nominationList[nominationListValidation][__identity]=<validation-uuid>
+nominationList[notFoundButNominatedPersons]=
+nominationList[persistenceObjectIdentifier]=<nomination-list-uuid>
+nominationList[secondAssistantCoachPerson]=
+nominationList[team][__identity]=<team-uuid>
 __csrfToken=<csrf-token>
 ```
 

@@ -47,20 +47,23 @@ Note: The scoresheet identity is NOT sent in the body. The server resolves it fr
 When a field has no value (e.g., writerPerson before scorer selection), the plain field name is used
 without `[__identity]` suffix.
 
-### Example Request (URL-decoded)
+### Example Request (URL-decoded, with scorer and file set)
 
 ```
-scoresheet[game][__identity]=<game-uuid>
-scoresheet[isSimpleScoresheet]=false
-scoresheet[writerPerson]=
-scoresheet[scoresheetValidation]=
-scoresheet[reminderAboutOpenScoresheetSentAt]=
-scoresheet[notFoundButNominatedPersons]=
-scoresheet[emergencySubstituteReferees]=
+scoresheet[__identity]=<scoresheet-uuid>
 scoresheet[closedAt]=
 scoresheet[closedBy]=
+scoresheet[emergencySubstituteReferees]=
 scoresheet[file][__identity]=<file-resource-uuid>
-scoresheet[hasFile]=false
+scoresheet[game][__identity]=<game-uuid>
+scoresheet[hasFile]=true
+scoresheet[isSimpleScoresheet]=false
+scoresheet[lastUpdatedByRealUser]=true
+scoresheet[notFoundButNominatedPersons]=
+scoresheet[persistenceObjectIdentifier]=<scoresheet-uuid>
+scoresheet[reminderAboutOpenScoresheetSentAt]=
+scoresheet[scoresheetValidation][__identity]=<validation-uuid>
+scoresheet[writerPerson][__identity]=<person-uuid>
 __csrfToken=<csrf-token>
 ```
 
