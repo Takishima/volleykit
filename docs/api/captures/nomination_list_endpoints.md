@@ -18,7 +18,7 @@ Updates an existing nomination list with player nominations and coach assignment
 ### Endpoint
 
 ```
-POST /api/sportmanager.indoorvolleyball/api\nominationlist
+PUT /api/sportmanager.indoorvolleyball/api\nominationlist
 ```
 
 ### Request

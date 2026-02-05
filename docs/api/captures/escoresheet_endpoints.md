@@ -19,7 +19,7 @@ Saves changes to an existing scoresheet.
 ### Endpoint
 
 ```
-POST /api/sportmanager.indoorvolleyball/api\scoresheet
+PUT /api/sportmanager.indoorvolleyball/api\scoresheet
 ```
 
 ### Request

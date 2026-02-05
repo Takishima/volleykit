@@ -1066,18 +1066,18 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   # ==================== eScoresheet Endpoints ====================
   /sportmanager.indoorvolleyball/api\scoresheet:
-    post:
+    put:
       tags: [eScoresheet]
       summary: Update scoresheet
       description: |
         Updates an existing scoresheet. Used to save scoresheet data before finalization.
         The scoresheet must already exist (created when accessing the eScoresheet interface).
-        Note: Uses POST method (not PUT) matching the actual volleymanager behavior.
+        Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
       operationId: updateScoresheet
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          text/plain:
             schema:
               $ref: '#/components/schemas/ScoresheetUpdateRequest'
       responses:
@@ -1142,18 +1142,18 @@ paths:
           $ref: '#/components/responses/Forbidden'
   # ==================== Nomination List Endpoints ====================
   /sportmanager.indoorvolleyball/api\nominationlist:
-    post:
+    put:
       tags: [NominationList]
       summary: Update nomination list
       description: |
         Updates an existing nomination list with player nominations, coach assignments, etc.
         Used by team responsibles and referees to manage the team lineup for a game.
-        Note: Uses POST method (not PUT) matching the actual volleymanager behavior.
+        Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
       operationId: updateNominationList
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          text/plain:
             schema:
               $ref: '#/components/schemas/NominationListUpdateRequest'
       responses:

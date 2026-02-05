@@ -134,7 +134,8 @@ export function clearSession() {
 async function apiRequest<T>(
   endpoint: string,
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-  body?: Record<string, unknown>
+  body?: Record<string, unknown>,
+  requestContentType?: string
 ): Promise<T> {
   let url = `${API_BASE}${endpoint}`
 
@@ -149,7 +150,7 @@ async function apiRequest<T>(
   }
 
   if (method !== 'GET' && body) {
-    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
   }
 
   const response = await fetch(url, {
@@ -547,8 +548,9 @@ export const api = {
 
     return apiRequest<NominationList>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist',
-      'POST',
-      body
+      'PUT',
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
@@ -620,8 +622,9 @@ export const api = {
 
     return apiRequest<Scoresheet>(
       '/sportmanager.indoorvolleyball/api%5cscoresheet',
-      'POST',
-      body
+      'PUT',
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
