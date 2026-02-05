@@ -1130,7 +1130,7 @@ paths:
           Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
           The body is still URL-encoded bracket notation despite the text/plain Content-Type.
         content:
-          application/x-www-form-urlencoded:
+          text/plain:
             schema:
               $ref: '#/components/schemas/ScoresheetFinalizeRequest'
       responses:
@@ -1185,7 +1185,7 @@ paths:
           Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
           The body is still URL-encoded bracket notation despite the text/plain Content-Type.
         content:
-          application/x-www-form-urlencoded:
+          text/plain:
             schema:
               $ref: '#/components/schemas/NominationListFinalizeRequest'
       responses:

@@ -61,6 +61,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   const [isFinalizing, setIsFinalizing] = useState(false)
   const isSavingRef = useRef(false)
   const isFinalizingRef = useRef(false)
+  const uploadedFileResourceIdRef = useRef<string | undefined>(undefined)
 
   const dataSource = useAuthStore((s) => s.dataSource)
   const apiClient = getApiClient(dataSource)
@@ -206,11 +207,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         return
       }
 
-      // Upload scoresheet file if present
-      let fileResourceId: string | undefined
-      if (state.scoresheet.file) {
+      // Upload scoresheet file if present (cache the resource ID to avoid re-upload on finalize)
+      let fileResourceId = uploadedFileResourceIdRef.current
+      if (!fileResourceId && state.scoresheet.file) {
         const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
         fileResourceId = uploadResult[0]?.__identity
+        uploadedFileResourceIdRef.current = fileResourceId
         logger.debug('[VS] PDF uploaded:', fileResourceId)
       }
 
@@ -264,10 +266,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         return
       }
 
-      let fileResourceId: string | undefined
-      if (state.scoresheet.file) {
+      // Reuse cached file resource ID from saveProgress if available
+      let fileResourceId = uploadedFileResourceIdRef.current
+      if (!fileResourceId && state.scoresheet.file) {
         const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
         fileResourceId = uploadResult[0]?.__identity
+        uploadedFileResourceIdRef.current = fileResourceId
         logger.debug('[VS] PDF uploaded:', fileResourceId)
       }
 

@@ -5678,7 +5678,7 @@ export interface operations {
          */
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["ScoresheetFinalizeRequest"];
+                "text/plain": components["schemas"]["ScoresheetFinalizeRequest"];
             };
         };
         responses: {
@@ -5734,7 +5734,7 @@ export interface operations {
          */
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["NominationListFinalizeRequest"];
+                "text/plain": components["schemas"]["NominationListFinalizeRequest"];
             };
         };
         responses: {
