@@ -11,6 +11,7 @@ import { useDemoStore } from '@/shared/stores/demo'
 import { BYTES_PER_KB } from '@/shared/utils/constants'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
+import { scoreNameMatch } from './search-utils'
 import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
@@ -75,33 +76,6 @@ function normalizeForSearch(str: string): string {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
-/** Match scores for ranking person search results (higher = better match). */
-const SCORE_EXACT = 4
-const SCORE_PREFIX = 3
-const SCORE_QUERY_CONTAINS_FIELD = 2
-const SCORE_SUBSTRING = 1
-
-/** Score how well a field value matches a query term (higher = better). */
-function mockScoreField(field: string, query: string): number {
-  if (field === query) return SCORE_EXACT
-  if (field.startsWith(query)) return SCORE_PREFIX
-  if (query.startsWith(field)) return SCORE_QUERY_CONTAINS_FIELD
-  if (field.includes(query)) return SCORE_SUBSTRING
-  return 0
-}
-
-/** Score a person result against two search terms, trying both orderings. */
-function mockScoreNameMatch(
-  person: PersonSearchResult,
-  normTerm1: string,
-  normTerm2: string
-): number {
-  const first = normalizeForSearch(person.firstName ?? '')
-  const last = normalizeForSearch(person.lastName ?? '')
-  const s1 = mockScoreField(first, normTerm1) + mockScoreField(last, normTerm2)
-  const s2 = mockScoreField(first, normTerm2) + mockScoreField(last, normTerm1)
-  return Math.max(s1, s2)
-}
 
 /**
  * Get a nested property value from an object using dot notation.
@@ -539,10 +513,10 @@ export const mockApi = {
     // When two search terms are provided, re-rank results so the best name
     // match appears first regardless of whether the user typed first-last or last-first.
     if (firstName && lastName) {
-      const normT1 = normalizeForSearch(firstName)
-      const normT2 = normalizeForSearch(lastName)
       filtered.sort((a: PersonSearchResult, b: PersonSearchResult) => {
-        return mockScoreNameMatch(b, normT1, normT2) - mockScoreNameMatch(a, normT1, normT2)
+        const scoreA = scoreNameMatch(a.firstName ?? '', a.lastName ?? '', firstName, lastName)
+        const scoreB = scoreNameMatch(b.firstName ?? '', b.lastName ?? '', firstName, lastName)
+        return scoreB - scoreA
       })
     }
 
