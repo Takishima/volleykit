@@ -9,6 +9,7 @@ import {
   validateResponse,
 } from './validation'
 import { mockApi } from './mock-api'
+import { scoreNameMatch } from './search-utils'
 
 import { calendarApi } from '@/features/assignments/api/calendar-client'
 
@@ -411,8 +412,9 @@ export const api = {
         makeRequest(lastName, firstName),
       ])
 
-      // Merge and deduplicate results by __identity, preserving original order first.
-      // Cap at the requested limit to keep pagination behavior predictable.
+      // Merge and deduplicate results from both orderings, then re-rank so the
+      // best name match appears first. Sorting happens before the limit cap so
+      // that the best matches are never excluded by an arbitrary truncation point.
       const limit = options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT
       const seen = new Set<string>()
       const merged: PersonSearchResult[] = []
@@ -421,11 +423,19 @@ export const api = {
         if (id && !seen.has(id)) {
           seen.add(id)
           merged.push(item)
-          if (merged.length >= limit) break
         }
       }
 
-      return { items: merged, totalItemsCount: merged.length }
+      // Re-rank: score each result by how well its firstName/lastName match the
+      // two search terms (trying both orderings), then sort best matches first.
+      merged.sort((a, b) => {
+        const scoreA = scoreNameMatch(a.firstName ?? '', a.lastName ?? '', firstName, lastName)
+        const scoreB = scoreNameMatch(b.firstName ?? '', b.lastName ?? '', firstName, lastName)
+        return scoreB - scoreA
+      })
+
+      const capped = merged.slice(0, limit)
+      return { items: capped, totalItemsCount: capped.length }
     }
 
     // Single-term search: search both firstName and lastName fields

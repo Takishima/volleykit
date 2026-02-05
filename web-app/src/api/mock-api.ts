@@ -11,6 +11,7 @@ import { useDemoStore } from '@/shared/stores/demo'
 import { BYTES_PER_KB } from '@/shared/utils/constants'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
+import { scoreNameMatch } from './search-utils'
 import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
@@ -74,6 +75,7 @@ function normalizeForSearch(str: string): string {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
 }
+
 
 /**
  * Get a nested property value from an object using dot notation.
@@ -507,6 +509,16 @@ export const mockApi = {
 
       return !yearOfBirth || scorerYear.includes(yearOfBirth)
     })
+
+    // When two search terms are provided, re-rank results so the best name
+    // match appears first regardless of whether the user typed first-last or last-first.
+    if (firstName && lastName) {
+      filtered.sort((a: PersonSearchResult, b: PersonSearchResult) => {
+        const scoreA = scoreNameMatch(a.firstName ?? '', a.lastName ?? '', firstName, lastName)
+        const scoreB = scoreNameMatch(b.firstName ?? '', b.lastName ?? '', firstName, lastName)
+        return scoreB - scoreA
+      })
+    }
 
     const offset = options?.offset ?? 0
     const limit = options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT
