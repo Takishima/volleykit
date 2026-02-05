@@ -1,5 +1,13 @@
 # @volleykit/mobile
 
+## 1.15.0
+
+### Patch Changes
+
+- [#901](https://github.com/Takishima/volleykit/pull/901) [`4d8bd1b`](https://github.com/Takishima/volleykit/commit/4d8bd1b28cf47b25db5ed72e93cff43862357fa1) Thanks [@Takishima](https://github.com/Takishima)! - Use i18n translation for LoadingScreen loading text
+
+  Replace hardcoded "Loading..." text with `t('common.loading')` to support all 4 languages (de, en, fr, it).
+
 ## 1.14.0
 
 ### Minor Changes

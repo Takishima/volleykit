@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.15.0
+
+### Minor Changes
+
+- [#902](https://github.com/Takishima/volleykit/pull/902) [`9d3cdab`](https://github.com/Takishima/volleykit/commit/9d3cdab755b4aa11e4b1e446e58b9f0f3dbbcee9) Thanks [@Takishima](https://github.com/Takishima)! - Scorer search now matches names in any order (e.g., "Bühler Renee" finds the same results as "Renee Bühler")
+
+### Patch Changes
+
+- [#904](https://github.com/Takishima/volleykit/pull/904) [`9ba5ad4`](https://github.com/Takishima/volleykit/commit/9ba5ad476f2561d832124bb361d3923c55340dc9) Thanks [@Takishima](https://github.com/Takishima)! - Improved scorer search ranking when names are entered in any order (e.g., last name first)
+
+- [#905](https://github.com/Takishima/volleykit/pull/905) [`926d0aa`](https://github.com/Takishima/volleykit/commit/926d0aa4e9a91a4acbeea70cbe7058f0ab49385b) Thanks [@Takishima](https://github.com/Takishima)! - Fixed validation modal showing editable state for already-validated games when validation was completed externally on volleymanager
+
+- [#903](https://github.com/Takishima/volleykit/pull/903) [`32554ae`](https://github.com/Takishima/volleykit/commit/32554ae7e508ecb69b9ccb443455265964ab7ac1) Thanks [@Takishima](https://github.com/Takishima)! - Fixed secure validation mode not persisting scorer and scoresheet data to the API. Added scoresheet file upload during save and cache invalidation after saving so reopening a game reflects the saved state.
+
 ## 1.14.0
 
 ### Minor Changes
