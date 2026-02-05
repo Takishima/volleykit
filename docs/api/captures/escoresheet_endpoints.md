@@ -231,7 +231,7 @@ POST /api/sportmanager.indoorvolleyball/api\scoresheet/finalize
 
 ### Request
 
-Content-Type: `application/x-www-form-urlencoded`
+Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
 | Parameter                                      | Type    | Description                              |
 | ---------------------------------------------- | ------- | ---------------------------------------- |

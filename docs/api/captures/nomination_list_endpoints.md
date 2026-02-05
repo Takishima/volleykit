@@ -154,7 +154,7 @@ POST /api/sportmanager.indoorvolleyball/api\nominationlist/finalize
 
 ### Request
 
-Content-Type: `application/x-www-form-urlencoded`
+Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
 Same parameters as update, with:
 

@@ -722,6 +722,7 @@ export interface paths {
          * Update scoresheet
          * @description Updates an existing scoresheet. Used to save scoresheet data before finalization.
          *     The scoresheet must already exist (created when accessing the eScoresheet interface).
+         *     Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
          */
         put: operations["updateScoresheet"];
         post?: never;
@@ -786,6 +787,7 @@ export interface paths {
          * Update nomination list
          * @description Updates an existing nomination list with player nominations, coach assignments, etc.
          *     Used by team responsibles and referees to manage the team lineup for a game.
+         *     Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
          */
         put: operations["updateNominationList"];
         post?: never;
@@ -5621,7 +5623,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["ScoresheetUpdateRequest"];
+                "text/plain": components["schemas"]["ScoresheetUpdateRequest"];
             };
         };
         responses: {
@@ -5670,6 +5672,10 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
+         *     The body is still URL-encoded bracket notation despite the text/plain Content-Type.
+         */
         requestBody: {
             content: {
                 "application/x-www-form-urlencoded": components["schemas"]["ScoresheetFinalizeRequest"];
@@ -5698,7 +5704,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["NominationListUpdateRequest"];
+                "text/plain": components["schemas"]["NominationListUpdateRequest"];
             };
         };
         responses: {
@@ -5722,6 +5728,10 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /**
+         * @description Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
+         *     The body is still URL-encoded bracket notation despite the text/plain Content-Type.
+         */
         requestBody: {
             content: {
                 "application/x-www-form-urlencoded": components["schemas"]["NominationListFinalizeRequest"];
@@ -5860,9 +5870,9 @@ export interface operations {
                 "multipart/form-data": {
                     /**
                      * Format: binary
-                     * @description The file to upload
+                     * @description The file to upload (field name uses array notation)
                      */
-                    resource?: string;
+                    "scoresheetFile[]"?: string;
                     __csrfToken?: string;
                 };
             };

@@ -6,7 +6,8 @@ info:
     Captured from observing production behavior at volleymanager.volleyball.ch
 
     ## Request Format
-    All POST endpoints use `application/x-www-form-urlencoded` with nested bracket notation:
+    Most POST endpoints use `application/x-www-form-urlencoded` with nested bracket notation.
+    However, PUT endpoints and some POST endpoints (finalize) use `text/plain;charset=UTF-8` with the same bracket notation body:
     ```
     searchConfiguration[propertyFilters][0][propertyName]=refereeGame.game.startingDateTime
     searchConfiguration[propertyFilters][0][dateRange][from]=2025-12-07T23:00:00.000Z
@@ -1125,6 +1126,9 @@ paths:
       operationId: finalizeScoresheet
       requestBody:
         required: true
+        description: |
+          Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
+          The body is still URL-encoded bracket notation despite the text/plain Content-Type.
         content:
           application/x-www-form-urlencoded:
             schema:
@@ -1177,6 +1181,9 @@ paths:
       operationId: finalizeNominationList
       requestBody:
         required: true
+        description: |
+          Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
+          The body is still URL-encoded bracket notation despite the text/plain Content-Type.
         content:
           application/x-www-form-urlencoded:
             schema:

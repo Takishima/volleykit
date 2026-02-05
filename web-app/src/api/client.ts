@@ -597,7 +597,8 @@ export const api = {
     return apiRequest<NominationListFinalizeResponse>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist/finalize',
       'POST',
-      body
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
@@ -655,7 +656,8 @@ export const api = {
     return apiRequest<Scoresheet>(
       '/sportmanager.indoorvolleyball/api%5cscoresheet/finalize',
       'POST',
-      body
+      body,
+      'text/plain;charset=UTF-8'
     )
   },
 
