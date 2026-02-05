@@ -16,6 +16,7 @@ import type { HeadersWithCookies } from './types'
 import {
   AUTH_ENDPOINT,
   CAPTURE_SESSION_TOKEN_HEADER,
+  CORS_PREFLIGHT_MAX_AGE_SECONDS,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
   OCR_MAX_FILE_SIZE_BYTES,
   VOLLEYKIT_USER_AGENT,
@@ -103,7 +104,7 @@ function corsHeaders(origin: string): HeadersInit {
     // Expose X-Session-Token so JavaScript can read the session cookie relay
     'Access-Control-Expose-Headers': 'X-Session-Token',
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400',
+    'Access-Control-Max-Age': String(CORS_PREFLIGHT_MAX_AGE_SECONDS),
   }
 }
 

@@ -64,6 +64,9 @@ export const CAPTURE_SESSION_TOKEN_HEADER = 'X-Capture-Session-Token'
 /** Retry-After duration when service is unavailable (kill switch enabled) */
 export const KILL_SWITCH_RETRY_AFTER_SECONDS = 86400 // 24 hours
 
+/** CORS preflight cache duration in seconds (24 hours) */
+export const CORS_PREFLIGHT_MAX_AGE_SECONDS = 86400
+
 /** Maximum file size for OCR requests (Mistral API limit) */
 export const OCR_MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024 // 50MB
 
