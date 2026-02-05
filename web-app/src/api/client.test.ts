@@ -512,6 +512,58 @@ describe('API Client', () => {
       expect(capturedUrls[1]).toContain('lastName')
     })
 
+    it('ranks exact name matches above partial matches when names are swapped', async () => {
+      // Simulates the real-world issue: user types "LastName FirstName" (e.g., last name first).
+      // The API returns a partial match from the "original" ordering and the exact match
+      // from the "swapped" ordering. Without re-ranking, the partial match appears first.
+      const partialMatch = {
+        __identity: 'a2222222-2222-4222-a222-222222222222',
+        firstName: 'Martin',
+        lastName: 'Testlast',
+        displayName: 'Martin Testlast',
+        associationId: 99999,
+        birthday: '1988-05-10T00:00:00+00:00',
+      }
+      const exactMatch = {
+        __identity: 'a1111111-1111-4111-a111-111111111111',
+        firstName: 'Testfirst',
+        lastName: 'Testlast',
+        displayName: 'Testfirst Testlast',
+        associationId: 12345,
+        birthday: '1990-01-01T00:00:00+00:00',
+      }
+
+      let requestCount = 0
+      server.use(
+        http.get('*/api%5celasticsearchperson/search', () => {
+          requestCount++
+          if (requestCount === 1) {
+            // "Original" ordering returns only a partial match (same last name, different first)
+            return HttpResponse.json({
+              items: [partialMatch],
+              totalItemsCount: 1,
+            })
+          }
+          // "Swapped" ordering returns the exact match
+          return HttpResponse.json({
+            items: [exactMatch],
+            totalItemsCount: 1,
+          })
+        })
+      )
+
+      // User types "Testlast Testfirst" → firstName="Testlast", lastName="Testfirst"
+      const result = await api.searchPersons({
+        firstName: 'Testlast',
+        lastName: 'Testfirst',
+      })
+
+      expect(result.items).toHaveLength(2)
+      // The exact match (Testfirst Testlast) should be ranked first
+      expect(result.items![0]!.__identity).toBe(exactMatch.__identity)
+      expect(result.items![1]!.__identity).toBe(partialMatch.__identity)
+    })
+
     it('deduplicates results from dual requests by __identity', async () => {
       const sharedItem = {
         __identity: 'a1111111-1111-4111-a111-111111111111',

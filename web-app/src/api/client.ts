@@ -204,6 +204,54 @@ async function apiRequest<T>(
   }
 }
 
+/**
+ * Normalize a string for accent-insensitive comparison.
+ * Uses Unicode NFD decomposition to strip combining diacritical marks,
+ * e.g. "Bühler" → "buhler", "Renée" → "renee".
+ */
+function normalizeForComparison(s: string): string {
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+/** Match scores for ranking person search results (higher = better match). */
+const SCORE_EXACT = 4
+const SCORE_PREFIX = 3
+const SCORE_QUERY_CONTAINS_FIELD = 2
+const SCORE_SUBSTRING = 1
+
+/**
+ * Score how well a single field matches a query term.
+ * Higher score = better match.
+ */
+function scoreField(field: string, query: string): number {
+  if (field === query) return SCORE_EXACT
+  if (field.startsWith(query)) return SCORE_PREFIX
+  if (query.startsWith(field)) return SCORE_QUERY_CONTAINS_FIELD
+  if (field.includes(query)) return SCORE_SUBSTRING
+  return 0
+}
+
+/**
+ * Score how well a person's name matches two search terms, trying both orderings.
+ * Used to re-rank merged results so "Lastname Firstname" and "Firstname Lastname"
+ * both surface the correct person first.
+ */
+function scoreNameMatch(person: PersonSearchResult, term1: string, term2: string): number {
+  const first = normalizeForComparison(person.firstName ?? '')
+  const last = normalizeForComparison(person.lastName ?? '')
+  const t1 = normalizeForComparison(term1)
+  const t2 = normalizeForComparison(term2)
+
+  // Try both orderings: t1=firstName/t2=lastName and t1=lastName/t2=firstName
+  const score1 = scoreField(first, t1) + scoreField(last, t2)
+  const score2 = scoreField(first, t2) + scoreField(last, t1)
+
+  return Math.max(score1, score2)
+}
+
 /** Properties requested from the Elasticsearch person search endpoint */
 const PERSON_SEARCH_PROPERTIES = [
   'displayName',
@@ -411,8 +459,9 @@ export const api = {
         makeRequest(lastName, firstName),
       ])
 
-      // Merge and deduplicate results by __identity, preserving original order first.
-      // Cap at the requested limit to keep pagination behavior predictable.
+      // Merge, deduplicate, and re-rank results so the best name match appears first.
+      // Without re-ranking, the "original" ordering's results always come first,
+      // which produces poor results when the user types last name before first name.
       const limit = options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT
       const seen = new Set<string>()
       const merged: PersonSearchResult[] = []
@@ -424,6 +473,12 @@ export const api = {
           if (merged.length >= limit) break
         }
       }
+
+      // Re-rank: score each result by how well its firstName/lastName match the
+      // two search terms (trying both orderings), then sort best matches first.
+      merged.sort((a, b) => {
+        return scoreNameMatch(b, firstName, lastName) - scoreNameMatch(a, firstName, lastName)
+      })
 
       return { items: merged, totalItemsCount: merged.length }
     }
