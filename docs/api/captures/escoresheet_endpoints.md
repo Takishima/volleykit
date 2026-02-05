@@ -19,41 +19,48 @@ Saves changes to an existing scoresheet.
 ### Endpoint
 
 ```
-PUT /api/sportmanager.indoorvolleyball/api\scoresheet
+POST /api/sportmanager.indoorvolleyball/api\scoresheet
 ```
 
 ### Request
 
-Content-Type: `application/x-www-form-urlencoded`
+Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
-| Parameter                                      | Type     | Description                          |
-| ---------------------------------------------- | -------- | ------------------------------------ |
-| scoresheet[\_\_identity]                       | UUID     | The scoresheet identifier            |
-| scoresheet[game][\_\_identity]                 | UUID     | The game identifier                  |
-| scoresheet[isSimpleScoresheet]                 | boolean  | Whether using simplified scoresheet  |
-| scoresheet[writerPerson][\_\_identity]         | UUID     | Person filling out the scoresheet    |
-| scoresheet[file][\_\_identity]                 | UUID     | Reference to uploaded PDF (optional) |
-| scoresheet[hasFile]                            | boolean  | Whether a PDF is attached            |
-| scoresheet[scoresheetValidation][\_\_identity] | UUID     | Validation record reference          |
-| scoresheet[closedAt]                           | datetime | When closed (empty if open)          |
-| scoresheet[closedBy]                           | string   | Who closed it (empty if open)        |
-| scoresheet[emergencySubstituteReferees]        | string   | Emergency referees (empty if none)   |
-| scoresheet[notFoundButNominatedPersons]        | string   | Unmatched persons (empty if none)    |
-| \_\_csrfToken                                  | string   | CSRF protection token                |
+| Parameter                                        | Type     | Description                                  |
+| ------------------------------------------------ | -------- | -------------------------------------------- |
+| scoresheet[game][\_\_identity]                   | UUID     | The game identifier                          |
+| scoresheet[isSimpleScoresheet]                   | boolean  | Whether using simplified scoresheet          |
+| scoresheet[writerPerson][\_\_identity]           | UUID     | Person filling out the scoresheet (optional) |
+| scoresheet[writerPerson]                         | string   | Empty string when no scorer set              |
+| scoresheet[file][\_\_identity]                   | UUID     | Reference to uploaded file (optional)        |
+| scoresheet[hasFile]                              | boolean  | Whether a file is attached                   |
+| scoresheet[scoresheetValidation][\_\_identity]   | UUID     | Validation record reference (optional)       |
+| scoresheet[scoresheetValidation]                 | string   | Empty string when no validation yet          |
+| scoresheet[reminderAboutOpenScoresheetSentAt]    | string   | Reminder timestamp (empty if not sent)       |
+| scoresheet[closedAt]                             | datetime | When closed (empty if open)                  |
+| scoresheet[closedBy]                             | string   | Who closed it (empty if open)                |
+| scoresheet[emergencySubstituteReferees]          | string   | Emergency referees (empty if none)           |
+| scoresheet[notFoundButNominatedPersons]          | string   | Unmatched persons (empty if none)            |
+| \_\_csrfToken                                    | string   | CSRF protection token                        |
+
+Note: The scoresheet identity is NOT sent in the body. The server resolves it from the game identity.
+When a field has no value (e.g., writerPerson before scorer selection), the plain field name is used
+without `[__identity]` suffix.
 
 ### Example Request (URL-decoded)
 
 ```
-scoresheet[__identity]=<scoresheet-uuid>
 scoresheet[game][__identity]=<game-uuid>
 scoresheet[isSimpleScoresheet]=false
-scoresheet[writerPerson][__identity]=<person-uuid>
-scoresheet[hasFile]=false
+scoresheet[writerPerson]=
+scoresheet[scoresheetValidation]=
+scoresheet[reminderAboutOpenScoresheetSentAt]=
+scoresheet[notFoundButNominatedPersons]=
+scoresheet[emergencySubstituteReferees]=
 scoresheet[closedAt]=
 scoresheet[closedBy]=
-scoresheet[scoresheetValidation][__identity]=<validation-uuid>
-scoresheet[emergencySubstituteReferees]=
-scoresheet[notFoundButNominatedPersons]=
+scoresheet[file][__identity]=<file-resource-uuid>
+scoresheet[hasFile]=false
 __csrfToken=<csrf-token>
 ```
 
@@ -159,9 +166,9 @@ Common validation issues include:
 
 ---
 
-## 3. Upload Scoresheet PDF
+## 3. Upload Scoresheet File
 
-Uploads the signed scoresheet PDF file.
+Uploads the signed scoresheet file (JPEG, PNG, or PDF).
 
 ### Endpoint
 
@@ -173,10 +180,13 @@ POST /api/sportmanager.resourcemanagement/api\persistentresource/upload
 
 Content-Type: `multipart/form-data`
 
-| Parameter     | Type   | Description            |
-| ------------- | ------ | ---------------------- |
-| resource      | file   | The PDF file to upload |
-| \_\_csrfToken | string | CSRF protection token  |
+| Parameter          | Type   | Description                       |
+| ------------------ | ------ | --------------------------------- |
+| scoresheetFile[]   | file   | The scoresheet file to upload     |
+| \_\_csrfToken      | string | CSRF protection token (optional)  |
+
+Note: The volleymanager website does not include a CSRF token in the upload request body.
+The field name uses array notation (`scoresheetFile[]`).
 
 ### Response
 

@@ -118,10 +118,10 @@ POST /api/sportmanager.resourcemanagement/api\persistentresource/upload
 
 Content-Type: `multipart/form-data`
 
-| Parameter     | Type   | Description           |
-| ------------- | ------ | --------------------- |
-| resource      | file   | The file to upload    |
-| \_\_csrfToken | string | CSRF protection token |
+| Parameter          | Type   | Description           |
+| ------------------ | ------ | --------------------- |
+| scoresheetFile[]   | file   | The file to upload    |
+| \_\_csrfToken      | string | CSRF protection token |
 
 ### Example (using cURL)
 
@@ -129,7 +129,7 @@ Content-Type: `multipart/form-data`
 curl -X POST \
   'https://volleymanager.volleyball.ch/api/sportmanager.resourcemanagement/api\persistentresource/upload' \
   -H 'Cookie: Neos_Flow_Session=<session-id>' \
-  -F 'resource=@/path/to/scoresheet.pdf' \
+  -F 'scoresheetFile[]=@/path/to/scoresheet.pdf' \
   -F '__csrfToken=<csrf-token>'
 ```
 

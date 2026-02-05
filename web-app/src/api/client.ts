@@ -547,7 +547,7 @@ export const api = {
 
     return apiRequest<NominationList>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist',
-      'PUT',
+      'POST',
       body
     )
   },
@@ -620,7 +620,7 @@ export const api = {
 
     return apiRequest<Scoresheet>(
       '/sportmanager.indoorvolleyball/api%5cscoresheet',
-      'PUT',
+      'POST',
       body
     )
   },
@@ -669,7 +669,7 @@ export const api = {
     }
 
     const formData = new FormData()
-    formData.append('resource', file)
+    formData.append('scoresheetFile[]', file)
     const csrfToken = getCsrfToken()
     if (csrfToken) {
       formData.append('__csrfToken', csrfToken)
