@@ -206,6 +206,14 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         return
       }
 
+      // Upload scoresheet file if present
+      let fileResourceId: string | undefined
+      if (state.scoresheet.file) {
+        const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
+        fileResourceId = uploadResult[0]?.__identity
+        logger.debug('[VS] PDF uploaded:', fileResourceId)
+      }
+
       await saveRosterModifications(
         apiClient,
         gameId,
@@ -224,8 +232,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         apiClient,
         gameId,
         gameDetails.scoresheet,
-        state.scorer.selected?.__identity
+        state.scorer.selected?.__identity,
+        fileResourceId
       )
+
+      // Invalidate cache so reopening shows the saved data
+      await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
       logger.debug('[VS] save done')
     } catch (error) {
       logger.error('[VS] save failed:', error)
@@ -234,7 +246,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isSavingRef.current = false
       setIsSaving(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
 
   const finalizeValidation = useCallback(async (): Promise<void> => {
     if (isFinalizingRef.current) {

@@ -603,15 +603,26 @@ export const api = {
     scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    isSimpleScoresheet: boolean = false
+    isSimpleScoresheet: boolean = false,
+    fileResourceId?: string
   ): Promise<Scoresheet> {
-    return apiRequest<Scoresheet>('/sportmanager.indoorvolleyball/api%5cscoresheet', 'PUT', {
+    const body: Record<string, unknown> = {
       'scoresheet[__identity]': scoresheetId,
       'scoresheet[game][__identity]': gameId,
       'scoresheet[writerPerson][__identity]': scorerPersonId,
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
-      'scoresheet[hasFile]': 'false',
-    })
+      'scoresheet[hasFile]': fileResourceId ? 'true' : 'false',
+    }
+
+    if (fileResourceId) {
+      body['scoresheet[file][__identity]'] = fileResourceId
+    }
+
+    return apiRequest<Scoresheet>(
+      '/sportmanager.indoorvolleyball/api%5cscoresheet',
+      'PUT',
+      body
+    )
   },
 
   async finalizeScoresheet(

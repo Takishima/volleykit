@@ -454,7 +454,8 @@ describe('useValidationState', () => {
         'scoresheet-1',
         'game-123',
         'scorer-1',
-        false
+        false,
+        undefined
       )
     })
 
