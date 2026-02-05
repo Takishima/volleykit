@@ -60,6 +60,20 @@ describe('mockApi.searchPersons', () => {
       expect(items[0]?.lastName).toBe('Müller')
     })
 
+    it('matches when names are provided in reversed order (lastName first)', async () => {
+      // User types "Müller Hans" → parseSearchInput gives firstName=Müller, lastName=Hans
+      // The mock API should still find Hans Müller
+      const result = await mockApi.searchPersons({
+        firstName: 'Müller',
+        lastName: 'Hans',
+      })
+      const items = result.items!
+
+      expect(items.length).toBe(1)
+      expect(items[0]?.firstName).toBe('Hans')
+      expect(items[0]?.lastName).toBe('Müller')
+    })
+
     it('returns empty when firstName matches but lastName does not', async () => {
       const result = await mockApi.searchPersons({
         firstName: 'Hans',
@@ -240,6 +254,22 @@ describe('scorer search integration - user flow simulation', () => {
 
       expect(filters).toEqual({ firstName: 'Hans', lastName: 'Müller' })
 
+      const result = await mockApi.searchPersons(filters)
+
+      expect(result.items).toBeDefined()
+      expect(result.items!.length).toBe(1)
+      expect(result.items![0]!.displayName).toBe('Hans Müller')
+    })
+
+    it('finds scorers when user types last name first (e.g., "Müller Hans")', async () => {
+      // User types "Müller Hans" (last name first, common in Swiss German)
+      const userInput = 'Müller Hans'
+      const filters = parseSearchInput(userInput)
+
+      // parseSearchInput treats first word as firstName, second as lastName
+      expect(filters).toEqual({ firstName: 'Müller', lastName: 'Hans' })
+
+      // But the mock API should still find Hans Müller via swapped name matching
       const result = await mockApi.searchPersons(filters)
 
       expect(result.items).toBeDefined()

@@ -487,6 +487,63 @@ describe('API Client', () => {
         expect(capturedUrl).toContain(prop)
       })
     })
+
+    it('makes two parallel requests with swapped names when both are provided', async () => {
+      const capturedUrls: string[] = []
+
+      server.use(
+        http.get('*/api%5celasticsearchperson/search', ({ request }) => {
+          capturedUrls.push(request.url)
+          return HttpResponse.json(mockPersonSearchResponse)
+        })
+      )
+
+      await api.searchPersons({ firstName: 'Bühler', lastName: 'Renee' })
+
+      // Should make two requests: original order + swapped order
+      expect(capturedUrls).toHaveLength(2)
+
+      // First request: firstName=Bühler, lastName=Renee
+      expect(capturedUrls[0]).toContain('firstName')
+      expect(capturedUrls[0]).toContain('lastName')
+
+      // Second request: firstName=Renee, lastName=Bühler (swapped)
+      expect(capturedUrls[1]).toContain('firstName')
+      expect(capturedUrls[1]).toContain('lastName')
+    })
+
+    it('deduplicates results from dual requests by __identity', async () => {
+      const sharedItem = {
+        __identity: 'a1111111-1111-4111-a111-111111111111',
+        firstName: 'Renee',
+        lastName: 'Bühler',
+        displayName: 'Renee Bühler',
+        associationId: 12345,
+        birthday: '1990-01-01T00:00:00+00:00',
+      }
+
+      let requestCount = 0
+      server.use(
+        http.get('*/api%5celasticsearchperson/search', () => {
+          requestCount++
+          // Both requests return the same person
+          return HttpResponse.json({
+            items: [sharedItem],
+            totalItemsCount: 1,
+          })
+        })
+      )
+
+      const result = await api.searchPersons({
+        firstName: 'Bühler',
+        lastName: 'Renee',
+      })
+
+      expect(requestCount).toBe(2)
+      // Should deduplicate: same __identity appears only once
+      expect(result.items).toHaveLength(1)
+      expect(result.items![0]!.__identity).toBe(sharedItem.__identity)
+    })
   })
 
   describe('request headers', () => {
