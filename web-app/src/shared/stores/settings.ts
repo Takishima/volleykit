@@ -183,13 +183,9 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
 interface SettingsState {
   // === Global settings (shared across all modes) ===
 
-  // Safe mode
+  // Safe mode - blocks exchanges/compensations, and in validation saves without finalizing
   isSafeModeEnabled: boolean
   setSafeMode: (enabled: boolean) => void
-
-  // Safe validation mode (save only, don't finalize - redirect to VolleyManager)
-  isSafeValidationEnabled: boolean
-  setSafeValidation: (enabled: boolean) => void
 
   // OCR feature toggle (experimental)
   isOCREnabled: boolean
@@ -471,7 +467,6 @@ export const useSettingsStore = create<SettingsState>()(
       (set, get) => ({
         // Global settings
         isSafeModeEnabled: true,
-        isSafeValidationEnabled: true,
         isOCREnabled: false,
         preventZoom: false,
 
@@ -506,10 +501,6 @@ export const useSettingsStore = create<SettingsState>()(
 
         setSafeMode: (enabled: boolean) => {
           set({ isSafeModeEnabled: enabled })
-        },
-
-        setSafeValidation: (enabled: boolean) => {
-          set({ isSafeValidationEnabled: enabled })
         },
 
         setOCREnabled: (enabled: boolean) => {
@@ -776,7 +767,6 @@ export const useSettingsStore = create<SettingsState>()(
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
-          isSafeValidationEnabled: state.isSafeValidationEnabled,
           isOCREnabled: state.isOCREnabled,
           preventZoom: state.preventZoom,
           // Mode-specific settings stored per mode
@@ -825,7 +815,6 @@ export const useSettingsStore = create<SettingsState>()(
           const persistedState = persisted as
             | {
                 isSafeModeEnabled?: boolean
-                isSafeValidationEnabled?: boolean
                 isOCREnabled?: boolean
                 preventZoom?: boolean
                 settingsByMode?: Record<DataSource, Partial<ModeSettings>>
@@ -893,8 +882,6 @@ export const useSettingsStore = create<SettingsState>()(
             ...current,
             // Preserve global settings
             isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
-            isSafeValidationEnabled:
-              persistedState?.isSafeValidationEnabled ?? current.isSafeValidationEnabled,
             isOCREnabled: persistedState?.isOCREnabled ?? current.isOCREnabled,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,
             // Preserve mode-specific settings

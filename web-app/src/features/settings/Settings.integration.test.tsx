@@ -64,7 +64,6 @@ describe('Settings Integration', () => {
     // Reset settings store - need to reset the persisted state
     useSettingsStore.setState({
       isSafeModeEnabled: true,
-      isSafeValidationEnabled: true,
       isOCREnabled: false,
       preventZoom: false,
       currentMode: 'api',

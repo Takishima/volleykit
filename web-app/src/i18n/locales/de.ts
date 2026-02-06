@@ -521,7 +521,7 @@ const de: Translations = {
     },
     safeMode: 'Sicherheitsmodus',
     safeModeDescription:
-      'Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse oder das Validieren von Spielen. Dies hilft, versehentliche Änderungen während des Testens der App zu vermeiden.',
+      'Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse. Die Validierung speichert Ihre Änderungen, schliesst das Spiel aber nicht ab — Sie schliessen die Validierung im VolleyManager ab.',
     safeModeEnabled: 'Sicherheitsmodus ist aktiviert',
     safeModeDisabled: 'Sicherheitsmodus ist deaktiviert',
     safeModeWarningTitle: 'Sicherheitsmodus deaktivieren?',
@@ -535,12 +535,6 @@ const de: Translations = {
     safeModeDangerous: 'Gefährliche Operationen sind aktiviert',
     safeModeBlocked:
       'Diese Operation ist im Sicherheitsmodus gesperrt. Deaktivieren Sie den Sicherheitsmodus in den Einstellungen, um fortzufahren.',
-    safeValidation: 'Sichere Validierung',
-    safeValidationDescription:
-      'Wenn aktiviert, speichert die Validierung Ihre Änderungen, aber schliesst das Spiel nicht ab. Sie werden aufgefordert, die Validierung im VolleyManager abzuschliessen.',
-    safeValidationEnabled: 'Sichere Validierung ist aktiviert',
-    safeValidationDisabled:
-      'Sichere Validierung ist deaktiviert - Spiele werden direkt abgeschlossen',
     safeValidationCompleteTitle: 'Validierung gespeichert',
     safeValidationCompleteMessage:
       'Ihre Änderungen wurden gespeichert. Bitte gehen Sie zum VolleyManager, um die Validierung abzuschliessen und das Spiel zu finalisieren.',
@@ -756,7 +750,6 @@ const de: Translations = {
       next: 'Weiter',
       validate: 'Validieren',
       finish: 'Abschliessen',
-      dismiss: 'Schliessen',
       stepOf: 'Schritt {current} von {total}',
       saving: 'Speichern...',
       markAsReviewed: 'Als geprüft markieren',

@@ -112,7 +112,6 @@ describe('Validation Integration', () => {
     // Reset settings store to defaults
     useSettingsStore.setState({
       isSafeModeEnabled: false,
-      isSafeValidationEnabled: false,
       isOCREnabled: false,
     })
   })
@@ -337,15 +336,6 @@ describe('Validation Integration', () => {
       // Enable OCR
       useSettingsStore.getState().setOCREnabled(true)
       expect(useSettingsStore.getState().isOCREnabled).toBe(true)
-    })
-
-    it('safe validation setting is read from settings store', () => {
-      // Default: safe validation disabled
-      expect(useSettingsStore.getState().isSafeValidationEnabled).toBe(false)
-
-      // Enable safe validation
-      useSettingsStore.getState().setSafeValidation(true)
-      expect(useSettingsStore.getState().isSafeValidationEnabled).toBe(true)
     })
 
     it('safe mode setting affects non-demo validation', () => {

@@ -35,19 +35,10 @@ export function SettingsPage() {
       refreshData: state.refreshData,
     }))
   )
-  const {
-    isSafeModeEnabled,
-    setSafeMode,
-    isSafeValidationEnabled,
-    setSafeValidation,
-    preventZoom,
-    setPreventZoom,
-  } = useSettingsStore(
+  const { isSafeModeEnabled, setSafeMode, preventZoom, setPreventZoom } = useSettingsStore(
     useShallow((state) => ({
       isSafeModeEnabled: state.isSafeModeEnabled,
       setSafeMode: state.setSafeMode,
-      isSafeValidationEnabled: state.isSafeValidationEnabled,
-      setSafeValidation: state.setSafeValidation,
       preventZoom: state.preventZoom,
       setPreventZoom: state.setPreventZoom,
     }))
@@ -80,12 +71,7 @@ export function SettingsPage() {
       )}
 
       {!isDemoMode && !isCalendarMode && (
-        <DataProtectionSection
-          isSafeModeEnabled={isSafeModeEnabled}
-          onSetSafeMode={setSafeMode}
-          isSafeValidationEnabled={isSafeValidationEnabled}
-          onSetSafeValidation={setSafeValidation}
-        />
+        <DataProtectionSection isSafeModeEnabled={isSafeModeEnabled} onSetSafeMode={setSafeMode} />
       )}
 
       <AppInfoSection showUpdates={__PWA_ENABLED__} />

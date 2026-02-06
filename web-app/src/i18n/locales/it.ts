@@ -514,7 +514,7 @@ const it: Translations = {
     },
     safeMode: 'Modalità sicura',
     safeModeDescription:
-      "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi o la convalida di partite. Questo aiuta a prevenire modifiche accidentali durante il test dell'app.",
+      "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi. La convalida salva le modifiche ma non finalizza la partita — completi la convalida su VolleyManager.",
     safeModeEnabled: 'La modalità sicura è attivata',
     safeModeDisabled: 'La modalità sicura è disattivata',
     safeModeWarningTitle: 'Disattivare la modalità sicura?',
@@ -527,12 +527,6 @@ const it: Translations = {
     safeModeDangerous: 'Le operazioni pericolose sono abilitate',
     safeModeBlocked:
       'Questa operazione è bloccata in modalità sicura. Disattiva la modalità sicura nelle Impostazioni per procedere.',
-    safeValidation: 'Convalida sicura',
-    safeValidationDescription:
-      'Quando attivata, la convalida salva le modifiche ma non finalizza la partita. Sarai invitato a completare la convalida su VolleyManager.',
-    safeValidationEnabled: 'Convalida sicura attivata',
-    safeValidationDisabled:
-      'Convalida sicura disattivata - le partite verranno finalizzate direttamente',
     safeValidationCompleteTitle: 'Convalida salvata',
     safeValidationCompleteMessage:
       'Le tue modifiche sono state salvate. Vai su VolleyManager per completare la convalida e finalizzare la partita.',
@@ -742,7 +736,6 @@ const it: Translations = {
       next: 'Avanti',
       validate: 'Valida',
       finish: 'Termina',
-      dismiss: 'Chiudi',
       stepOf: 'Passo {current} di {total}',
       saving: 'Salvataggio...',
       markAsReviewed: 'Segna come verificato',
