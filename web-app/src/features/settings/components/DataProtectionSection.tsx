@@ -13,15 +13,11 @@ const SafeModeWarningModal = lazy(() =>
 interface DataProtectionSectionProps {
   isSafeModeEnabled: boolean
   onSetSafeMode: (enabled: boolean) => void
-  isSafeValidationEnabled: boolean
-  onSetSafeValidation: (enabled: boolean) => void
 }
 
 function DataProtectionSectionComponent({
   isSafeModeEnabled,
   onSetSafeMode,
-  isSafeValidationEnabled,
-  onSetSafeValidation,
 }: DataProtectionSectionProps) {
   const { t } = useTranslation()
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false)
@@ -41,10 +37,6 @@ function DataProtectionSectionComponent({
   const handleConfirmDisableSafeMode = useCallback(() => {
     onSetSafeMode(false)
   }, [onSetSafeMode])
-
-  const handleToggleSafeValidation = useCallback(() => {
-    onSetSafeValidation(!isSafeValidationEnabled)
-  }, [isSafeValidationEnabled, onSetSafeValidation])
 
   return (
     <>
@@ -114,36 +106,6 @@ function DataProtectionSectionComponent({
                 checked={isSafeModeEnabled}
                 onChange={handleToggleSafeMode}
                 label={t('settings.safeMode')}
-                variant="success"
-              />
-            </div>
-          </div>
-
-          {/* Separator */}
-          <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
-
-          {/* Safe Validation */}
-          <div className="space-y-4">
-            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-              {t('settings.safeValidation')}
-            </div>
-            <p className="text-sm text-text-muted dark:text-text-muted-dark">
-              {t('settings.safeValidationDescription')}
-            </p>
-
-            <div className="flex items-center justify-between py-2">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                  {isSafeValidationEnabled
-                    ? t('settings.safeValidationEnabled')
-                    : t('settings.safeValidationDisabled')}
-                </div>
-              </div>
-
-              <ToggleSwitch
-                checked={isSafeValidationEnabled}
-                onChange={handleToggleSafeValidation}
-                label={t('settings.safeValidation')}
                 variant="success"
               />
             </div>

@@ -394,10 +394,6 @@ export interface Translations {
     safeModeConfirmButton: string
     safeModeDangerous: string
     safeModeBlocked: string
-    safeValidation: string
-    safeValidationDescription: string
-    safeValidationEnabled: string
-    safeValidationDisabled: string
     safeValidationCompleteTitle: string
     safeValidationCompleteMessage: string
     safeValidationCompleteButton: string
@@ -595,7 +591,6 @@ export interface Translations {
       next: string
       validate: string
       finish: string
-      dismiss: string
       stepOf: string
       saving: string
       markAsReviewed: string

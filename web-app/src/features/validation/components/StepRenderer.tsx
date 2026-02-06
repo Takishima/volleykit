@@ -13,8 +13,6 @@ interface LoadingState {
 
 interface ValidationInfo {
   isValidated: boolean
-  /** True when safe mode is enabled - roster editing is disabled */
-  isInSafeMode: boolean
   validatedInfo: UseValidationStateResult['validatedInfo']
   pendingScorer: UseValidationStateResult['pendingScorer']
   scoresheetNotRequired: boolean
@@ -85,7 +83,7 @@ export function StepRenderer({
           assignment={assignment}
           onModificationsChange={handlers.setHomeRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={validation.isValidated || validation.isInSafeMode}
+          readOnly={validation.isValidated}
           initialModifications={validation.state.homeRoster.playerModifications}
           initialCoachModifications={validation.state.homeRoster.coachModifications}
           prefetchedNominationList={validation.homeNominationList}
@@ -97,7 +95,7 @@ export function StepRenderer({
           assignment={assignment}
           onModificationsChange={handlers.setAwayRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={validation.isValidated || validation.isInSafeMode}
+          readOnly={validation.isValidated}
           initialModifications={validation.state.awayRoster.playerModifications}
           initialCoachModifications={validation.state.awayRoster.coachModifications}
           prefetchedNominationList={validation.awayNominationList}
@@ -108,7 +106,7 @@ export function StepRenderer({
         <ScorerPanel
           key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
           onScorerChange={handlers.setScorer}
-          readOnly={validation.isValidated || validation.isInSafeMode}
+          readOnly={validation.isValidated}
           readOnlyScorerName={validation.validatedInfo?.scorerName}
           readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
           initialScorer={
@@ -126,7 +124,7 @@ export function StepRenderer({
       {currentStepId === 'scoresheet' && (
         <ScoresheetPanel
           onScoresheetChange={handlers.setScoresheet}
-          readOnly={validation.isValidated || validation.isInSafeMode}
+          readOnly={validation.isValidated}
           hasScoresheet={validation.validatedInfo?.hasScoresheet}
           scoresheetNotRequired={validation.scoresheetNotRequired}
         />

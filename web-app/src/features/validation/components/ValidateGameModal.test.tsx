@@ -32,7 +32,6 @@ vi.mock('@/shared/stores/settings', () => ({
   useSettingsStore: vi.fn((selector) => {
     const state = {
       isSafeModeEnabled: false,
-      isSafeValidationEnabled: false,
       isOCREnabled: false,
     }
     // Handle both selector function and direct access patterns

@@ -67,23 +67,6 @@ export function ValidatedModeButtons(props: ValidatedModeButtonsProps) {
   return <ReadOnlyModeButtons {...props} closeLabel={t('common.close')} />
 }
 
-interface SafeModeButtonsProps {
-  navigation: WizardNavigationState
-  onBack: () => void
-  onNext: () => void
-  onClose: () => void
-}
-
-/**
- * Navigation buttons shown when safe mode is enabled.
- * Read-only mode with Previous/Next/Dismiss buttons.
- * Dismiss closes without making any API calls.
- */
-export function SafeModeButtons(props: SafeModeButtonsProps) {
-  const { t } = useTranslation()
-  return <ReadOnlyModeButtons {...props} closeLabel={t('validation.wizard.dismiss')} />
-}
-
 interface EditModeState {
   isFinalizing: boolean
   isLoadingGameDetails: boolean

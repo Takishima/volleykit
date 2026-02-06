@@ -442,8 +442,8 @@ describe('useAssignmentActions', () => {
     })
 
     it('should allow opening validate game modal when safe mode is enabled for unvalidated games', () => {
-      // Safe mode now allows opening the modal - the modal shows SafeModeButtons
-      // with a "Dismiss" button instead of blocking entirely
+      // Safe mode allows opening the modal - the modal saves without finalizing
+      // and redirects to VolleyManager instead of blocking entirely
       const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() })
 
       act(() => {

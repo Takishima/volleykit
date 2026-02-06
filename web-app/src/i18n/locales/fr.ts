@@ -518,7 +518,7 @@ const fr: Translations = {
     },
     safeMode: 'Mode sécurisé',
     safeModeDescription:
-      "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges ou la validation de matchs. Cela aide à éviter les modifications accidentelles pendant les tests de l'application.",
+      "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges. La validation enregistre vos modifications mais ne finalise pas le match — vous complétez la validation sur VolleyManager.",
     safeModeEnabled: 'Le mode sécurisé est activé',
     safeModeDisabled: 'Le mode sécurisé est désactivé',
     safeModeWarningTitle: 'Désactiver le mode sécurisé?',
@@ -531,12 +531,6 @@ const fr: Translations = {
     safeModeDangerous: 'Les opérations dangereuses sont activées',
     safeModeBlocked:
       'Cette opération est bloquée en mode sécurisé. Désactivez le mode sécurisé dans les paramètres pour continuer.',
-    safeValidation: 'Validation sécurisée',
-    safeValidationDescription:
-      'Lorsque activé, la validation enregistre vos modifications mais ne finalise pas le match. Vous serez invité à compléter la validation sur VolleyManager.',
-    safeValidationEnabled: 'Validation sécurisée activée',
-    safeValidationDisabled:
-      'Validation sécurisée désactivée - les matchs seront finalisés directement',
     safeValidationCompleteTitle: 'Validation enregistrée',
     safeValidationCompleteMessage:
       'Vos modifications ont été enregistrées. Veuillez aller sur VolleyManager pour compléter la validation et finaliser le match.',
@@ -750,7 +744,6 @@ const fr: Translations = {
       next: 'Suivant',
       validate: 'Valider',
       finish: 'Terminer',
-      dismiss: 'Fermer',
       stepOf: 'Étape {current} sur {total}',
       saving: 'Enregistrement...',
       markAsReviewed: 'Marquer comme vérifié',

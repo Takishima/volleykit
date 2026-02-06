@@ -504,7 +504,7 @@ const en: Translations = {
     },
     safeMode: 'Safe Mode',
     safeModeDescription:
-      'Safe mode restricts dangerous operations like adding/taking games from exchange or validating games. This helps prevent accidental modifications while the app is being tested.',
+      'Safe mode restricts dangerous operations like adding/taking games from exchange. Validation saves your changes but does not finalize the game — you complete the validation on VolleyManager.',
     safeModeEnabled: 'Safe mode is enabled',
     safeModeDisabled: 'Safe mode is disabled',
     safeModeWarningTitle: 'Disable Safe Mode?',
@@ -517,11 +517,6 @@ const en: Translations = {
     safeModeDangerous: 'Dangerous operations are enabled',
     safeModeBlocked:
       'This operation is blocked in safe mode. Disable safe mode in Settings to proceed.',
-    safeValidation: 'Safe Validation Mode',
-    safeValidationDescription:
-      'When enabled, validation saves your changes but does not finalize the game. You will be directed to complete the validation on VolleyManager.',
-    safeValidationEnabled: 'Safe validation is enabled',
-    safeValidationDisabled: 'Safe validation is disabled - games will be finalized directly',
     safeValidationCompleteTitle: 'Validation Saved',
     safeValidationCompleteMessage:
       'Your changes have been saved. Please go to VolleyManager to complete the validation and finalize the game.',
@@ -727,7 +722,6 @@ const en: Translations = {
       next: 'Next',
       validate: 'Validate',
       finish: 'Finish',
-      dismiss: 'Dismiss',
       stepOf: 'Step {current} of {total}',
       saving: 'Saving...',
       markAsReviewed: 'Mark as reviewed',
