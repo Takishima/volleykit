@@ -76,7 +76,9 @@ export function SessionMonitorProvider({ children }: SessionMonitorProviderProps
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         checkBiometricStatus()
-        onAppForeground()
+        onAppForeground().catch(() => {
+          // Ignore cleanup errors on foreground
+        })
       }
     })
 
