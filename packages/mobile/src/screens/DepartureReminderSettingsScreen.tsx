@@ -25,6 +25,7 @@ import { useTranslation } from '@volleykit/shared/i18n'
 import { COLORS, SETTINGS_ICON_SIZE } from '../constants'
 import { location } from '../platform/location'
 import { notifications } from '../platform/notifications'
+import { onFeatureDisabled } from '../services/departure-reminder'
 import { departureReminderSettingsStore } from '../stores/departureReminderSettings'
 import {
   DEFAULT_DEPARTURE_REMINDER_SETTINGS,
@@ -126,9 +127,9 @@ export function DepartureReminderSettingsScreen(_props: Props) {
         const updated = await departureReminderSettingsStore.disable(storage)
         setSettings(updated)
 
-        // Stop background tracking
+        // Clean up: cancel notifications, stop tracking, clear reminder data
         try {
-          await location.stopBackgroundTracking()
+          await onFeatureDisabled()
         } catch {
           // Ignore errors
         }

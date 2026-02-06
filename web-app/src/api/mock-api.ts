@@ -76,7 +76,6 @@ function normalizeForSearch(str: string): string {
     .replace(/[\u0300-\u036f]/g, '')
 }
 
-
 /**
  * Get a nested property value from an object using dot notation.
  * @example getNestedValue({ a: { b: 1 } }, "a.b") // returns 1

@@ -14,6 +14,7 @@ import { useStorage } from '@volleykit/shared/adapters'
 
 import { BIOMETRIC_ENABLED_KEY } from '../constants'
 import { biometrics } from '../platform/biometrics'
+import { onAppForeground } from '../services/departure-reminder'
 
 export interface SessionMonitorState {
   /** Whether the session has expired */
@@ -75,6 +76,9 @@ export function SessionMonitorProvider({ children }: SessionMonitorProviderProps
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
         checkBiometricStatus()
+        onAppForeground().catch(() => {
+          // Ignore cleanup errors on foreground
+        })
       }
     })
 

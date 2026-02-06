@@ -14,6 +14,7 @@ import { useAuthStore } from '@volleykit/shared/stores'
 
 import { setSessionToken, setCsrfToken, clearTokens, getSessionToken } from '../api'
 import { SESSION_TOKEN_HEADER } from '../constants'
+import { onUserLogout as cleanupDepartureReminders } from './departure-reminder'
 import { secureStorage } from '../platform/secureStorage'
 import { useActionQueueStore } from './offline/action-queue-store'
 
@@ -203,6 +204,14 @@ export async function logout(): Promise<void> {
     logger.info('Offline action queue cleared')
   } catch (error) {
     logger.warn('Failed to clear offline action queue:', error)
+  }
+
+  // Clean up departure reminders (cancel notifications, stop tracking, clear data)
+  try {
+    await cleanupDepartureReminders()
+    logger.info('Departure reminders cleaned up')
+  } catch (error) {
+    logger.warn('Failed to clean up departure reminders:', error)
   }
 
   // Clear auth store
