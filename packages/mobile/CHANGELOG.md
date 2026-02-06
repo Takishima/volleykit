@@ -1,5 +1,11 @@
 # @volleykit/mobile
 
+## 1.16.0
+
+### Patch Changes
+
+- [#906](https://github.com/Takishima/volleykit/pull/906) [`0d274be`](https://github.com/Takishima/volleykit/commit/0d274bebb6ddb29896bb4214c81f0dcb057b41cb) Thanks [@Takishima](https://github.com/Takishima)! - Wire departure reminder cleanup into app lifecycle hooks
+
 ## 1.15.0
 
 ### Patch Changes

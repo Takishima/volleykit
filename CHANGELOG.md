@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.0
+
+### Minor Changes
+
+- [#907](https://github.com/Takishima/volleykit/pull/907) [`1b2fced`](https://github.com/Takishima/volleykit/commit/1b2fceda36a62788bb856ab7cc4d48021e9530de) Thanks [@Takishima](https://github.com/Takishima)! - Replace safe mode read-only validation with save-without-finalize behavior
+
 ## 1.15.0
 
 ### Minor Changes
