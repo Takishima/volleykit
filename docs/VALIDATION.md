@@ -113,7 +113,6 @@ npm run size
 | Main App Bundle      | 145 KB |
 | Vendor Chunks (each) | 50 KB  |
 | PDF Library (lazy)   | 185 KB |
-| OCR Feature (lazy)   | 12 KB  |
 | Image Cropper (lazy) | 10 KB  |
 | CSS                  | 12 KB  |
 | Total JS             | 520 KB |

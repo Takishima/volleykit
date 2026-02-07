@@ -56,12 +56,6 @@
       "gzip": true
     },
     {
-      "name": "OCR Feature (lazy-loaded)",
-      "path": "dist/assets/chunk-OCRPanel-*.js",
-      "limit": "12 kB",
-      "gzip": true
-    },
-    {
       "name": "Image Cropper (lazy-loaded)",
       "path": "dist/assets/chunk-cropper-*.js",
       "limit": "10 kB",
