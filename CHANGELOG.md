@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.1
+
+### Patch Changes
+
+- [#908](https://github.com/Takishima/volleykit/pull/908) [`7fd88c8`](https://github.com/Takishima/volleykit/commit/7fd88c839bb1a953d7af6bc6da4d93b6541f0d8a) Thanks [@Takishima](https://github.com/Takishima)! - Removed licence category badge from player rows in the roster validation modal
+
 ## 1.16.0
 
 ### Minor Changes
