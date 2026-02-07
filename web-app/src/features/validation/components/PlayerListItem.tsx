@@ -60,18 +60,10 @@ export function PlayerListItem({
           </span>
         </div>
 
-        {/* Badges */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* License category badge */}
-          {player.licenseCategory && !isMarkedForRemoval && (
-            <Badge variant="neutral">{player.licenseCategory}</Badge>
-          )}
-
-          {/* Newly added badge */}
-          {player.isNewlyAdded && !isMarkedForRemoval && (
-            <Badge variant="success">{t('validation.roster.newlyAdded')}</Badge>
-          )}
-        </div>
+        {/* Newly added badge */}
+        {player.isNewlyAdded && !isMarkedForRemoval && (
+          <Badge variant="success">{t('validation.roster.newlyAdded')}</Badge>
+        )}
       </div>
 
       {/* Action button - hidden in read-only mode */}

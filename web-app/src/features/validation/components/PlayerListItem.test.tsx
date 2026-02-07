@@ -9,7 +9,6 @@ function createMockPlayer(overrides: Partial<RosterPlayer> = {}): RosterPlayer {
   return {
     id: 'player-1',
     displayName: 'John Doe',
-    licenseCategory: 'SEN',
     isNewlyAdded: false,
     ...overrides,
   }
@@ -43,23 +42,6 @@ describe('PlayerListItem', () => {
     expect(screen.getByText('Max')).toBeInTheDocument()
     expect(screen.getByText('M.')).toBeInTheDocument()
     expect(screen.getByText('01.01.90')).toBeInTheDocument()
-  })
-
-  it('shows license category badge when provided', () => {
-    const player = createMockPlayer({ licenseCategory: 'JUN' })
-
-    render(
-      <PlayerListItem
-        player={player}
-        displayData={createDisplayData()}
-        maxLastNameWidth={10}
-        isMarkedForRemoval={false}
-        onRemove={vi.fn()}
-        onUndoRemoval={vi.fn()}
-      />
-    )
-
-    expect(screen.getByText('JUN')).toBeInTheDocument()
   })
 
   it('shows newly added badge when isNewlyAdded is true', () => {
@@ -157,9 +139,9 @@ describe('PlayerListItem', () => {
     expect(lastNameElement).toHaveClass('line-through')
   })
 
-  it('hides badges when marked for removal', () => {
+  it('hides newly added badge when marked for removal', () => {
     const player = createMockPlayer({
-      licenseCategory: 'SEN',
+      isNewlyAdded: true,
     })
 
     render(
@@ -173,7 +155,7 @@ describe('PlayerListItem', () => {
       />
     )
 
-    expect(screen.queryByText('SEN')).not.toBeInTheDocument()
+    expect(screen.queryByText('New')).not.toBeInTheDocument()
   })
 
   it('aligns last names based on maxLastNameWidth', () => {
