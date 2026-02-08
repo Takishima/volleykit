@@ -6,7 +6,6 @@
   "ignoreDependencies": [
     "tailwindcss",
     "@volleykit/shared",
-    "eslint",
     "openapi-typescript",
     "size-limit",
     "prettier"
@@ -14,7 +13,7 @@
   "ignoreBinaries": [
     "tsc",
     "eslint",
-    "playwright",
+    "vite",
     "size-limit",
     "openapi-typescript",
     "changeset",
