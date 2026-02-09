@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import { fixupPluginRules } from '@eslint/compat'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
@@ -46,8 +47,8 @@ export default tseslint.config(
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
       'jsx-a11y': jsxA11y,
-      security,
-      'no-unsanitized': noUnsanitized,
+      security: fixupPluginRules(security),
+      'no-unsanitized': fixupPluginRules(noUnsanitized),
       'import-x': importX,
     },
     settings: {

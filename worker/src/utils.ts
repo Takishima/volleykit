@@ -102,7 +102,7 @@ export function validateAllowedOrigins(origins: string[]): void {
       if (e instanceof Error && e.message.includes('Origin')) {
         throw e
       }
-      throw new Error(`Invalid origin format: ${origin}`)
+      throw new Error(`Invalid origin format: ${origin}`, { cause: e })
     }
   }
 }

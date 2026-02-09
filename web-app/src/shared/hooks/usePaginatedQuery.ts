@@ -112,7 +112,7 @@ export async function fetchAllAssignmentPages(
   const allItems: Assignment[] = []
   let offset = 0
   let totalCount = 0
-  let previousTotalCount = -1
+  let previousTotalCount: number
   let pagesFetched = 0
 
   do {

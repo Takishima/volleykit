@@ -128,7 +128,7 @@ export class MistralOCR implements OCREngine {
       this.#abortController = null
       // Handle cancellation
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('OCR cancelled')
+        throw new Error('OCR cancelled', { cause: error })
       }
       // Health check failed but we'll try OCR anyway
       console.warn('OCR service health check failed, will attempt OCR anyway:', error)
@@ -297,7 +297,7 @@ export class MistralOCR implements OCREngine {
       return this.#convertResponse(mistralResponse)
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('OCR cancelled')
+        throw new Error('OCR cancelled', { cause: error })
       }
       throw error
     } finally {
