@@ -201,6 +201,6 @@ export async function downloadCompensationPDF(compensationId: string): Promise<v
     if (error instanceof Error) {
       throw error
     }
-    throw new Error('Unknown error occurred while downloading PDF')
+    throw new Error('Unknown error occurred while downloading PDF', { cause: error })
   }
 }

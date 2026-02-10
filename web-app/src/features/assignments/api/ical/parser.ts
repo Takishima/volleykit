@@ -866,13 +866,8 @@ export function extractAssignment(event: ICalEvent): ParseResult {
   const association = parseAssociation(event.description)
 
   // Extract or build maps URL
-  let mapsUrl: string | null = null
   const mapsMatch = MAPS_URL_PATTERN.exec(event.description)
-  if (mapsMatch) {
-    mapsUrl = mapsMatch[0]
-  } else {
-    mapsUrl = buildMapsUrl(locationData.address, event.geo)
-  }
+  const mapsUrl = mapsMatch ? mapsMatch[0] : buildMapsUrl(locationData.address, event.geo)
 
   const assignment: CalendarAssignment = {
     gameId,

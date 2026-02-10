@@ -733,7 +733,6 @@ function parseSwissOfficialsLine(line: string): {
           displayName: parsed.displayName,
           rawName: name,
         }
-        currentIndex++
       }
     }
   }
