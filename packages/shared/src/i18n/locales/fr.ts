@@ -304,9 +304,10 @@ const fr: Translations = {
     syncComplete: '{count} modifications synchronisées avec succès',
     syncFailed: '{count} modifications ont échoué lors de la synchronisation',
     syncError: 'Échec de la synchronisation. Veuillez réessayer plus tard.',
-    sessionExpired: 'Session expirée. Veuillez vous reconnecter pour synchroniser les modifications.',
+    sessionExpired:
+      'Session expirée. Veuillez vous reconnecter pour synchroniser les modifications.',
     actions: {
-      updateCompensation: 'Mettre à jour l\'indemnisation',
+      updateCompensation: "Mettre à jour l'indemnisation",
       applyForExchange: 'Postuler pour un échange',
       addToExchange: 'Ajouter à la bourse',
       removeOwnExchange: 'Retirer de la bourse',

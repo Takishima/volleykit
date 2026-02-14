@@ -34,6 +34,26 @@ vi.mock('@/shared/stores/settings', () => ({
   useSettingsStore: mockSettingsStore,
 }))
 
+// Mock PersistQueryClientProvider to use regular QueryClientProvider in tests.
+// PersistQueryClientProvider requires IndexedDB persistence which doesn't work in happy-dom.
+vi.mock('@tanstack/react-query-persist-client', async () => {
+  const actual = await vi.importActual('@tanstack/react-query-persist-client')
+  const { QueryClientProvider } =
+    await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query')
+  return {
+    ...actual,
+    PersistQueryClientProvider: ({
+      client,
+      children,
+    }: {
+      client: unknown
+      children: React.ReactNode
+    }) => {
+      return QueryClientProvider({ client, children } as never)
+    },
+  }
+})
+
 // Mock navigate function
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {

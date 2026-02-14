@@ -15,7 +15,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTranslation } from '@volleykit/shared/i18n'
 
-import { useToastStore, DEFAULT_TOAST_DURATION_MS, type Toast, type ToastType } from '../stores/toast'
+import {
+  useToastStore,
+  DEFAULT_TOAST_DURATION_MS,
+  type Toast,
+  type ToastType,
+} from '../stores/toast'
 
 /** Animation duration for toast entrance/exit */
 const ANIMATION_DURATION_MS = 200
@@ -158,29 +163,21 @@ function ToastItem({ toast }: ToastItemProps): JSX.Element {
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
     >
-      <View
-        className={`flex-row items-start rounded-lg border p-3 ${styles.bg} ${styles.border}`}
-      >
+      <View className={`flex-row items-start rounded-lg border p-3 ${styles.bg} ${styles.border}`}>
         <Feather
           name={iconName}
           size={TOAST_ICON_SIZE}
           color={styles.iconColor}
           style={localStyles.icon}
         />
-        <Text className={`flex-1 text-sm font-medium ${styles.text}`}>
-          {toast.message}
-        </Text>
+        <Text className={`flex-1 text-sm font-medium ${styles.text}`}>{toast.message}</Text>
         <Pressable
           onPress={handleDismiss}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
         >
-          <Feather
-            name="x"
-            size={CLOSE_ICON_SIZE}
-            color={styles.iconColor}
-          />
+          <Feather name="x" size={CLOSE_ICON_SIZE} color={styles.iconColor} />
         </Pressable>
       </View>
     </Animated.View>
@@ -200,10 +197,7 @@ export function ToastContainer(): JSX.Element | null {
   }
 
   return (
-    <View
-      style={[localStyles.container, { top: insets.top + 8 }]}
-      pointerEvents="box-none"
-    >
+    <View style={[localStyles.container, { top: insets.top + 8 }]} pointerEvents="box-none">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} />
       ))}

@@ -303,7 +303,8 @@ const de: Translations = {
     syncComplete: '{count} Änderungen erfolgreich synchronisiert',
     syncFailed: '{count} Änderungen konnten nicht synchronisiert werden',
     syncError: 'Synchronisierung fehlgeschlagen. Bitte versuchen Sie es später erneut.',
-    sessionExpired: 'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
+    sessionExpired:
+      'Sitzung abgelaufen. Bitte melden Sie sich erneut an, um Änderungen zu synchronisieren.',
     actions: {
       updateCompensation: 'Entschädigung aktualisieren',
       applyForExchange: 'Für Börse bewerben',

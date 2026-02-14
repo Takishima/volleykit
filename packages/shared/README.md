@@ -12,15 +12,15 @@ import { formatDate } from '@volleykit/shared/utils'
 import { t } from '@volleykit/shared/i18n'
 ```
 
-| Export | Contents |
-|--------|----------|
-| `/api` | API client, query keys, generated types |
-| `/hooks` | TanStack Query hooks for all endpoints |
-| `/stores` | Zustand stores (auth, settings, etc.) |
-| `/i18n` | Translations (de, en, fr, it) |
-| `/utils` | Date formatting, validation helpers |
-| `/types` | Shared TypeScript types |
-| `/adapters` | Platform-specific adapters |
+| Export      | Contents                                |
+| ----------- | --------------------------------------- |
+| `/api`      | API client, query keys, generated types |
+| `/hooks`    | TanStack Query hooks for all endpoints  |
+| `/stores`   | Zustand stores (auth, settings, etc.)   |
+| `/i18n`     | Translations (de, en, fr, it)           |
+| `/utils`    | Date formatting, validation helpers     |
+| `/types`    | Shared TypeScript types                 |
+| `/adapters` | Platform-specific adapters              |
 
 ## Development
 
