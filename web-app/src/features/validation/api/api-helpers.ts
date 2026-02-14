@@ -29,6 +29,7 @@ export interface ScoresheetForApi {
   __identity?: string
   isSimpleScoresheet?: boolean
   scoresheetValidation?: { __identity?: string }
+  closedAt?: string | null
 }
 
 /**
@@ -209,6 +210,10 @@ export async function finalizeScoresheetWithFile(
 ): Promise<void> {
   if (!scorerId) {
     logger.debug('[VS] skip scoresheet finalize: no scorer selected')
+    return
+  }
+  if (scoresheet?.closedAt) {
+    logger.debug('[VS] skip scoresheet finalize: scoresheet already closed')
     return
   }
 

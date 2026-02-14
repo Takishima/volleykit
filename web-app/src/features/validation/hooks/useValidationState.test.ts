@@ -645,6 +645,37 @@ describe('useValidationState', () => {
       )
     })
 
+    it('skips scoresheet finalize when scoresheet is already closed', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        scoresheet: {
+          ...mockGameDetails.scoresheet,
+          closedAt: '2026-02-14T10:00:00.000000+00:00',
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      await act(async () => {
+        await result.current.finalizeValidation()
+      })
+
+      // Nomination lists should still be finalized
+      expect(mockFinalizeNominationList).toHaveBeenCalledTimes(2)
+      // Scoresheet should NOT be finalized (already closed)
+      expect(mockFinalizeScoresheet).not.toHaveBeenCalled()
+    })
+
     it('sets isFinalizing during operation', async () => {
       mockFinalizeNominationList.mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100))
