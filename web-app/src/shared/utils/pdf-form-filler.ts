@@ -22,6 +22,7 @@ export interface SportsHallReportData {
   hallName: string
   location: string
   date: string
+  startingDateTime?: string
   firstRefereeName?: string
   secondRefereeName?: string
 }
@@ -81,6 +82,7 @@ export function extractSportsHallReportData(assignment: Assignment): SportsHallR
     hallName: game.hall?.name ?? '',
     location: game.hall?.primaryPostalAddress?.city ?? '',
     date: formatDateForReport(game.startingDateTime),
+    startingDateTime: game.startingDateTime,
     firstRefereeName: firstReferee,
     secondRefereeName: secondReferee,
   }
@@ -232,12 +234,42 @@ export function downloadPdf(pdfBytes: Uint8Array, filename: string): void {
   URL.revokeObjectURL(url)
 }
 
+const REPORT_NAME: Record<Language, string> = {
+  de: 'hallenrapport',
+  fr: 'rapport_salle',
+}
+
+export function buildReportFilename(
+  leagueCategory: LeagueCategory,
+  language: Language,
+  startingDateTime?: string,
+  gameNumber?: string
+): string {
+  const league = leagueCategory.toLowerCase()
+  const reportName = REPORT_NAME[language]
+  let datePart = 'unknown'
+  if (startingDateTime) {
+    try {
+      datePart = format(new Date(startingDateTime), 'yyyyMMdd')
+    } catch {
+      logger.warn('Failed to parse date for report filename:', startingDateTime)
+    }
+  }
+  const suffix = gameNumber ? `_${gameNumber}` : ''
+  return `${league}_${reportName}_${datePart}${suffix}.pdf`
+}
+
 export async function generateAndDownloadSportsHallReport(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
   language: Language
 ): Promise<void> {
   const pdfBytes = await fillSportsHallReportForm(data, leagueCategory, language)
-  const filename = `sports-hall-report-${data.gameNumber}-${language}.pdf`
+  const filename = buildReportFilename(
+    leagueCategory,
+    language,
+    data.startingDateTime,
+    data.gameNumber
+  )
   downloadPdf(pdfBytes, filename)
 }

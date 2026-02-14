@@ -9,6 +9,7 @@ import {
   mapAppLocaleToPdfLanguage,
   downloadPdf,
   fillSportsHallReportForm,
+  buildReportFilename,
   type SportsHallReportData,
 } from './pdf-form-filler'
 
@@ -99,6 +100,7 @@ describe('pdf-form-filler', () => {
         hallName: 'Sporthalle Hardau',
         location: 'Zürich',
         date: '15.12.25',
+        startingDateTime: '2025-12-15T19:30:00.000Z',
         firstRefereeName: 'Max Mustermann',
         secondRefereeName: 'Anna Schmidt',
       })
@@ -283,6 +285,50 @@ describe('pdf-form-filler', () => {
     })
   })
 
+  describe('buildReportFilename', () => {
+    it('builds German NLB filename with date and game number', () => {
+      expect(buildReportFilename('NLB', 'de', '2026-02-14T19:30:00.000Z', '123456')).toBe(
+        'nlb_hallenrapport_20260214_123456.pdf'
+      )
+    })
+
+    it('builds French NLB filename with date and game number', () => {
+      expect(buildReportFilename('NLB', 'fr', '2026-02-14T19:30:00.000Z', '789')).toBe(
+        'nlb_rapport_salle_20260214_789.pdf'
+      )
+    })
+
+    it('builds German NLA filename with date and game number', () => {
+      expect(buildReportFilename('NLA', 'de', '2025-12-15T19:30:00.000Z', '456')).toBe(
+        'nla_hallenrapport_20251215_456.pdf'
+      )
+    })
+
+    it('builds French NLA filename with date and game number', () => {
+      expect(buildReportFilename('NLA', 'fr', '2025-12-15T19:30:00.000Z', '789')).toBe(
+        'nla_rapport_salle_20251215_789.pdf'
+      )
+    })
+
+    it('uses "unknown" when startingDateTime is undefined', () => {
+      expect(buildReportFilename('NLB', 'de', undefined, '123')).toBe(
+        'nlb_hallenrapport_unknown_123.pdf'
+      )
+    })
+
+    it('omits game number suffix when gameNumber is undefined', () => {
+      expect(buildReportFilename('NLB', 'de', '2026-02-14T19:30:00.000Z')).toBe(
+        'nlb_hallenrapport_20260214.pdf'
+      )
+    })
+
+    it('falls back to "unknown" date for invalid date string', () => {
+      expect(buildReportFilename('NLA', 'de', 'invalid-date', '123')).toBe(
+        'nla_hallenrapport_unknown_123.pdf'
+      )
+    })
+  })
+
   describe('downloadPdf', () => {
     let mockCreateObjectURL: ReturnType<typeof vi.fn>
     let mockRevokeObjectURL: ReturnType<typeof vi.fn>
@@ -349,6 +395,7 @@ describe('pdf-form-filler', () => {
       hallName: 'Test Hall',
       location: 'Test City',
       date: '15.12.25',
+      startingDateTime: '2025-12-15T19:30:00.000Z',
       firstRefereeName: 'First Ref',
       secondRefereeName: 'Second Ref',
     }
