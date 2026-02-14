@@ -608,6 +608,74 @@ describe('useValidationState', () => {
       expect(mockFinalizeNominationList).toHaveBeenCalledTimes(2)
     })
 
+    it('skips finalize for already-closed nomination lists', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        nominationListOfTeamHome: {
+          ...mockGameDetails.nominationListOfTeamHome,
+          closed: true,
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      await act(async () => {
+        await result.current.finalizeValidation()
+      })
+
+      // Only the away team should be finalized (home is already closed)
+      expect(mockFinalizeNominationList).toHaveBeenCalledTimes(1)
+      expect(mockFinalizeNominationList).toHaveBeenCalledWith(
+        'nomlist-away',
+        'game-123',
+        'team-away',
+        ['player-3'],
+        'validation-away',
+        undefined
+      )
+    })
+
+    it('skips scoresheet finalize when scoresheet is already closed', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        scoresheet: {
+          ...mockGameDetails.scoresheet,
+          closedAt: '2026-02-14T10:00:00.000000+00:00',
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      await act(async () => {
+        await result.current.finalizeValidation()
+      })
+
+      // Nomination lists should still be finalized
+      expect(mockFinalizeNominationList).toHaveBeenCalledTimes(2)
+      // Scoresheet should NOT be finalized (already closed)
+      expect(mockFinalizeScoresheet).not.toHaveBeenCalled()
+    })
+
     it('sets isFinalizing during operation', async () => {
       mockFinalizeNominationList.mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100))

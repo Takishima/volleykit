@@ -21,6 +21,7 @@ export interface NominationListForApi {
   coachPerson?: { __identity?: string }
   firstAssistantCoachPerson?: { __identity?: string }
   secondAssistantCoachPerson?: { __identity?: string }
+  closed?: boolean
 }
 
 /** Type for scoresheet with required fields for API calls. */
@@ -28,6 +29,7 @@ export interface ScoresheetForApi {
   __identity?: string
   isSimpleScoresheet?: boolean
   scoresheetValidation?: { __identity?: string }
+  closedAt?: string | null
 }
 
 /**
@@ -131,6 +133,10 @@ export async function saveRosterModifications(
     logger.debug('[VS] skip roster save: missing nomination list or team ID')
     return
   }
+  if (nomList.closed) {
+    logger.debug('[VS] skip roster save: nomination list already closed')
+    return
+  }
 
   const playerIds = getPlayerNominationIds(nomList, playerModifications)
   const coachIds = coachModifications ? buildCoachIds(nomList, coachModifications) : undefined
@@ -154,6 +160,10 @@ export async function saveScorerSelection(
 ): Promise<void> {
   if (!scorerId) {
     logger.debug('[VS] skip scorer save: no scorer selected')
+    return
+  }
+  if (scoresheet?.closedAt) {
+    logger.debug('[VS] skip scorer save: scoresheet already closed')
     return
   }
 
@@ -180,6 +190,10 @@ export async function finalizeRoster(
     logger.debug('[VS] skip roster finalize: missing nomination list or team ID')
     return
   }
+  if (nomList.closed) {
+    logger.debug('[VS] skip roster finalize: nomination list already closed')
+    return
+  }
 
   const playerIds = getPlayerNominationIds(nomList, playerModifications)
   const coachIds = coachModifications ? buildCoachIds(nomList, coachModifications) : undefined
@@ -204,6 +218,10 @@ export async function finalizeScoresheetWithFile(
 ): Promise<void> {
   if (!scorerId) {
     logger.debug('[VS] skip scoresheet finalize: no scorer selected')
+    return
+  }
+  if (scoresheet?.closedAt) {
+    logger.debug('[VS] skip scoresheet finalize: scoresheet already closed')
     return
   }
 
