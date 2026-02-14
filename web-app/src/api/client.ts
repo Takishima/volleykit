@@ -653,18 +653,21 @@ export const api = {
   },
 
   async updateScoresheet(
-    scoresheetId: string,
+    scoresheetId: string | undefined,
     gameId: string,
     scorerPersonId: string,
     isSimpleScoresheet: boolean = false,
     fileResourceId?: string
   ): Promise<Scoresheet> {
     const body: Record<string, unknown> = {
-      'scoresheet[__identity]': scoresheetId,
       'scoresheet[game][__identity]': gameId,
       'scoresheet[writerPerson][__identity]': scorerPersonId,
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
       'scoresheet[hasFile]': fileResourceId ? 'true' : 'false',
+    }
+
+    if (scoresheetId) {
+      body['scoresheet[__identity]'] = scoresheetId
     }
 
     if (fileResourceId) {
@@ -680,7 +683,7 @@ export const api = {
   },
 
   async finalizeScoresheet(
-    scoresheetId: string,
+    scoresheetId: string | undefined,
     gameId: string,
     scorerPersonId: string,
     fileResourceId?: string,
@@ -688,11 +691,14 @@ export const api = {
     isSimpleScoresheet: boolean = false
   ): Promise<Scoresheet> {
     const body: Record<string, unknown> = {
-      'scoresheet[__identity]': scoresheetId,
       'scoresheet[game][__identity]': gameId,
       'scoresheet[writerPerson][__identity]': scorerPersonId,
       'scoresheet[hasFile]': fileResourceId ? 'true' : 'false',
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
+    }
+
+    if (scoresheetId) {
+      body['scoresheet[__identity]'] = scoresheetId
     }
 
     if (fileResourceId) {

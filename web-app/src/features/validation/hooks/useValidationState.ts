@@ -238,15 +238,13 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         state.awayRoster.playerModifications,
         state.awayRoster.coachModifications
       )
-      if (!scoresheetNotRequired) {
-        await saveScorerSelection(
-          apiClient,
-          gameId,
-          gameDetails.scoresheet,
-          state.scorer.selected?.__identity,
-          fileResourceId
-        )
-      }
+      await saveScorerSelection(
+        apiClient,
+        gameId,
+        gameDetails.scoresheet,
+        state.scorer.selected?.__identity,
+        fileResourceId
+      )
 
       // Invalidate cache so reopening shows the saved data
       await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
@@ -258,7 +256,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isSavingRef.current = false
       setIsSaving(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient, scoresheetNotRequired])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
 
   const finalizeValidation = useCallback(async (): Promise<void> => {
     if (isFinalizingRef.current) {
@@ -299,15 +297,13 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         state.awayRoster.playerModifications,
         state.awayRoster.coachModifications
       )
-      if (!scoresheetNotRequired) {
-        await finalizeScoresheetWithFile(
-          apiClient,
-          gameId,
-          gameDetails.scoresheet,
-          state.scorer.selected?.__identity,
-          fileResourceId
-        )
-      }
+      await finalizeScoresheetWithFile(
+        apiClient,
+        gameId,
+        gameDetails.scoresheet,
+        state.scorer.selected?.__identity,
+        fileResourceId
+      )
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId!) })
       logger.debug('[VS] finalize done')
@@ -318,7 +314,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isFinalizingRef.current = false
       setIsFinalizing(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient, scoresheetNotRequired])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
 
   return {
     state,

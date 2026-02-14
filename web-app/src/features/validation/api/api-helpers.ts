@@ -157,21 +157,13 @@ export async function saveScorerSelection(
     return
   }
 
-  if (!scoresheet?.__identity) {
-    // DIAGNOSTIC: log to debug missing scoresheet (see #924)
-    logger.error('saveScorerSelection: scorer selected but scoresheet missing', {
-      gameId,
-      scorerId,
-      scoresheet,
-    })
-    throw new Error('Cannot save scorer: scoresheet not found for this game')
-  }
-
+  // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
+  // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.updateScoresheet(
-    scoresheet.__identity,
+    scoresheet?.__identity,
     gameId,
     scorerId,
-    scoresheet.isSimpleScoresheet ?? false,
+    scoresheet?.isSimpleScoresheet ?? false,
     fileResourceId
   )
 }
@@ -215,22 +207,14 @@ export async function finalizeScoresheetWithFile(
     return
   }
 
-  if (!scoresheet?.__identity) {
-    // DIAGNOSTIC: log to debug missing scoresheet (see #924)
-    logger.error('finalizeScoresheetWithFile: scorer selected but scoresheet missing', {
-      gameId,
-      scorerId,
-      scoresheet,
-    })
-    throw new Error('Cannot finalize: scoresheet not found for this game')
-  }
-
+  // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
+  // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.finalizeScoresheet(
-    scoresheet.__identity,
+    scoresheet?.__identity,
     gameId,
     scorerId,
     fileResourceId,
-    scoresheet.scoresheetValidation?.__identity,
-    scoresheet.isSimpleScoresheet ?? false
+    scoresheet?.scoresheetValidation?.__identity,
+    scoresheet?.isSimpleScoresheet ?? false
   )
 }
