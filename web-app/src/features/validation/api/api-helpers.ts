@@ -133,6 +133,10 @@ export async function saveRosterModifications(
     logger.debug('[VS] skip roster save: missing nomination list or team ID')
     return
   }
+  if (nomList.closed) {
+    logger.debug('[VS] skip roster save: nomination list already closed')
+    return
+  }
 
   const playerIds = getPlayerNominationIds(nomList, playerModifications)
   const coachIds = coachModifications ? buildCoachIds(nomList, coachModifications) : undefined
