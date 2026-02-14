@@ -269,16 +269,16 @@ describe('useCompensationActions', () => {
       )
     })
 
-    it('should block editing compensation when safe mode is enabled', () => {
+    it('should allow editing compensation when safe mode is enabled', () => {
       const { result } = renderHook(() => useCompensationActions())
 
       act(() => {
         result.current.editCompensationModal.open(mockCompensation)
       })
 
-      expect(result.current.editCompensationModal.isOpen).toBe(false)
-      expect(result.current.editCompensationModal.compensation).toBeNull()
-      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
+      expect(result.current.editCompensationModal.isOpen).toBe(true)
+      expect(result.current.editCompensationModal.compensation).toBe(mockCompensation)
+      expect(toast.warning).not.toHaveBeenCalled()
     })
   })
 })

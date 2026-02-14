@@ -2,9 +2,9 @@ import { useCallback } from 'react'
 
 import type { CompensationRecord } from '@/api/client'
 import { useModalState } from '@/shared/hooks/useModalState'
-import { useSafeModeGuard } from '@/shared/hooks/useSafeModeGuard'
 import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
 import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useAuthStore } from '@/shared/stores/auth'
 import { toast } from '@/shared/stores/toast'
 
 import { downloadCompensationPDF } from '../utils/compensation-actions'
@@ -21,7 +21,7 @@ interface UseCompensationActionsResult {
 
 export function useCompensationActions(): UseCompensationActionsResult {
   const { t } = useTranslation()
-  const { guard, isDemoMode } = useSafeModeGuard()
+  const isDemoMode = useAuthStore((state) => state.dataSource) === 'demo'
   const editCompensationModal = useModalState<CompensationRecord>()
 
   const pdfMutation = useSafeMutation(
@@ -38,18 +38,9 @@ export function useCompensationActions(): UseCompensationActionsResult {
 
   const openEditCompensation = useCallback(
     (compensation: CompensationRecord) => {
-      if (
-        guard({
-          context: 'useCompensationActions',
-          action: 'editing compensation',
-        })
-      ) {
-        return
-      }
-
       editCompensationModal.open(compensation)
     },
-    [guard, editCompensationModal]
+    [editCompensationModal]
   )
 
   const handleGeneratePDF = useCallback(
