@@ -545,6 +545,7 @@ export const api = {
       // Group must be requested before nested properties to avoid 500 errors
       // when group is null (e.g., for already validated games)
       'group',
+      'group.hasNoScoresheet',
       'group.phase.league.leagueCategory.writersCanUseSimpleScoresheetForThisLeagueCategory',
     ]
 

@@ -453,6 +453,10 @@ function createRefereeGame({
   const venue = venues[venueIndex % venues.length]!
   const league = leagues[leagueIndex % leagues.length]!
 
+  // NLA and NLB use electronic scoresheets — no physical upload needed
+  const effectiveHasNoScoresheet =
+    hasNoScoresheet || league.name === 'NLA' || league.name === 'NLB'
+
   // Build linesman convocations based on specified positions
   type LinesmanConvocations = Pick<
     RefereeGame,
@@ -539,7 +543,7 @@ function createRefereeGame({
         name: 'Quali',
         managingAssociationShortName: associationCode,
         isTournamentGroup,
-        hasNoScoresheet,
+        hasNoScoresheet: effectiveHasNoScoresheet,
         phase: {
           name: 'Phase 1',
           league: {
@@ -652,7 +656,6 @@ export function generateAssignments(associationCode: DemoAssociationCode, now: D
       gender: 'm',
       isGameInFuture: true,
       hasMessage: true,
-      hasNoScoresheet: associationCode !== 'SV',
     },
     // NLA/1L women - head referee
     {

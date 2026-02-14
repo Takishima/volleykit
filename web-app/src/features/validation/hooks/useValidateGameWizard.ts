@@ -204,10 +204,14 @@ export function useValidateGameWizard({
         label: t('validation.awayRoster'),
         isInvalid: !rosterValidation.away.isValid,
       },
-      { id: 'scorer', label: t('validation.scorer') },
+      {
+        id: 'scorer',
+        label: t('validation.scorer'),
+        isOptional: scoresheetNotRequired,
+      },
       { id: 'scoresheet', label: t('validation.scoresheet'), isOptional: true },
     ],
-    [t, rosterValidation.home.isValid, rosterValidation.away.isValid]
+    [t, rosterValidation.home.isValid, rosterValidation.away.isValid, scoresheetNotRequired]
   )
 
   const {
@@ -266,8 +270,8 @@ export function useValidateGameWizard({
 
   // Computed values
   const canMarkCurrentStepDone = useMemo(() => {
-    const stepId = wizardSteps[currentStepIndex]?.id
-    if (stepId === 'scorer') return completionStatus.scorer
+    const step = wizardSteps[currentStepIndex]
+    if (step?.id === 'scorer') return step.isOptional || completionStatus.scorer
     return true
   }, [currentStepIndex, wizardSteps, completionStatus.scorer])
 
