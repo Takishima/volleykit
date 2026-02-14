@@ -1,6 +1,10 @@
 /**
- * Simple logger utility for development.
- * All logs are disabled in production builds.
+ * Logger utility with runtime toggle.
+ *
+ * Enabled automatically in development. In production, enable via browser console:
+ *   localStorage.setItem('volleykit:debug', 'true')
+ * and reload the page. Disable with:
+ *   localStorage.removeItem('volleykit:debug')
  */
 
 export interface Logger {
@@ -9,6 +13,10 @@ export interface Logger {
   warn: (...args: unknown[]) => void
   error: (...args: unknown[]) => void
 }
+
+/** Check once at module load whether logging is enabled. */
+const isLoggingEnabled: boolean =
+  import.meta.env.DEV || globalThis.localStorage?.getItem('volleykit:debug') === 'true'
 
 /**
  * Creates a logger with a context prefix.
@@ -20,25 +28,25 @@ export function createLogger(context: string): Logger {
 
   return {
     debug: (...args: unknown[]): void => {
-      if (import.meta.env.DEV) {
+      if (isLoggingEnabled) {
         console.log(prefix, ...args)
       }
     },
 
     info: (...args: unknown[]): void => {
-      if (import.meta.env.DEV) {
+      if (isLoggingEnabled) {
         console.info(prefix, ...args)
       }
     },
 
     warn: (...args: unknown[]): void => {
-      if (import.meta.env.DEV) {
+      if (isLoggingEnabled) {
         console.warn(prefix, ...args)
       }
     },
 
     error: (...args: unknown[]): void => {
-      if (import.meta.env.DEV) {
+      if (isLoggingEnabled) {
         console.error(prefix, ...args)
       }
     },

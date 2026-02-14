@@ -8,7 +8,9 @@ import type {
   CoachModifications,
   CoachRole,
 } from '@/features/validation/hooks/useNominationList'
-import { logger } from '@/shared/utils/logger'
+import { createLogger } from '@/shared/utils/logger'
+
+const logger = createLogger('ValidationApi')
 
 /** Type for nomination list with required fields for API calls. */
 export interface NominationListForApi {
@@ -156,9 +158,8 @@ export async function saveScorerSelection(
   }
 
   if (!scoresheet?.__identity) {
-    // DIAGNOSTIC: log in production to debug missing scoresheet (see #924)
-    // eslint-disable-next-line no-console
-    console.error('[VolleyKit] saveScorerSelection: scorer selected but scoresheet missing', {
+    // DIAGNOSTIC: log to debug missing scoresheet (see #924)
+    logger.error('saveScorerSelection: scorer selected but scoresheet missing', {
       gameId,
       scorerId,
       scoresheet,
@@ -215,16 +216,12 @@ export async function finalizeScoresheetWithFile(
   }
 
   if (!scoresheet?.__identity) {
-    // DIAGNOSTIC: log in production to debug missing scoresheet (see #924)
-    // eslint-disable-next-line no-console
-    console.error(
-      '[VolleyKit] finalizeScoresheetWithFile: scorer selected but scoresheet missing',
-      {
-        gameId,
-        scorerId,
-        scoresheet,
-      }
-    )
+    // DIAGNOSTIC: log to debug missing scoresheet (see #924)
+    logger.error('finalizeScoresheetWithFile: scorer selected but scoresheet missing', {
+      gameId,
+      scorerId,
+      scoresheet,
+    })
     throw new Error('Cannot finalize: scoresheet not found for this game')
   }
 

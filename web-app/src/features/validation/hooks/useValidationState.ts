@@ -208,8 +208,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       }
 
       // DIAGNOSTIC: log scoresheet state to debug missing PUT/POST (see #924)
-      // eslint-disable-next-line no-console
-      console.debug('[VolleyKit] saveProgress: scoresheet data from API', {
+      logger.debug('[VS] saveProgress: scoresheet data from API', {
         hasScoresheet: !!gameDetails.scoresheet,
         scoresheetId: gameDetails.scoresheet?.__identity,
         scorerId: state.scorer.selected?.__identity,
