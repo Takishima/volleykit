@@ -608,6 +608,43 @@ describe('useValidationState', () => {
       expect(mockFinalizeNominationList).toHaveBeenCalledTimes(2)
     })
 
+    it('skips finalize for already-closed nomination lists', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        nominationListOfTeamHome: {
+          ...mockGameDetails.nominationListOfTeamHome,
+          closed: true,
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      await act(async () => {
+        await result.current.finalizeValidation()
+      })
+
+      // Only the away team should be finalized (home is already closed)
+      expect(mockFinalizeNominationList).toHaveBeenCalledTimes(1)
+      expect(mockFinalizeNominationList).toHaveBeenCalledWith(
+        'nomlist-away',
+        'game-123',
+        'team-away',
+        ['player-3'],
+        'validation-away',
+        undefined
+      )
+    })
+
     it('sets isFinalizing during operation', async () => {
       mockFinalizeNominationList.mockImplementation(
         () => new Promise((resolve) => setTimeout(resolve, 100))

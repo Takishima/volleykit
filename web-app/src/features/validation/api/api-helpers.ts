@@ -21,6 +21,7 @@ export interface NominationListForApi {
   coachPerson?: { __identity?: string }
   firstAssistantCoachPerson?: { __identity?: string }
   secondAssistantCoachPerson?: { __identity?: string }
+  closed?: boolean
 }
 
 /** Type for scoresheet with required fields for API calls. */
@@ -178,6 +179,10 @@ export async function finalizeRoster(
 ): Promise<void> {
   if (!nomList?.__identity || !nomList.team?.__identity) {
     logger.debug('[VS] skip roster finalize: missing nomination list or team ID')
+    return
+  }
+  if (nomList.closed) {
+    logger.debug('[VS] skip roster finalize: nomination list already closed')
     return
   }
 
