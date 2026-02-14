@@ -156,7 +156,13 @@ export async function saveScorerSelection(
   }
 
   if (!scoresheet?.__identity) {
-    logger.error('[VS] scorer selected but scoresheet ID missing — cannot save scorer')
+    // DIAGNOSTIC: log in production to debug missing scoresheet (see #924)
+    // eslint-disable-next-line no-console
+    console.error('[VolleyKit] saveScorerSelection: scorer selected but scoresheet missing', {
+      gameId,
+      scorerId,
+      scoresheet,
+    })
     throw new Error('Cannot save scorer: scoresheet not found for this game')
   }
 
@@ -209,7 +215,16 @@ export async function finalizeScoresheetWithFile(
   }
 
   if (!scoresheet?.__identity) {
-    logger.error('[VS] scorer selected but scoresheet ID missing — cannot finalize')
+    // DIAGNOSTIC: log in production to debug missing scoresheet (see #924)
+    // eslint-disable-next-line no-console
+    console.error(
+      '[VolleyKit] finalizeScoresheetWithFile: scorer selected but scoresheet missing',
+      {
+        gameId,
+        scorerId,
+        scoresheet,
+      }
+    )
     throw new Error('Cannot finalize: scoresheet not found for this game')
   }
 
