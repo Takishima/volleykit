@@ -454,8 +454,7 @@ function createRefereeGame({
   const league = leagues[leagueIndex % leagues.length]!
 
   // NLA and NLB use electronic scoresheets — no physical upload needed
-  const effectiveHasNoScoresheet =
-    hasNoScoresheet || league.name === 'NLA' || league.name === 'NLB'
+  const effectiveHasNoScoresheet = hasNoScoresheet || league.name === 'NLA' || league.name === 'NLB'
 
   // Build linesman convocations based on specified positions
   type LinesmanConvocations = Pick<
