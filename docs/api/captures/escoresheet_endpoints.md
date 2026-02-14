@@ -26,22 +26,22 @@ PUT /api/sportmanager.indoorvolleyball/api\scoresheet
 
 Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
-| Parameter                                        | Type     | Description                                  |
-| ------------------------------------------------ | -------- | -------------------------------------------- |
-| scoresheet[game][\_\_identity]                   | UUID     | The game identifier                          |
-| scoresheet[isSimpleScoresheet]                   | boolean  | Whether using simplified scoresheet          |
-| scoresheet[writerPerson][\_\_identity]           | UUID     | Person filling out the scoresheet (optional) |
-| scoresheet[writerPerson]                         | string   | Empty string when no scorer set              |
-| scoresheet[file][\_\_identity]                   | UUID     | Reference to uploaded file (optional)        |
-| scoresheet[hasFile]                              | boolean  | Whether a file is attached                   |
-| scoresheet[scoresheetValidation][\_\_identity]   | UUID     | Validation record reference (optional)       |
-| scoresheet[scoresheetValidation]                 | string   | Empty string when no validation yet          |
-| scoresheet[reminderAboutOpenScoresheetSentAt]    | string   | Reminder timestamp (empty if not sent)       |
-| scoresheet[closedAt]                             | datetime | When closed (empty if open)                  |
-| scoresheet[closedBy]                             | string   | Who closed it (empty if open)                |
-| scoresheet[emergencySubstituteReferees]          | string   | Emergency referees (empty if none)           |
-| scoresheet[notFoundButNominatedPersons]          | string   | Unmatched persons (empty if none)            |
-| \_\_csrfToken                                    | string   | CSRF protection token                        |
+| Parameter                                      | Type     | Description                                  |
+| ---------------------------------------------- | -------- | -------------------------------------------- |
+| scoresheet[game][\_\_identity]                 | UUID     | The game identifier                          |
+| scoresheet[isSimpleScoresheet]                 | boolean  | Whether using simplified scoresheet          |
+| scoresheet[writerPerson][\_\_identity]         | UUID     | Person filling out the scoresheet (optional) |
+| scoresheet[writerPerson]                       | string   | Empty string when no scorer set              |
+| scoresheet[file][\_\_identity]                 | UUID     | Reference to uploaded file (optional)        |
+| scoresheet[hasFile]                            | boolean  | Whether a file is attached                   |
+| scoresheet[scoresheetValidation][\_\_identity] | UUID     | Validation record reference (optional)       |
+| scoresheet[scoresheetValidation]               | string   | Empty string when no validation yet          |
+| scoresheet[reminderAboutOpenScoresheetSentAt]  | string   | Reminder timestamp (empty if not sent)       |
+| scoresheet[closedAt]                           | datetime | When closed (empty if open)                  |
+| scoresheet[closedBy]                           | string   | Who closed it (empty if open)                |
+| scoresheet[emergencySubstituteReferees]        | string   | Emergency referees (empty if none)           |
+| scoresheet[notFoundButNominatedPersons]        | string   | Unmatched persons (empty if none)            |
+| \_\_csrfToken                                  | string   | CSRF protection token                        |
 
 Note: The scoresheet identity is NOT sent in the body. The server resolves it from the game identity.
 When a field has no value (e.g., writerPerson before scorer selection), the plain field name is used
@@ -183,10 +183,10 @@ POST /api/sportmanager.resourcemanagement/api\persistentresource/upload
 
 Content-Type: `multipart/form-data`
 
-| Parameter          | Type   | Description                       |
-| ------------------ | ------ | --------------------------------- |
-| scoresheetFile[]   | file   | The scoresheet file to upload     |
-| \_\_csrfToken      | string | CSRF protection token (optional)  |
+| Parameter        | Type   | Description                      |
+| ---------------- | ------ | -------------------------------- |
+| scoresheetFile[] | file   | The scoresheet file to upload    |
+| \_\_csrfToken    | string | CSRF protection token (optional) |
 
 Note: The volleymanager website does not include a CSRF token in the upload request body.
 The field name uses array notation (`scoresheetFile[]`).

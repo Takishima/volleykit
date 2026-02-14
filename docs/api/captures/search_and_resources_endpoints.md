@@ -118,10 +118,10 @@ POST /api/sportmanager.resourcemanagement/api\persistentresource/upload
 
 Content-Type: `multipart/form-data`
 
-| Parameter          | Type   | Description           |
-| ------------------ | ------ | --------------------- |
-| scoresheetFile[]   | file   | The file to upload    |
-| \_\_csrfToken      | string | CSRF protection token |
+| Parameter        | Type   | Description           |
+| ---------------- | ------ | --------------------- |
+| scoresheetFile[] | file   | The file to upload    |
+| \_\_csrfToken    | string | CSRF protection token |
 
 ### Example (using cURL)
 

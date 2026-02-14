@@ -26,19 +26,21 @@
     "shared:test": "npm run test --workspace=@volleykit/shared"
   },
   "dependencies": {
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "@tanstack/react-query": "^5.90.21",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
     "@changesets/cli": "^2.29.8",
-    "@types/react": "^19.0.0",
-    "prettier": "^3.7.4",
+    "@types/react": "^19.2.14",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.3"
   },
   "overrides": {
     "fast-xml-parser": "^5.3.4",
-    "@types/react": "^19.0.0",
+    "@types/react": "^19.2.14",
     "axios": "^1.12.0",
     "wrangler": {
       "miniflare": {
@@ -47,7 +49,7 @@
     },
     "jsdom": "^27.4.0",
     "@xmldom/xmldom": "^0.8.11",
-    "react": "^19.2.3",
+    "react": "^19.2.4",
     "@expo/vector-icons": "^15.0.3",
     "react-native-screens": "~4.16.0",
     "tar": "^7.5.7"

@@ -162,9 +162,7 @@ export function PendingActionsBadge({ style }: PendingActionsBadgeProps): JSX.El
           style={{ marginRight: BADGE_ICON_MARGIN }}
         />
         <Text className="text-amber-800 text-xs font-medium">{pendingCount}</Text>
-        {isSyncing && (
-          <Text className="sr-only">{t('offline.syncing')}</Text>
-        )}
+        {isSyncing && <Text className="sr-only">{t('offline.syncing')}</Text>}
       </View>
     </Animated.View>
   )
