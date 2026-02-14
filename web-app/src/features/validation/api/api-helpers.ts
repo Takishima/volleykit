@@ -162,6 +162,10 @@ export async function saveScorerSelection(
     logger.debug('[VS] skip scorer save: no scorer selected')
     return
   }
+  if (scoresheet?.closedAt) {
+    logger.debug('[VS] skip scorer save: scoresheet already closed')
+    return
+  }
 
   // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
   // entity hasn't been created yet. The server resolves it from the game identity.
