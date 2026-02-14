@@ -1,10 +1,11 @@
 /**
  * Logger utility with runtime toggle.
  *
- * Enabled automatically in development. In production, enable via browser console:
- *   localStorage.setItem('volleykit:debug', 'true')
- * and reload the page. Disable with:
- *   localStorage.removeItem('volleykit:debug')
+ * - `warn` and `error` are always emitted (even in production).
+ * - `debug` and `info` are enabled in development, or in production via:
+ *     localStorage.setItem('volleykit:debug', 'true')
+ *   then reload the page. Disable with:
+ *     localStorage.removeItem('volleykit:debug')
  */
 
 export interface Logger {
@@ -14,8 +15,8 @@ export interface Logger {
   error: (...args: unknown[]) => void
 }
 
-/** Check once at module load whether logging is enabled. */
-const isLoggingEnabled: boolean =
+/** Check once at module load whether verbose logging (debug/info) is enabled. */
+const isVerboseEnabled: boolean =
   import.meta.env.DEV || globalThis.localStorage?.getItem('volleykit:debug') === 'true'
 
 /**
@@ -28,27 +29,23 @@ export function createLogger(context: string): Logger {
 
   return {
     debug: (...args: unknown[]): void => {
-      if (isLoggingEnabled) {
+      if (isVerboseEnabled) {
         console.log(prefix, ...args)
       }
     },
 
     info: (...args: unknown[]): void => {
-      if (isLoggingEnabled) {
+      if (isVerboseEnabled) {
         console.info(prefix, ...args)
       }
     },
 
     warn: (...args: unknown[]): void => {
-      if (isLoggingEnabled) {
-        console.warn(prefix, ...args)
-      }
+      console.warn(prefix, ...args)
     },
 
     error: (...args: unknown[]): void => {
-      if (isLoggingEnabled) {
-        console.error(prefix, ...args)
-      }
+      console.error(prefix, ...args)
     },
   }
 }
