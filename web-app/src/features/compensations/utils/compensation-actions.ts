@@ -1,6 +1,7 @@
 import { createElement } from 'react'
 
 import type { Assignment, CompensationRecord } from '@/api/client'
+import { captureSessionToken, getSessionHeaders } from '@/api/client'
 import { isFromCalendarMode } from '@/features/assignments/utils/assignment-helpers'
 import { Wallet, FileText } from '@/shared/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
@@ -161,7 +162,12 @@ export async function downloadCompensationPDF(compensationId: string): Promise<v
     const response = await fetch(url, {
       method: 'GET',
       credentials: 'include',
+      headers: {
+        ...getSessionHeaders(),
+      },
     })
+
+    captureSessionToken(response)
 
     if (!response.ok) {
       throw new Error(`Failed to download PDF: ${response.statusText}`)

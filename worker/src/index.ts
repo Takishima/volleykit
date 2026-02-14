@@ -102,7 +102,7 @@ function corsHeaders(origin: string): HeadersInit {
     // These headers bypass iOS Safari's ITP which blocks third-party cookies in PWA mode
     'Access-Control-Allow-Headers': `Content-Type, Accept, X-Session-Token, ${CAPTURE_SESSION_TOKEN_HEADER}`,
     // Expose X-Session-Token so JavaScript can read the session cookie relay
-    'Access-Control-Expose-Headers': 'X-Session-Token',
+    'Access-Control-Expose-Headers': 'X-Session-Token, Content-Disposition',
     'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': String(CORS_PREFLIGHT_MAX_AGE_SECONDS),
   }

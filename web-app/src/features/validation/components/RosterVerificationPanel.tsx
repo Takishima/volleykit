@@ -447,7 +447,6 @@ export function RosterVerificationPanel({
           onSelectCoach={handleSelectCoach}
         />
       )}
-
     </div>
   )
 }

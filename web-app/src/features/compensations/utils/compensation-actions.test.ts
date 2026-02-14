@@ -12,6 +12,15 @@ import {
   isAssignmentCompensationEditable,
 } from './compensation-actions'
 
+vi.mock('@/api/client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/api/client')>()
+  return {
+    ...actual,
+    getSessionHeaders: vi.fn(() => ({ 'X-Session-Token': 'mock-session-token' })),
+    captureSessionToken: vi.fn(),
+  }
+})
+
 // Close MSW server for this file since we use manual fetch mocking
 // These tests need fine-grained control over PDF download responses that MSW can't provide
 beforeAll(() => {
@@ -111,8 +120,9 @@ describe('downloadCompensationPDF', () => {
     vi.restoreAllMocks()
   })
 
-  it('should successfully download PDF with correct URL encoding', async () => {
-    mockFetch.mockResolvedValue({
+  it('should successfully download PDF with correct URL encoding and session headers', async () => {
+    const { captureSessionToken } = await import('@/api/client')
+    const mockResponse = {
       ok: true,
       headers: {
         get: (name: string) => {
@@ -122,7 +132,8 @@ describe('downloadCompensationPDF', () => {
         },
       },
       blob: () => Promise.resolve(new Blob(['mock pdf'], { type: 'application/pdf' })),
-    })
+    }
+    mockFetch.mockResolvedValue(mockResponse)
 
     await downloadCompensationPDF('test-compensation-1')
 
@@ -131,9 +142,13 @@ describe('downloadCompensationPDF', () => {
       expect.objectContaining({
         method: 'GET',
         credentials: 'include',
+        headers: expect.objectContaining({
+          'X-Session-Token': 'mock-session-token',
+        }),
       })
     )
 
+    expect(captureSessionToken).toHaveBeenCalledWith(mockResponse)
     expect(document.createElement).toHaveBeenCalledWith('a')
     expect(URL.createObjectURL).toHaveBeenCalled()
     expect(URL.revokeObjectURL).toHaveBeenCalled()
