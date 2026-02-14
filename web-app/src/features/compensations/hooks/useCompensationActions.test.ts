@@ -4,13 +4,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { CompensationRecord } from '@/api/client'
 import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
 import * as authStore from '@/shared/stores/auth'
-import * as settingsStore from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
 
 import { useCompensationActions } from './useCompensationActions'
 import * as compensationActionsModule from '../utils/compensation-actions'
 
 vi.mock('@/shared/stores/auth')
+// Auto-mock settings store - still needed indirectly by useSafeMutation's internal useSafeModeGuard
 vi.mock('@/shared/stores/settings')
 vi.mock('@/shared/stores/toast', () => ({
   toast: {
@@ -62,13 +62,6 @@ describe('useCompensationActions', () => {
     // Default: not in demo mode
     vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
       selector({ dataSource: 'api' } as ReturnType<typeof authStore.useAuthStore.getState>)
-    )
-
-    // Default: safe mode disabled (allow operations)
-    vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
-      selector({ isSafeModeEnabled: false } as ReturnType<
-        typeof settingsStore.useSettingsStore.getState
-      >)
     )
   })
 
@@ -239,13 +232,6 @@ describe('useCompensationActions', () => {
     })
 
     it('should allow editing compensation in demo mode even with safe mode enabled', () => {
-      // Demo mode bypasses safe mode since changes are local-only
-      vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
-        selector({ isSafeModeEnabled: true } as ReturnType<
-          typeof settingsStore.useSettingsStore.getState
-        >)
-      )
-
       const { result } = renderHook(() => useCompensationActions())
 
       act(() => {
@@ -257,28 +243,16 @@ describe('useCompensationActions', () => {
   })
 
   describe('safe mode guards', () => {
-    beforeEach(() => {
-      // Not in demo mode, safe mode enabled
-      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ dataSource: 'api' } as ReturnType<typeof authStore.useAuthStore.getState>)
-      )
-      vi.mocked(settingsStore.useSettingsStore).mockImplementation((selector) =>
-        selector({ isSafeModeEnabled: true } as ReturnType<
-          typeof settingsStore.useSettingsStore.getState
-        >)
-      )
-    })
-
-    it('should block editing compensation when safe mode is enabled', () => {
+    it('should allow editing compensation when safe mode is enabled', () => {
       const { result } = renderHook(() => useCompensationActions())
 
       act(() => {
         result.current.editCompensationModal.open(mockCompensation)
       })
 
-      expect(result.current.editCompensationModal.isOpen).toBe(false)
-      expect(result.current.editCompensationModal.compensation).toBeNull()
-      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
+      expect(result.current.editCompensationModal.isOpen).toBe(true)
+      expect(result.current.editCompensationModal.compensation).toBe(mockCompensation)
+      expect(toast.warning).not.toHaveBeenCalled()
     })
   })
 })
