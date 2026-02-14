@@ -242,12 +242,21 @@ const REPORT_NAME: Record<Language, string> = {
 export function buildReportFilename(
   leagueCategory: LeagueCategory,
   language: Language,
-  startingDateTime?: string
+  startingDateTime?: string,
+  gameNumber?: string
 ): string {
   const league = leagueCategory.toLowerCase()
   const reportName = REPORT_NAME[language]
-  const datePart = startingDateTime ? format(new Date(startingDateTime), 'yyyyMMdd') : 'unknown'
-  return `${league}_${reportName}_${datePart}.pdf`
+  let datePart = 'unknown'
+  if (startingDateTime) {
+    try {
+      datePart = format(new Date(startingDateTime), 'yyyyMMdd')
+    } catch {
+      logger.warn('Failed to parse date for report filename:', startingDateTime)
+    }
+  }
+  const suffix = gameNumber ? `_${gameNumber}` : ''
+  return `${league}_${reportName}_${datePart}${suffix}.pdf`
 }
 
 export async function generateAndDownloadSportsHallReport(
@@ -256,6 +265,11 @@ export async function generateAndDownloadSportsHallReport(
   language: Language
 ): Promise<void> {
   const pdfBytes = await fillSportsHallReportForm(data, leagueCategory, language)
-  const filename = buildReportFilename(leagueCategory, language, data.startingDateTime)
+  const filename = buildReportFilename(
+    leagueCategory,
+    language,
+    data.startingDateTime,
+    data.gameNumber
+  )
   downloadPdf(pdfBytes, filename)
 }
