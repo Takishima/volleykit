@@ -679,6 +679,7 @@ const fr: Translations = {
       secondAssistant: '2e assistant',
       notAssigned: 'Non assigné',
       addCoach: 'Ajouter un entraîneur',
+      addAssistantCoach: 'Ajouter un assistant',
       removeCoach: "Retirer l'entraîneur",
       searchCoaches: 'Rechercher des entraîneurs...',
       noCoachesFound: 'Aucun entraîneur trouvé',
