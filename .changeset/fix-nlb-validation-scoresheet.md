@@ -2,4 +2,4 @@
 'volleykit-web': patch
 ---
 
-Fixed NLB/NLA validation not fetching group.hasNoScoresheet from the API, causing the scoresheet upload to incorrectly appear as required and preventing save requests (PUT/POST) from being made for games with electronic scoresheets
+Fixed NLB/NLA validation: fetch group.hasNoScoresheet so scoresheet upload correctly shows as not required, and throw an error instead of silently succeeding when the scorer cannot be saved due to a missing scoresheet

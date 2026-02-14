@@ -150,9 +150,14 @@ export async function saveScorerSelection(
   scorerId: string | undefined,
   fileResourceId?: string
 ): Promise<void> {
-  if (!scorerId || !scoresheet?.__identity) {
-    logger.debug('[VS] skip scorer save: no scorer or scoresheet ID')
+  if (!scorerId) {
+    logger.debug('[VS] skip scorer save: no scorer selected')
     return
+  }
+
+  if (!scoresheet?.__identity) {
+    logger.error('[VS] scorer selected but scoresheet ID missing — cannot save scorer')
+    throw new Error('Cannot save scorer: scoresheet not found for this game')
   }
 
   await apiClient.updateScoresheet(
@@ -198,9 +203,14 @@ export async function finalizeScoresheetWithFile(
   scorerId: string | undefined,
   fileResourceId: string | undefined
 ): Promise<void> {
-  if (!scorerId || !scoresheet?.__identity) {
-    logger.debug('[VS] skip scoresheet finalize: no scorer or scoresheet ID')
+  if (!scorerId) {
+    logger.debug('[VS] skip scoresheet finalize: no scorer selected')
     return
+  }
+
+  if (!scoresheet?.__identity) {
+    logger.error('[VS] scorer selected but scoresheet ID missing — cannot finalize')
+    throw new Error('Cannot finalize: scoresheet not found for this game')
   }
 
   await apiClient.finalizeScoresheet(
