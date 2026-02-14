@@ -207,6 +207,14 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
         return
       }
 
+      // DIAGNOSTIC: log scoresheet state to debug missing PUT/POST (see #924)
+      logger.debug('[VS] saveProgress: scoresheet data from API', {
+        hasScoresheet: !!gameDetails.scoresheet,
+        scoresheetId: gameDetails.scoresheet?.__identity,
+        scorerId: state.scorer.selected?.__identity,
+        hasNoScoresheet: gameDetails.group?.hasNoScoresheet,
+      })
+
       // Upload scoresheet file if present (cache the resource ID to avoid re-upload on finalize)
       let fileResourceId = uploadedFileResourceIdRef.current
       if (!fileResourceId && state.scoresheet.file) {

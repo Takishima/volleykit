@@ -8,7 +8,9 @@ import type {
   CoachModifications,
   CoachRole,
 } from '@/features/validation/hooks/useNominationList'
-import { logger } from '@/shared/utils/logger'
+import { createLogger } from '@/shared/utils/logger'
+
+const logger = createLogger('ValidationApi')
 
 /** Type for nomination list with required fields for API calls. */
 export interface NominationListForApi {
@@ -150,16 +152,18 @@ export async function saveScorerSelection(
   scorerId: string | undefined,
   fileResourceId?: string
 ): Promise<void> {
-  if (!scorerId || !scoresheet?.__identity) {
-    logger.debug('[VS] skip scorer save: no scorer or scoresheet ID')
+  if (!scorerId) {
+    logger.debug('[VS] skip scorer save: no scorer selected')
     return
   }
 
+  // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
+  // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.updateScoresheet(
-    scoresheet.__identity,
+    scoresheet?.__identity,
     gameId,
     scorerId,
-    scoresheet.isSimpleScoresheet ?? false,
+    scoresheet?.isSimpleScoresheet ?? false,
     fileResourceId
   )
 }
@@ -198,17 +202,19 @@ export async function finalizeScoresheetWithFile(
   scorerId: string | undefined,
   fileResourceId: string | undefined
 ): Promise<void> {
-  if (!scorerId || !scoresheet?.__identity) {
-    logger.debug('[VS] skip scoresheet finalize: no scorer or scoresheet ID')
+  if (!scorerId) {
+    logger.debug('[VS] skip scoresheet finalize: no scorer selected')
     return
   }
 
+  // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
+  // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.finalizeScoresheet(
-    scoresheet.__identity,
+    scoresheet?.__identity,
     gameId,
     scorerId,
     fileResourceId,
-    scoresheet.scoresheetValidation?.__identity,
-    scoresheet.isSimpleScoresheet ?? false
+    scoresheet?.scoresheetValidation?.__identity,
+    scoresheet?.isSimpleScoresheet ?? false
   )
 }
