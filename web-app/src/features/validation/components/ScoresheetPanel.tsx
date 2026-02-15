@@ -224,7 +224,7 @@ export function ScoresheetPanel({
         <div className="border border-border-default dark:border-border-default-dark rounded-lg p-4 text-center">
           {hasScoresheet ? (
             <>
-              <CheckCircle className="w-12 h-12 mx-auto text-green-500 mb-3" aria-hidden="true" />
+              <CheckCircle className="w-12 h-12 mx-auto text-success-500 mb-3" aria-hidden="true" />
               <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                 {t('validation.scoresheetUpload.scoresheetUploaded')}
               </h3>
@@ -355,7 +355,7 @@ export function ScoresheetPanel({
 
             {uploadState === 'complete' && (
               <div
-                className="mb-3 flex items-center gap-2 text-green-600 dark:text-green-400"
+                className="mb-3 flex items-center gap-2 text-success-600 dark:text-success-400"
                 role="status"
                 aria-live="polite"
               >
@@ -384,7 +384,7 @@ export function ScoresheetPanel({
                 type="button"
                 onClick={resetState}
                 disabled={uploadState === 'uploading'}
-                className="flex-1 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 text-sm font-medium text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-900/20 hover:bg-danger-100 dark:hover:bg-danger-900/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {tKey('remove')}
               </button>

@@ -83,7 +83,7 @@ export function PlayerListItem({
             <button
               type="button"
               onClick={onRemove}
-              className="p-1.5 rounded-full text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors"
+              className="p-1.5 rounded-full text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-900/50 transition-colors"
               aria-label={t('validation.roster.removePlayer')}
               title={t('validation.roster.removePlayer')}
             >

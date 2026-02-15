@@ -13,7 +13,7 @@ export function ValidationSuccessToast({ message }: ValidationSuccessToastProps)
     <div
       role="status"
       aria-live="polite"
-      className="fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
+      className="fixed top-4 right-4 bg-success-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
       style={{ zIndex: Z_INDEX_TOAST }}
     >
       <svg

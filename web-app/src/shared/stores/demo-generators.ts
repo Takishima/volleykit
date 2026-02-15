@@ -1435,6 +1435,120 @@ const NOMINATION_LIST_CONFIGS: NominationListGameConfig[] = [
       // No assistants - to test adding coaches
     },
   },
+  // Assignment index 4: cancelled women's 3L game (VB Therwil vs VBC Münchenstein for SVRBA via venueIndex wrap)
+  {
+    gameIndex: 4,
+    home: {
+      teamId: 'team-demo-4-1',
+      teamDisplayName: 'VB Therwil',
+      players: [
+        {
+          index: 1,
+          shirtNumber: 1,
+          firstName: 'Lea',
+          lastName: 'Schaub',
+          licenseCategory: 'SEN',
+          isCaptain: true,
+        },
+        {
+          index: 2,
+          shirtNumber: 3,
+          firstName: 'Nina',
+          lastName: 'Ritter',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 3,
+          shirtNumber: 5,
+          firstName: 'Sarah',
+          lastName: 'Vogt',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 4,
+          shirtNumber: 7,
+          firstName: 'Alina',
+          lastName: 'Frey',
+          licenseCategory: 'JUN',
+          isLibero: true,
+        },
+        {
+          index: 5,
+          shirtNumber: 9,
+          firstName: 'Mia',
+          lastName: 'Tanner',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 6,
+          shirtNumber: 12,
+          firstName: 'Julia',
+          lastName: 'Steiner',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 7,
+          shirtNumber: 14,
+          firstName: 'Laura',
+          lastName: 'Bucher',
+          licenseCategory: 'SEN',
+        },
+      ],
+      headCoach: { firstName: 'Christine', lastName: 'Portmann' },
+      firstAssistant: { firstName: 'Andrea', lastName: 'Kühne' },
+    },
+    away: {
+      teamId: 'team-demo-4-2',
+      teamDisplayName: 'VBC Münchenstein',
+      players: [
+        {
+          index: 1,
+          shirtNumber: 2,
+          firstName: 'Elena',
+          lastName: 'Grieder',
+          licenseCategory: 'SEN',
+          isCaptain: true,
+        },
+        {
+          index: 2,
+          shirtNumber: 4,
+          firstName: 'Noemi',
+          lastName: 'Bischof',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 3,
+          shirtNumber: 6,
+          firstName: 'Lena',
+          lastName: 'Ackermann',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 4,
+          shirtNumber: 8,
+          firstName: 'Sophie',
+          lastName: 'Erb',
+          licenseCategory: 'JUN',
+          isLibero: true,
+        },
+        {
+          index: 5,
+          shirtNumber: 11,
+          firstName: 'Anna',
+          lastName: 'Thommen',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 6,
+          shirtNumber: 13,
+          firstName: 'Chiara',
+          lastName: 'Hänggi',
+          licenseCategory: 'SEN',
+        },
+      ],
+      headCoach: { firstName: 'Monika', lastName: 'Flück' },
+    },
+  },
 ]
 
 // Mock nomination lists keyed by game ID, then by team type
