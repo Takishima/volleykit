@@ -319,6 +319,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       )
 
       await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId!) })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
       logger.debug('[VS] finalize done')
     } catch (error) {
       logger.error('[VS] finalize failed:', error)
