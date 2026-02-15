@@ -57,7 +57,7 @@ jobs:
 
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npx --yes openapi-typescript docs/api/volleymanager-openapi.yaml -o packages/shared/src/api/schema.ts
+        run: npm exec -w web-app -- openapi-typescript ../docs/api/volleymanager-openapi.yaml -o ../packages/shared/src/api/schema.ts
 
   typecheck:
     name: TypeScript Check
