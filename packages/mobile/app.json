@@ -16,7 +16,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "ch.volleyball.volleykit",
-      "associatedDomains": ["webcredentials:volleymanager.volleyball.ch"],
+      "associatedDomains": [
+        "webcredentials:volleymanager.volleyball.ch"
+      ],
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "VolleyKit uses your location to calculate public transport routes to your assignment venues.",
         "NSLocationAlwaysUsageDescription": "VolleyKit needs background location access to send smart departure reminders for your upcoming assignments.",

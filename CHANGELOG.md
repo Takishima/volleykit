@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.17.0
+
+### Minor Changes
+
+- [#928](https://github.com/Takishima/volleykit/pull/928) [`cc01110`](https://github.com/Takishima/volleykit/commit/cc01110dc6f09fd529a1212b0f8bc547903b902f) Thanks [@Takishima](https://github.com/Takishima)! - Mark individual validation wizard steps as read-only when their form is already finalized. Also fixes `isValidated` to require all forms closed (both rosters + scoresheet) instead of only checking `scoresheet.closedAt`. Adds a partially validated game in demo mode to showcase per-step read-only state.
+
+### Patch Changes
+
+- [#925](https://github.com/Takishima/volleykit/pull/925) [`e06ccb0`](https://github.com/Takishima/volleykit/commit/e06ccb099df3ce0f60a590f38cfeed222e69ceb2) Thanks [@Takishima](https://github.com/Takishima)! - Fixed NLB/NLA validation: fetch group.hasNoScoresheet so scoresheet upload correctly shows as not required, throw an error instead of silently succeeding when the scorer cannot be saved due to a missing scoresheet, and make logger configurable via localStorage for on-demand debugging in production
+
+- [#926](https://github.com/Takishima/volleykit/pull/926) [`3b79377`](https://github.com/Takishima/volleykit/commit/3b79377b2729755b1929596fc6a94038b3c16686) Thanks [@Takishima](https://github.com/Takishima)! - Skip nomination list finalize for already-closed lists to prevent 409 Conflict
+
+- [#921](https://github.com/Takishima/volleykit/pull/921) [`f4b8bd6`](https://github.com/Takishima/volleykit/commit/f4b8bd67b1676cd8c30681ef489f7b0f192dd205) Thanks [@Takishima](https://github.com/Takishima)! - Fix compensation PDF download by adding session token authentication headers
+
+- [#920](https://github.com/Takishima/volleykit/pull/920) [`dde99a0`](https://github.com/Takishima/volleykit/commit/dde99a06d402a2eb22c47a53dc03963a64465f03) Thanks [@Takishima](https://github.com/Takishima)! - Allow editing compensations in the compensation tab when safe mode is enabled, matching existing assignment tab behavior
+
+- [#928](https://github.com/Takishima/volleykit/pull/928) [`cc01110`](https://github.com/Takishima/volleykit/commit/cc01110dc6f09fd529a1212b0f8bc547903b902f) Thanks [@Takishima](https://github.com/Takishima)! - Show visible warning message when Finish button is disabled due to incomplete steps on any last step, not only read-only steps
+
+- [#923](https://github.com/Takishima/volleykit/pull/923) [`1e3d69a`](https://github.com/Takishima/volleykit/commit/1e3d69a0d00b7669890817983f9276438963a188) Thanks [@Takishima](https://github.com/Takishima)! - Use localized naming pattern for sports hall report filenames (e.g., nlb_hallenrapport_20260214_123456.pdf)
+
+- [#928](https://github.com/Takishima/volleykit/pull/928) [`cc01110`](https://github.com/Takishima/volleykit/commit/cc01110dc6f09fd529a1212b0f8bc547903b902f) Thanks [@Takishima](https://github.com/Takishima)! - Fix validate swipe button staying green after game finalization by invalidating assignment list cache
+
 ## 1.16.1
 
 ### Patch Changes
