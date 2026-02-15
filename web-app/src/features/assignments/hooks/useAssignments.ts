@@ -21,6 +21,7 @@ import {
 } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
+import type { ValidatedGameData } from '@/shared/stores/demo/types'
 
 import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
 
@@ -88,6 +89,37 @@ function filterByValidationClosed(items: Assignment[], deadlineHours: number): A
 }
 
 /**
+ * Enrich demo assignments with scoresheet.closedAt from validated games.
+ * In demo mode, the raw store assignments don't include validation status;
+ * this mirrors the enrichment done by mockApi.searchAssignments.
+ */
+function enrichWithValidationData(
+  items: Assignment[],
+  validatedGames: Record<string, ValidatedGameData>
+): Assignment[] {
+  return items.map((assignment) => {
+    const gameId = assignment.refereeGame?.game?.__identity
+    const validatedData = gameId ? validatedGames[gameId] : undefined
+
+    if (validatedData && assignment.refereeGame?.game) {
+      return {
+        ...assignment,
+        refereeGame: {
+          ...assignment.refereeGame,
+          game: {
+            ...assignment.refereeGame.game,
+            scoresheet: {
+              closedAt: validatedData.validatedAt,
+            },
+          },
+        },
+      } as Assignment
+    }
+    return assignment
+  })
+}
+
+/**
  * Hook to fetch assignments with date-based filtering.
  *
  * In demo mode, this hook bypasses React Query's cache and reads directly
@@ -106,6 +138,7 @@ export function useAssignments(
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const demoAssignments = useDemoStore((state) => state.assignments)
   const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode)
+  const validatedGames = useDemoStore((state) => state.validatedGames)
   const apiClient = getApiClient(dataSource)
 
   // Use appropriate key for cache invalidation when switching associations
@@ -146,6 +179,8 @@ export function useAssignments(
   // Filter demo assignments client-side to match API behavior.
   // This bypasses React Query's cache to ensure immediate updates
   // when switching associations.
+  // Also enriches with scoresheet.closedAt from validatedGames so the
+  // validate button shows the correct color (gray for validated games).
   const demoFilteredData = useMemo(() => {
     if (!isDemoMode) return []
 
@@ -161,8 +196,9 @@ export function useAssignments(
       return gameDate >= from && gameDate <= to
     })
 
-    return sortByGameDate(filtered, period === 'past')
-  }, [isDemoMode, demoAssignments, fromDate, toDate, period])
+    const sorted = sortByGameDate(filtered, period === 'past')
+    return enrichWithValidationData(sorted, validatedGames)
+  }, [isDemoMode, demoAssignments, fromDate, toDate, period, validatedGames])
 
   const query = useQuery({
     queryKey: queryKeys.assignments.list(config, associationKey),
@@ -216,6 +252,7 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const demoAssignments = useDemoStore((state) => state.assignments)
   const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode)
+  const validatedGames = useDemoStore((state) => state.validatedGames)
 
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
@@ -305,7 +342,9 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   })
 
   // Memoize demo data filtering to prevent recalculation on every render.
-  // Only recompute when demo assignments, date range, or deadline changes.
+  // Only recompute when demo assignments, date range, deadline, or validation state changes.
+  // Also enriches with scoresheet.closedAt from validatedGames so the
+  // validate button shows the correct color (gray for validated games).
   const demoFilteredData = useMemo(() => {
     if (!isDemoMode) return []
 
@@ -323,8 +362,9 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
       })
     })
     const filtered = filterByValidationClosed(inDateRange, deadlineHours)
-    return sortByGameDate(filtered, true)
-  }, [isDemoMode, demoAssignments, fromDate, toDate, deadlineHours])
+    const sorted = sortByGameDate(filtered, true)
+    return enrichWithValidationData(sorted, validatedGames)
+  }, [isDemoMode, demoAssignments, fromDate, toDate, deadlineHours, validatedGames])
 
   if (isDemoMode) {
     return createDemoQueryResult(query, demoFilteredData)

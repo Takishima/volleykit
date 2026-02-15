@@ -1,4 +1,4 @@
-import { Check, AlertTriangle } from '@/shared/components/icons'
+import { Check, AlertTriangle, Lock } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import type { WizardStep } from '@/shared/hooks/useWizardNavigation'
 
@@ -6,14 +6,22 @@ import type { WizardStep } from '@/shared/hooks/useWizardNavigation'
 function getStepIndicatorStyle(
   isCurrent: boolean,
   showCompletion: boolean,
-  isInvalid: boolean
+  isInvalid: boolean,
+  isReadOnly: boolean
 ): string {
   if (isCurrent) {
+    if (isReadOnly) {
+      return 'bg-surface-muted dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark ring-2 ring-border-strong dark:ring-border-strong-dark ring-offset-2 dark:ring-offset-surface-card-dark'
+    }
     // Current step with invalid state gets warning ring
     if (isInvalid) {
       return 'bg-warning-500 text-warning-950 ring-2 ring-warning-500 ring-offset-2 dark:ring-offset-surface-card-dark'
     }
     return 'bg-primary-500 text-primary-950 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-surface-card-dark'
+  }
+  // Non-current read-only (finalized) step
+  if (isReadOnly) {
+    return 'bg-surface-muted dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark'
   }
   // Non-current invalid step
   if (isInvalid) {
@@ -65,9 +73,10 @@ export function WizardStepIndicator({
         const isCurrent = index === currentStepIndex
         const isMarkedDone = stepsMarkedDone.has(index)
         const isInvalid = step.isInvalid ?? false
+        const isReadOnly = step.isReadOnly ?? false
 
-        // Show checkmark if user has marked step as done (and it's not optional and not invalid)
-        const showCompletion = !step.isOptional && isMarkedDone && !isInvalid
+        // Show checkmark if user has marked step as done (and it's not optional, not invalid, and not read-only)
+        const showCompletion = !step.isOptional && isMarkedDone && !isInvalid && !isReadOnly
 
         const isDisabled = !clickable
 
@@ -87,6 +96,7 @@ export function WizardStepIndicator({
         // Build aria-label with all states
         const ariaLabelParts = [step.label]
         if (isCurrent) ariaLabelParts.push(t('common.stepIndicatorCurrent'))
+        if (isReadOnly) ariaLabelParts.push(t('common.stepIndicatorFinalized'))
         if (showCompletion) ariaLabelParts.push(t('common.stepIndicatorDone'))
         if (isInvalid) ariaLabelParts.push(t('common.stepIndicatorInvalid'))
 
@@ -115,12 +125,14 @@ export function WizardStepIndicator({
                 relative flex items-center justify-center w-8 h-8 rounded-full
                 transition-all duration-200
                 ${clickable ? 'cursor-pointer hover:scale-110' : 'cursor-default'}
-                ${getStepIndicatorStyle(isCurrent, showCompletion, isInvalid)}
+                ${getStepIndicatorStyle(isCurrent, showCompletion, isInvalid, isReadOnly)}
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-surface-card-dark
                 aria-disabled:cursor-default aria-disabled:opacity-100
               `}
             >
-              {isInvalid && !isCurrent ? (
+              {isReadOnly ? (
+                <Lock className="w-3.5 h-3.5" strokeWidth={2.5} aria-hidden="true" />
+              ) : isInvalid && !isCurrent ? (
                 <AlertTriangle className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
               ) : showCompletion && !isCurrent ? (
                 <Check className="w-4 h-4" strokeWidth={3} aria-hidden="true" />

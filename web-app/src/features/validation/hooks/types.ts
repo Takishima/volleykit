@@ -91,8 +91,10 @@ export interface UseValidationStateResult {
   completionStatus: PanelCompletionStatus
   /** Whether all required panels are complete */
   isAllRequiredComplete: boolean
-  /** Whether the game has already been validated (read-only mode) */
+  /** Whether the game has already been fully validated (all forms closed) */
   isValidated: boolean
+  /** Whether the scoresheet is independently closed (scorer + scoresheet finalized) */
+  isScoresheetClosed: boolean
   /** Information about the validated game (if validated) */
   validatedInfo: ValidatedGameInfo | null
   /** Pending scorer from previous save (if any) */

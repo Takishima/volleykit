@@ -112,6 +112,7 @@ describe('useConvocations - API Client Routing', () => {
               },
             },
           ],
+          validatedGames: {},
         } as ReturnType<typeof demoStore.useDemoStore.getState>)
       )
 

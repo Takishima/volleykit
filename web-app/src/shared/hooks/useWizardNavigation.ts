@@ -6,6 +6,8 @@ export interface WizardStep {
   isOptional?: boolean
   /** Whether the step has validation errors that should be highlighted */
   isInvalid?: boolean
+  /** Whether the step is read-only (already finalized externally) */
+  isReadOnly?: boolean
 }
 
 export interface UseWizardNavigationOptions<T extends WizardStep> {

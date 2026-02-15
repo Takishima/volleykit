@@ -297,6 +297,7 @@ describe('useAssignments', () => {
             },
           }),
         ],
+        validatedGames: {},
       })
     )
 

@@ -50,6 +50,7 @@ export interface Translations {
     stepIndicatorCurrent: string
     stepIndicatorDone: string
     stepIndicatorInvalid: string
+    stepIndicatorFinalized: string
     dob: string
   }
   auth: {
@@ -596,6 +597,9 @@ export interface Translations {
       markAsReviewed: string
       alreadyValidated: string
       validatedBy: string
+      rosterFinalized: string
+      scoresheetFinalized: string
+      stepsIncomplete: string
     }
     ocr: {
       scanScoresheet: string

@@ -1306,14 +1306,16 @@ function createCoachPerson(
 function createNominationList(
   config: NominationListConfig,
   gameIndex: number,
-  teamIndex: number
+  teamIndex: number,
+  closed = false
 ): NominationList {
   return {
     __identity: `demo-nomlist-${config.side}-${gameIndex}`,
     game: { __identity: config.gameId },
     team: { __identity: config.teamId, displayName: config.teamDisplayName },
-    closed: false,
-    isClosedForTeam: false,
+    closed,
+    isClosedForTeam: closed,
+    ...(closed && { closedAt: new Date().toISOString(), closedBy: 'referee' }),
     indoorPlayerNominations: config.players.map((player) =>
       createPlayerNomination(player, gameIndex, teamIndex)
     ),
@@ -1341,6 +1343,8 @@ function createNominationList(
 
 interface NominationListGameConfig {
   gameIndex: number
+  /** Whether both nomination lists should be pre-closed (for partial validation demo) */
+  closed?: boolean
   home: Omit<NominationListConfig, 'gameId' | 'side'>
   away: Omit<NominationListConfig, 'gameId' | 'side'>
 }
@@ -1435,118 +1439,100 @@ const NOMINATION_LIST_CONFIGS: NominationListGameConfig[] = [
       // No assistants - to test adding coaches
     },
   },
-  // Assignment index 4: cancelled women's 3L game (VB Therwil vs VBC Münchenstein for SVRBA via venueIndex wrap)
+  // Game 3: Partially validated - rosters already closed but scoresheet not yet finalized.
+  // Demonstrates per-step read-only mode (lock icons on roster steps).
+  // Demo user is head-two (second head referee) for this game.
   {
-    gameIndex: 4,
+    gameIndex: 3,
+    closed: true,
     home: {
-      teamId: 'team-demo-4-1',
-      teamDisplayName: 'VB Therwil',
-      players: [
-        {
-          index: 1,
-          shirtNumber: 1,
-          firstName: 'Lea',
-          lastName: 'Schaub',
-          licenseCategory: 'SEN',
-          isCaptain: true,
-        },
-        {
-          index: 2,
-          shirtNumber: 3,
-          firstName: 'Nina',
-          lastName: 'Ritter',
-          licenseCategory: 'SEN',
-        },
-        {
-          index: 3,
-          shirtNumber: 5,
-          firstName: 'Sarah',
-          lastName: 'Vogt',
-          licenseCategory: 'SEN',
-        },
-        {
-          index: 4,
-          shirtNumber: 7,
-          firstName: 'Alina',
-          lastName: 'Frey',
-          licenseCategory: 'JUN',
-          isLibero: true,
-        },
-        {
-          index: 5,
-          shirtNumber: 9,
-          firstName: 'Mia',
-          lastName: 'Tanner',
-          licenseCategory: 'SEN',
-        },
-        {
-          index: 6,
-          shirtNumber: 12,
-          firstName: 'Julia',
-          lastName: 'Steiner',
-          licenseCategory: 'SEN',
-        },
-        {
-          index: 7,
-          shirtNumber: 14,
-          firstName: 'Laura',
-          lastName: 'Bucher',
-          licenseCategory: 'SEN',
-        },
-      ],
-      headCoach: { firstName: 'Christine', lastName: 'Portmann' },
-      firstAssistant: { firstName: 'Andrea', lastName: 'Kühne' },
-    },
-    away: {
-      teamId: 'team-demo-4-2',
-      teamDisplayName: 'VBC Münchenstein',
+      teamId: 'team-demo-3',
+      teamDisplayName: 'Volley Näfels',
       players: [
         {
           index: 1,
           shirtNumber: 2,
-          firstName: 'Elena',
-          lastName: 'Grieder',
+          firstName: 'Rafael',
+          lastName: 'Bosshard',
           licenseCategory: 'SEN',
           isCaptain: true,
         },
         {
           index: 2,
           shirtNumber: 4,
-          firstName: 'Noemi',
-          lastName: 'Bischof',
+          firstName: 'Damien',
+          lastName: 'Carnal',
           licenseCategory: 'SEN',
         },
         {
           index: 3,
-          shirtNumber: 6,
-          firstName: 'Lena',
-          lastName: 'Ackermann',
-          licenseCategory: 'SEN',
-        },
-        {
-          index: 4,
           shirtNumber: 8,
-          firstName: 'Sophie',
-          lastName: 'Erb',
+          firstName: 'Noel',
+          lastName: 'Siegenthaler',
           licenseCategory: 'JUN',
           isLibero: true,
         },
         {
-          index: 5,
-          shirtNumber: 11,
-          firstName: 'Anna',
-          lastName: 'Thommen',
+          index: 4,
+          shirtNumber: 10,
+          firstName: 'Joel',
+          lastName: 'Leuthard',
           licenseCategory: 'SEN',
         },
         {
-          index: 6,
-          shirtNumber: 13,
-          firstName: 'Chiara',
-          lastName: 'Hänggi',
+          index: 5,
+          shirtNumber: 15,
+          firstName: 'Sven',
+          lastName: 'Aeberhard',
           licenseCategory: 'SEN',
         },
       ],
-      headCoach: { firstName: 'Monika', lastName: 'Flück' },
+      headCoach: { firstName: 'Marco', lastName: 'Bigler' },
+      firstAssistant: { firstName: 'Roger', lastName: 'Schneider' },
+    },
+    away: {
+      teamId: 'team-demo-4',
+      teamDisplayName: 'Volero Zürich',
+      players: [
+        {
+          index: 1,
+          shirtNumber: 1,
+          firstName: 'Liam',
+          lastName: 'Hess',
+          licenseCategory: 'SEN',
+          isCaptain: true,
+        },
+        {
+          index: 2,
+          shirtNumber: 6,
+          firstName: 'Oliver',
+          lastName: 'Rinaldi',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 3,
+          shirtNumber: 9,
+          firstName: 'Julian',
+          lastName: 'Staub',
+          licenseCategory: 'JUN',
+          isLibero: true,
+        },
+        {
+          index: 4,
+          shirtNumber: 11,
+          firstName: 'Matteo',
+          lastName: 'Graf',
+          licenseCategory: 'SEN',
+        },
+        {
+          index: 5,
+          shirtNumber: 13,
+          firstName: 'Robin',
+          lastName: 'Thommen',
+          licenseCategory: 'SEN',
+        },
+      ],
+      headCoach: { firstName: 'Daniel', lastName: 'Werder' },
     },
   },
 ]
@@ -1572,12 +1558,14 @@ export function generateMockNominationLists(): MockNominationLists {
       home: createNominationList(
         { ...config.home, gameId: gameUuid, side: 'home' },
         config.gameIndex,
-        1
+        1,
+        config.closed
       ),
       away: createNominationList(
         { ...config.away, gameId: gameUuid, side: 'away' },
         config.gameIndex,
-        2
+        2,
+        config.closed
       ),
     }
   }

@@ -1,6 +1,7 @@
 import type { Assignment, NominationList } from '@/api/client'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
+import { Lock } from '@/shared/components/icons'
 import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
@@ -13,6 +14,8 @@ interface LoadingState {
 
 interface ValidationInfo {
   isValidated: boolean
+  /** Whether the current step is read-only due to its form being already finalized */
+  isCurrentStepReadOnly: boolean
   validatedInfo: UseValidationStateResult['validatedInfo']
   pendingScorer: UseValidationStateResult['pendingScorer']
   scoresheetNotRequired: boolean
@@ -76,14 +79,38 @@ export function StepRenderer({
     )
   }
 
+  const isStepReadOnly = validation.isValidated || validation.isCurrentStepReadOnly
+  const isRosterStep = currentStepId === 'home-roster' || currentStepId === 'away-roster'
+
+  // Show finalized banner when the step is read-only due to partial finalization
+  // (not when the entire game is validated — that has its own banner in the modal)
+  const showFinalizedBanner = !validation.isValidated && validation.isCurrentStepReadOnly
+
   return (
     <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
+      {showFinalizedBanner && (
+        <div
+          role="status"
+          className="mb-3 p-2.5 flex items-center gap-2 bg-surface-muted dark:bg-surface-subtle-dark border border-border-strong dark:border-border-strong-dark rounded-lg"
+        >
+          <Lock
+            className="w-4 h-4 flex-shrink-0 text-text-muted dark:text-text-muted-dark"
+            aria-hidden="true"
+          />
+          <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
+            {isRosterStep
+              ? t('validation.wizard.rosterFinalized')
+              : t('validation.wizard.scoresheetFinalized')}
+          </p>
+        </div>
+      )}
+
       {currentStepId === 'home-roster' && (
         <HomeRosterPanel
           assignment={assignment}
           onModificationsChange={handlers.setHomeRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={validation.isValidated}
+          readOnly={isStepReadOnly}
           initialModifications={validation.state.homeRoster.playerModifications}
           initialCoachModifications={validation.state.homeRoster.coachModifications}
           prefetchedNominationList={validation.homeNominationList}
@@ -95,7 +122,7 @@ export function StepRenderer({
           assignment={assignment}
           onModificationsChange={handlers.setAwayRosterModifications}
           onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={validation.isValidated}
+          readOnly={isStepReadOnly}
           initialModifications={validation.state.awayRoster.playerModifications}
           initialCoachModifications={validation.state.awayRoster.coachModifications}
           prefetchedNominationList={validation.awayNominationList}
@@ -106,7 +133,7 @@ export function StepRenderer({
         <ScorerPanel
           key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
           onScorerChange={handlers.setScorer}
-          readOnly={validation.isValidated}
+          readOnly={isStepReadOnly}
           readOnlyScorerName={validation.validatedInfo?.scorerName}
           readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
           initialScorer={
@@ -124,7 +151,7 @@ export function StepRenderer({
       {currentStepId === 'scoresheet' && (
         <ScoresheetPanel
           onScoresheetChange={handlers.setScoresheet}
-          readOnly={validation.isValidated}
+          readOnly={isStepReadOnly}
           hasScoresheet={validation.validatedInfo?.hasScoresheet}
           scoresheetNotRequired={validation.scoresheetNotRequired}
         />
