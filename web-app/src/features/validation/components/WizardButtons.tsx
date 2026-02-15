@@ -12,11 +12,13 @@ interface ReadOnlyModeButtonsProps {
   onNext: () => void
   onClose: () => void
   closeLabel: string
+  closeVariant?: 'primary' | 'success'
+  closeDisabled?: boolean
 }
 
 /**
- * Shared navigation buttons for read-only modes (validated/safe mode).
- * Shows Previous/Next buttons with a customizable close button on last step.
+ * Shared navigation buttons for read-only modes (validated/safe mode/finalized step).
+ * Shows Previous/Next buttons with a customizable close/finish button on last step.
  */
 function ReadOnlyModeButtons({
   navigation,
@@ -24,6 +26,8 @@ function ReadOnlyModeButtons({
   onNext,
   onClose,
   closeLabel,
+  closeVariant = 'primary',
+  closeDisabled = false,
 }: ReadOnlyModeButtonsProps) {
   const { t } = useTranslation()
 
@@ -38,7 +42,7 @@ function ReadOnlyModeButtons({
       </div>
       <div>
         {navigation.isLastStep ? (
-          <Button variant="primary" onClick={onClose}>
+          <Button variant={closeVariant} onClick={onClose} disabled={closeDisabled}>
             {closeLabel}
           </Button>
         ) : (
@@ -65,6 +69,42 @@ interface ValidatedModeButtonsProps {
 export function ValidatedModeButtons(props: ValidatedModeButtonsProps) {
   const { t } = useTranslation()
   return <ReadOnlyModeButtons {...props} closeLabel={t('common.close')} />
+}
+
+interface ReadOnlyStepButtonsProps {
+  navigation: WizardNavigationState
+  onBack: () => void
+  onNext: () => void
+  onFinish: () => Promise<void>
+  finishDisabled: boolean
+  isFinalizing: boolean
+}
+
+/**
+ * Navigation buttons shown when the current step is read-only (finalized)
+ * but the overall game is not yet fully validated.
+ * Shows Previous/Next, plus Finish on the last step.
+ */
+export function ReadOnlyStepButtons({
+  navigation,
+  onBack,
+  onNext,
+  onFinish,
+  finishDisabled,
+  isFinalizing,
+}: ReadOnlyStepButtonsProps) {
+  const { t } = useTranslation()
+  return (
+    <ReadOnlyModeButtons
+      navigation={navigation}
+      onBack={onBack}
+      onNext={onNext}
+      onClose={() => onFinish()}
+      closeLabel={isFinalizing ? t('common.loading') : t('validation.wizard.finish')}
+      closeVariant="success"
+      closeDisabled={finishDisabled}
+    />
+  )
 }
 
 interface EditModeState {

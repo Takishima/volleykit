@@ -151,6 +151,7 @@ const de: Translations = {
     stepIndicatorCurrent: '(aktuell)',
     stepIndicatorDone: '(erledigt)',
     stepIndicatorInvalid: '(unvollständig)',
+    stepIndicatorFinalized: '(abgeschlossen)',
     dob: 'Geb.',
   },
   auth: {
@@ -755,6 +756,9 @@ const de: Translations = {
       markAsReviewed: 'Als geprüft markieren',
       alreadyValidated: 'Dieses Spiel wurde bereits validiert',
       validatedBy: 'Schreiber: {scorer}',
+      rosterFinalized: 'Diese Aufstellung wurde bereits eingereicht',
+      scoresheetFinalized: 'Der Spielbericht wurde bereits abgeschlossen',
+      stepsIncomplete: 'Alle Schritte abschliessen vor dem Finalisieren',
     },
     ocr: {
       scanScoresheet: 'Spielbericht scannen',

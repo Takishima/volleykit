@@ -151,6 +151,7 @@ const it: Translations = {
     stepIndicatorCurrent: '(corrente)',
     stepIndicatorDone: '(completato)',
     stepIndicatorInvalid: '(incompleto)',
+    stepIndicatorFinalized: '(finalizzato)',
     dob: 'DDN',
   },
   auth: {
@@ -741,6 +742,9 @@ const it: Translations = {
       markAsReviewed: 'Segna come verificato',
       alreadyValidated: 'Questa partita è già stata validata',
       validatedBy: 'Segnapunti: {scorer}',
+      rosterFinalized: 'Questa lista è già stata inviata',
+      scoresheetFinalized: 'Il referto è già stato finalizzato',
+      stepsIncomplete: 'Completare tutti i passaggi prima di finalizzare',
     },
     ocr: {
       scanScoresheet: 'Scansiona referto',

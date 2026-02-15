@@ -150,6 +150,7 @@ const en: Translations = {
     stepIndicatorCurrent: '(current)',
     stepIndicatorDone: '(done)',
     stepIndicatorInvalid: '(incomplete)',
+    stepIndicatorFinalized: '(finalized)',
     dob: 'DOB',
   },
   auth: {
@@ -727,6 +728,9 @@ const en: Translations = {
       markAsReviewed: 'Mark as reviewed',
       alreadyValidated: 'This game has already been validated',
       validatedBy: 'Scorer: {scorer}',
+      rosterFinalized: 'This roster has already been submitted',
+      scoresheetFinalized: 'The scoresheet has already been finalized',
+      stepsIncomplete: 'Complete all steps before finalizing',
     },
     ocr: {
       scanScoresheet: 'Scan Scoresheet',

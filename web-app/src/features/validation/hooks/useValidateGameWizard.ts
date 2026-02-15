@@ -27,6 +27,8 @@ export interface ValidationStep {
   isOptional?: boolean
   /** Whether the step has validation errors (e.g., insufficient players/coaches) */
   isInvalid?: boolean
+  /** Whether the step is read-only (already finalized externally) */
+  isReadOnly?: boolean
 }
 
 interface UseValidateGameWizardOptions {
@@ -52,6 +54,8 @@ export interface UseValidateGameWizardResult {
   isDirty: boolean
   completionStatus: ReturnType<typeof useValidationState>['completionStatus']
   isValidated: boolean
+  /** Whether the current step is read-only due to its form being already finalized */
+  isCurrentStepReadOnly: boolean
   validatedInfo: ReturnType<typeof useValidationState>['validatedInfo']
   pendingScorer: ReturnType<typeof useValidationState>['pendingScorer']
   scoresheetNotRequired: boolean
@@ -135,6 +139,7 @@ export function useValidateGameWizard({
     isDirty,
     completionStatus,
     isValidated: isValidatedFromQuery,
+    isScoresheetClosed: isScoresheetClosedFromQuery,
     validatedInfo: validatedInfoFromQuery,
     pendingScorer,
     scoresheetNotRequired,
@@ -156,7 +161,8 @@ export function useValidateGameWizard({
   // The assignment list data may be fresher than the cached game details query.
   // When a game is validated externally on volleymanager, the assignment list
   // reflects closedAt immediately, but the game details query cache may still
-  // have stale data. Check both sources to determine validated state.
+  // have stale data. The assignment only carries scoresheet.closedAt — when
+  // that's set, the game was fully validated externally (all forms closed).
   const assignmentClosedAt = assignment.refereeGame?.game?.scoresheet?.closedAt
   const isValidated = isValidatedFromQuery || !!assignmentClosedAt
 
@@ -192,22 +198,45 @@ export function useValidateGameWizard({
     validationState.awayRoster.coachModifications,
   ])
 
+  // Per-step read-only detection based on individual form closure status.
+  // Roster steps are locked when their nomination list is independently closed.
+  // Scorer/scoresheet steps are locked when scoresheet.closedAt is set.
+  // We check both data sources (game details query and fresher assignment list)
+  // since the assignment list may reflect external changes sooner.
+  const isHomeRosterClosed = !!homeNominationList?.closed
+  const isAwayRosterClosed = !!awayNominationList?.closed
+  const isScoresheetClosed = isScoresheetClosedFromQuery || !!assignmentClosedAt
+
   const wizardSteps = useMemo<ValidationStep[]>(
     () => [
       {
         id: 'home-roster',
         label: t('validation.homeRoster'),
-        isInvalid: !rosterValidation.home.isValid,
+        isInvalid: !isHomeRosterClosed && !rosterValidation.home.isValid,
+        isReadOnly: isHomeRosterClosed,
       },
       {
         id: 'away-roster',
         label: t('validation.awayRoster'),
-        isInvalid: !rosterValidation.away.isValid,
+        isInvalid: !isAwayRosterClosed && !rosterValidation.away.isValid,
+        isReadOnly: isAwayRosterClosed,
       },
-      { id: 'scorer', label: t('validation.scorer') },
-      { id: 'scoresheet', label: t('validation.scoresheet'), isOptional: true },
+      { id: 'scorer', label: t('validation.scorer'), isReadOnly: isScoresheetClosed },
+      {
+        id: 'scoresheet',
+        label: t('validation.scoresheet'),
+        isOptional: true,
+        isReadOnly: isScoresheetClosed,
+      },
     ],
-    [t, rosterValidation.home.isValid, rosterValidation.away.isValid]
+    [
+      t,
+      rosterValidation.home.isValid,
+      rosterValidation.away.isValid,
+      isHomeRosterClosed,
+      isAwayRosterClosed,
+      isScoresheetClosed,
+    ]
   )
 
   const {
@@ -225,6 +254,17 @@ export function useValidateGameWizard({
   } = useWizardNavigation<ValidationStep>({
     steps: wizardSteps,
   })
+
+  // Auto-mark read-only (already finalized) steps as done
+  useEffect(() => {
+    wizardSteps.forEach((step, index) => {
+      if (step.isReadOnly) {
+        setStepDone(index, true)
+      }
+    })
+  }, [wizardSteps, setStepDone])
+
+  const isCurrentStepReadOnly = currentStep.isReadOnly ?? false
 
   // Refs for tracking state without re-renders
   const isDirtyRef = useRef(isDirty)
@@ -426,6 +466,7 @@ export function useValidateGameWizard({
     isDirty,
     completionStatus,
     isValidated,
+    isCurrentStepReadOnly,
     validatedInfo,
     pendingScorer,
     scoresheetNotRequired,

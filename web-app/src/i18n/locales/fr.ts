@@ -152,6 +152,7 @@ const fr: Translations = {
     stepIndicatorCurrent: '(actuel)',
     stepIndicatorDone: '(terminé)',
     stepIndicatorInvalid: '(incomplet)',
+    stepIndicatorFinalized: '(finalisé)',
     dob: 'DDN',
   },
   auth: {
@@ -749,6 +750,9 @@ const fr: Translations = {
       markAsReviewed: 'Marquer comme vérifié',
       alreadyValidated: 'Ce match a déjà été validé',
       validatedBy: 'Marqueur: {scorer}',
+      rosterFinalized: 'Cette liste a déjà été soumise',
+      scoresheetFinalized: 'La feuille de match a déjà été finalisée',
+      stepsIncomplete: 'Compléter toutes les étapes avant de finaliser',
     },
     ocr: {
       scanScoresheet: 'Scanner la feuille de match',

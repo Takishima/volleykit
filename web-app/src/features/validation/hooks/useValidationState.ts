@@ -93,12 +93,25 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     [completionStatus]
   )
 
-  const isValidated = useMemo(
+  // Whether the scoresheet is independently closed (scorer + scoresheet finalized)
+  const isScoresheetClosed = useMemo(
     () => !!gameDetailsQuery.data?.scoresheet?.closedAt,
     [gameDetailsQuery.data]
   )
 
+  // A game is fully validated when ALL forms are closed:
+  // both nomination lists (rosters) + scoresheet
+  const isValidated = useMemo(() => {
+    const data = gameDetailsQuery.data
+    return !!(
+      data?.nominationListOfTeamHome?.closed &&
+      data?.nominationListOfTeamAway?.closed &&
+      data?.scoresheet?.closedAt
+    )
+  }, [gameDetailsQuery.data])
+
   const validatedInfo = useMemo<ValidatedGameInfo | null>(() => {
+    if (!isValidated) return null
     const scoresheet = gameDetailsQuery.data?.scoresheet
     if (!scoresheet?.closedAt) return null
     // Cast to include birthday which is available in demo mode
@@ -111,7 +124,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       scorerBirthday: writerPerson?.birthday,
       hasScoresheet: !!scoresheet.hasFile,
     }
-  }, [gameDetailsQuery.data])
+  }, [gameDetailsQuery.data, isValidated])
 
   const pendingScorer = useMemo<PendingScorerData | null>(() => {
     if (isValidated) return null
@@ -322,6 +335,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     completionStatus,
     isAllRequiredComplete,
     isValidated,
+    isScoresheetClosed,
     validatedInfo,
     pendingScorer,
     scoresheetNotRequired,

@@ -18,6 +18,7 @@ import {
   ValidationSuccessToast,
   StepRenderer,
   ValidatedModeButtons,
+  ReadOnlyStepButtons,
   EditModeButtons,
   OCREntryModal,
 } from '.'
@@ -185,6 +186,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
 
   const validationInfo = {
     isValidated: wizard.isValidated,
+    isCurrentStepReadOnly: wizard.isCurrentStepReadOnly,
     validatedInfo: wizard.validatedInfo,
     pendingScorer: wizard.pendingScorer,
     scoresheetNotRequired: wizard.scoresheetNotRequired,
@@ -301,6 +303,19 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           </div>
         )}
 
+        {!wizard.isValidated &&
+          wizard.isCurrentStepReadOnly &&
+          !wizard.allPreviousRequiredStepsDone && (
+            <div
+              role="status"
+              className="mt-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg"
+            >
+              <p className="text-sm text-warning-700 dark:text-warning-400">
+                {t('validation.wizard.stepsIncomplete')}
+              </p>
+            </div>
+          )}
+
         <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
           {wizard.isValidated ? (
             <ValidatedModeButtons
@@ -308,6 +323,20 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               onBack={wizard.goBack}
               onNext={wizard.goNext}
               onClose={onClose}
+            />
+          ) : wizard.isCurrentStepReadOnly ? (
+            <ReadOnlyStepButtons
+              navigation={navigation}
+              onBack={wizard.goBack}
+              onNext={wizard.goNext}
+              onFinish={wizard.handleFinish}
+              finishDisabled={
+                wizard.isFinalizing ||
+                wizard.isLoadingGameDetails ||
+                !!wizard.gameDetailsError ||
+                !wizard.allPreviousRequiredStepsDone
+              }
+              isFinalizing={wizard.isFinalizing}
             />
           ) : (
             <EditModeButtons

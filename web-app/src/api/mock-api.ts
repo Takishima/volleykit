@@ -550,6 +550,36 @@ export const mockApi = {
 
     // Build mock game details with scoresheet and nomination lists
     // Cast to allow extended writerPerson type with birthday (demo mode only)
+    // For validated games without stored nomination lists, return closed stubs
+    // so that isValidated correctly detects the game as fully validated.
+    const encounter = assignment?.refereeGame?.game?.encounter
+    const homeNomFallback = validatedData
+      ? {
+          __identity: `nom-home-${gameId}`,
+          game: { __identity: gameId },
+          team: encounter?.teamHome
+            ? { __identity: encounter.teamHome.__identity, displayName: encounter.teamHome.name }
+            : undefined,
+          closed: true,
+          closedAt: validatedData.validatedAt,
+          closedBy: 'referee',
+          isClosedForTeam: true,
+        }
+      : undefined
+    const awayNomFallback = validatedData
+      ? {
+          __identity: `nom-away-${gameId}`,
+          game: { __identity: gameId },
+          team: encounter?.teamAway
+            ? { __identity: encounter.teamAway.__identity, displayName: encounter.teamAway.name }
+            : undefined,
+          closed: true,
+          closedAt: validatedData.validatedAt,
+          closedBy: 'referee',
+          isClosedForTeam: true,
+        }
+      : undefined
+
     const gameDetails = {
       __identity: gameId,
       // Include group info for scoresheet requirements
@@ -578,8 +608,8 @@ export const mockApi = {
           closedBy: 'referee',
         }),
       },
-      nominationListOfTeamHome: gameNominations?.home ?? undefined,
-      nominationListOfTeamAway: gameNominations?.away ?? undefined,
+      nominationListOfTeamHome: gameNominations?.home ?? homeNomFallback,
+      nominationListOfTeamAway: gameNominations?.away ?? awayNomFallback,
     } as GameDetails
 
     return gameDetails
