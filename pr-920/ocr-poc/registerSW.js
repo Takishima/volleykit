@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/volleykit/pr-920/ocr-poc/sw.js', { scope: '/volleykit/pr-920/ocr-poc/' })})}
