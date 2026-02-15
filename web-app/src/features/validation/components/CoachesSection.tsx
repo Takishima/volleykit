@@ -101,8 +101,8 @@ function CoachRow({
             </button>
           )}
 
-          {/* Add/Change button - shown when no coach or as change option */}
-          {!hasCoach && !isNewlyAdded && (
+          {/* Add/Change button - shown when no coach assigned, or when coach is pending removal */}
+          {((!hasCoach && !isNewlyAdded) || isMarkedForRemoval) && (
             <button
               type="button"
               onClick={onAdd}
