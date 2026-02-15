@@ -685,7 +685,6 @@ const de: Translations = {
       secondAssistant: '2. Assistent',
       notAssigned: 'Nicht zugewiesen',
       addCoach: 'Trainer hinzufügen',
-      addAssistantCoach: 'Assistenztrainer hinzufügen',
       removeCoach: 'Trainer entfernen',
       searchCoaches: 'Trainer suchen...',
       noCoachesFound: 'Keine Trainer gefunden',

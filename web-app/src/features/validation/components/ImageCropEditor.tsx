@@ -134,7 +134,7 @@ export function ImageCropEditor({
         {/* Error message */}
         {error && (
           <div
-            className="flex items-center gap-2 mb-2 px-3 py-2 text-sm text-red-200 bg-red-900/50 rounded"
+            className="flex items-center gap-2 mb-2 px-3 py-2 text-sm text-danger-200 bg-danger-900/50 rounded"
             role="alert"
           >
             <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />

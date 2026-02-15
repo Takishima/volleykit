@@ -1,6 +1,6 @@
 import type { Schemas } from '@/api/client'
 import type { CoachRole } from '@/features/validation/hooks/useNominationList'
-import { UserPlus, X } from '@/shared/components/icons'
+import { Trash2, Undo2, UserPlus } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
 type PersonSummary = Schemas['PersonSummary']
@@ -83,9 +83,9 @@ function CoachRow({
               type="button"
               onClick={onRemove}
               aria-label={t('validation.roster.removeCoach')}
-              className="p-1.5 rounded-md text-text-muted hover:text-danger-600 hover:bg-danger-50 dark:hover:text-danger-400 dark:hover:bg-danger-900/30 transition-colors"
+              className="p-1.5 rounded-md text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-900/50 transition-colors"
             >
-              <X className="w-4 h-4" aria-hidden="true" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
 
@@ -95,9 +95,9 @@ function CoachRow({
               type="button"
               onClick={onRemove}
               aria-label={t('validation.roster.undoRemoval')}
-              className="text-xs px-2 py-1 rounded-md text-danger-600 hover:bg-danger-100 dark:text-danger-400 dark:hover:bg-danger-900/40 transition-colors"
+              className="p-1.5 rounded-md text-danger-600 hover:bg-danger-100 dark:text-danger-400 dark:hover:bg-danger-900/40 transition-colors"
             >
-              {t('validation.roster.undoRemoval')}
+              <Undo2 className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
 

@@ -282,20 +282,6 @@ export function RosterVerificationPanel({
     return map
   }, [coachAdditions])
 
-  // Determine vacant coach slots for showing add buttons
-  // A slot is vacant if there's no existing coach (or it's pending removal) and no pending addition
-  const isHeadCoachVacant =
-    (!headCoach || coachRemovals.has('head')) && !coachAdditions.has('head')
-  const isFirstAssistantVacant =
-    (!firstAssistant || coachRemovals.has('firstAssistant')) && !coachAdditions.has('firstAssistant')
-  const isSecondAssistantVacant =
-    (!secondAssistant || coachRemovals.has('secondAssistant')) &&
-    !coachAdditions.has('secondAssistant')
-  const hasVacantAssistant = isFirstAssistantVacant || isSecondAssistantVacant
-  const nextVacantAssistantRole: CoachRole = isFirstAssistantVacant
-    ? 'firstAssistant'
-    : 'secondAssistant'
-
   // Count coaches (including pending additions, excluding pending removals)
   const coachCount = useMemo(() => {
     let count = 0
@@ -375,32 +361,6 @@ export function RosterVerificationPanel({
               pendingAdditions={coachAdditionsAsPersonSummary}
               pendingRemovals={coachRemovals}
             />
-
-            {/* Add Coach / Add Assistant Coach buttons */}
-            {!readOnly && (isHeadCoachVacant || hasVacantAssistant) && (
-              <div className="mt-4 flex gap-2">
-                {isHeadCoachVacant && (
-                  <button
-                    type="button"
-                    onClick={() => handleAddCoach('head')}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
-                  >
-                    <UserPlus className="w-4 h-4" aria-hidden="true" />
-                    {t('validation.roster.addCoach')}
-                  </button>
-                )}
-                {hasVacantAssistant && (
-                  <button
-                    type="button"
-                    onClick={() => handleAddCoach(nextVacantAssistantRole)}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 rounded-lg border border-primary-200 dark:border-primary-800 transition-colors"
-                  >
-                    <UserPlus className="w-4 h-4" aria-hidden="true" />
-                    {t('validation.roster.addAssistantCoach')}
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         )}
       </div>

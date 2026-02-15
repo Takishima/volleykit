@@ -531,7 +531,6 @@ export interface Translations {
       secondAssistant: string
       notAssigned: string
       addCoach: string
-      addAssistantCoach: string
       removeCoach: string
       searchCoaches: string
       noCoachesFound: string

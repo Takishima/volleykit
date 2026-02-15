@@ -660,7 +660,6 @@ const en: Translations = {
       secondAssistant: '2nd Assistant',
       notAssigned: 'Not assigned',
       addCoach: 'Add Coach',
-      addAssistantCoach: 'Add Assistant Coach',
       removeCoach: 'Remove coach',
       searchCoaches: 'Search coaches...',
       noCoachesFound: 'No coaches found',
