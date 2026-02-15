@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>VolleyKit</title>
+    <script>
+      // GitHub Pages SPA redirect workaround
+      // When a route like /login is accessed directly, GitHub Pages serves this 404.html
+      // This script captures the path and redirects to index.html with the path in sessionStorage
+      // The index.html will then restore the correct route
+      (function() {
+        const fullPath = window.location.pathname;
+        const search = window.location.search;
+        const hash = window.location.hash;
+
+        // Don't redirect for subdirectory apps - they have their own index.html
+        // The ocr-poc is a separate Vite app deployed as a subdirectory
+        if (fullPath.includes('/ocr-poc/') || fullPath.endsWith('/ocr-poc')) {
+          // Let the browser handle this normally (will 404 or load the actual ocr-poc app)
+          return;
+        }
+
+        // Detect the base path from the current URL
+        // For PR previews: /volleykit/pr-123/some-route -> base is /volleykit/pr-123/
+        // For main site: /volleykit/some-route -> base is /volleykit/
+        let basePath = '/volleykit/pr-929/';
+
+        // Check if this is a PR preview path (contains /pr-NUMBER/)
+        // Test cases:
+        // - '/volleykit/pr-94/' -> basePath = '/volleykit/pr-94/'
+        // - '/volleykit/pr-94/login' -> basePath = '/volleykit/pr-94/'
+        // - '/volleykit/some-route' -> basePath = '/volleykit/pr-929/'
+        // - '/pr-123/' -> basePath = '/pr-123/' (edge case)
+        // - '/volleykit/preview-94/' -> basePath = '/volleykit/pr-929/' (not matching pr- pattern)
+        const prMatch = fullPath.match(/^(\/[^/]+\/pr-\d+\/)/);
+        if (prMatch && prMatch[1]) {
+          basePath = prMatch[1];
+        }
+
+        // Store the full path (including base path if present)
+        // The index.html will restore this path via history.replaceState
+        sessionStorage.setItem('redirectPath', fullPath + search + hash);
+
+        // Redirect to the base path (index.html)
+        window.location.replace(basePath);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting...</p>
+  </body>
+</html>
