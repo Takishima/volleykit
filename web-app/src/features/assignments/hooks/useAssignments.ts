@@ -21,7 +21,6 @@ import {
 } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
-
 import type { ValidatedGameData } from '@/shared/stores/demo/types'
 
 import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
