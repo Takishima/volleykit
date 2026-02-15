@@ -304,7 +304,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
         )}
 
         {!wizard.isValidated &&
-          wizard.isCurrentStepReadOnly &&
+          wizard.isLastStep &&
           !wizard.allPreviousRequiredStepsDone && (
             <div
               role="status"
