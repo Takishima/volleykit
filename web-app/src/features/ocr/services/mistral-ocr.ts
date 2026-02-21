@@ -294,7 +294,9 @@ export class MistralOCR implements OCREngine {
 
       this.#reportProgress('Processing complete', PROGRESS_COMPLETE)
 
-      return this.#convertResponse(mistralResponse)
+      const result = this.#convertResponse(mistralResponse)
+      result.rawResponse = JSON.stringify(mistralResponse, null, 2)
+      return result
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('OCR cancelled', { cause: error })
