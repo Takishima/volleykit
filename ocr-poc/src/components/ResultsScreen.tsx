@@ -50,6 +50,7 @@ function CollapsibleSection({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
         className="w-full px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center gap-2 hover:bg-slate-100 transition-colors"
       >
         {isOpen ? (
@@ -88,9 +89,9 @@ function TeamPlayerList({ team, label }: { team: ParsedTeam; label: string }) {
       {/* Players */}
       {team.players.length > 0 ? (
         <div className="divide-y divide-slate-100">
-          {team.players.map((player, idx) => (
+          {team.players.map((player) => (
             <div
-              key={`${idx}-${player.rawName}`}
+              key={`${player.shirtNumber ?? 'x'}-${player.rawName}`}
               className="px-4 py-1.5 flex items-center gap-3"
             >
               <span className="text-xs font-mono text-slate-400 w-6 text-right flex-shrink-0">
@@ -122,9 +123,9 @@ function TeamPlayerList({ team, label }: { team: ParsedTeam; label: string }) {
             <span className="text-xs font-medium text-slate-500 uppercase">Officials</span>
           </div>
           <div className="divide-y divide-slate-100">
-            {team.officials.map((official, idx) => (
+            {team.officials.map((official) => (
               <div
-                key={`${idx}-${official.rawName}`}
+                key={`${official.role}-${official.rawName}`}
                 className="px-4 py-1.5 flex items-center gap-3"
               >
                 <span className="text-xs font-mono text-slate-400 w-6 text-right flex-shrink-0">
@@ -170,7 +171,9 @@ export function ResultsScreen() {
 
   // Parse the OCR result into structured player data
   const parsedGameSheet = useMemo(() => {
-    if (!ocrResult) return null
+    if (!ocrResult) {
+      return null
+    }
     try {
       return parseGameSheetWithOCR(ocrResult, {
         type: sheetType === 'manuscript' ? 'manuscript' : 'electronic',
@@ -270,8 +273,8 @@ export function ResultsScreen() {
             {/* Warnings */}
             {parsedGameSheet.warnings.length > 0 && (
               <div className="px-4 py-2 bg-amber-50 border-t border-amber-100">
-                {parsedGameSheet.warnings.map((warning, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-xs text-amber-700">
+                {parsedGameSheet.warnings.map((warning) => (
+                  <div key={warning} className="flex items-start gap-2 text-xs text-amber-700">
                     <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-0.5" />
                     <span>{warning}</span>
                   </div>
