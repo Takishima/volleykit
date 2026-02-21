@@ -92,8 +92,9 @@ export interface OCREngine {
  * - C: Head Coach
  * - AC, AC2, AC3, AC4: Assistant Coaches
  * - M: Medical Staff (Doctor)
+ * - P: Physiotherapist
  */
-export type OfficialRole = 'C' | 'AC' | 'AC2' | 'AC3' | 'AC4' | 'M'
+export type OfficialRole = 'C' | 'AC' | 'AC2' | 'AC3' | 'AC4' | 'M' | 'P'
 
 /**
  * A player parsed from OCR text

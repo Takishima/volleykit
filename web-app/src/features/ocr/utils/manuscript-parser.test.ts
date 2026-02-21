@@ -356,6 +356,21 @@ S. AngeliL. CollierO. Follouier`
 2 WEBER MARIE`
       expect(isSwissTabularFormat(text)).toBe(false)
     })
+
+    it('returns false for sequential tab-separated format with Swiss headers', () => {
+      // This format has Swiss headers and tabs but is sequential (one team per line),
+      // NOT two-column tabular (both teams per line)
+      const text = `Mannschaften/Equipes/Squadre
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke
+31.07.07\t2\tN. Christen
+30.07.07\t11\tN. Walser
+LIBEROS («L»)
+13.06.04\t1\tC. Tsang
+Offizielle/Officiels/Ufficiali
+11.08.65\tC\tD. Heynen`
+      expect(isSwissTabularFormat(text)).toBe(false)
+    })
   })
 })
 
@@ -603,6 +618,156 @@ LIBEROS («L»)\tLIBEROS («L»)
 
     const teamBLibero = result.teamB.players.find((p) => p.rawName.includes('Candido'))
     expect(teamBLibero?.birthDate).toBe('10.6.92')
+  })
+})
+
+describe('parseManuscriptSheet with sequential tab-separated format', () => {
+  it('parses VBC Votero Zürich vs Volley Oerlikon scoresheet', () => {
+    // Real OCR output from a manuscript scoresheet scanned sequentially
+    // (left column = Team A, then right column = Team B)
+    const ocrText = `Mannschaften/Equipes/Squadre
+A oder/ou/o B
+A oder/ou/o B
+
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke
+31.07.07\t2\tN. Christen
+30.07.07\t11\tN. Walser
+06.04.07\t8\tA. Heinzer
+31.05.07\t6\tI. Pautelić
+25.11.03\t9\tN. Dankelschlep
+10.04.03\t13\tG. Taggin
+16.06.08\t15\tK. Hamnata
+13.06.04\t1\tC. Tsang
+27.01.04\t2\tA. Nuri
+28.03.03\t7\tN. Nausson
+
+LIBEROS («L»)
+
+13.06.04\t1\tC. Tsang
+
+Offizielle/Officiels/Ufficiali
+
+11.08.65\tC\tD. Heynen
+AC1
+AC2
+18.04.05\tP\tN. Fabry
+03.10.08\tM\tY. Zeitov
+
+Unterschrift/Signature/Firma
+
+KapitänCapitaineCapitano
+
+Trainer
+
+EntraineurAllenatore
+
+Volley Oerlikon
+
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+01.10.95\t5\tG. Papadopoulos
+24.02.03\t4\tN. von Loesch
+18.05.96\t8\tI. Kellenberger
+16.09.92\t14\tO. Hartes
+07.08.96\t10\tS. Ward
+26.05.92\t6\tA. Bratschi
+30.07.96\t167\tN. Jegu
+29.10.85\t15\tJ. Risso Gertrude
+24.11.06\t3\tL. Huthäfer
+14.07.06\t11\tL. Zach
+07.04.\tH. Birrer
+
+LIBEROS («L»)
+
+00.07.96\t16\tN. Segu
+29.10.85\t15\tJ. Risso Gertrude
+
+Offizielle/Officiels/Ufficiali
+
+07.04.91\tC\tN. Birrer
+AC1
+AC2
+21.03.97\tP\tN. Chinellato
+M\tY. Zeitler
+
+Unterschrift/Signature/Firma
+
+KapitänCapitaineCapitano
+
+Trainer
+
+EntraineurAllenatore`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Team A (first column - VBC Votero Zürich)
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(11)
+
+    // Check specific Team A players
+    const klocke = result.teamA.players.find((p) => p.rawName.includes('Klocke'))
+    expect(klocke).toBeDefined()
+    expect(klocke!.shirtNumber).toBe(5)
+
+    const tsang = result.teamA.players.find((p) => p.rawName.includes('Tsang'))
+    expect(tsang).toBeDefined()
+    expect(tsang!.shirtNumber).toBe(1)
+
+    // Team A officials
+    expect(result.teamA.officials.length).toBeGreaterThanOrEqual(2)
+    const coachA = result.teamA.officials.find((o) => o.role === 'C')
+    expect(coachA).toBeDefined()
+    expect(coachA!.rawName).toContain('Heynen')
+
+    // Team B (second column - Volley Oerlikon)
+    expect(result.teamB.name).toContain('Volley Oerlikon')
+    expect(result.teamB.players.length).toBeGreaterThanOrEqual(10)
+
+    // Check specific Team B players
+    const papadopoulos = result.teamB.players.find((p) => p.rawName.includes('Papadopoulos'))
+    expect(papadopoulos).toBeDefined()
+    expect(papadopoulos!.shirtNumber).toBe(5)
+
+    const ward = result.teamB.players.find((p) => p.rawName.includes('Ward'))
+    expect(ward).toBeDefined()
+    expect(ward!.shirtNumber).toBe(10)
+
+    // Team B officials
+    expect(result.teamB.officials.length).toBeGreaterThanOrEqual(2)
+    const coachB = result.teamB.officials.find((o) => o.role === 'C')
+    expect(coachB).toBeDefined()
+    expect(coachB!.rawName).toContain('Birrer')
+  })
+
+  it('handles tab-separated player lines with birth dates', () => {
+    const ocrText = `Team A VBC Test
+16.05.07\t5\tJ. Klocke
+31.07.07\t2\tN. Christen`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    expect(result.teamA.players).toHaveLength(2)
+    expect(result.teamA.players[0]!.shirtNumber).toBe(5)
+    expect(result.teamA.players[0]!.rawName).toBe('J. Klocke')
+    expect(result.teamA.players[0]!.birthDate).toBe('16.05.07')
+    expect(result.teamA.players[1]!.shirtNumber).toBe(2)
+  })
+
+  it('handles tab-separated officials with birth dates', () => {
+    const ocrText = `Team A VBC Test
+1 MÜLLER ANNA
+Offizielle/Officiels/Ufficiali
+11.08.65\tC\tD. Heynen
+18.04.05\tP\tN. Fabry
+M\tY. Zeitov`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    expect(result.teamA.officials.length).toBeGreaterThanOrEqual(3)
+    expect(result.teamA.officials[0]!.role).toBe('C')
+    expect(result.teamA.officials[0]!.rawName).toContain('Heynen')
+    const physio = result.teamA.officials.find((o) => o.role === 'P')
+    expect(physio).toBeDefined()
+    expect(physio!.rawName).toContain('Fabry')
   })
 })
 

@@ -276,6 +276,10 @@ function isNoiseLine(line: string): boolean {
 
 /**
  * Detect if the OCR text appears to be from a Swiss tabular manuscript format
+ * (two-column layout with both teams side-by-side).
+ *
+ * Distinguishes from sequential format (Team A section followed by Team B section)
+ * which may also have Swiss headers and tabs but with fewer parts per line.
  */
 export function isSwissTabularFormat(ocrText: string): boolean {
   const lines = ocrText.split('\n')
@@ -292,7 +296,31 @@ export function isSwissTabularFormat(ocrText: string): boolean {
   // Check for concatenated names pattern (e.g., "S. AngeliL. Collier")
   const hasConcatenatedNames = /[A-Z]\.\s*[A-Za-zÀ-ÿ]+[A-Z]\.\s*[A-Za-zÀ-ÿ]+/.test(ocrText)
 
-  return hasSwissHeaders && (hasTabularStructure || hasConcatenatedNames)
+  if (!hasSwissHeaders) return false
+  if (!hasTabularStructure && !hasConcatenatedNames) return false
+
+  // Distinguish from sequential tab-separated format:
+  // Swiss tabular lines contain data for BOTH teams (4+ parts per line),
+  // while sequential format has data for ONE team per line (2-3 parts).
+  // Only apply this check when there are enough non-header data lines to be conclusive.
+  if (hasTabularStructure && !hasConcatenatedNames) {
+    const minDataLinesForCheck = 3
+    const dataLineParts = tabSeparatedLines
+      .filter((line) => !SWISS_HEADER_PATTERNS.some((p) => p.test(line)))
+      .map((line) => line.split('\t').filter((p) => p.trim().length > 0).length)
+      .filter((count) => count > 0)
+
+    if (dataLineParts.length >= minDataLinesForCheck) {
+      // Sort and find median
+      const sorted = [...dataLineParts].sort((a, b) => a - b)
+      const median = sorted[Math.floor(sorted.length / 2)]!
+      // Sequential format typically has ≤3 parts per line (date, number, name)
+      // Swiss tabular has 4+ parts (data for both teams)
+      if (median <= 3) return false
+    }
+  }
+
+  return true
 }
 
 // =============================================================================
@@ -993,22 +1021,96 @@ function isOfficialsMarker(line: string): boolean {
 }
 
 /**
- * Check if a line indicates end of player data
+ * Check if a line indicates end of player data (signature/captain/trainer section)
  */
 function isEndMarker(line: string): boolean {
   const upper = line.toUpperCase()
   return (
     upper.includes('SIGNATURE') ||
+    upper.includes('UNTERSCHRIFT') ||
     upper.includes('CAPTAIN') ||
+    upper.includes('KAPITÄN') ||
+    upper.includes('CAPITAINE') ||
+    upper.includes('CAPITANO') ||
     upper.includes('REFEREE') ||
-    upper.includes('ARBITRE')
+    upper.includes('ARBITRE') ||
+    /^TRAINER\b/i.test(line) ||
+    upper.includes('ENTRAÎNEUR') ||
+    upper.includes('ENTRAINEUR') ||
+    upper.includes('ALLENATORE')
   )
+}
+
+/**
+ * Check if a line is a Swiss multilingual header row (license/player/name headers).
+ * These repeat at the start of each team section in sequential format.
+ */
+function isSwissDataHeader(line: string): boolean {
+  return SWISS_HEADER_PATTERNS.some((pattern) => pattern.test(line))
+}
+
+/**
+ * Try to extract a player from a tab-separated line with format: date\tnumber\tname
+ * This format is common in Swiss sequential manuscript scoresheets.
+ */
+function tryExtractPlayerFromTabs(line: string): ParsedPlayer | null {
+  if (!line.includes('\t')) return null
+
+  const parts = line
+    .split('\t')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+
+  if (parts.length < 2) return null
+
+  let birthDate: string | undefined
+  let jerseyNumber: number | null = null
+  let name = ''
+  let currentIndex = 0
+
+  // First part might be a date (DD.MM.YY or DD.MM.YYYY)
+  if (currentIndex < parts.length && DATE_PATTERN.test(parts[currentIndex]!)) {
+    birthDate = parts[currentIndex]!
+    currentIndex++
+  }
+
+  // Next should be jersey number
+  if (currentIndex < parts.length && JERSEY_NUMBER_PATTERN.test(parts[currentIndex]!)) {
+    const num = parseInt(parts[currentIndex]!, 10)
+    if (num >= 1 && num <= MAX_SHIRT_NUMBER) {
+      jerseyNumber = num
+      currentIndex++
+    }
+  }
+
+  // Next should be name
+  if (currentIndex < parts.length && NAME_START_PATTERN.test(parts[currentIndex]!)) {
+    name = parts[currentIndex]!
+  }
+
+  if (!name || name.length < MIN_NAME_LENGTH) return null
+
+  const parsed = parsePlayerName(name)
+
+  return {
+    shirtNumber: jerseyNumber,
+    lastName: parsed.lastName,
+    firstName: parsed.firstName,
+    displayName: parsed.displayName,
+    rawName: name,
+    licenseStatus: '',
+    birthDate,
+  }
 }
 
 /**
  * Try to extract a player from a line
  */
 function tryExtractPlayer(line: string): ParsedPlayer | null {
+  // Try tab-separated format first (date\tnumber\tname)
+  const tabPlayer = tryExtractPlayerFromTabs(line)
+  if (tabPlayer) return tabPlayer
+
   // Try strict pattern first
   let match = PLAYER_LINE_PATTERN.exec(line)
   if (!match) {
@@ -1039,10 +1141,60 @@ function tryExtractPlayer(line: string): ParsedPlayer | null {
   }
 }
 
+/** Valid official roles including P (physiotherapist) */
+const VALID_ROLES_EXTENDED = new Set([...VALID_ROLES, 'P'])
+
+/**
+ * Try to extract an official from a tab-separated line with format: date\trole\tname
+ * or role\tname (without date)
+ */
+function tryExtractOfficialFromTabs(line: string): ParsedOfficial | null {
+  if (!line.includes('\t')) return null
+
+  const parts = line
+    .split('\t')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+
+  if (parts.length < 2) return null
+
+  let currentIndex = 0
+
+  // First part might be a date - skip it
+  if (currentIndex < parts.length && DATE_PATTERN.test(parts[currentIndex]!)) {
+    currentIndex++
+  }
+
+  // Next should be role
+  if (currentIndex >= parts.length) return null
+  const role = parts[currentIndex]!.toUpperCase()
+  if (!VALID_ROLES_EXTENDED.has(role)) return null
+  currentIndex++
+
+  // Next should be name
+  if (currentIndex >= parts.length) return null
+  const nameStr = parts[currentIndex]!
+  if (!NAME_START_PATTERN.test(nameStr) || nameStr.length < MIN_NAME_LENGTH) return null
+
+  const parsed = parseOfficialName(nameStr)
+
+  return {
+    role: role as OfficialRole,
+    lastName: parsed.lastName,
+    firstName: parsed.firstName,
+    displayName: parsed.displayName,
+    rawName: nameStr,
+  }
+}
+
 /**
  * Try to extract an official from a line
  */
 function tryExtractOfficial(line: string): ParsedOfficial | null {
+  // Try tab-separated format first (date\trole\tname or role\tname)
+  const tabOfficial = tryExtractOfficialFromTabs(line)
+  if (tabOfficial) return tabOfficial
+
   const match = OFFICIAL_LINE_PATTERN.exec(line)
   if (!match) return null
 
@@ -1071,6 +1223,24 @@ function tryExtractOfficial(line: string): ParsedOfficial | null {
 // =============================================================================
 
 /**
+ * Check if a line is a Swiss form label that should be skipped
+ * (e.g., "Mannschaften/Equipes/Squadre", "A oder/ou/o B")
+ */
+function isSwissFormLabel(line: string): boolean {
+  const upper = line.toUpperCase()
+  return (
+    /MANNSCHAFT.*EQUIPE.*SQUADR/i.test(line) ||
+    /A\s*ODER\/OU\/O\s*B/i.test(line) ||
+    /ODER\/OU\/O/i.test(line) ||
+    upper.includes('LIZENZ-NR') ||
+    upper.includes('LICENCE-NO') ||
+    upper.includes('LICENZA-NO') ||
+    /SPIELER.*JOUEUR.*GIOCATORE/i.test(line) ||
+    /NAME.*NOM.*NOME/i.test(line)
+  )
+}
+
+/**
  * Try to extract team name from a line
  */
 function extractTeamName(line: string): string | null {
@@ -1083,10 +1253,17 @@ function extractTeamName(line: string): string | null {
   if (PLAYER_LINE_PATTERN.test(trimmed)) return null
   if (PLAYER_LINE_LENIENT.test(trimmed)) return null
 
+  // Skip tab-separated player data (date\tnumber\tname)
+  if (trimmed.includes('\t') && DATE_PATTERN.test(trimmed.split('\t')[0]!.trim())) return null
+
   // Skip section markers
   if (isLiberoMarker(trimmed)) return null
   if (isOfficialsMarker(trimmed)) return null
   if (isEndMarker(trimmed)) return null
+
+  // Skip Swiss form labels and data headers
+  if (isSwissFormLabel(trimmed)) return null
+  if (isSwissDataHeader(trimmed)) return null
 
   // Check if it looks like a team name (mostly letters, maybe some spaces/hyphens)
   const letterCount = (trimmed.match(/[A-Za-zÀ-ÿ]/g) ?? []).length
@@ -1173,17 +1350,58 @@ function splitIntoTeamSections(lines: string[]): TeamSections {
 
   let currentTeam: 'A' | 'B' | null = null
   let teamASectionFound = false
+  /** Set to true after we see a signature/trainer end marker while in Team A */
+  let seenEndMarkerInTeamA = false
+  /** Track if Team A has had any content (players/officials) */
+  let teamAHasContent = false
 
   for (const line of lines) {
     const trimmed = line.trim()
     if (!trimmed) continue
 
-    // Check for team section markers
+    // Skip Swiss form labels (e.g., "Mannschaften/Equipes/Squadre", "A oder/ou/o B")
+    if (isSwissFormLabel(trimmed)) continue
+
+    // Skip Swiss data headers (e.g., "Lizenz-Nr.Licence-No.Licenza-No.\t...")
+    if (isSwissDataHeader(trimmed)) continue
+
+    // Check for explicit team section markers (TEAM A, TEAM B, etc.)
     if (isTeamSectionMarker(trimmed)) {
       const markerResult = processTeamMarker(trimmed, result)
       if (markerResult) {
         currentTeam = markerResult.team
         if (markerResult.isTeamA) teamASectionFound = true
+        continue
+      }
+    }
+
+    // Detect end markers (signature, trainer, captain) as team boundary
+    if (isEndMarker(trimmed)) {
+      if (currentTeam === 'A' && teamAHasContent) {
+        seenEndMarkerInTeamA = true
+      }
+      // Don't add end marker lines to either team
+      continue
+    }
+
+    // After seeing end markers in Team A, look for Team B start
+    if (seenEndMarkerInTeamA && currentTeam === 'A') {
+      // Check if this line starts new team content (team name or player data)
+      const teamName = extractTeamName(trimmed)
+      if (teamName) {
+        result.teamBName = teamName
+        currentTeam = 'B'
+        continue
+      }
+
+      // If we see player-like data or a section marker, it's Team B
+      const looksLikePlayerData =
+        tryExtractPlayer(trimmed) !== null || tryExtractOfficial(trimmed) !== null
+      if (looksLikePlayerData || isLiberoMarker(trimmed) || isOfficialsMarker(trimmed)) {
+        currentTeam = 'B'
+        // Don't continue - let the line be processed below
+      } else {
+        // Skip inter-team noise (empty roles like "AC1", signatures, etc.)
         continue
       }
     }
@@ -1201,6 +1419,11 @@ function splitIntoTeamSections(lines: string[]): TeamSections {
     // Default to team A if no team is set
     if (currentTeam === null) {
       currentTeam = 'A'
+    }
+
+    // Track that Team A has received content
+    if (currentTeam === 'A') {
+      teamAHasContent = true
     }
 
     // Add line to current team
