@@ -40,8 +40,11 @@ const MIN_TEAM_NAME_LENGTH = 3
 /** Minimum ratio of letters in team name */
 const MIN_LETTER_RATIO = 0.6
 
-/** Valid official roles */
-const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4', 'M'])
+/** Maximum tab-separated parts per line in sequential format (date, number, name) */
+const MAX_SEQUENTIAL_PARTS_PER_LINE = 3
+
+/** Valid official roles (C=Coach, AC=Assistant Coach, M=Medical, P=Physiotherapist) */
+const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4', 'M', 'P'])
 
 // =============================================================================
 // OCR Error Correction Maps
@@ -316,7 +319,7 @@ export function isSwissTabularFormat(ocrText: string): boolean {
       const median = sorted[Math.floor(sorted.length / 2)]!
       // Sequential format typically has ≤3 parts per line (date, number, name)
       // Swiss tabular has 4+ parts (data for both teams)
-      if (median <= 3) return false
+      if (median <= MAX_SEQUENTIAL_PARTS_PER_LINE) return false
     }
   }
 
@@ -615,7 +618,8 @@ const MAX_ROW_NUMBER = 14
 const MIN_LIBERO_LINE_PARTS = 3
 
 /** Date pattern for DD.MM.YY or DD.MM.YYYY format */
-const DATE_PATTERN = /^\d{1,2}\.\d{1,2}\.\d{2,4}$/
+/** Date pattern - DD.MM.YY(YY) or incomplete OCR dates like DD.MM. (trailing dot, no year) */
+const DATE_PATTERN = /^\d{1,2}\.\d{1,2}\.\d{0,4}$/
 
 /** Name pattern - starts with a letter */
 const NAME_START_PATTERN = /^[A-Za-zÀ-ÿ]/
@@ -1141,9 +1145,6 @@ function tryExtractPlayer(line: string): ParsedPlayer | null {
   }
 }
 
-/** Valid official roles including P (physiotherapist) */
-const VALID_ROLES_EXTENDED = new Set([...VALID_ROLES, 'P'])
-
 /**
  * Try to extract an official from a tab-separated line with format: date\trole\tname
  * or role\tname (without date)
@@ -1168,7 +1169,7 @@ function tryExtractOfficialFromTabs(line: string): ParsedOfficial | null {
   // Next should be role
   if (currentIndex >= parts.length) return null
   const role = parts[currentIndex]!.toUpperCase()
-  if (!VALID_ROLES_EXTENDED.has(role)) return null
+  if (!VALID_ROLES.has(role)) return null
   currentIndex++
 
   // Next should be name
@@ -1223,20 +1224,21 @@ function tryExtractOfficial(line: string): ParsedOfficial | null {
 // =============================================================================
 
 /**
- * Check if a line is a Swiss form label that should be skipped
- * (e.g., "Mannschaften/Equipes/Squadre", "A oder/ou/o B")
+ * Check if a line is a Swiss form label or data header that should be skipped.
+ * Covers multilingual form labels ("Mannschaften/Equipes/Squadre", "A oder/ou/o B")
+ * and data header rows ("Lizenz-Nr.Licence-No.Licenza-No.").
  */
-function isSwissFormLabel(line: string): boolean {
+function isSwissFormLabelOrHeader(line: string): boolean {
   const upper = line.toUpperCase()
   return (
-    /MANNSCHAFT.*EQUIPE.*SQUADR/i.test(line) ||
-    /A\s*ODER\/OU\/O\s*B/i.test(line) ||
-    /ODER\/OU\/O/i.test(line) ||
     upper.includes('LIZENZ-NR') ||
     upper.includes('LICENCE-NO') ||
     upper.includes('LICENZA-NO') ||
+    upper.includes('ODER/OU/O') ||
+    /MANNSCHAFT.*EQUIPE.*SQUADR/i.test(line) ||
     /SPIELER.*JOUEUR.*GIOCATORE/i.test(line) ||
-    /NAME.*NOM.*NOME/i.test(line)
+    /NAME.*NOM.*NOME/i.test(line) ||
+    isSwissDataHeader(line)
   )
 }
 
@@ -1262,8 +1264,7 @@ function extractTeamName(line: string): string | null {
   if (isEndMarker(trimmed)) return null
 
   // Skip Swiss form labels and data headers
-  if (isSwissFormLabel(trimmed)) return null
-  if (isSwissDataHeader(trimmed)) return null
+  if (isSwissFormLabelOrHeader(trimmed)) return null
 
   // Check if it looks like a team name (mostly letters, maybe some spaces/hyphens)
   const letterCount = (trimmed.match(/[A-Za-zÀ-ÿ]/g) ?? []).length
@@ -1340,6 +1341,99 @@ function processTeamMarker(
   return null
 }
 
+/** Mutable state for the team section splitter */
+interface SplitterState {
+  currentTeam: 'A' | 'B' | null
+  teamASectionFound: boolean
+  seenEndMarkerInTeamA: boolean
+  teamAHasContent: boolean
+}
+
+/**
+ * Check if a line looks like team content (player data or section marker)
+ */
+function looksLikeTeamContent(line: string): boolean {
+  return (
+    tryExtractPlayer(line) !== null ||
+    tryExtractOfficial(line) !== null ||
+    isLiberoMarker(line) ||
+    isOfficialsMarker(line)
+  )
+}
+
+/**
+ * Try to detect a team B transition after Team A's end markers.
+ * Returns: 'switch-b' to switch to Team B, 'switch-b-keep' to switch AND process line,
+ * 'skip' to skip noise, or null if this handler doesn't apply.
+ */
+function tryDetectTeamBTransition(
+  trimmed: string,
+  state: SplitterState,
+  result: TeamSections
+): 'switch-b' | 'switch-b-keep' | 'skip' | null {
+  if (!state.seenEndMarkerInTeamA || state.currentTeam !== 'A') return null
+
+  const teamName = extractTeamName(trimmed)
+  if (teamName) {
+    result.teamBName = teamName
+    state.currentTeam = 'B'
+    return 'switch-b'
+  }
+
+  if (looksLikeTeamContent(trimmed)) {
+    state.currentTeam = 'B'
+    return 'switch-b-keep'
+  }
+
+  return 'skip'
+}
+
+/**
+ * Process a team section marker line.
+ * Returns true if the line was consumed (should continue to next line).
+ */
+function handleTeamSectionMarker(
+  trimmed: string,
+  state: SplitterState,
+  result: TeamSections
+): boolean {
+  if (!isTeamSectionMarker(trimmed)) return false
+  const markerResult = processTeamMarker(trimmed, result)
+  if (!markerResult) return false
+  state.currentTeam = markerResult.team
+  if (markerResult.isTeamA) state.teamASectionFound = true
+  return true
+}
+
+/**
+ * Process an end marker line (signature, trainer, captain).
+ * Returns true if the line was consumed.
+ */
+function handleEndMarker(trimmed: string, state: SplitterState): boolean {
+  if (!isEndMarker(trimmed)) return false
+  if (state.currentTeam === 'A' && state.teamAHasContent) {
+    state.seenEndMarkerInTeamA = true
+  }
+  return true
+}
+
+/**
+ * Try to detect Team A's name from a line when no explicit section was found.
+ * Returns true if the line was consumed as a team name.
+ */
+function handleTeamANameDetection(
+  trimmed: string,
+  state: SplitterState,
+  result: TeamSections
+): boolean {
+  if (state.teamASectionFound || result.teamAName) return false
+  const teamName = extractTeamName(trimmed)
+  if (!teamName) return false
+  result.teamAName = teamName
+  state.currentTeam = 'A'
+  return true
+}
+
 function splitIntoTeamSections(lines: string[]): TeamSections {
   const result: TeamSections = {
     teamALines: [],
@@ -1348,86 +1442,30 @@ function splitIntoTeamSections(lines: string[]): TeamSections {
     teamBName: '',
   }
 
-  let currentTeam: 'A' | 'B' | null = null
-  let teamASectionFound = false
-  /** Set to true after we see a signature/trainer end marker while in Team A */
-  let seenEndMarkerInTeamA = false
-  /** Track if Team A has had any content (players/officials) */
-  let teamAHasContent = false
+  const state: SplitterState = {
+    currentTeam: null,
+    teamASectionFound: false,
+    seenEndMarkerInTeamA: false,
+    teamAHasContent: false,
+  }
 
   for (const line of lines) {
     const trimmed = line.trim()
-    if (!trimmed) continue
-
-    // Skip Swiss form labels (e.g., "Mannschaften/Equipes/Squadre", "A oder/ou/o B")
-    if (isSwissFormLabel(trimmed)) continue
-
-    // Skip Swiss data headers (e.g., "Lizenz-Nr.Licence-No.Licenza-No.\t...")
-    if (isSwissDataHeader(trimmed)) continue
-
-    // Check for explicit team section markers (TEAM A, TEAM B, etc.)
-    if (isTeamSectionMarker(trimmed)) {
-      const markerResult = processTeamMarker(trimmed, result)
-      if (markerResult) {
-        currentTeam = markerResult.team
-        if (markerResult.isTeamA) teamASectionFound = true
-        continue
-      }
-    }
-
-    // Detect end markers (signature, trainer, captain) as team boundary
-    if (isEndMarker(trimmed)) {
-      if (currentTeam === 'A' && teamAHasContent) {
-        seenEndMarkerInTeamA = true
-      }
-      // Don't add end marker lines to either team
-      continue
-    }
+    if (!trimmed || isSwissFormLabelOrHeader(trimmed)) continue
+    if (handleTeamSectionMarker(trimmed, state, result)) continue
+    if (handleEndMarker(trimmed, state)) continue
 
     // After seeing end markers in Team A, look for Team B start
-    if (seenEndMarkerInTeamA && currentTeam === 'A') {
-      // Check if this line starts new team content (team name or player data)
-      const teamName = extractTeamName(trimmed)
-      if (teamName) {
-        result.teamBName = teamName
-        currentTeam = 'B'
-        continue
-      }
+    const transition = tryDetectTeamBTransition(trimmed, state, result)
+    if (transition === 'switch-b' || transition === 'skip') continue
 
-      // If we see player-like data or a section marker, it's Team B
-      const looksLikePlayerData =
-        tryExtractPlayer(trimmed) !== null || tryExtractOfficial(trimmed) !== null
-      if (looksLikePlayerData || isLiberoMarker(trimmed) || isOfficialsMarker(trimmed)) {
-        currentTeam = 'B'
-        // Don't continue - let the line be processed below
-      } else {
-        // Skip inter-team noise (empty roles like "AC1", signatures, etc.)
-        continue
-      }
-    }
+    if (handleTeamANameDetection(trimmed, state, result)) continue
 
-    // If we haven't found explicit team sections, try to detect team name
-    if (!teamASectionFound && !result.teamAName) {
-      const teamName = extractTeamName(trimmed)
-      if (teamName) {
-        result.teamAName = teamName
-        currentTeam = 'A'
-        continue
-      }
-    }
-
-    // Default to team A if no team is set
-    if (currentTeam === null) {
-      currentTeam = 'A'
-    }
-
-    // Track that Team A has received content
-    if (currentTeam === 'A') {
-      teamAHasContent = true
-    }
+    if (state.currentTeam === null) state.currentTeam = 'A'
+    if (state.currentTeam === 'A') state.teamAHasContent = true
 
     // Add line to current team
-    if (currentTeam === 'A') {
+    if (state.currentTeam === 'A') {
       result.teamALines.push(trimmed)
     } else {
       result.teamBLines.push(trimmed)
