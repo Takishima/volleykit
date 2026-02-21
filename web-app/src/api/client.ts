@@ -158,7 +158,10 @@ async function apiRequest<T>(
     method,
     headers,
     credentials: 'include',
-    body: method !== 'GET' && body ? buildFormData(body) : undefined,
+    // Explicitly convert URLSearchParams to string to ensure correct serialization
+    // on iOS Safari PWA where passing URLSearchParams with a non-default Content-Type
+    // (e.g. text/plain) may result in an empty or malformed request body.
+    body: method !== 'GET' && body ? buildFormData(body).toString() : undefined,
   })
 
   // Capture session token from response headers (iOS Safari PWA)
@@ -659,19 +662,38 @@ export const api = {
     isSimpleScoresheet: boolean = false,
     fileResourceId?: string
   ): Promise<Scoresheet> {
+    // Build body matching the real volleymanager site format.
+    // Empty string values for unset fields are required by the TYPO3 Neos/Flow backend;
+    // omitting them causes 500 errors during property mapping.
     const body: Record<string, unknown> = {
       'scoresheet[game][__identity]': gameId,
-      'scoresheet[writerPerson][__identity]': scorerPersonId,
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
       'scoresheet[hasFile]': fileResourceId ? 'true' : 'false',
+      'scoresheet[closedAt]': '',
+      'scoresheet[closedBy]': '',
+      'scoresheet[emergencySubstituteReferees]': '',
+      'scoresheet[notFoundButNominatedPersons]': '',
+      'scoresheet[lastUpdatedByRealUser]': 'true',
     }
 
+    // scoresheet[__identity] may be undefined for games where the scoresheet
+    // entity hasn't been created yet. The server resolves it from the game identity.
     if (scoresheetId) {
       body['scoresheet[__identity]'] = scoresheetId
     }
 
+    // writerPerson: send [__identity] when set, plain empty field when not set
+    if (scorerPersonId) {
+      body['scoresheet[writerPerson][__identity]'] = scorerPersonId
+    } else {
+      body['scoresheet[writerPerson]'] = ''
+    }
+
+    // file: send [__identity] when set, plain empty field when not set
     if (fileResourceId) {
       body['scoresheet[file][__identity]'] = fileResourceId
+    } else {
+      body['scoresheet[file]'] = ''
     }
 
     return apiRequest<Scoresheet>(
