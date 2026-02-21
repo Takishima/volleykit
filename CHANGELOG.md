@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.17.1
+
+### Patch Changes
+
+- [#936](https://github.com/Takishima/volleykit/pull/936) [`072e0b4`](https://github.com/Takishima/volleykit/commit/072e0b476118a3f10b75ad33d5ed19fb7ab06cad) Thanks [@Takishima](https://github.com/Takishima)! - Fix scoresheet API 500 error by explicitly serializing request body to string and sending complete field set matching the real volleymanager site format
+
 ## 1.17.0
 
 ### Minor Changes
