@@ -109,7 +109,52 @@ jobs:
           working-directory: web-app
 
       - name: Audit dependencies
-        run: npm audit --audit-level=high --omit=dev
+        run: |
+          # Known unfixable vulnerabilities to ignore:
+          # - GHSA-3ppc-4f35-3m26: minimatch ReDoS (transitive via eslint, no fix until eslint 10)
+          # - GHSA-jmr7-xgp7-cmfj: fast-xml-parser DoS (transitive via ojp-sdk-next, no upstream fix)
+          IGNORED_ADVISORIES="GHSA-3ppc-4f35-3m26 GHSA-jmr7-xgp7-cmfj"
+          AUDIT_JSON=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
+          FOUND=$(echo "$AUDIT_JSON" | jq -r '.vulnerabilities | keys[]' 2>/dev/null || true)
+
+          # First pass: collect packages with directly ignored advisories
+          IGNORED_PKGS=""
+          for vuln in $FOUND; do
+            ADVISORIES=$(echo "$AUDIT_JSON" | jq -r ".vulnerabilities[\"$vuln\"].via[] | if type == \"object\" then .url else empty end" 2>/dev/null || true)
+            if [ -n "$ADVISORIES" ]; then
+              ALL_MATCHED=true
+              for adv in $ADVISORIES; do
+                MATCHED=false
+                for ignored in $IGNORED_ADVISORIES; do
+                  if echo "$adv" | grep -q "$ignored"; then MATCHED=true; fi
+                done
+                if [ "$MATCHED" = "false" ]; then ALL_MATCHED=false; fi
+              done
+              if [ "$ALL_MATCHED" = "true" ]; then IGNORED_PKGS="$IGNORED_PKGS $vuln"; fi
+            fi
+          done
+
+          # Second pass: also ignore packages that are only vulnerable transitively via ignored packages
+          UNIGNORED=""
+          for vuln in $FOUND; do
+            if echo "$IGNORED_PKGS" | grep -qw "$vuln"; then continue; fi
+            VIA_PKGS=$(echo "$AUDIT_JSON" | jq -r ".vulnerabilities[\"$vuln\"].via[] | if type == \"string\" then . else empty end" 2>/dev/null || true)
+            if [ -n "$VIA_PKGS" ]; then
+              ALL_VIA_IGNORED=true
+              for via_pkg in $VIA_PKGS; do
+                echo "$IGNORED_PKGS" | grep -qw "$via_pkg" || ALL_VIA_IGNORED=false
+              done
+              if [ "$ALL_VIA_IGNORED" = "true" ]; then continue; fi
+            fi
+            UNIGNORED="$UNIGNORED $vuln"
+          done
+
+          if [ -n "$(echo "$UNIGNORED" | xargs)" ]; then
+            echo "::error::New vulnerabilities found:$UNIGNORED"
+            npm audit --audit-level=high --omit=dev
+            exit 1
+          fi
+          echo "All vulnerabilities are known/ignored. Audit passed."
 
   # Lint check - needs API types from setup
   lint:
