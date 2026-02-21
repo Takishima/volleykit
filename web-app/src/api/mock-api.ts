@@ -678,7 +678,7 @@ export const mockApi = {
   },
 
   async updateScoresheet(
-    scoresheetId: string,
+    scoresheetId: string | undefined,
     gameId: string,
     scorerPersonId: string,
     isSimpleScoresheet: boolean = false
@@ -702,7 +702,7 @@ export const mockApi = {
 
     // In demo mode, return a mock updated scoresheet
     return {
-      __identity: scoresheetId,
+      __identity: scoresheetId ?? `scoresheet-${gameId}`,
       game: { __identity: gameId },
       writerPerson: { __identity: scorerPersonId },
       isSimpleScoresheet,
@@ -711,7 +711,7 @@ export const mockApi = {
   },
 
   async finalizeScoresheet(
-    scoresheetId: string,
+    scoresheetId: string | undefined,
     gameId: string,
     scorerPersonId: string,
     fileResourceId?: string,
@@ -743,7 +743,7 @@ export const mockApi = {
 
     // In demo mode, return a mock finalized scoresheet
     return {
-      __identity: scoresheetId,
+      __identity: scoresheetId ?? `scoresheet-${gameId}`,
       game: { __identity: gameId },
       writerPerson: { __identity: scorerPersonId },
       isSimpleScoresheet,

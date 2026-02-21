@@ -167,7 +167,7 @@ export async function saveScorerSelection(
     return
   }
 
-  // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
+  // scoresheet.__identity may be undefined for games where the scoresheet
   // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.updateScoresheet(
     scoresheet?.__identity,
@@ -225,7 +225,7 @@ export async function finalizeScoresheetWithFile(
     return
   }
 
-  // scoresheet.__identity may be undefined for NLB/NLA games where the scoresheet
+  // scoresheet.__identity may be undefined for games where the scoresheet
   // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.finalizeScoresheet(
     scoresheet?.__identity,
