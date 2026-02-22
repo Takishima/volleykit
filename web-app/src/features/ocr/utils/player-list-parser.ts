@@ -15,6 +15,7 @@
  * For manuscript scoresheets, use parseGameSheet with type: 'manuscript' option.
  */
 
+import { deduplicatePlayers } from './dedup-players'
 import { parseManuscriptSheet } from './manuscript-parser'
 
 import type { ScoresheetType } from './scoresheet-detector'
@@ -864,6 +865,10 @@ export function parseGameSheet(ocrText: string): ParsedGameSheet {
     processLine(line, state)
   }
 
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(state.teamA)
+  deduplicatePlayers(state.teamB)
+
   // Add warnings
   if (state.teamA.players.length === 0) {
     warnings.push('No players found for Team A')
@@ -1396,6 +1401,10 @@ export function parseGameSheetWithOCR(
     const ocrLine = lineToOCRLine.get(line)
     processLineWithOCR(line, state, ocrLine)
   }
+
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(state.teamA)
+  deduplicatePlayers(state.teamB)
 
   // Add warnings
   if (state.teamA.players.length === 0) {

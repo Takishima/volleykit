@@ -170,8 +170,8 @@ export function ImageCropEditor({
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex-shrink-0 flex gap-4 p-4 bg-white dark:bg-gray-800">
+      {/* Controls - pb accounts for iOS safe area behind home indicator */}
+      <div className="flex-shrink-0 flex gap-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white dark:bg-gray-800">
         <button
           type="button"
           onClick={onCancel}

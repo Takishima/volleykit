@@ -16,6 +16,8 @@
  *    where OCR reads horizontally concatenating data from both columns
  */
 
+import { deduplicatePlayers } from './dedup-players'
+
 import type {
   ParsedPlayer,
   ParsedOfficial,
@@ -1115,6 +1117,10 @@ function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
     addPlayersFromExtractedData(teamB, data.secondHalfNames, data.secondHalfDates)
   }
 
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(teamA)
+  deduplicatePlayers(teamB)
+
   const warnings = generateTeamWarnings(teamA, teamB)
   return { teamA, teamB, warnings }
 }
@@ -1745,6 +1751,10 @@ export function parseManuscriptSheet(ocrText: string): ParsedGameSheet {
   // Parse each team
   const teamAResult = parseTeamLines(sections.teamALines, sections.teamAName)
   const teamBResult = parseTeamLines(sections.teamBLines, sections.teamBName)
+
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(teamAResult.team)
+  deduplicatePlayers(teamBResult.team)
 
   // Collect warnings
   warnings.push(...teamAResult.warnings)

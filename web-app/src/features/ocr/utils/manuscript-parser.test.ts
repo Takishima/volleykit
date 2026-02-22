@@ -701,7 +701,8 @@ EntraineurAllenatore`
     const result = parseManuscriptSheet(ocrText)
 
     // Team A (first column - VBC Votero Zürich)
-    expect(result.teamA.players.length).toBeGreaterThanOrEqual(11)
+    // 11 unique players (libero C. Tsang deduplicated)
+    expect(result.teamA.players).toHaveLength(11)
 
     // Check specific Team A players
     const klocke = result.teamA.players.find((p) => p.rawName.includes('Klocke'))
@@ -976,8 +977,8 @@ Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
     const result = parseManuscriptSheet(ocrText)
 
     // ---- Team A (VBC Votero Zürich) ----
-    // 11 regular players + 1 libero (duplicate of C. Tsang)
-    expect(result.teamA.players.length).toBeGreaterThanOrEqual(11)
+    // 11 unique players (libero C. Tsang deduplicated - appears in both player list and LIBERO section)
+    expect(result.teamA.players).toHaveLength(11)
 
     // Check specific players with DOB
     const klocke = result.teamA.players.find((p) => p.rawName.includes('Klocke'))
@@ -1007,7 +1008,8 @@ Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
     expect(medicalA!.rawName).toContain('Zeitov')
 
     // ---- Team B (Volley Oerlikon) ----
-    expect(result.teamB.players.length).toBeGreaterThanOrEqual(11)
+    // 11 unique players (liberos N. Jegu and J. Risso Gertrude deduplicated)
+    expect(result.teamB.players).toHaveLength(11)
 
     const papadopoulos = result.teamB.players.find((p) => p.rawName.includes('Papadopoulos'))
     expect(papadopoulos).toBeDefined()
@@ -1035,5 +1037,64 @@ Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
     const medicalB = result.teamB.officials.find((o) => o.role === 'M')
     expect(medicalB).toBeDefined()
     expect(medicalB!.rawName).toContain('Zeitler')
+  })
+})
+
+// =============================================================================
+// Libero Deduplication Tests
+// =============================================================================
+
+describe('Libero deduplication', () => {
+  it('deduplicates libero players that appear in both player list and LIBERO section (6-column)', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVC Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+13.06.04\t1\tC. Tsang\t30.07.96\t16\tN. Jegu
+LIBEROS («L»)\tLIBEROS («L»)
+13.06.04\t1\tC. Tsang\t30.07.96\t16\tN. Jegu`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Each team should have exactly 2 players (no duplicates from libero section)
+    expect(result.teamA.players).toHaveLength(2)
+    expect(result.teamB.players).toHaveLength(2)
+
+    // C. Tsang should appear only once
+    const tsangCount = result.teamA.players.filter((p) => p.rawName.includes('Tsang')).length
+    expect(tsangCount).toBe(1)
+
+    // N. Jegu should appear only once
+    const jeguCount = result.teamB.players.filter((p) => p.rawName.includes('Jegu')).length
+    expect(jeguCount).toBe(1)
+  })
+
+  it('deduplicates libero players in sequential format', () => {
+    const ocrText = `Team A VBC Test
+16.05.07\t5\tJ. Klocke
+13.06.04\t1\tC. Tsang
+LIBEROS («L»)
+13.06.04\t1\tC. Tsang`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Should have 2 players, not 3
+    expect(result.teamA.players).toHaveLength(2)
+
+    const tsangCount = result.teamA.players.filter((p) => p.rawName.includes('Tsang')).length
+    expect(tsangCount).toBe(1)
+  })
+
+  it('keeps libero-only players that are not in the regular list', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVC Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+LIBEROS («L»)\tLIBEROS («L»)
+13.06.04\t1\tC. Tsang\t30.07.96\t16\tN. Jegu`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Liberos not in regular list should still be added
+    expect(result.teamA.players).toHaveLength(2) // Klocke + Tsang
+    expect(result.teamB.players).toHaveLength(2) // Papadopoulos + Jegu
   })
 })
