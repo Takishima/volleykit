@@ -24,6 +24,8 @@ import type {
   OfficialRole,
 } from '../types'
 
+import { deduplicatePlayers } from './dedup-players'
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -1036,33 +1038,6 @@ function detectSectionMarker(line: string): 'libero' | 'officials' | 'end' | nul
   if (isOfficialsMarker(line)) return 'officials'
   if (isEndMarker(line)) return 'end'
   return null
-}
-
-/**
- * Deduplicate players in a team's roster.
- *
- * Manuscript scoresheets typically list libero players twice:
- * once in the main player list and again in a separate LIBERO section.
- * This function removes duplicates, keeping the first occurrence.
- *
- * Two players are considered duplicates if they share the same rawName
- * (case-insensitive). Shirt numbers are NOT used for deduplication because
- * OCR errors can assign the same number to different players.
- */
-function deduplicatePlayers(team: ParsedTeam): void {
-  const seenNames = new Set<string>()
-  const deduped: ParsedPlayer[] = []
-
-  for (const player of team.players) {
-    const nameKey = player.rawName.toLowerCase().trim()
-
-    if (!nameKey || !seenNames.has(nameKey)) {
-      deduped.push(player)
-      if (nameKey) seenNames.add(nameKey)
-    }
-  }
-
-  team.players = deduped
 }
 
 /**

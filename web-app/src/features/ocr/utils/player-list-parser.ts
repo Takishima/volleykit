@@ -15,6 +15,7 @@
  * For manuscript scoresheets, use parseGameSheet with type: 'manuscript' option.
  */
 
+import { deduplicatePlayers } from './dedup-players'
 import { parseManuscriptSheet } from './manuscript-parser'
 
 import type { ScoresheetType } from './scoresheet-detector'
@@ -805,37 +806,6 @@ function processLine(line: string, state: ParserState): void {
       processOfficialsLine(parts, state)
       break
   }
-}
-
-// =============================================================================
-// Player Deduplication
-// =============================================================================
-
-/**
- * Deduplicate players in a team's roster.
- *
- * Scoresheets typically list libero players twice:
- * once in the main player list and again in a separate LIBERO section.
- * This function removes duplicates, keeping the first occurrence.
- *
- * Two players are considered duplicates if they share the same rawName
- * (case-insensitive). Shirt numbers are NOT used for deduplication because
- * OCR errors can assign the same number to different players.
- */
-function deduplicatePlayers(team: ParsedTeam): void {
-  const seenNames = new Set<string>()
-  const deduped: ParsedPlayer[] = []
-
-  for (const player of team.players) {
-    const nameKey = player.rawName.toLowerCase().trim()
-
-    if (!nameKey || !seenNames.has(nameKey)) {
-      deduped.push(player)
-      if (nameKey) seenNames.add(nameKey)
-    }
-  }
-
-  team.players = deduped
 }
 
 // =============================================================================
