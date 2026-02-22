@@ -801,3 +801,239 @@ TrainerEntraîneurAllenatore\tTrainerEntraîneurAllenatore`
     expect(result.teamA.name).not.toBe('4 8 4 8 . 4 8 4 8 4 8 4 8 4 8 4 8 .')
   })
 })
+
+// =============================================================================
+// 6-Column Swiss Tabular Format Tests (Mistral OCR HTML table output)
+// =============================================================================
+
+describe('parseManuscriptSheet with 6-column tabular format', () => {
+  it('parses 6-column player rows with DOB, jersey number, and name for both teams', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVölley Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+31.07.07\t2\tN. Christen\t24.02.03\t4\tN. von Loesch
+30.07.07\t11\tN. Walser\t18.05.96\t8\tI. Kellenberger`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Team A
+    expect(result.teamA.players).toHaveLength(3)
+    expect(result.teamA.players[0]!.shirtNumber).toBe(5)
+    expect(result.teamA.players[0]!.rawName).toBe('J. Klocke')
+    expect(result.teamA.players[0]!.birthDate).toBe('16.05.07')
+    expect(result.teamA.players[1]!.shirtNumber).toBe(2)
+    expect(result.teamA.players[1]!.rawName).toBe('N. Christen')
+    expect(result.teamA.players[1]!.birthDate).toBe('31.07.07')
+    expect(result.teamA.players[2]!.shirtNumber).toBe(11)
+
+    // Team B
+    expect(result.teamB.players).toHaveLength(3)
+    expect(result.teamB.players[0]!.shirtNumber).toBe(5)
+    expect(result.teamB.players[0]!.rawName).toBe('G. Papadopoulos')
+    expect(result.teamB.players[0]!.birthDate).toBe('01.10.95')
+    expect(result.teamB.players[1]!.shirtNumber).toBe(4)
+    expect(result.teamB.players[2]!.shirtNumber).toBe(8)
+  })
+
+  it('handles partial rows where one team has empty columns', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVC Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+28.03.03\t7\tN. Nausson\t07.04.\t\tH. Birrer
+\t\t\t29.10.85\t15\tJ. Risso Gertrude`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Row 1: Team A has player, Team B has player with incomplete DOB and no jersey
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(1)
+    const nausson = result.teamA.players.find((p) => p.rawName.includes('Nausson'))
+    expect(nausson).toBeDefined()
+    expect(nausson!.shirtNumber).toBe(7)
+    expect(nausson!.birthDate).toBe('28.03.03')
+
+    const birrer = result.teamB.players.find((p) => p.rawName.includes('Birrer'))
+    expect(birrer).toBeDefined()
+    expect(birrer!.shirtNumber).toBeNull()
+    expect(birrer!.birthDate).toBe('07.04.')
+
+    // Row 2: Only Team B has data (Team A columns are empty)
+    const risso = result.teamB.players.find((p) => p.rawName.includes('Risso'))
+    expect(risso).toBeDefined()
+    expect(risso!.shirtNumber).toBe(15)
+    expect(risso!.birthDate).toBe('29.10.85')
+  })
+
+  it('parses officials with DOB prefix in 6-column format', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVC Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
+11.08.65\tC\tD. Heynen\t07.04.71\tC\tN. Birrer
+18.04.05\tP\tN. Fabry\t21.03.97\tP\tN. Chinellato
+03.10.08\tM\tY. Zeitov\t\tM\tY. Zeitler`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Team A officials
+    expect(result.teamA.officials.length).toBeGreaterThanOrEqual(3)
+    const coachA = result.teamA.officials.find((o) => o.role === 'C')
+    expect(coachA).toBeDefined()
+    expect(coachA!.rawName).toContain('Heynen')
+    const physioA = result.teamA.officials.find((o) => o.role === 'P')
+    expect(physioA).toBeDefined()
+    expect(physioA!.rawName).toContain('Fabry')
+    const medicalA = result.teamA.officials.find((o) => o.role === 'M')
+    expect(medicalA).toBeDefined()
+    expect(medicalA!.rawName).toContain('Zeitov')
+
+    // Team B officials
+    expect(result.teamB.officials.length).toBeGreaterThanOrEqual(3)
+    const coachB = result.teamB.officials.find((o) => o.role === 'C')
+    expect(coachB).toBeDefined()
+    expect(coachB!.rawName).toContain('Birrer')
+    const physioB = result.teamB.officials.find((o) => o.role === 'P')
+    expect(physioB).toBeDefined()
+    expect(physioB!.rawName).toContain('Chinellato')
+    const medicalB = result.teamB.officials.find((o) => o.role === 'M')
+    expect(medicalB).toBeDefined()
+    expect(medicalB!.rawName).toContain('Zeitler')
+  })
+
+  it('normalizes AC1 role to AC', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVC Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
+C\tM. Lorentz\tC\tA. Zbinden
+15.03.80\tAC1\tS. Helper\t22.06.85\tAC1\tR. Assistent`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // AC1 should be normalized to AC
+    const acA = result.teamA.officials.find((o) => o.role === 'AC')
+    expect(acA).toBeDefined()
+    expect(acA!.rawName).toContain('Helper')
+
+    const acB = result.teamB.officials.find((o) => o.role === 'AC')
+    expect(acB).toBeDefined()
+    expect(acB!.rawName).toContain('Assistent')
+  })
+
+  it('parses libero section in 6-column format', () => {
+    const ocrText = `A Oder/ou/o B VBC Test\tVC Opponent A Oder/ou/o B
+Lizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome\tLizenz-Nr.Licence-No.Licenza-No.\tSpieler Nr.Joueur No.Giocatore No.\tNameNomNome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+LIBEROS («L»)\tLIBEROS («L»)
+13.06.04\t1\tC. Tsang\t30.07.96\t16\tN. Jegu
+\t\t\t29.10.85\t15\tJ. Risso Gertrude`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // Team A libero
+    const tsang = result.teamA.players.find((p) => p.rawName.includes('Tsang'))
+    expect(tsang).toBeDefined()
+    expect(tsang!.shirtNumber).toBe(1)
+    expect(tsang!.birthDate).toBe('13.06.04')
+
+    // Team B liberos
+    const jegu = result.teamB.players.find((p) => p.rawName.includes('Jegu'))
+    expect(jegu).toBeDefined()
+    expect(jegu!.shirtNumber).toBe(16)
+    expect(jegu!.birthDate).toBe('30.07.96')
+
+    // Team B second libero (only on Team B side)
+    const risso = result.teamB.players.find((p) => p.rawName.includes('Risso'))
+    expect(risso).toBeDefined()
+    expect(risso!.shirtNumber).toBe(15)
+    expect(risso!.birthDate).toBe('29.10.85')
+  })
+
+  it('parses full Mistral OCR output from VBC Votero Zürich vs Volley Oerlikon', () => {
+    // Simulates the tab-separated output from #parseHtmlTable after processing
+    // Mistral's 6-column HTML table with <br> → space conversion and preserved empty cells
+    const ocrText = `A Oder/ou/o B VBC Votero Zürich\tVölley Oerlikon A Oder/ou/o B
+Lizenz-Nr. Licence-No. Licenza-No.\tSpieler Nr. Joueur No. Giocatore No.\tName Nom Nome\tLizenz-Nr. Licence-No. Licenza-No.\tSpieler Nr. Joueur No. Giocatore No.\tName Nom Nome
+16.05.07\t5\tJ. Klocke\t01.10.95\t5\tG. Papadopoulos
+31.07.07\t2\tN. Christen\t24.02.03\t4\tN. von Loesch
+30.07.07\t11\tN. Walser\t18.05.96\t8\tI. Kellenberger
+06.04.07\t8\tA. Heinzer\t16.09.92\t14\tO. Hartes
+31.05.07\t6\tI. Pautelić\t07.08.96\t10\tS. Ward
+25.11.03\t9\tN. Dankelschlep\t26.05.92\t6\tA. Bratschi
+10.04.03\t13\tG. Taggin\t30.07.96\t16\tN. Jegu
+16.06.08\t15\tK. Hamnata\t29.10.85\t15\tJ. Risso Gertrude
+13.06.04\t1\tC. Tsang\t24.11.06\t3\tL. Huthäfer
+27.01.04\t12\tA. Nuri\t14.07.06\t11\tL. Zach
+28.03.03\t7\tN. Nausson\t07.04.\t\tH. Birrer
+LIBEROS («L»)\tLIBEROS («L»)
+13.06.04\t1\tC. Tsang\t30.07.96\t16\tN. Jegu
+\t\t\t29.10.85\t15\tJ. Risso Gertrude
+Offizielle/Officiels/Ufficiali\tOffizielle/Officiels/Ufficiali
+11.08.65\tC\tD. Heynen\t07.04.71\tC\tN. Birrer
+\tAC1\t\t\tAC1\t
+\tAC2\t\t\tAC2\t
+18.04.05\tP\tN. Fabry\t21.03.97\tP\tN. Chinellato
+03.10.08\tM\tY. Zeitov\t\tM\tY. Zeitler`
+
+    const result = parseManuscriptSheet(ocrText)
+
+    // ---- Team A (VBC Votero Zürich) ----
+    // 11 regular players + 1 libero (duplicate of C. Tsang)
+    expect(result.teamA.players.length).toBeGreaterThanOrEqual(11)
+
+    // Check specific players with DOB
+    const klocke = result.teamA.players.find((p) => p.rawName.includes('Klocke'))
+    expect(klocke).toBeDefined()
+    expect(klocke!.shirtNumber).toBe(5)
+    expect(klocke!.birthDate).toBe('16.05.07')
+
+    const tsang = result.teamA.players.find((p) => p.rawName.includes('Tsang'))
+    expect(tsang).toBeDefined()
+    expect(tsang!.shirtNumber).toBe(1)
+
+    const dankelschlep = result.teamA.players.find((p) => p.rawName.includes('Dankelschlep'))
+    expect(dankelschlep).toBeDefined()
+    expect(dankelschlep!.shirtNumber).toBe(9)
+    expect(dankelschlep!.birthDate).toBe('25.11.03')
+
+    // Team A officials
+    expect(result.teamA.officials.length).toBeGreaterThanOrEqual(3)
+    const coachA = result.teamA.officials.find((o) => o.role === 'C')
+    expect(coachA).toBeDefined()
+    expect(coachA!.rawName).toContain('Heynen')
+    const physioA = result.teamA.officials.find((o) => o.role === 'P')
+    expect(physioA).toBeDefined()
+    expect(physioA!.rawName).toContain('Fabry')
+    const medicalA = result.teamA.officials.find((o) => o.role === 'M')
+    expect(medicalA).toBeDefined()
+    expect(medicalA!.rawName).toContain('Zeitov')
+
+    // ---- Team B (Volley Oerlikon) ----
+    expect(result.teamB.players.length).toBeGreaterThanOrEqual(11)
+
+    const papadopoulos = result.teamB.players.find((p) => p.rawName.includes('Papadopoulos'))
+    expect(papadopoulos).toBeDefined()
+    expect(papadopoulos!.shirtNumber).toBe(5)
+    expect(papadopoulos!.birthDate).toBe('01.10.95')
+
+    const ward = result.teamB.players.find((p) => p.rawName.includes('Ward'))
+    expect(ward).toBeDefined()
+    expect(ward!.shirtNumber).toBe(10)
+
+    // H. Birrer has incomplete DOB and no jersey number
+    const birrerPlayer = result.teamB.players.find((p) => p.rawName.includes('Birrer'))
+    expect(birrerPlayer).toBeDefined()
+    expect(birrerPlayer!.shirtNumber).toBeNull()
+    expect(birrerPlayer!.birthDate).toBe('07.04.')
+
+    // Team B officials
+    expect(result.teamB.officials.length).toBeGreaterThanOrEqual(3)
+    const coachB = result.teamB.officials.find((o) => o.role === 'C')
+    expect(coachB).toBeDefined()
+    expect(coachB!.rawName).toContain('Birrer')
+    const physioB = result.teamB.officials.find((o) => o.role === 'P')
+    expect(physioB).toBeDefined()
+    expect(physioB!.rawName).toContain('Chinellato')
+    const medicalB = result.teamB.officials.find((o) => o.role === 'M')
+    expect(medicalB).toBeDefined()
+    expect(medicalB!.rawName).toContain('Zeitler')
+  })
+})

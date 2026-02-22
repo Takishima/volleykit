@@ -303,18 +303,16 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           </div>
         )}
 
-        {!wizard.isValidated &&
-          wizard.isLastStep &&
-          !wizard.allPreviousRequiredStepsDone && (
-            <div
-              role="status"
-              className="mt-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg"
-            >
-              <p className="text-sm text-warning-700 dark:text-warning-400">
-                {t('validation.wizard.stepsIncomplete')}
-              </p>
-            </div>
-          )}
+        {!wizard.isValidated && wizard.isLastStep && !wizard.allPreviousRequiredStepsDone && (
+          <div
+            role="status"
+            className="mt-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg"
+          >
+            <p className="text-sm text-warning-700 dark:text-warning-400">
+              {t('validation.wizard.stepsIncomplete')}
+            </p>
+          </div>
+        )}
 
         <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
           {wizard.isValidated ? (

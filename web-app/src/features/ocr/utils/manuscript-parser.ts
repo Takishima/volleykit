@@ -43,6 +43,12 @@ const MIN_LETTER_RATIO = 0.6
 /** Maximum tab-separated parts per line in sequential format (date, number, name) */
 const MAX_SEQUENTIAL_PARTS_PER_LINE = 3
 
+/** Total columns in 6-column Swiss tabular format (3 per team × 2 teams) */
+const TABULAR_TOTAL_COLUMNS = 6
+
+/** Columns per team in 6-column Swiss tabular format (date, number, name) */
+const TABULAR_COLUMNS_PER_TEAM = 3
+
 /** Valid official roles (C=Coach, AC=Assistant Coach, M=Medical, P=Physiotherapist) */
 const VALID_ROLES = new Set(['C', 'AC', 'AC2', 'AC3', 'AC4', 'M', 'P'])
 
@@ -247,7 +253,7 @@ const SWISS_HEADER_PATTERNS = [
   /offizielle.*officiels.*ufficiali/i, // Officials header (DE/FR/IT)
   /kapitän.*capitaine.*capitano/i, // Captain header (DE/FR/IT)
   /trainer.*entraîneur.*allenatore/i, // Trainer header (DE/FR/IT)
-  /aader\/ou\/o/i, // Common marker for "and/or" in Swiss forms
+  /oder\/ou\/o/i, // Common marker for "and/or" in Swiss forms (A oder/ou/o B)
 ]
 
 /**
@@ -494,7 +500,7 @@ const MIN_VALID_TEAM_NAME_LENGTH = 3
  */
 function cleanSwissMarkers(text: string): string {
   return text
-    .replace(/aader\/ou\/o\s*B?\s*/gi, ' ')
+    .replace(/A? ?oder\/ou\/o ?B? ?/gi, ' ')
     .replace(/punkte[\s\S]*?punti\s*/i, ' ')
     .replace(/\s+/g, ' ')
     .trim()
@@ -686,10 +692,25 @@ function parseSwissLiberoLine(line: string): {
   teamA: ParsedPlayer | null
   teamB: ParsedPlayer | null
 } {
-  const parts = line
-    .split('\t')
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0)
+  const rawParts = line.split('\t')
+
+  // If we have exactly 6 columns, use column-based parsing to preserve team alignment
+  if (rawParts.length === TABULAR_TOTAL_COLUMNS) {
+    const teamA = parsePlayerFromColumns(
+      rawParts[0]!.trim(),
+      rawParts[1]!.trim(),
+      rawParts[2]!.trim()
+    )
+    const teamB = parsePlayerFromColumns(
+      rawParts[3]!.trim(),
+      rawParts[4]!.trim(),
+      rawParts[5]!.trim()
+    )
+    return { teamA, teamB }
+  }
+
+  // Fallback: sequential parsing for non-6-column lines
+  const parts = rawParts.map((p) => p.trim()).filter((p) => p.length > 0)
 
   if (parts.length < MIN_LIBERO_LINE_PARTS) {
     return { teamA: null, teamB: null }
@@ -713,63 +734,182 @@ function parseSwissLiberoLine(line: string): {
 }
 
 /**
+ * Parse a 6-column tab-separated player line from Swiss tabular format.
+ * Format: "date_A\tnumber_A\tname_A\tdate_B\tnumber_B\tname_B"
+ * Columns may be empty (preserved as empty strings from HTML table conversion).
+ * Returns true if the line was successfully parsed as player data.
+ */
+function parseSwissTabularPlayerLine(line: string, teamA: ParsedTeam, teamB: ParsedTeam): boolean {
+  // Split keeping all parts (including empty) to preserve column alignment
+  const parts = line.split('\t')
+
+  // Need exactly 6 columns for the two-team tabular format
+  if (parts.length !== TABULAR_TOTAL_COLUMNS) return false
+
+  const teamACols = [parts[0]!.trim(), parts[1]!.trim(), parts[2]!.trim()]
+  const teamBCols = [parts[3]!.trim(), parts[4]!.trim(), parts[5]!.trim()]
+
+  let parsedAny = false
+
+  // Parse Team A (columns 0-2)
+  const playerA = parsePlayerFromColumns(teamACols[0]!, teamACols[1]!, teamACols[2]!)
+  if (playerA) {
+    teamA.players.push(playerA)
+    parsedAny = true
+  }
+
+  // Parse Team B (columns 3-5)
+  const playerB = parsePlayerFromColumns(teamBCols[0]!, teamBCols[1]!, teamBCols[2]!)
+  if (playerB) {
+    teamB.players.push(playerB)
+    parsedAny = true
+  }
+
+  return parsedAny
+}
+
+/**
+ * Parse a player from 3 columns: date (DOB), jersey number, and name.
+ * Any column may be empty. Returns null if no valid name is found.
+ */
+function parsePlayerFromColumns(col0: string, col1: string, col2: string): ParsedPlayer | null {
+  let birthDate: string | undefined
+  let jerseyNumber: number | null = null
+  let name = ''
+
+  // Column 0: expect DOB (DD.MM.YY or DD.MM.YYYY)
+  if (DATE_PATTERN.test(col0)) {
+    birthDate = col0
+  }
+
+  // Column 1: expect jersey number (1-2 digits, 1-99)
+  if (JERSEY_NUMBER_PATTERN.test(col1)) {
+    const num = parseInt(col1, 10)
+    if (num >= 1 && num <= MAX_SHIRT_NUMBER) {
+      jerseyNumber = num
+    }
+  }
+
+  // Column 2: expect player name
+  if (col2 && NAME_START_PATTERN.test(col2) && col2.length >= MIN_NAME_LENGTH) {
+    name = col2
+  }
+
+  // Must have at least a name to count as a valid player
+  if (!name) return null
+
+  const parsed = parsePlayerName(name)
+  return {
+    shirtNumber: jerseyNumber,
+    lastName: parsed.lastName,
+    firstName: parsed.firstName,
+    displayName: parsed.displayName,
+    rawName: name,
+    licenseStatus: '',
+    birthDate,
+  }
+}
+
+/**
+ * Normalize official role strings from Swiss forms.
+ * AC1 → AC (Swiss forms use AC1 for first assistant coach, AC2 for second)
+ */
+function normalizeRole(role: string): string | null {
+  const upper = role.toUpperCase()
+  if (VALID_ROLES.has(upper)) return upper
+  // AC1 → AC (Swiss form convention)
+  if (upper === 'AC1') return 'AC'
+  return null
+}
+
+/**
+ * Parse one official from parts starting at currentIndex.
+ * Handles optional date prefix: [date]\trole\tname
+ */
+function parseOneOfficial(
+  parts: string[],
+  startIndex: number
+): { official: ParsedOfficial | null; nextIndex: number } {
+  let currentIndex = startIndex
+
+  // Skip date prefix if present (DOB for officials)
+  if (currentIndex < parts.length && DATE_PATTERN.test(parts[currentIndex]!)) {
+    currentIndex++
+  }
+
+  // Expect role
+  if (currentIndex >= parts.length) {
+    return { official: null, nextIndex: currentIndex }
+  }
+
+  const normalizedRole = normalizeRole(parts[currentIndex]!)
+  if (!normalizedRole) {
+    return { official: null, nextIndex: currentIndex }
+  }
+  currentIndex++
+
+  // Expect name
+  if (currentIndex >= parts.length || !NAME_START_PATTERN.test(parts[currentIndex]!)) {
+    return { official: null, nextIndex: currentIndex }
+  }
+
+  const name = parts[currentIndex]!
+  currentIndex++
+  const parsed = parseOfficialName(name)
+
+  return {
+    official: {
+      role: normalizedRole as OfficialRole,
+      lastName: parsed.lastName,
+      firstName: parsed.firstName,
+      displayName: parsed.displayName,
+      rawName: name,
+    },
+    nextIndex: currentIndex,
+  }
+}
+
+/**
  * Parse a tab-separated officials line from Swiss format
- * Format: "C\tM. Lorentz\tC\tA. Zbinden"
+ * Supports formats:
+ *   "C\tM. Lorentz\tC\tA. Zbinden"             (without dates)
+ *   "11.08.65\tC\tD. Heynen\t07.04.71\tC\tN. Birrer"  (with DOB prefix)
  */
 function parseSwissOfficialsLine(line: string): {
   teamA: ParsedOfficial | null
   teamB: ParsedOfficial | null
 } {
-  const parts = line
-    .split('\t')
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0)
+  const rawParts = line.split('\t')
 
-  let teamAOfficial: ParsedOfficial | null = null
-  let teamBOfficial: ParsedOfficial | null = null
+  // If we have exactly 6 columns, use column-based parsing to preserve team alignment
+  if (rawParts.length === TABULAR_TOTAL_COLUMNS) {
+    const teamACols = rawParts.slice(0, TABULAR_COLUMNS_PER_TEAM).map((p) => p.trim())
+    const teamBCols = rawParts
+      .slice(TABULAR_COLUMNS_PER_TEAM, TABULAR_TOTAL_COLUMNS)
+      .map((p) => p.trim())
 
-  let currentIndex = 0
+    const teamAFiltered = teamACols.filter((p) => p.length > 0)
+    const teamBFiltered = teamBCols.filter((p) => p.length > 0)
 
-  // Parse Team A official
-  if (currentIndex < parts.length) {
-    const role = parts[currentIndex]!.toUpperCase()
-    if (VALID_ROLES.has(role)) {
-      currentIndex++
-      if (currentIndex < parts.length && /^[A-Za-zÀ-ÿ]/.test(parts[currentIndex]!)) {
-        const name = parts[currentIndex]!
-        const parsed = parseOfficialName(name)
-        teamAOfficial = {
-          role: role as OfficialRole,
-          lastName: parsed.lastName,
-          firstName: parsed.firstName,
-          displayName: parsed.displayName,
-          rawName: name,
-        }
-        currentIndex++
-      }
+    const teamAResult = teamAFiltered.length > 0 ? parseOneOfficial(teamAFiltered, 0) : null
+    const teamBResult = teamBFiltered.length > 0 ? parseOneOfficial(teamBFiltered, 0) : null
+
+    return {
+      teamA: teamAResult?.official ?? null,
+      teamB: teamBResult?.official ?? null,
     }
   }
 
-  // Parse Team B official
-  if (currentIndex < parts.length) {
-    const role = parts[currentIndex]!.toUpperCase()
-    if (VALID_ROLES.has(role)) {
-      currentIndex++
-      if (currentIndex < parts.length && /^[A-Za-zÀ-ÿ]/.test(parts[currentIndex]!)) {
-        const name = parts[currentIndex]!
-        const parsed = parseOfficialName(name)
-        teamBOfficial = {
-          role: role as OfficialRole,
-          lastName: parsed.lastName,
-          firstName: parsed.firstName,
-          displayName: parsed.displayName,
-          rawName: name,
-        }
-      }
-    }
-  }
+  // Fallback: sequential parsing for non-6-column lines
+  const parts = rawParts.map((p) => p.trim()).filter((p) => p.length > 0)
 
-  return { teamA: teamAOfficial, teamB: teamBOfficial }
+  // Parse Team A official (skips leading date if present)
+  const teamAResult = parseOneOfficial(parts, 0)
+
+  // Parse Team B official (continues from where Team A left off)
+  const teamBResult = parseOneOfficial(parts, teamAResult.nextIndex)
+
+  return { teamA: teamAResult.official, teamB: teamBResult.official }
 }
 
 /** Concatenated names pattern (e.g., "S. AngeliL. Collier") */
@@ -881,7 +1021,7 @@ function processStructuredLine(
  */
 function shouldSkipLine(line: string): boolean {
   if (isNoiseLine(line)) return true
-  if (SWISS_HEADER_PATTERNS.some((pattern) => pattern.test(line)) && !line.includes('\t')) {
+  if (SWISS_HEADER_PATTERNS.some((pattern) => pattern.test(line))) {
     return true
   }
   return false
@@ -922,7 +1062,9 @@ function generateTeamWarnings(teamA: ParsedTeam, teamB: ParsedTeam): string[] {
  * This format has both teams side-by-side with OCR reading horizontally
  */
 function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
-  const lines = ocrText.split('\n').map((l) => l.trim())
+  // Keep raw lines (don't trim) to preserve tab-based column alignment
+  // Lines like "\t\t\t29.10.85\t15\tName" need leading tabs for 6-column parsing
+  const rawLines = ocrText.split('\n')
   const teamNames = extractSwissTeamNames(ocrText)
 
   const teamA: ParsedTeam = { name: teamNames.teamA, players: [], officials: [] }
@@ -931,9 +1073,12 @@ function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
   let inLiberoSection = false
   let inOfficialsSection = false
 
-  for (const line of lines) {
-    if (shouldSkipLine(line)) continue
+  for (const rawLine of rawLines) {
+    const line = rawLine.trim()
 
+    // Check section markers first (before skip) so multilingual headers
+    // like "Offizielle/Officiels/Ufficiali" are detected as section markers
+    // rather than skipped as Swiss header patterns
     const sectionMarker = detectSectionMarker(line)
     if (sectionMarker === 'end') break
     if (sectionMarker === 'libero') {
@@ -947,13 +1092,23 @@ function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
       continue
     }
 
+    if (shouldSkipLine(line)) continue
+
     if (!line.includes('\t')) continue
 
-    if (processStructuredLine(line, inOfficialsSection, inLiberoSection, teamA, teamB)) {
+    // Use rawLine for tab-based parsing to preserve column alignment
+    if (processStructuredLine(rawLine, inOfficialsSection, inLiberoSection, teamA, teamB)) {
       continue
     }
 
-    // Process concatenated player data
+    // Try parsing as 6-column tab-separated player row (date\tnum\tname per team)
+    if (!inOfficialsSection && !inLiberoSection) {
+      if (parseSwissTabularPlayerLine(rawLine, teamA, teamB)) {
+        continue
+      }
+    }
+
+    // Process concatenated player data (fallback for OCR that runs names together)
     const parts = line.split('\t')
     const data = extractConcatenatedData(parts)
     addPlayersFromExtractedData(teamA, data.firstHalfNames, data.firstHalfDates)
@@ -1019,9 +1174,16 @@ function isLiberoMarker(line: string): boolean {
  */
 function isOfficialsMarker(line: string): boolean {
   const upper = line.toUpperCase()
-  // Must contain 'OFFICIAL' or specific section headers
+  // Must contain 'OFFICIAL' or multilingual equivalents, or specific section headers
   // Avoid matching lines like "C Hans Trainer" which contain 'TRAINER'
-  return upper.includes('OFFICIAL') || upper.startsWith('COACH') || /^TRAINER\b/.test(upper)
+  return (
+    upper.includes('OFFICIAL') ||
+    upper.includes('OFFICIEL') ||
+    upper.includes('OFFIZIEL') ||
+    upper.includes('UFFICIALI') ||
+    upper.startsWith('COACH') ||
+    /^TRAINER\b/.test(upper)
+  )
 }
 
 /**
@@ -1166,10 +1328,10 @@ function tryExtractOfficialFromTabs(line: string): ParsedOfficial | null {
     currentIndex++
   }
 
-  // Next should be role
+  // Next should be role (with AC1 → AC normalization)
   if (currentIndex >= parts.length) return null
-  const role = parts[currentIndex]!.toUpperCase()
-  if (!VALID_ROLES.has(role)) return null
+  const role = normalizeRole(parts[currentIndex]!)
+  if (!role) return null
   currentIndex++
 
   // Next should be name
