@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.18.0
+
+### Minor Changes
+
+- [#939](https://github.com/Takishima/volleykit/pull/939) [`24953d5`](https://github.com/Takishima/volleykit/commit/24953d556d2a652faaf7750f357a197ac4c67970) Thanks [@Takishima](https://github.com/Takishima)! - Added player list and raw JSON display to OCR PoC results screen
+
+### Patch Changes
+
+- [#941](https://github.com/Takishima/volleykit/pull/941) [`39da33e`](https://github.com/Takishima/volleykit/commit/39da33eeacbd587dc7428f33e00de4884daae406) Thanks [@Takishima](https://github.com/Takishima)! - Fixed duplicate libero players in scoresheet parsing and crop button visibility on iOS
+
+- [#940](https://github.com/Takishima/volleykit/pull/940) [`e86509f`](https://github.com/Takishima/volleykit/commit/e86509fedfa5502873e1b591313fec6276fd060f) Thanks [@Takishima](https://github.com/Takishima)! - Fix 6-column Swiss tabular OCR parsing: detect multilingual officials headers, preserve tab column alignment, and skip header rows in tabular format
+
+- [#938](https://github.com/Takishima/volleykit/pull/938) [`6318dbf`](https://github.com/Takishima/volleykit/commit/6318dbf5e73f766f7e80c4f2fb4153c918476bcf) Thanks [@Takishima](https://github.com/Takishima)! - Fix manuscript scoresheet OCR roster detection failing to parse sequential tab-separated format
+
 ## 1.17.1
 
 ### Patch Changes
