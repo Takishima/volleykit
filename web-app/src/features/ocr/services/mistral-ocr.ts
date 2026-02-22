@@ -142,7 +142,10 @@ export class MistralOCR implements OCREngine {
    */
   #parseHtmlTable(html: string): string[] {
     const parser = new DOMParser()
-    const doc = parser.parseFromString(html, 'text/html')
+    // Replace <br> tags with spaces before parsing to preserve word boundaries
+    // (e.g., "A<br/>Oder/ou/o" → "A Oder/ou/o" instead of "AOder/ou/o")
+    const cleanedHtml = html.replace(/<br\s*\/?>/gi, ' ')
+    const doc = parser.parseFromString(cleanedHtml, 'text/html')
     const table = doc.querySelector('table')
 
     if (!table) {
@@ -154,11 +157,11 @@ export class MistralOCR implements OCREngine {
 
     for (const row of rows) {
       const cells = row.querySelectorAll('th, td')
-      const cellTexts = Array.from(cells)
-        .map((cell) => cell.textContent?.trim() ?? '')
-        .filter((text) => text.length > 0)
+      // Preserve empty cells to maintain column alignment for tabular formats
+      const cellTexts = Array.from(cells).map((cell) => cell.textContent?.trim() ?? '')
 
-      if (cellTexts.length > 0) {
+      // Only skip rows where ALL cells are empty
+      if (cellTexts.some((text) => text.length > 0)) {
         // Join cells with tab separator for structured output
         lines.push(cellTexts.join('\t'))
       }
