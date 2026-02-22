@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Scan web-app components imported via aliases (ImageCropEditor, etc.) */
+@source "../../web-app/src/features";
+
 /* Tailwind 4 theme customization */
 @theme {
   --color-primary-500: #1e40af;

@@ -1039,6 +1039,33 @@ function detectSectionMarker(line: string): 'libero' | 'officials' | 'end' | nul
 }
 
 /**
+ * Deduplicate players in a team's roster.
+ *
+ * Manuscript scoresheets typically list libero players twice:
+ * once in the main player list and again in a separate LIBERO section.
+ * This function removes duplicates, keeping the first occurrence.
+ *
+ * Two players are considered duplicates if they share the same rawName
+ * (case-insensitive). Shirt numbers are NOT used for deduplication because
+ * OCR errors can assign the same number to different players.
+ */
+function deduplicatePlayers(team: ParsedTeam): void {
+  const seenNames = new Set<string>()
+  const deduped: ParsedPlayer[] = []
+
+  for (const player of team.players) {
+    const nameKey = player.rawName.toLowerCase().trim()
+
+    if (!nameKey || !seenNames.has(nameKey)) {
+      deduped.push(player)
+      if (nameKey) seenNames.add(nameKey)
+    }
+  }
+
+  team.players = deduped
+}
+
+/**
  * Generate warnings for parsed teams
  */
 function generateTeamWarnings(teamA: ParsedTeam, teamB: ParsedTeam): string[] {
@@ -1114,6 +1141,10 @@ function parseSwissTabularSheet(ocrText: string): ParsedGameSheet {
     addPlayersFromExtractedData(teamA, data.firstHalfNames, data.firstHalfDates)
     addPlayersFromExtractedData(teamB, data.secondHalfNames, data.secondHalfDates)
   }
+
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(teamA)
+  deduplicatePlayers(teamB)
 
   const warnings = generateTeamWarnings(teamA, teamB)
   return { teamA, teamB, warnings }
@@ -1745,6 +1776,10 @@ export function parseManuscriptSheet(ocrText: string): ParsedGameSheet {
   // Parse each team
   const teamAResult = parseTeamLines(sections.teamALines, sections.teamAName)
   const teamBResult = parseTeamLines(sections.teamBLines, sections.teamBName)
+
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(teamAResult.team)
+  deduplicatePlayers(teamBResult.team)
 
   // Collect warnings
   warnings.push(...teamAResult.warnings)

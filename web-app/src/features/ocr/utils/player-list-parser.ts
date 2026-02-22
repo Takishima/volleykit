@@ -808,6 +808,37 @@ function processLine(line: string, state: ParserState): void {
 }
 
 // =============================================================================
+// Player Deduplication
+// =============================================================================
+
+/**
+ * Deduplicate players in a team's roster.
+ *
+ * Scoresheets typically list libero players twice:
+ * once in the main player list and again in a separate LIBERO section.
+ * This function removes duplicates, keeping the first occurrence.
+ *
+ * Two players are considered duplicates if they share the same rawName
+ * (case-insensitive). Shirt numbers are NOT used for deduplication because
+ * OCR errors can assign the same number to different players.
+ */
+function deduplicatePlayers(team: ParsedTeam): void {
+  const seenNames = new Set<string>()
+  const deduped: ParsedPlayer[] = []
+
+  for (const player of team.players) {
+    const nameKey = player.rawName.toLowerCase().trim()
+
+    if (!nameKey || !seenNames.has(nameKey)) {
+      deduped.push(player)
+      if (nameKey) seenNames.add(nameKey)
+    }
+  }
+
+  team.players = deduped
+}
+
+// =============================================================================
 // Main Parser
 // =============================================================================
 
@@ -863,6 +894,10 @@ export function parseGameSheet(ocrText: string): ParsedGameSheet {
   for (const line of lines) {
     processLine(line, state)
   }
+
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(state.teamA)
+  deduplicatePlayers(state.teamB)
 
   // Add warnings
   if (state.teamA.players.length === 0) {
@@ -1396,6 +1431,10 @@ export function parseGameSheetWithOCR(
     const ocrLine = lineToOCRLine.get(line)
     processLineWithOCR(line, state, ocrLine)
   }
+
+  // Deduplicate players (liberos often appear in both the main list and LIBERO section)
+  deduplicatePlayers(state.teamA)
+  deduplicatePlayers(state.teamB)
 
   // Add warnings
   if (state.teamA.players.length === 0) {
