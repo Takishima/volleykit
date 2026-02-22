@@ -16,6 +16,8 @@
  *    where OCR reads horizontally concatenating data from both columns
  */
 
+import { deduplicatePlayers } from './dedup-players'
+
 import type {
   ParsedPlayer,
   ParsedOfficial,
@@ -23,8 +25,6 @@ import type {
   ParsedGameSheet,
   OfficialRole,
 } from '../types'
-
-import { deduplicatePlayers } from './dedup-players'
 
 // =============================================================================
 // Constants
