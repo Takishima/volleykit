@@ -54,6 +54,8 @@ export interface OCRResult {
   words: OCRWord[]
   /** Whether bounding boxes are precise pixel coordinates (false = estimated) */
   hasPreciseBoundingBoxes: boolean
+  /** Raw JSON response from the OCR service (for debugging/inspection) */
+  rawResponse?: string
 }
 
 /**
