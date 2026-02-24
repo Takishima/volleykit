@@ -1089,7 +1089,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scoresheet'
+                $ref: '#/components/schemas/ScoresheetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1114,7 +1114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scoresheet'
+                $ref: '#/components/schemas/ScoresheetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1166,7 +1166,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scoresheet'
+                $ref: '#/components/schemas/ScoresheetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -5975,6 +5975,12 @@ components:
           type: string
         _permissions:
           $ref: '#/components/schemas/Permissions'
+    ScoresheetResponse:
+      type: object
+      description: Response wrapper for scoresheet create, update, and finalize endpoints
+      properties:
+        scoresheet:
+          $ref: '#/components/schemas/Scoresheet'
     ScoresheetCreateRequest:
       type: object
       description: Request to create a new scoresheet (no scoresheet[__identity] — server generates it)

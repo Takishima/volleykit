@@ -4125,6 +4125,10 @@ export interface components {
             updatedBy?: string;
             _permissions?: components["schemas"]["Permissions"];
         };
+        /** @description Response wrapper for scoresheet create, update, and finalize endpoints */
+        ScoresheetResponse: {
+            scoresheet?: components["schemas"]["Scoresheet"];
+        };
         /** @description Request to create a new scoresheet (no scoresheet[__identity] — server generates it) */
         ScoresheetCreateRequest: {
             /**
@@ -5671,7 +5675,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Scoresheet"];
+                    "application/json": components["schemas"]["ScoresheetResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5697,7 +5701,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Scoresheet"];
+                    "application/json": components["schemas"]["ScoresheetResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5752,7 +5756,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Scoresheet"];
+                    "application/json": components["schemas"]["ScoresheetResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];

@@ -77,37 +77,39 @@ __csrfToken=<csrf-token>
 
 ### Response
 
-Returns the newly created scoresheet object. Same shape as Update response — full scoresheet with generated `__identity`, linked game, writer, validation, file, and audit fields. `closedAt` is `null` (not yet finalized).
+Returns the newly created scoresheet wrapped in a `{"scoresheet": {...}}` envelope. `closedAt` is `null` (not yet finalized). Note: the server overrides `hasFile` to `true` when a file resource is linked, even though the request sends `false`.
 
 ```json
 {
-  "__identity": "<new-scoresheet-uuid>",
-  "game": {
-    "__identity": "79bc8d28-9636-4613-bc5b-dd76450cc900"
-  },
-  "isSimpleScoresheet": false,
-  "writerPerson": {
-    "__identity": "<person-uuid>",
-    "displayName": "[Referee Name]"
-  },
-  "scoresheetValidation": {
-    "__identity": "<validation-uuid>",
-    "hasValidationIssues": true,
-    "scoresheetValidationIssues": []
-  },
-  "file": {
-    "__identity": "<file-resource-uuid>"
-  },
-  "hasFile": false,
-  "closedAt": null,
-  "closedBy": null,
-  "createdAt": "2025-12-10T20:52:30.000000+00:00",
-  "createdBy": "[username]",
-  "updatedAt": "2025-12-10T20:52:30.000000+00:00",
-  "updatedBy": "[username]",
-  "_permissions": {
-    "object": { "create": true, "update": true, "delete": false },
-    "properties": { ... }
+  "scoresheet": {
+    "__identity": "<new-scoresheet-uuid>",
+    "game": {
+      "__identity": "79bc8d28-9636-4613-bc5b-dd76450cc900"
+    },
+    "isSimpleScoresheet": false,
+    "writerPerson": {
+      "__identity": "<person-uuid>",
+      "displayName": "[Referee Name]"
+    },
+    "scoresheetValidation": {
+      "__identity": "<new-validation-uuid>",
+      "hasValidationIssues": false,
+      "scoresheetValidationIssues": []
+    },
+    "file": {
+      "__identity": "<file-resource-uuid>"
+    },
+    "hasFile": true,
+    "closedAt": null,
+    "closedBy": "",
+    "createdAt": "2026-02-24T21:27:35.000000+00:00",
+    "createdBy": "[username]",
+    "updatedAt": "2026-02-24T21:27:35.000000+00:00",
+    "updatedBy": "[username]",
+    "_permissions": {
+      "object": { "create": true, "update": true, "delete": false },
+      "properties": { ... }
+    }
   }
 }
 ```
@@ -171,35 +173,37 @@ __csrfToken=<csrf-token>
 
 ### Response
 
-Returns the updated scoresheet object with all properties and permissions.
+Returns the updated scoresheet wrapped in a `{"scoresheet": {...}}` envelope.
 
 ```json
 {
-  "__identity": "<scoresheet-uuid>",
-  "game": {
-    "__identity": "<game-uuid>"
-  },
-  "isSimpleScoresheet": false,
-  "writerPerson": {
-    "__identity": "<person-uuid>",
-    "displayName": "[Referee Name]"
-  },
-  "scoresheetValidation": {
-    "__identity": "<validation-uuid>",
-    "hasValidationIssues": true,
-    "scoresheetValidationIssues": []
-  },
-  "file": null,
-  "hasFile": false,
-  "closedAt": null,
-  "closedBy": null,
-  "createdAt": "2025-12-10T20:50:51.000000+00:00",
-  "createdBy": "[username]",
-  "updatedAt": "2025-12-10T20:51:30.000000+00:00",
-  "updatedBy": "[username]",
-  "_permissions": {
-    "object": { "create": true, "update": true, "delete": false },
-    "properties": { ... }
+  "scoresheet": {
+    "__identity": "<scoresheet-uuid>",
+    "game": {
+      "__identity": "<game-uuid>"
+    },
+    "isSimpleScoresheet": false,
+    "writerPerson": {
+      "__identity": "<person-uuid>",
+      "displayName": "[Referee Name]"
+    },
+    "scoresheetValidation": {
+      "__identity": "<validation-uuid>",
+      "hasValidationIssues": true,
+      "scoresheetValidationIssues": []
+    },
+    "file": null,
+    "hasFile": false,
+    "closedAt": null,
+    "closedBy": null,
+    "createdAt": "2025-12-10T20:50:51.000000+00:00",
+    "createdBy": "[username]",
+    "updatedAt": "2025-12-10T20:51:30.000000+00:00",
+    "updatedBy": "[username]",
+    "_permissions": {
+      "object": { "create": true, "update": true, "delete": false },
+      "properties": { ... }
+    }
   }
 }
 ```
@@ -356,33 +360,35 @@ Before finalization:
 
 ### Response
 
-Returns the finalized scoresheet with `closedAt` and `closedBy` populated.
+Returns the finalized scoresheet wrapped in a `{"scoresheet": {...}}` envelope, with `closedAt` and `closedBy` populated.
 
 ```json
 {
-  "__identity": "<scoresheet-uuid>",
-  "game": {
-    "__identity": "<game-uuid>"
-  },
-  "isSimpleScoresheet": false,
-  "writerPerson": {
-    "__identity": "<person-uuid>",
-    "displayName": "[Referee Name]"
-  },
-  "file": {
-    "__identity": "<file-resource-uuid>",
-    "publicResourceUri": "https://volleymanager.volleyball.ch/_Resources/Persistent/<hash>/scoresheet.pdf"
-  },
-  "hasFile": true,
-  "closedAt": "2025-12-10T20:52:45.000000+00:00",
-  "closedBy": "referee",
-  "scoresheetValidation": {
-    "__identity": "<validation-uuid>",
-    "hasValidationIssues": false
-  },
-  "_permissions": {
-    "object": { "create": false, "update": false, "delete": false },
-    "properties": { ... }
+  "scoresheet": {
+    "__identity": "<scoresheet-uuid>",
+    "game": {
+      "__identity": "<game-uuid>"
+    },
+    "isSimpleScoresheet": false,
+    "writerPerson": {
+      "__identity": "<person-uuid>",
+      "displayName": "[Referee Name]"
+    },
+    "file": {
+      "__identity": "<file-resource-uuid>",
+      "publicResourceUri": "https://volleymanager.volleyball.ch/_Resources/Persistent/<hash>/scoresheet.pdf"
+    },
+    "hasFile": true,
+    "closedAt": "2026-02-24T21:27:51.000000+00:00",
+    "closedBy": "referee",
+    "scoresheetValidation": {
+      "__identity": "<validation-uuid>",
+      "hasValidationIssues": false
+    },
+    "_permissions": {
+      "object": { "create": false, "update": false, "delete": false },
+      "properties": { ... }
+    }
   }
 }
 ```
