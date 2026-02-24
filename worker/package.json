@@ -14,7 +14,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260302.0",
+    "@cloudflare/workers-types": "^4.20260303.0",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.0.1",
     "globals": "^17.3.0",
