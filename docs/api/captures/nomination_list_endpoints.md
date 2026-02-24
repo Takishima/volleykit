@@ -25,29 +25,41 @@ PUT /api/sportmanager.indoorvolleyball/api\nominationlist
 
 Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
-| Parameter                                                | Type     | Description                               |
-| -------------------------------------------------------- | -------- | ----------------------------------------- |
-| nominationList[\_\_identity]                             | UUID     | The nomination list identifier            |
-| nominationList[game][\_\_identity]                       | UUID     | The game identifier                       |
-| nominationList[team][\_\_identity]                       | UUID     | The team identifier                       |
-| nominationList[coachPerson][\_\_identity]                | UUID     | Head coach person ID                      |
-| nominationList[firstAssistantCoachPerson][\_\_identity]  | UUID     | First assistant coach (optional)          |
-| nominationList[firstAssistantCoachPerson]                | string   | Empty string when no assistant coach      |
-| nominationList[secondAssistantCoachPerson]               | string   | Second assistant coach UUID or empty      |
-| nominationList[indoorPlayerNominations][N][\_\_identity] | UUID     | Player nomination IDs (array)             |
-| nominationList[closed]                                   | boolean  | Whether the list is closed                |
-| nominationList[closedAt]                                 | datetime | When closed (empty if open)               |
-| nominationList[closedBy]                                 | string   | Who closed it (empty if open)             |
-| nominationList[checked]                                  | boolean  | Whether checked by referee                |
-| nominationList[checkedAt]                                | datetime | When checked (empty if not checked)       |
-| nominationList[checkedBy]                                | string   | Who checked it (empty if not checked)     |
-| nominationList[isClosedForTeam]                          | boolean  | Whether team can still edit               |
-| nominationList[isSubsequentGameForTeamInTournamentGroup] | boolean  | Whether second/third game in tournament   |
-| nominationList[lastUpdatedByRealUser]                    | boolean  | Marks update as user-initiated            |
-| nominationList[nominationListValidation][\_\_identity]   | UUID     | Validation record                         |
-| nominationList[notFoundButNominatedPersons]              | string   | Unmatched persons (empty if none)         |
-| nominationList[persistenceObjectIdentifier]              | UUID     | Same as \_\_identity (Neos Flow internal) |
-| \_\_csrfToken                                            | string   | CSRF protection token                     |
+| Parameter                                                         | Type     | Description                                             |
+| ----------------------------------------------------------------- | -------- | ------------------------------------------------------- |
+| nominationList[\_\_identity]                                      | UUID     | The nomination list identifier                          |
+| nominationList[game][\_\_identity]                                | UUID     | The game identifier                                     |
+| nominationList[team][\_\_identity]                                | UUID     | The team identifier                                     |
+| nominationList[coachPerson][\_\_identity]                         | UUID     | Head coach person ID                                    |
+| nominationList[firstAssistantCoachPerson][\_\_identity]           | UUID     | First assistant coach (optional)                        |
+| nominationList[firstAssistantCoachPerson]                         | string   | Empty string when no assistant coach                    |
+| nominationList[secondAssistantCoachPerson]                        | string   | Second assistant coach UUID or empty                    |
+| nominationList[indoorPlayerNominations][N][\_\_identity]          | UUID     | Player nomination IDs (array)                           |
+| nominationList[closed]                                            | boolean  | Whether the list is closed                              |
+| nominationList[closedAt]                                          | datetime | When closed (empty if open)                             |
+| nominationList[closedBy]                                          | string   | Who closed it (empty if open)                           |
+| nominationList[checked]                                           | boolean  | Whether checked by referee                              |
+| nominationList[checkedAt]                                         | datetime | When checked (empty if not checked)                     |
+| nominationList[checkedBy]                                         | string   | Who checked it (empty if not checked)                   |
+| nominationList[isClosedForTeam]                                   | boolean  | Whether team can still edit                             |
+| nominationList[isSubsequentGameForTeamInTournamentGroup]          | boolean  | Whether second/third game in tournament                 |
+| nominationList[lastUpdatedByRealUser]                             | boolean  | Marks update as user-initiated                          |
+| nominationList[nominationListValidation][\_\_identity]            | UUID     | Validation record                                       |
+| nominationList[notFoundButNominatedPersons]                       | string   | Unmatched persons (empty if none)                       |
+| nominationList[persistenceObjectIdentifier]                       | UUID     | Same as \_\_identity (Neos Flow internal)               |
+| nominationList[createdBy]                                         | string   | Creator username (echoed back from server)              |
+| nominationList[createdByIpAddress]                                | string   | Creator IP address (empty if system-created)            |
+| nominationList[createdByPersistenceIdentifier]                    | string   | Creator persistence ID ("System" if auto-created)       |
+| nominationList[deletedAt]                                         | datetime | Soft-delete timestamp (empty if not deleted)            |
+| nominationList[updatedBy]                                         | string   | Last updater username                                   |
+| nominationList[updatedByIpAddress]                                | string   | Last updater IP address                                 |
+| nominationList[updatedByPersistenceIdentifier]                    | UUID     | Last updater persistence ID                             |
+| nominationList[firstReminderAboutIncompleteNominationListSentAt]  | datetime | First incomplete reminder timestamp (empty if not sent) |
+| nominationList[secondReminderAboutIncompleteNominationListSentAt] | datetime | Second incomplete reminder timestamp                    |
+| nominationList[thirdReminderAboutIncompleteNominationListSentAt]  | datetime | Third incomplete reminder timestamp                     |
+| \_\_csrfToken                                                     | string   | CSRF protection token                                   |
+
+> **Note:** The audit fields (`createdBy`, `updatedBy`, etc.) and reminder timestamps are Neos Flow framework fields that the client echoes back from the server response. They are not required for the API to function.
 
 ### Example Request (URL-decoded)
 
@@ -74,6 +86,16 @@ nominationList[notFoundButNominatedPersons]=
 nominationList[persistenceObjectIdentifier]=<nomination-list-uuid>
 nominationList[secondAssistantCoachPerson]=
 nominationList[team][__identity]=<team-uuid>
+nominationList[createdBy]=System
+nominationList[createdByIpAddress]=
+nominationList[createdByPersistenceIdentifier]=System
+nominationList[deletedAt]=
+nominationList[updatedBy]=<username>
+nominationList[updatedByIpAddress]=<ip-address>
+nominationList[updatedByPersistenceIdentifier]=<user-uuid>
+nominationList[firstReminderAboutIncompleteNominationListSentAt]=
+nominationList[secondReminderAboutIncompleteNominationListSentAt]=
+nominationList[thirdReminderAboutIncompleteNominationListSentAt]=
 __csrfToken=<csrf-token>
 ```
 
@@ -133,7 +155,19 @@ Returns a wrapper object with the updated nomination list.
       "__identity": "<validation-uuid>",
       "hasValidationIssues": false,
       "nominationListValidationIssues": []
-    }
+    },
+    "createdAt": "2026-02-23T19:31:07.000000+00:00",
+    "createdBy": "System",
+    "createdByIpAddress": "",
+    "createdByPersistenceIdentifier": "System",
+    "deletedAt": null,
+    "updatedAt": "2026-02-24T21:29:17.562049+00:00",
+    "updatedBy": "damien_nguyen2",
+    "updatedByIpAddress": "144.2.105.99",
+    "updatedByPersistenceIdentifier": "2b1dae47-...",
+    "firstReminderAboutIncompleteNominationListSentAt": null,
+    "secondReminderAboutIncompleteNominationListSentAt": null,
+    "thirdReminderAboutIncompleteNominationListSentAt": null
   }
 }
 ```
@@ -154,7 +188,12 @@ POST /api/sportmanager.indoorvolleyball/api\nominationlist/finalize
 
 Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
 
-Same parameters as update, with:
+Same parameters as update, plus two additional audit timestamps:
+
+- `nominationList[createdAt]` - Creation timestamp (not sent in update requests)
+- `nominationList[updatedAt]` - Last update timestamp (not sent in update requests)
+
+Key differences from update:
 
 - `nominationList[isClosedForTeam]` = `true`
 - `nominationList[closed]` = `false` (will be set to true after finalization)
