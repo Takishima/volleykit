@@ -1,5 +1,4 @@
 name: Release
-
 on:
   workflow_dispatch:
     inputs:
@@ -18,15 +17,12 @@ on:
         required: false
         type: boolean
         default: false
-
 permissions:
   contents: write
-
 # Prevent concurrent releases
 concurrency:
   group: release
   cancel-in-progress: false
-
 jobs:
   # Validate before release
   validate:
@@ -37,27 +33,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Generate API types
         run: npm run generate:api
-
       - name: Lint
         run: npm run lint
-
       - name: Knip (dead code detection)
         run: npm run knip
-
       - name: Test
         run: npm test
-
       - name: Build
         run: npm run build
-
   release:
     needs: validate
     runs-on: ubuntu-latest
@@ -76,26 +65,21 @@ jobs:
             exit 1
           fi
           echo "RELEASE_TOKEN is configured"
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: Install root dependencies (changesets)
         run: npm install
-
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
       - name: Check for changesets
         id: check_changesets
         run: |
@@ -108,7 +92,6 @@ jobs:
           else
             echo "Found $CHANGESET_COUNT changeset(s)"
           fi
-
       - name: Version packages (Changesets)
         if: steps.check_changesets.outputs.changeset_count != '0'
         env:
@@ -120,7 +103,6 @@ jobs:
 
           # Sync package-lock.json with the new version in package.json
           npm install --package-lock-only
-
       - name: Sync mobile app.json version
         if: steps.check_changesets.outputs.changeset_count != '0'
         run: |
@@ -136,7 +118,6 @@ jobs:
           "
 
           echo "Synced app.json version to $MOBILE_VERSION"
-
       - name: Get new version
         id: get_version
         run: |
@@ -160,7 +141,6 @@ jobs:
             echo "released=true" >> "$GITHUB_OUTPUT"
             echo "New version: $VERSION (highest across linked packages)"
           fi
-
       - name: Extract release notes
         if: steps.get_version.outputs.released == 'true'
         id: release_notes
@@ -222,7 +202,6 @@ jobs:
             echo "::warning::No release notes found for v$VERSION in any CHANGELOG"
             echo "No release notes found for v$VERSION" > /tmp/release_notes.md
           fi
-
       - name: Show changes (dry run)
         if: inputs.dry_run && steps.get_version.outputs.released == 'true'
         run: |
@@ -270,7 +249,6 @@ jobs:
           cat /tmp/release_notes.md
           echo ""
           echo "=== Would create tag: $TAG ==="
-
       - name: Commit changes
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         run: |
@@ -279,7 +257,6 @@ jobs:
           chore(release): prepare v${{ steps.get_version.outputs.version }} release
           EOF
           )"
-
       - name: Create tag
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         run: |
@@ -305,13 +282,11 @@ jobs:
           fi
 
           git tag -a "$TAG" -m "Release $TAG"
-
       - name: Push changes
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         run: |
           git push origin ${{ github.event.repository.default_branch }}
           git push origin "v${{ steps.get_version.outputs.version }}"
-
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         env:
@@ -320,7 +295,6 @@ jobs:
           gh release create "v${{ steps.get_version.outputs.version }}" \
             --title "v${{ steps.get_version.outputs.version }}" \
             --notes-file /tmp/release_notes.md
-
       - name: Summary
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
@@ -349,7 +323,6 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"
           fi
-
   # Build Android APK and attach to release
   build-android:
     needs: release
@@ -364,7 +337,6 @@ jobs:
     secrets:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-
   # Build iOS app and attach to release (optional - requires Apple credentials)
   build-ios:
     needs: release

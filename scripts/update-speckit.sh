@@ -10,9 +10,9 @@
 set -euo pipefail
 
 # Check for required dependencies
-if ! command -v uv &> /dev/null; then
-    echo "ERROR: uv is required but not installed. See https://docs.astral.sh/uv/"
-    exit 1
+if ! command -v uv &>/dev/null; then
+  echo "ERROR: uv is required but not installed. See https://docs.astral.sh/uv/"
+  exit 1
 fi
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,11 +22,11 @@ echo "=== Updating spec-kit templates ==="
 
 # Get current version
 if [ -f .specify/version ]; then
-    CURRENT_VERSION=$(cat .specify/version)
-    echo "Current version: $CURRENT_VERSION"
+  CURRENT_VERSION=$(cat .specify/version)
+  echo "Current version: $CURRENT_VERSION"
 else
-    CURRENT_VERSION="unknown"
-    echo "Current version: unknown"
+  CURRENT_VERSION="unknown"
+  echo "Current version: unknown"
 fi
 
 # Install spec-kit CLI
@@ -40,7 +40,7 @@ echo "Updating templates..."
 echo "y" | specify init . --ai claude --no-git --ignore-agent-tools
 
 # Store the installed version (using sed for macOS compatibility)
-specify version | sed -n 's/.*CLI Version:[[:space:]]*\([0-9.]*\).*/\1/p' > .specify/version 2>/dev/null || true
+specify version | sed -n 's/.*CLI Version:[[:space:]]*\([0-9.]*\).*/\1/p' >.specify/version 2>/dev/null || true
 NEW_VERSION=$(cat .specify/version 2>/dev/null || echo "unknown")
 echo "New version: $NEW_VERSION"
 
@@ -57,20 +57,20 @@ sed -i '/^check_feature_branch() {$/,/^}$/c\check_feature_branch() {\n    # Bran
 
 # Verify customization applied
 if grep -q "Branch validation removed" .specify/scripts/bash/common.sh; then
-    echo "✓ Branch validation customization applied"
+  echo "✓ Branch validation customization applied"
 else
-    echo "ERROR: Failed to apply branch validation customization"
-    exit 1
+  echo "ERROR: Failed to apply branch validation customization"
+  exit 1
 fi
 
 # Show changes
 echo ""
 echo "=== Changes ==="
 if git diff --quiet && git diff --staged --quiet; then
-    echo "No changes detected (already up to date)"
+  echo "No changes detected (already up to date)"
 else
-    git diff --stat
-    echo ""
-    echo "Review changes with: git diff"
-    echo "Commit with: git add -A && git commit -m 'chore(deps): update spec-kit templates'"
+  git diff --stat
+  echo ""
+  echo "Review changes with: git diff"
+  echo "Commit with: git add -A && git commit -m 'chore(deps): update spec-kit templates'"
 fi

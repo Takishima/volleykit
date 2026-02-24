@@ -122,7 +122,10 @@ describe('ExchangeCard', () => {
       const exchange = createMockExchange()
       render(<ExchangeCard exchange={exchange} />)
 
-      expect(screen.getByText('14:00')).toBeInTheDocument()
+      // Format expected time in local timezone (same as date-fns format(date, 'HH:mm'))
+      const startDate = new Date('2024-03-15T14:00:00Z')
+      const expectedTime = `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`
+      expect(screen.getByText(expectedTime)).toBeInTheDocument()
     })
 
     it('renders TBD when no start date', () => {

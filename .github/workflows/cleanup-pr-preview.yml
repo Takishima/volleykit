@@ -167,7 +167,6 @@ jobs:
           else
             echo "No PR previews needed cleanup." >> $GITHUB_STEP_SUMMARY
           fi
-
   # Squash gh-pages history to reduce repository size
   # Runs monthly (1st of month) or on manual trigger with squash_history=true
   squash-history:
@@ -178,7 +177,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Check gh-pages exists and get commit count
         id: check
         run: |
@@ -201,14 +199,12 @@ jobs:
             echo "Only $commit_count commits, skipping squash (threshold: 10)"
             echo "should_squash=false" >> $GITHUB_OUTPUT
           fi
-
       - name: Download gh-pages content
         if: steps.check.outputs.should_squash == 'true'
         run: |
           git clone --depth 1 --branch gh-pages \
             https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
             gh-pages-content
-
       - name: Create squashed commit
         if: steps.check.outputs.should_squash == 'true'
         run: |
@@ -233,7 +229,6 @@ jobs:
           All content preserved, only git history removed."
 
           echo "✓ Created squashed commit with all content preserved"
-
       - name: Force push squashed history
         if: steps.check.outputs.should_squash == 'true'
         run: |
@@ -241,7 +236,6 @@ jobs:
           git remote add origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
           git push --force origin gh-pages
           echo "✓ Force pushed squashed gh-pages branch"
-
       - name: Summary
         run: |
           echo "## History Squash Summary" >> $GITHUB_STEP_SUMMARY

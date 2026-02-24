@@ -1067,12 +1067,39 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   # ==================== eScoresheet Endpoints ====================
   /sportmanager.indoorvolleyball/api\scoresheet:
+    post:
+      tags: [eScoresheet]
+      summary: Create scoresheet
+      description: |
+        Creates a new scoresheet for a game that doesn't have one yet.
+        Used when game.scoresheet is null. The request body does NOT include
+        scoresheet[__identity] — the server generates a new UUID.
+        Typically called after validation and file upload.
+        Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
+      operationId: createScoresheet
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/ScoresheetCreateRequest'
+      responses:
+        '200':
+          description: Scoresheet created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScoresheetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     put:
       tags: [eScoresheet]
       summary: Update scoresheet
       description: |
         Updates an existing scoresheet. Used to save scoresheet data before finalization.
-        The scoresheet must already exist (created when accessing the eScoresheet interface).
+        The scoresheet must already exist (use POST to create one first if game.scoresheet is null).
         Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
       operationId: updateScoresheet
       requestBody:
@@ -1087,7 +1114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scoresheet'
+                $ref: '#/components/schemas/ScoresheetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1139,7 +1166,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Scoresheet'
+                $ref: '#/components/schemas/ScoresheetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1166,7 +1193,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NominationList'
+                $ref: '#/components/schemas/NominationListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1194,7 +1221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NominationListFinalizeResponse'
+                $ref: '#/components/schemas/NominationListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -5948,6 +5975,50 @@ components:
           type: string
         _permissions:
           $ref: '#/components/schemas/Permissions'
+    ScoresheetResponse:
+      type: object
+      description: Response wrapper for scoresheet create, update, and finalize endpoints
+      properties:
+        scoresheet:
+          $ref: '#/components/schemas/Scoresheet'
+    ScoresheetCreateRequest:
+      type: object
+      description: Request to create a new scoresheet (no scoresheet[__identity] — server generates it)
+      required: ["scoresheet[game][__identity]", __csrfToken]
+      properties:
+        "scoresheet[game][__identity]":
+          type: string
+          format: uuid
+          description: The game identifier (required)
+        "scoresheet[isSimpleScoresheet]":
+          type: string
+          enum: ["true", "false"]
+        "scoresheet[writerPerson][__identity]":
+          type: string
+          format: uuid
+        "scoresheet[scoresheetValidation][__identity]":
+          type: string
+          format: uuid
+          description: Validation record from prior validate call
+        "scoresheet[file][__identity]":
+          type: string
+          format: uuid
+          description: File resource from prior upload
+        "scoresheet[hasFile]":
+          type: string
+          enum: ["true", "false"]
+        "scoresheet[closedAt]":
+          type: string
+        "scoresheet[closedBy]":
+          type: string
+        "scoresheet[emergencySubstituteReferees]":
+          type: string
+        "scoresheet[notFoundButNominatedPersons]":
+          type: string
+        "scoresheet[reminderAboutOpenScoresheetSentAt]":
+          type: string
+        __csrfToken:
+          type: string
     ScoresheetUpdateRequest:
       type: object
       description: Request to update a scoresheet
@@ -6252,9 +6323,9 @@ components:
           format: uuid
         __csrfToken:
           type: string
-    NominationListFinalizeResponse:
+    NominationListResponse:
       type: object
-      description: Response after finalizing a nomination list
+      description: Wrapper for nomination list responses (both update and finalize)
       properties:
         nominationList:
           $ref: '#/components/schemas/NominationList'

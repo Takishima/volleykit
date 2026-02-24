@@ -1,5 +1,4 @@
 name: Build Mobile Apps
-
 on:
   workflow_dispatch:
     inputs:
@@ -17,15 +16,12 @@ on:
           - ios
           - both
         default: android
-
 permissions:
   contents: write
-
 # Prevent concurrent builds
 concurrency:
   group: build-mobile-${{ github.event.inputs.commit || github.sha }}
   cancel-in-progress: false
-
 jobs:
   # Verify actor is authorized
   authorize:
@@ -38,7 +34,6 @@ jobs:
             exit 1
           fi
           echo "Authorized: ${{ github.actor }}"
-
   # Validate commit is on main
   validate:
     needs: authorize
@@ -51,7 +46,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
       - name: Resolve and validate commit
         id: resolve
         run: |
@@ -91,7 +85,6 @@ jobs:
           echo "sha=$FULL_SHA" >> "$GITHUB_OUTPUT"
           echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
           echo "Building commit: $FULL_SHA ($SHORT_SHA)"
-
   # Build Android APK
   build-android:
     needs: validate
@@ -103,7 +96,6 @@ jobs:
       version: ${{ needs.validate.outputs.short_sha }}
     secrets:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
   # Build iOS app
   build-ios:
     needs: validate

@@ -1,5 +1,4 @@
 name: CI Mobile
-
 on:
   push:
     branches: [main]
@@ -16,7 +15,6 @@ on:
       - 'docs/api/volleymanager-openapi.yaml'
       - '.github/workflows/ci-mobile.yml'
       - '.github/actions/**'
-
 # =============================================================================
 # Mobile CI Pipeline
 # =============================================================================
@@ -28,7 +26,6 @@ on:
 #              └──> test
 #
 # =============================================================================
-
 jobs:
   setup:
     name: Setup
@@ -38,27 +35,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
-
       - name: Generate API cache key
         id: api-cache-key
         run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'package-lock.json') }}" >> $GITHUB_OUTPUT
-
       - name: Cache generated API types
         id: api-cache
         uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
-
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm exec -w web-app -- openapi-typescript ../docs/api/volleymanager-openapi.yaml -o ../packages/shared/src/api/schema.ts
-
   typecheck:
     name: TypeScript Check
     runs-on: ubuntu-latest
@@ -69,21 +61,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
-
       - name: Restore API types cache
         uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
-
       - name: TypeScript Check
         run: npm run typecheck
-
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -94,21 +82,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
-
       - name: Restore API types cache
         uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
-
       - name: Run ESLint
         run: npm run lint
-
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -119,17 +103,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
-
       - name: Restore API types cache
         uses: actions/cache@v5
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
-
       - name: Run Tests
         run: npm test -- --passWithNoTests

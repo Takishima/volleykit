@@ -1,5 +1,4 @@
 name: Deploy Worker
-
 on:
   push:
     branches: [main]
@@ -7,7 +6,6 @@ on:
       - 'worker/**'
       - '.github/workflows/deploy-worker.yml'
   workflow_dispatch: # Allow manual trigger
-
 jobs:
   deploy:
     name: Deploy to Cloudflare
@@ -20,23 +18,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: worker/package-lock.json
-
       - name: Install dependencies
         run: npm ci
-
       - name: Lint
         run: npm run lint
-
       - name: Run tests
         run: npm test
-
       - name: Compute worker git hash
         id: worker-hash
         run: |
@@ -46,7 +39,6 @@ jobs:
           WORKER_GIT_HASH=$(git log -1 --format='%h' -- .)
           echo "hash=$WORKER_GIT_HASH" >> "$GITHUB_OUTPUT"
           echo "Worker git hash: $WORKER_GIT_HASH"
-
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy --define __WORKER_GIT_HASH__:\"${{ steps.worker-hash.outputs.hash }}\"
         env:

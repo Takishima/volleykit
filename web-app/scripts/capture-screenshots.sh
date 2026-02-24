@@ -22,44 +22,44 @@ SINGLE_TEST=""
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --all)
-      CAPTURE_MODE="all"
-      shift
-      ;;
-    --travel)
-      CAPTURE_MODE="travel"
-      shift
-      ;;
-    --single)
-      CAPTURE_MODE="single"
-      SINGLE_TEST="$2"
-      shift 2
-      ;;
-    --production)
-      export PRODUCTION_URL="$2"
-      shift 2
-      ;;
-    -h|--help)
-      echo "Usage: $0 [options]"
-      echo ""
-      echo "Options:"
-      echo "  --all           Capture all screenshots (default)"
-      echo "  --travel        Capture travel screenshots (requires internet)"
-      echo "  --single NAME   Capture specific screenshot (e.g., 'assignment-detail')"
-      echo "  --production URL Set production URL for travel screenshots"
-      echo "  -h, --help      Show this help message"
-      echo ""
-      echo "Examples:"
-      echo "  $0                          # Capture all standard screenshots"
-      echo "  $0 --travel                 # Capture travel screenshots"
-      echo "  $0 --single assignment-list # Capture only assignment list"
-      exit 0
-      ;;
-    *)
-      echo "Unknown option: $1"
-      echo "Use -h or --help for usage information"
-      exit 1
-      ;;
+  --all)
+    CAPTURE_MODE="all"
+    shift
+    ;;
+  --travel)
+    CAPTURE_MODE="travel"
+    shift
+    ;;
+  --single)
+    CAPTURE_MODE="single"
+    SINGLE_TEST="$2"
+    shift 2
+    ;;
+  --production)
+    export PRODUCTION_URL="$2"
+    shift 2
+    ;;
+  -h | --help)
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  --all           Capture all screenshots (default)"
+    echo "  --travel        Capture travel screenshots (requires internet)"
+    echo "  --single NAME   Capture specific screenshot (e.g., 'assignment-detail')"
+    echo "  --production URL Set production URL for travel screenshots"
+    echo "  -h, --help      Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0                          # Capture all standard screenshots"
+    echo "  $0 --travel                 # Capture travel screenshots"
+    echo "  $0 --single assignment-list # Capture only assignment list"
+    exit 0
+    ;;
+  *)
+    echo "Unknown option: $1"
+    echo "Use -h or --help for usage information"
+    exit 1
+    ;;
   esac
 done
 
@@ -68,7 +68,7 @@ echo "================================"
 echo ""
 
 # Check if Playwright is installed
-if ! npx playwright --version &> /dev/null; then
+if ! npx playwright --version &>/dev/null; then
   echo "⚠️  Playwright not found. Installing..."
   npm install
 fi
@@ -85,21 +85,21 @@ npm run build
 
 # Determine which tests to run
 case $CAPTURE_MODE in
-  all)
-    echo "📷 Capturing all screenshots..."
-    npx playwright test e2e/capture-screenshots.spec.ts --project=chromium
-    ;;
-  travel)
-    echo "🚂 Capturing travel screenshots..."
-    echo "   Using production URL: $PRODUCTION_URL"
-    export PRODUCTION_URL
-    # Remove test.skip for travel tests temporarily by using grep pattern that includes them
-    npx playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "travel-time|journey-details"
-    ;;
-  single)
-    echo "📷 Capturing screenshot: $SINGLE_TEST"
-    npx playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "$SINGLE_TEST"
-    ;;
+all)
+  echo "📷 Capturing all screenshots..."
+  npx playwright test e2e/capture-screenshots.spec.ts --project=chromium
+  ;;
+travel)
+  echo "🚂 Capturing travel screenshots..."
+  echo "   Using production URL: $PRODUCTION_URL"
+  export PRODUCTION_URL
+  # Remove test.skip for travel tests temporarily by using grep pattern that includes them
+  npx playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "travel-time|journey-details"
+  ;;
+single)
+  echo "📷 Capturing screenshot: $SINGLE_TEST"
+  npx playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "$SINGLE_TEST"
+  ;;
 esac
 
 echo ""

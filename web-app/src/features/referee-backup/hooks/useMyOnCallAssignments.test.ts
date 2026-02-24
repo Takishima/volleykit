@@ -107,8 +107,11 @@ describe('extractUserOnCallAssignments', () => {
     expect(result[0]).toMatchObject({
       id: 'entry-1-NLA',
       league: 'NLA',
-      date: '2026-01-15T16:00:00.000Z', // Normalized to 16:00 (weekday)
     })
+    // normalizeOnCallDate uses setHours which sets local hour to 16 (weekday)
+    const normalizedDate = new Date(result[0]!.date)
+    expect(normalizedDate.getDate()).toBe(15)
+    expect(normalizedDate.getHours()).toBe(16)
   })
 
   it('extracts NLB assignments for the user', () => {
@@ -219,9 +222,13 @@ describe('extractUserOnCallAssignments', () => {
     const result = extractUserOnCallAssignments(entries, userId)
 
     expect(result).toHaveLength(2)
-    // Both dates normalized to 16:00 (weekdays)
-    expect(result[0]?.date).toBe('2026-01-15T16:00:00.000Z')
-    expect(result[1]?.date).toBe('2026-01-22T16:00:00.000Z')
+    // Both dates normalized to local 16:00 (weekdays) via setHours
+    const date0 = new Date(result[0]!.date)
+    expect(date0.getDate()).toBe(15)
+    expect(date0.getHours()).toBe(16)
+    const date1 = new Date(result[1]!.date)
+    expect(date1.getDate()).toBe(22)
+    expect(date1.getHours()).toBe(16)
   })
 
   it('returns empty array for empty entries', () => {

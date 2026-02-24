@@ -1,17 +1,13 @@
 name: Release Build (iOS)
-
 on:
   release:
     types: [published]
-
 permissions:
   contents: write
-
 # Prevent concurrent builds for the same release
 concurrency:
   group: release-build-ios-${{ github.event.release.tag_name }}
   cancel-in-progress: false
-
 jobs:
   # Extract version number from tag (removes 'v' prefix)
   prepare:
@@ -27,7 +23,6 @@ jobs:
           VERSION="${TAG#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Extracted version: $VERSION from tag: $TAG"
-
   # TODO: Re-enable EAS build once Expo issues are fixed
   # build:
   #   needs: prepare
@@ -41,7 +36,6 @@ jobs:
   #   secrets:
   #     EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
   #     RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-
   build:
     needs: prepare
     runs-on: ubuntu-latest
@@ -58,7 +52,6 @@ jobs:
           echo ""
           echo "TODO: Re-enable EAS build once Expo issues are fixed"
           echo "=================================================="
-
       - name: Summary
         run: |
           echo "## iOS Release Build (Disabled)" >> "$GITHUB_STEP_SUMMARY"

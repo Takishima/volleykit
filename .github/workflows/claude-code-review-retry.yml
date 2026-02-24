@@ -3,7 +3,6 @@ on:
   workflow_run:
     workflows: ['Claude Code Review']
     types: [completed]
-
 jobs:
   retry-on-failure:
     # Only run if the workflow failed and was triggered by a PR (not workflow_dispatch)
@@ -20,7 +19,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
       - name: Get PR information
         id: pr-info
         run: |
@@ -46,7 +44,6 @@ jobs:
           echo "base_ref=$BASE_REF" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
-
       - name: Check if retry should be skipped
         id: check-guidelines
         if: steps.pr-info.outputs.skip != 'true'
@@ -77,7 +74,6 @@ jobs:
           echo "skip_retry=false" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
-
       - name: Check retry count
         id: check-retry
         if: |
@@ -101,7 +97,6 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ github.token }}
-
       - name: Trigger retry
         if: |
           steps.pr-info.outputs.skip != 'true' &&
@@ -122,7 +117,6 @@ jobs:
           echo "Retry triggered successfully"
         env:
           GH_TOKEN: ${{ github.token }}
-
       - name: Log skip reason
         if: |
           steps.pr-info.outputs.skip == 'true' ||

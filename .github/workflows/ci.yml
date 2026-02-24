@@ -16,7 +16,6 @@ on:
       - '.changeset/**'
       - '.github/workflows/ci.yml'
       - '.github/actions/**'
-
 # =============================================================================
 # CI Pipeline Architecture
 # =============================================================================
@@ -44,7 +43,6 @@ on:
 # - E2E uses pre-built Playwright Docker image (no browser install overhead)
 #
 # =============================================================================
-
 jobs:
   # Setup job - generates API types once, shared by all downstream jobs
   # This is the CRITICAL PATH for lint, knip, test, and build jobs
@@ -59,16 +57,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Generate API cache key
         id: api-cache-key
         run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}" >> $GITHUB_OUTPUT
-
       - name: Cache generated API types
         id: api-cache
         uses: actions/cache@v5
@@ -77,11 +72,9 @@ jobs:
             web-app/src/api/schema.ts
             packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
-
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
-
       # Upload API types as artifact for downstream jobs (both locations)
       - name: Upload API types
         uses: actions/upload-artifact@v5
@@ -91,7 +84,6 @@ jobs:
             web-app/src/api/schema.ts
             packages/shared/src/api/schema.ts
           retention-days: 1
-
   # Security audit - runs independently (doesn't need API types)
   audit:
     name: Security Audit
@@ -102,12 +94,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Audit dependencies
         run: |
           # Known unfixable vulnerabilities to ignore:
@@ -155,7 +145,6 @@ jobs:
             exit 1
           fi
           echo "All vulnerabilities are known/ignored. Audit passed."
-
   # Lint check - needs API types from setup
   lint:
     name: Lint
@@ -167,18 +156,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download API types
         uses: actions/download-artifact@v7
         with:
           name: api-types
           path: .
-
       # Cache ESLint results (ESLint handles per-file invalidation internally)
       # Key based on ESLint config, TypeScript config, and plugins
       - name: Cache ESLint
@@ -188,10 +174,8 @@ jobs:
           key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/tsconfig.json', 'web-app/package-lock.json') }}
           restore-keys: |
             eslint-${{ runner.os }}-
-
       - name: Lint
         run: npm run lint -- --cache --cache-location .eslintcache
-
   # Dead code detection - needs API types from setup
   knip:
     name: Dead Code Check
@@ -203,21 +187,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download API types
         uses: actions/download-artifact@v7
         with:
           name: api-types
           path: .
-
       - name: Check for dead code
         run: npm run knip
-
   # Unit tests - needs API types from setup
   # PRs: only run tests affected by changed files (--changed)
   # main: run all tests for full coverage validation
@@ -234,18 +214,15 @@ jobs:
         with:
           # Full history needed for --changed to compare against base branch
           fetch-depth: 0
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download API types
         uses: actions/download-artifact@v7
         with:
           name: api-types
           path: .
-
       # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
       # Key based on tooling config - source file changes don't invalidate transforms
       - name: Cache Vite
@@ -255,7 +232,6 @@ jobs:
           key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
-
       - name: Run tests
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -265,7 +241,6 @@ jobs:
             # main branch: run all tests
             npm test
           fi
-
   # Build once - artifact shared by bundle-size, e2e, and lighthouse
   build:
     name: Build
@@ -277,18 +252,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download API types
         uses: actions/download-artifact@v7
         with:
           name: api-types
           path: .
-
       # Cache Vite pre-bundled dependencies (shared key with test job)
       # Key based on dependencies and config - source changes don't affect dep pre-bundling
       - name: Cache Vite
@@ -298,17 +270,14 @@ jobs:
           key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
-
       - name: Build
         run: npm run build
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v5
         with:
           name: web-app-dist
           path: web-app/dist
           retention-days: 1
-
   # Bundle size check - lightweight job, only needs build artifact
   bundle-size:
     name: Bundle Size
@@ -320,21 +289,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download build artifact
         uses: actions/download-artifact@v7
         with:
           name: web-app-dist
           path: web-app/dist
-
       - name: Check bundle size
         run: npm run size
-
   # E2E tests - per browser, uses build artifact
   # PRs: chromium only (fast feedback)
   # main: chromium + firefox + webkit (full coverage)
@@ -360,21 +325,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download build artifact
         uses: actions/download-artifact@v7
         with:
           name: web-app-dist
           path: web-app/dist
-
       - name: Run E2E tests
         run: npx playwright test --project=${{ matrix.browser }} --retries=2
-
       - name: Upload test results
         uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
@@ -382,7 +343,6 @@ jobs:
           name: playwright-report-${{ matrix.browser }}
           path: web-app/playwright-report/
           retention-days: 7
-
   # Lighthouse performance audit - uses build artifact
   lighthouse:
     name: Lighthouse
@@ -394,24 +354,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       - name: Download build artifact
         uses: actions/download-artifact@v7
         with:
           name: web-app-dist
           path: web-app/dist
-
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v12
         with:
           uploadArtifacts: true
           configPath: ./web-app/lighthouserc.json
-
   # Changeset check - ensures PRs include changelog entries
   # Only runs on PRs, reports missing changesets (informational)
   changeset:
@@ -423,15 +379,12 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: Install changeset CLI
         run: npm install -g @changesets/cli
-
       - name: Check for changesets
         id: changeset_check
         run: |
@@ -445,7 +398,6 @@ jobs:
             echo "has_changeset=true" >> "$GITHUB_OUTPUT"
             echo "Found $CHANGESET_COUNT changeset(s)"
           fi
-
       - name: Summary
         run: |
           if [ "${{ steps.changeset_check.outputs.has_changeset }}" = "true" ]; then

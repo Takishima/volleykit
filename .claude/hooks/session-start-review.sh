@@ -9,7 +9,7 @@ if [ "${CLAUDE_CODE_REVIEW:-}" != "true" ]; then
 fi
 
 # Synchronous execution - block until complete
-cat << 'EOF'
+cat <<'EOF'
 === Claude Code Review Session ===
 
 MANDATORY: You MUST read these files FIRST before reviewing any code:

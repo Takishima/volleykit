@@ -1,5 +1,4 @@
 name: Update Dependencies (Mobile)
-
 on:
   # Run weekly on Sundays at 14:30 UTC (offset from web, before Dependabot on Monday 07:00 UTC)
   schedule:
@@ -12,7 +11,6 @@ on:
         required: false
         default: false
         type: boolean
-
 # =============================================================================
 # Mobile App Dependency Update Workflow (Expo-based)
 # =============================================================================
@@ -30,11 +28,9 @@ on:
 #   7. Create PR with changes if all validations pass
 #
 # =============================================================================
-
 concurrency:
   group: update-deps-mobile
   cancel-in-progress: true
-
 jobs:
   update:
     name: Update Dependencies
@@ -48,18 +44,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: Install root dependencies
         run: npm ci
-
       - name: Install npm-check-updates
         run: npm install -g npm-check-updates@17
-
       - name: Check for updates
         id: check-updates
         working-directory: packages/mobile
@@ -126,28 +118,23 @@ jobs:
             echo "has_updates=false" >> "$GITHUB_OUTPUT"
             echo "No updates available"
           fi
-
       - name: Apply Expo updates
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
         run: |
           echo "Applying Expo-managed package updates..."
           npx expo install --fix
-
       - name: Update mobile dev dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
         run: ncu --target minor --dep dev -u
-
       - name: Update shared dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/shared
         run: ncu --target minor -u
-
       - name: Reinstall dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
         run: npm install
-
       - name: Run Expo Doctor
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
@@ -169,7 +156,6 @@ jobs:
           elif [ $DOCTOR_EXIT -ne 0 ]; then
             echo "::warning::Expo Doctor found warnings (exit code $DOCTOR_EXIT)"
           fi
-
       - name: Upload updated files
         if: steps.check-updates.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v5
@@ -180,7 +166,6 @@ jobs:
             packages/mobile/package.json
             packages/shared/package.json
           retention-days: 1
-
   validate:
     name: Validate
     needs: update
@@ -192,35 +177,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Download updated packages
         uses: actions/download-artifact@v7
         with:
           name: updated-packages-mobile
           path: .
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
-
       - name: Generate API types
         run: npm run generate:api
         working-directory: .
-
       - name: TypeScript check
         run: npm run typecheck
-
       - name: Lint
         run: npm run lint
-
       - name: Security audit
         run: npm audit --audit-level=high --omit=dev
         working-directory: .
-
       - name: Test
         run: npm test -- --passWithNoTests
-
   create-pr:
     name: Create PR
     needs: [update, validate]
@@ -233,13 +210,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Download updated packages
         uses: actions/download-artifact@v7
         with:
           name: updated-packages-mobile
           path: .
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:

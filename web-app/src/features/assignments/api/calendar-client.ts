@@ -43,7 +43,7 @@ import type {
   AssociationSettings,
   Season,
   NominationList,
-  NominationListFinalizeResponse,
+  NominationListResponse,
   Scoresheet,
   FileResource,
   GameDetails,
@@ -275,7 +275,7 @@ export const calendarApi = {
     throw new CalendarModeNotSupportedError('Nomination list updates')
   },
 
-  async finalizeNominationList(): Promise<NominationListFinalizeResponse> {
+  async finalizeNominationList(): Promise<NominationListResponse> {
     throw new CalendarModeNotSupportedError('Nomination list finalization')
   },
 
