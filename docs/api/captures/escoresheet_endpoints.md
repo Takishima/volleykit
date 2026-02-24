@@ -4,15 +4,117 @@ The electronic scoresheet (eScoresheet) functionality allows referees to manage 
 
 ## Workflow Overview
 
-1. **Access eScoresheet** - Opens the scoresheet interface for a game
-1. **Update Scoresheet** - Save changes to the scoresheet (writer person, validation status)
-1. **Validate Scoresheet** - Check for validation issues before finalization
-1. **Upload PDF** - Upload the signed scoresheet PDF
-1. **Finalize Scoresheet** - Close the scoresheet permanently
+### New game (no existing scoresheet)
+
+When `game.scoresheet` is `null` in the game details response:
+
+1. **Load game** (`GET showWithNestedObjects`) — scoresheet is `null`
+2. **Validate scoresheet** (`POST validateScoresheet`) — creates a validation object
+3. **Upload file** (`POST persistentresource/upload`) — creates a file resource
+4. **Create scoresheet** (`POST scoresheet`) — links game + validation + file
+5. **Finalize scoresheet** (`POST scoresheet/finalize`) — re-validates, closes scoresheet
+6. **Reload game** (`GET showWithNestedObjects`) — scoresheet is now populated
+
+### Existing game (scoresheet already exists)
+
+When `game.scoresheet` is already populated:
+
+1. **Load game** (`GET showWithNestedObjects`) — scoresheet exists
+2. **Update scoresheet** (`PUT scoresheet`) — save changes
+3. **Validate scoresheet** (`POST validateScoresheet`)
+4. **Upload file** (`POST persistentresource/upload`)
+5. **Finalize scoresheet** (`POST scoresheet/finalize`)
 
 ---
 
-## 1. Update Scoresheet
+## 1. Create Scoresheet
+
+Creates a new scoresheet for a game that doesn't have one yet. Used when `game.scoresheet` is `null`.
+
+### Endpoint
+
+```
+POST /api/sportmanager.indoorvolleyball/api\scoresheet
+```
+
+### Request
+
+Content-Type: `text/plain;charset=UTF-8` (URL-encoded body despite text/plain Content-Type)
+
+| Parameter                                      | Type    | Description                                  |
+| ---------------------------------------------- | ------- | -------------------------------------------- |
+| scoresheet[game][\_\_identity]                 | UUID    | The game identifier (required)               |
+| scoresheet[isSimpleScoresheet]                 | boolean | Whether using simplified scoresheet          |
+| scoresheet[writerPerson][\_\_identity]         | UUID    | Person filling out the scoresheet (optional) |
+| scoresheet[scoresheetValidation][\_\_identity] | UUID    | Validation record from prior validate call   |
+| scoresheet[file][\_\_identity]                 | UUID    | File resource from prior upload              |
+| scoresheet[hasFile]                            | boolean | `false` (server may set this)                |
+| scoresheet[closedAt]                           | string  | Empty (not yet finalized)                    |
+| scoresheet[closedBy]                           | string  | Empty (not yet finalized)                    |
+| scoresheet[emergencySubstituteReferees]        | string  | Empty if none                                |
+| scoresheet[notFoundButNominatedPersons]        | string  | Empty if none                                |
+| scoresheet[reminderAboutOpenScoresheetSentAt]  | string  | Empty                                        |
+| \_\_csrfToken                                  | string  | CSRF protection token                        |
+
+**Key difference from Update (PUT):** No `scoresheet[__identity]` in the request body — the scoresheet doesn't exist yet. The server creates a new scoresheet and returns it with a generated UUID.
+
+### Example Request (URL-decoded)
+
+```
+scoresheet[game][__identity]=79bc8d28-9636-4613-bc5b-dd76450cc900
+scoresheet[isSimpleScoresheet]=false
+scoresheet[writerPerson][__identity]=<person-uuid>
+scoresheet[scoresheetValidation][__identity]=<validation-uuid>
+scoresheet[file][__identity]=<file-resource-uuid>
+scoresheet[hasFile]=false
+scoresheet[closedAt]=
+scoresheet[closedBy]=
+scoresheet[emergencySubstituteReferees]=
+scoresheet[notFoundButNominatedPersons]=
+scoresheet[reminderAboutOpenScoresheetSentAt]=
+__csrfToken=<csrf-token>
+```
+
+### Response
+
+Returns the newly created scoresheet object. Same shape as Update response — full scoresheet with generated `__identity`, linked game, writer, validation, file, and audit fields. `closedAt` is `null` (not yet finalized).
+
+```json
+{
+  "__identity": "<new-scoresheet-uuid>",
+  "game": {
+    "__identity": "79bc8d28-9636-4613-bc5b-dd76450cc900"
+  },
+  "isSimpleScoresheet": false,
+  "writerPerson": {
+    "__identity": "<person-uuid>",
+    "displayName": "[Referee Name]"
+  },
+  "scoresheetValidation": {
+    "__identity": "<validation-uuid>",
+    "hasValidationIssues": true,
+    "scoresheetValidationIssues": []
+  },
+  "file": {
+    "__identity": "<file-resource-uuid>"
+  },
+  "hasFile": false,
+  "closedAt": null,
+  "closedBy": null,
+  "createdAt": "2025-12-10T20:52:30.000000+00:00",
+  "createdBy": "[username]",
+  "updatedAt": "2025-12-10T20:52:30.000000+00:00",
+  "updatedBy": "[username]",
+  "_permissions": {
+    "object": { "create": true, "update": true, "delete": false },
+    "properties": { ... }
+  }
+}
+```
+
+---
+
+## 2. Update Scoresheet
 
 Saves changes to an existing scoresheet.
 
@@ -104,7 +206,7 @@ Returns the updated scoresheet object with all properties and permissions.
 
 ---
 
-## 2. Validate Scoresheet
+## 3. Validate Scoresheet
 
 Validates the scoresheet and returns any issues that need to be addressed.
 
@@ -169,7 +271,7 @@ Common validation issues include:
 
 ---
 
-## 3. Upload Scoresheet File
+## 4. Upload Scoresheet File
 
 Uploads the signed scoresheet file (JPEG, PNG, or PDF).
 
@@ -219,7 +321,7 @@ Returns an array with the uploaded file resource.
 
 ---
 
-## 4. Finalize Scoresheet
+## 5. Finalize Scoresheet
 
 Finalizes and closes the scoresheet. Once finalized, it becomes read-only.
 
@@ -333,8 +435,9 @@ GET /api/sportmanager.indoorvolleyball/api\game/showWithNestedObjects
 
 ## Notes
 
-- The scoresheet is automatically created when first accessing the eScoresheet interface
+- For games without an existing scoresheet, the app explicitly creates one via `POST /api/.../scoresheet` after validation and file upload. The scoresheet is **not** auto-created on access.
 - `isSimpleScoresheet` can only be `true` for lower league categories where it's allowed
 - The `writerPerson` is typically the referee accessing the scoresheet
 - Emergency substitute referees can be added if the assigned referee couldn't attend
 - Once finalized, the scoresheet cannot be modified (permissions become read-only)
+- **Re-validation on finalize:** The finalize request contains a _different_ `scoresheetValidation.__identity` than the create/save step, indicating the server performs re-validation during finalize. For example, the create step used validation UUID `3b75845a-...` while the finalize step used a new UUID `aaf4ae53-...`. Additionally, `hasFile` changes from `false` (create) to `true` (finalize).
