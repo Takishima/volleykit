@@ -932,7 +932,7 @@ describe('API Client', () => {
   })
 
   describe('updateScoresheet', () => {
-    it('sends PUT request with scoresheet data', async () => {
+    it('sends PUT request when scoresheetId is provided', async () => {
       let capturedBody: URLSearchParams | null = null
       let capturedMethod: string | null = null
 
@@ -953,6 +953,27 @@ describe('API Client', () => {
       expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
       expect(capturedBody?.get('scoresheet[isSimpleScoresheet]')).toBe('false')
       expect(capturedBody?.get('scoresheet[hasFile]')).toBe('false')
+    })
+
+    it('sends POST request when scoresheetId is undefined (new scoresheet)', async () => {
+      let capturedBody: URLSearchParams | null = null
+      let capturedMethod: string | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet', async ({ request }) => {
+          capturedMethod = request.method
+          const text = await request.text()
+          capturedBody = new URLSearchParams(text)
+          return HttpResponse.json({})
+        })
+      )
+
+      await api.updateScoresheet(undefined, 'game-1', 'scorer-1', false)
+
+      expect(capturedMethod).toBe('POST')
+      expect(capturedBody?.has('scoresheet[__identity]')).toBe(false)
+      expect(capturedBody?.get('scoresheet[game][__identity]')).toBe('game-1')
+      expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
     })
 
     it('supports simple scoresheet flag', async () => {

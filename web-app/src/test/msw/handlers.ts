@@ -116,12 +116,16 @@ export function createHandlers(overrides: MockResponseOverrides = {}) {
       return HttpResponse.json(responses.nominationList)
     }),
 
-    // Scoresheet
-    http.put('*/api%5cscoresheet', () => {
+    // Scoresheet (finalize must come before generic POST to avoid glob overlap)
+    http.post('*/api%5cscoresheet/finalize', () => {
       return HttpResponse.json(responses.scoresheet)
     }),
 
-    http.post('*/api%5cscoresheet/finalize', () => {
+    http.post('*/api%5cscoresheet', () => {
+      return HttpResponse.json(responses.scoresheet)
+    }),
+
+    http.put('*/api%5cscoresheet', () => {
       return HttpResponse.json(responses.scoresheet)
     }),
 

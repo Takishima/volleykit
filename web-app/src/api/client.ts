@@ -676,8 +676,10 @@ export const api = {
       'scoresheet[lastUpdatedByRealUser]': 'true',
     }
 
-    // scoresheet[__identity] may be undefined for games where the scoresheet
-    // entity hasn't been created yet. The server resolves it from the game identity.
+    // Use POST to create a new scoresheet, PUT to update an existing one.
+    // The volleymanager backend requires POST when no scoresheet exists yet.
+    const method = scoresheetId ? 'PUT' : 'POST'
+
     if (scoresheetId) {
       body['scoresheet[__identity]'] = scoresheetId
     }
@@ -698,7 +700,7 @@ export const api = {
 
     return apiRequest<Scoresheet>(
       '/sportmanager.indoorvolleyball/api%5cscoresheet',
-      'PUT',
+      method,
       body,
       'text/plain;charset=UTF-8'
     )

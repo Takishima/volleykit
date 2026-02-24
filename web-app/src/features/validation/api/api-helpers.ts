@@ -167,8 +167,8 @@ export async function saveScorerSelection(
     return
   }
 
-  // scoresheet.__identity may be undefined for games where the scoresheet
-  // entity hasn't been created yet. The server resolves it from the game identity.
+  // When scoresheet.__identity is undefined, updateScoresheet uses POST to create
+  // a new scoresheet; otherwise it uses PUT to update the existing one.
   await apiClient.updateScoresheet(
     scoresheet?.__identity,
     gameId,
