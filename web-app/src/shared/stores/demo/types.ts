@@ -122,7 +122,8 @@ export interface DemoValidationState {
  * Combined state for all demo slices.
  */
 export interface DemoState
-  extends DemoCoreState,
+  extends
+    DemoCoreState,
     DemoAssignmentsState,
     DemoCompensationsState,
     DemoExchangesState,

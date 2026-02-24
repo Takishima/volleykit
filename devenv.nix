@@ -136,9 +136,13 @@
           enable = true;
           indent_size = 2;
         };
-        # Use Prettier for the same file types as npm run format
+        # Use the workspace-installed Prettier so treefmt and npm run format
+        # always produce identical output (avoids version drift between nix and npm).
         prettier = {
           enable = true;
+          package = pkgs.writeShellScriptBin "prettier" ''
+            exec ${config.devenv.root}/node_modules/.bin/prettier "$@"
+          '';
           includes = [
             "**/*.ts"
             "**/*.tsx"

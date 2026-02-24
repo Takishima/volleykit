@@ -480,9 +480,8 @@ describe('localStorage persistence', () => {
   })
 
   it('returns cached result from localStorage without API call', async () => {
-    const { getCachedTravelTime, calculateMockTravelTime } = await import(
-      '@/shared/services/transport'
-    )
+    const { getCachedTravelTime, calculateMockTravelTime } =
+      await import('@/shared/services/transport')
     const { useAuthStore } = await import('@/shared/stores/auth')
     const { useSettingsStore } = await import('@/shared/stores/settings')
 

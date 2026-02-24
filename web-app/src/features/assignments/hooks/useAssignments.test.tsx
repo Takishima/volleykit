@@ -430,9 +430,8 @@ describe('useValidationClosedAssignments', () => {
   })
 
   it('returns pending state when dependencies are not ready', async () => {
-    const { useAssociationSettings, useActiveSeason } = await import(
-      '@/features/settings/hooks/useSettings'
-    )
+    const { useAssociationSettings, useActiveSeason } =
+      await import('@/features/settings/hooks/useSettings')
 
     // Settings still loading
     vi.mocked(useAssociationSettings).mockReturnValue({
