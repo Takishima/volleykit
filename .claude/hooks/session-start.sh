@@ -54,7 +54,7 @@ if needs_install; then
   # Running parallel installs could cause race conditions since workspaces share node_modules
   if npm install; then
     # Store hash to skip install next time
-    echo "$CURRENT_LOCK_HASH" > "$INSTALL_MARKER"
+    echo "$CURRENT_LOCK_HASH" >"$INSTALL_MARKER"
     echo "Dependencies installed successfully"
   else
     echo "Warning: npm install failed - will retry on next session"
@@ -83,7 +83,7 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo ""
   echo "CRITICAL: You MUST wrap curl commands in bash -c to access the token:"
   echo "  bash -c 'curl -s -H \"Authorization: Bearer \$GITHUB_TOKEN\" \\"
-  echo "       -H \"Accept: application/vnd.github+json\" \\"
+  echo '       -H "Accept: application/vnd.github+json" \'
   echo "       https://api.github.com/repos/OWNER/REPO/issues'"
   echo ""
   echo "Direct curl commands will fail with 401 - always use bash -c wrapper."

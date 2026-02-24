@@ -287,8 +287,9 @@ describe('AddPlayerSheet - Loading State', () => {
   })
 
   it('shows loading spinner when data is loading', async () => {
-    const { usePossiblePlayerNominations } =
-      await import('@/features/validation/hooks/usePlayerNominations')
+    const { usePossiblePlayerNominations } = await import(
+      '@/features/validation/hooks/usePlayerNominations'
+    )
     vi.mocked(usePossiblePlayerNominations).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -317,8 +318,9 @@ describe('AddPlayerSheet - Error State', () => {
   })
 
   it('shows error message when data fetch fails', async () => {
-    const { usePossiblePlayerNominations } =
-      await import('@/features/validation/hooks/usePlayerNominations')
+    const { usePossiblePlayerNominations } = await import(
+      '@/features/validation/hooks/usePlayerNominations'
+    )
     vi.mocked(usePossiblePlayerNominations).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -358,8 +360,9 @@ describe('AddPlayerSheet - Multi-Player Selection', () => {
     vi.useFakeTimers()
 
     // Reset mock to return proper data (in case previous test changed it)
-    const { usePossiblePlayerNominations } =
-      await import('@/features/validation/hooks/usePlayerNominations')
+    const { usePossiblePlayerNominations } = await import(
+      '@/features/validation/hooks/usePlayerNominations'
+    )
     vi.mocked(usePossiblePlayerNominations).mockReturnValue({
       data: mockPlayers,
       isLoading: false,

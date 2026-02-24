@@ -1,6 +1,5 @@
 name: Setup Node.js with Dependencies
 description: Sets up Node.js, caches node_modules, and installs dependencies for monorepo
-
 inputs:
   working-directory:
     description: The working directory for npm commands (for backwards compatibility)
@@ -13,12 +12,10 @@ inputs:
     description: Optional prefix for cache key (defaults to working directory basename)
     required: false
     default: ''
-
 outputs:
   cache-hit:
     description: Whether node_modules cache was hit
     value: ${{ steps.cache-node-modules.outputs.cache-hit }}
-
 runs:
   using: composite
   steps:
@@ -26,7 +23,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-
     # Determine cache key prefix (use provided prefix or derive from working directory)
     - name: Determine cache key prefix
       id: cache-prefix
@@ -39,7 +35,6 @@ runs:
           basename=$(basename "${{ inputs.working-directory }}")
           echo "prefix=${basename}" >> $GITHUB_OUTPUT
         fi
-
     # Cache root node_modules for monorepo workspaces
     # This caches the hoisted dependencies that workspace packages use
     - name: Cache root node_modules
@@ -52,7 +47,6 @@ runs:
           root-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
           root-node-modules-v3-${{ runner.os }}-main-
           root-node-modules-v3-${{ runner.os }}-
-
     # Cache workspace node_modules (for any local-only modules)
     - name: Cache node_modules
       id: cache-node-modules
@@ -64,7 +58,6 @@ runs:
           ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
           ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-main-
           ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-
-
     # Install from root to handle workspaces correctly
     - name: Install dependencies
       if: steps.cache-root-modules.outputs.cache-hit != 'true' || steps.cache-node-modules.outputs.cache-hit != 'true'

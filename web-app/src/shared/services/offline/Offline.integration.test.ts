@@ -60,8 +60,9 @@ vi.mock('./indexed-db', () => ({
 }))
 
 // Import after mocking
-const { createAction, getPendingActions, deleteAction, clearAllActions } =
-  await import('./action-store')
+const { createAction, getPendingActions, deleteAction, clearAllActions } = await import(
+  './action-store'
+)
 
 describe('Offline Action Queue', () => {
   beforeEach(async () => {

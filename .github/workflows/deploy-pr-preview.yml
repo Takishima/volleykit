@@ -16,7 +16,6 @@ permissions:
 concurrency:
   group: 'pages'
   cancel-in-progress: false
-
 jobs:
   # Build jobs run in parallel
   build-web-app:
@@ -27,12 +26,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: web-app
-
       # Cache generated API types (shared across branches)
       - name: Cache generated API types
         id: api-cache
@@ -42,11 +39,9 @@ jobs:
             web-app/src/api/schema.ts
             packages/shared/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'package-lock.json') }}
-
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: npm run generate:api
-
       # Cache ESLint results per branch
       - name: Cache ESLint
         uses: actions/cache@v5
@@ -56,10 +51,8 @@ jobs:
           restore-keys: |
             eslint-${{ runner.os }}-${{ github.head_ref }}-
             eslint-${{ runner.os }}-
-
       - name: Lint
         run: npm run lint -- --cache --cache-location .eslintcache
-
       # Cache Vitest results per branch
       - name: Cache Vitest
         uses: actions/cache@v5
@@ -69,10 +62,8 @@ jobs:
           restore-keys: |
             vitest-${{ runner.os }}-${{ github.head_ref }}-
             vitest-${{ runner.os }}-
-
       - name: Test
         run: npm test
-
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
         uses: actions/cache@v5
@@ -82,7 +73,6 @@ jobs:
           restore-keys: |
             vite-${{ runner.os }}-${{ github.head_ref }}-
             vite-${{ runner.os }}-
-
       - name: Build for PR Preview
         run: npm run build
         env:
@@ -91,17 +81,14 @@ jobs:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
-
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
-
       - name: Upload web-app artifact
         uses: actions/upload-artifact@v4
         with:
           name: web-app-dist
           path: web-app/dist
           retention-days: 1
-
   build-help-site:
     runs-on: ubuntu-latest
     defaults:
@@ -110,13 +97,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: help-site
           node-version: '22'
-
       # Cache Astro build artifacts per branch
       - name: Cache Astro build
         uses: actions/cache@v5
@@ -126,19 +111,16 @@ jobs:
           restore-keys: |
             astro-${{ runner.os }}-${{ github.head_ref }}-
             astro-${{ runner.os }}-
-
       - name: Build Help Site
         run: npm run build
         env:
           ASTRO_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/help
-
       - name: Upload help-site artifact
         uses: actions/upload-artifact@v4
         with:
           name: help-site-dist
           path: help-site/dist
           retention-days: 1
-
   build-ocr-poc:
     runs-on: ubuntu-latest
     defaults:
@@ -147,12 +129,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: ocr-poc
-
       # Cache ESLint results per branch
       - name: Cache ESLint
         uses: actions/cache@v5
@@ -162,10 +142,8 @@ jobs:
           restore-keys: |
             ocr-poc-eslint-${{ runner.os }}-${{ github.head_ref }}-
             ocr-poc-eslint-${{ runner.os }}-
-
       - name: Lint OCR POC
         run: npm run lint -- --cache --cache-location .eslintcache
-
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
         uses: actions/cache@v5
@@ -175,45 +153,38 @@ jobs:
           restore-keys: |
             ocr-poc-vite-${{ runner.os }}-${{ github.head_ref }}-
             ocr-poc-vite-${{ runner.os }}-
-
       - name: Build OCR POC
         run: npm run build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
-
       - name: Upload ocr-poc artifact
         uses: actions/upload-artifact@v4
         with:
           name: ocr-poc-dist
           path: ocr-poc/dist
           retention-days: 1
-
   deploy:
     runs-on: ubuntu-latest
     needs: [build-web-app, build-help-site, build-ocr-poc]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
       - name: Download web-app artifact
         uses: actions/download-artifact@v7
         with:
           name: web-app-dist
           path: web-app-dist
-
       - name: Download help-site artifact
         uses: actions/download-artifact@v7
         with:
           name: help-site-dist
           path: help-site-dist
-
       - name: Download ocr-poc artifact
         uses: actions/download-artifact@v7
         with:
           name: ocr-poc-dist
           path: ocr-poc-dist
-
       - name: Delete artifacts
         uses: geekyeggo/delete-artifact@v5
         with:
@@ -221,7 +192,6 @@ jobs:
             web-app-dist
             help-site-dist
             ocr-poc-dist
-
       - name: Download existing gh-pages content
         run: |
           if git ls-remote --exit-code --heads origin gh-pages; then
@@ -232,7 +202,6 @@ jobs:
           else
             echo "gh-pages branch does not exist yet, starting fresh"
           fi
-
       - name: Prepare deployment with PR preview
         run: |
           mkdir -p deploy
@@ -249,7 +218,6 @@ jobs:
           # Add/update Help Site preview
           mkdir -p deploy/pr-${{ github.event.pull_request.number }}/help
           cp -r help-site-dist/* deploy/pr-${{ github.event.pull_request.number }}/help/
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -257,7 +225,6 @@ jobs:
           publish_dir: deploy
           keep_files: false
           enable_jekyll: false
-
       - name: Comment PR with preview link
         uses: actions/github-script@v8
         with:

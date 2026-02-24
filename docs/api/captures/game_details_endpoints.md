@@ -155,8 +155,8 @@ GET /api/sportmanager.indoorvolleyball/api\game/showWithNestedObjects
 | ----- | ----------------------------------------------------------------------------- | --------------------------- | ------------------- | --- |
 | 0     | number                                                                        | Match number (e.g., 382215) |
 | 1     | group.phase.league.leagueCategory.displayNameWithManagingAssociationShortName | "SVRZ                       | 2L"                 |
-| 2     | group.phase.league.displayName                                                | "#6651                      | 2L                  | ♂"  |
-| 3     | group.phase.league.genderUnicodeSign                                          | "♂" or "♀"                  |
+| 2     | group.phase.league.displayName                                                | "#6651                      | 2L                  | ♂" |
+| 3     | group.phase.league.genderUnicodeSign                                          | "♂" or "♀"                |
 | 4     | group.phase.displayName                                                       | "#13011                     | Hin- und Rückrunde" |
 | 5     | group.displayName                                                             | "#27106                     | Herren 2. Liga"     |
 | 6     | gameDayIndex                                                                  | Match day number (e.g., 4)  |
@@ -184,16 +184,16 @@ GET /api/sportmanager.indoorvolleyball/api\game/showWithNestedObjects
 The dialog displays:
 
 | Field                | Example Value                          |
-| -------------------- | -------------------------------------- | ---------------------------------- | -------------------------------------- |
+| -------------------- | -------------------------------------- | ----------------------------------- | -------------------------------------- |
 | N° match             | #382215                                |
-| Catégorie de ligue   | SVRZ                                   | 2L                                 |
-| Ligue                | #6651                                  | 2L                                 | ♂                                      |
-| Genre                | ♂                                      |
-| Phase                | #13011                                 | Hin- und Rückrunde                 |
-| Groupe               | #27106                                 | Herren 2. Liga                     |
+| Catégorie de ligue   | SVRZ                                   | 2L                                  |
+| Ligue                | #6651                                  | 2L                                  | ♂                                     |
+| Genre                | ♂                                     |
+| Phase                | #13011                                 | Hin- und Rückrunde                  |
+| Groupe               | #27106                                 | Herren 2. Liga                      |
 | Jour de match        | 4                                      |
 | Date/heure de début  | 13.12.2025 13:00                       |
-| Salle                | #74                                    | [Hall Name]                        | [Street Address], [Postal Code] [City] |
+| Salle                | #74                                    | [Hall Name]                         | [Street Address], [Postal Code] [City] |
 | Plus code            | [Plus Code] (linked to Google Maps)    |
 | Equipe recevante     | #2328                                  | [Team Name] (2L, ♂, SVRZ)          |
 | Responsable d'équipe | Multiple contacts with email and phone |

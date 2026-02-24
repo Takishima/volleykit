@@ -83,10 +83,10 @@ export function useTravelTime(
   // Demo mode uses mock transport, calendar/API mode uses real OJP when configured
   const shouldFetch = Boolean(
     isTransportEnabled &&
-    homeLocation &&
-    hallCoords &&
-    hallId &&
-    (isDemoMode || isCalendarMode || isOjpConfigured())
+      homeLocation &&
+      hallCoords &&
+      hallId &&
+      (isDemoMode || isCalendarMode || isOjpConfigured())
   )
 
   const queryKey = queryKeys.travelTime.hall(hallId ?? '', homeLocationHash ?? '', dayType)
