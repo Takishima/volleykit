@@ -127,7 +127,11 @@ describe('getDateRangeForPeriod', () => {
   it('returns correct range for upcoming period', () => {
     const range = getDateRangeForPeriod('upcoming')
 
-    expect(new Date(range.from).toISOString()).toMatch(/2025-01-15T00:00:00/)
+    // date-fns startOfDay uses local time, so assert on local date/time components
+    const from = new Date(range.from)
+    expect(from.getDate()).toBe(15)
+    expect(from.getHours()).toBe(0)
+    expect(from.getMinutes()).toBe(0)
     // 365 days in the future
     expect(new Date(range.to).getFullYear()).toBeGreaterThanOrEqual(2026)
   })
@@ -135,8 +139,11 @@ describe('getDateRangeForPeriod', () => {
   it('returns correct range for past period', () => {
     const range = getDateRangeForPeriod('past')
 
-    // Yesterday end of day
-    expect(new Date(range.to).toISOString()).toMatch(/2025-01-14T23:59:59/)
+    // Yesterday end of day (local time)
+    const to = new Date(range.to)
+    expect(to.getDate()).toBe(14)
+    expect(to.getHours()).toBe(23)
+    expect(to.getMinutes()).toBe(59)
     // 365 days in the past
     expect(new Date(range.from).getFullYear()).toBeLessThanOrEqual(2024)
   })
@@ -144,17 +151,28 @@ describe('getDateRangeForPeriod', () => {
   it('returns correct range for thisWeek period', () => {
     const range = getDateRangeForPeriod('thisWeek')
 
-    expect(new Date(range.from).toISOString()).toMatch(/2025-01-15T00:00:00/)
+    const from = new Date(range.from)
+    expect(from.getDate()).toBe(15)
+    expect(from.getHours()).toBe(0)
     // 7 days from now
-    expect(new Date(range.to).toISOString()).toMatch(/2025-01-22T23:59:59/)
+    const to = new Date(range.to)
+    expect(to.getDate()).toBe(22)
+    expect(to.getHours()).toBe(23)
+    expect(to.getMinutes()).toBe(59)
   })
 
   it('returns correct range for nextMonth period', () => {
     const range = getDateRangeForPeriod('nextMonth')
 
-    expect(new Date(range.from).toISOString()).toMatch(/2025-01-15T00:00:00/)
+    const from = new Date(range.from)
+    expect(from.getDate()).toBe(15)
+    expect(from.getHours()).toBe(0)
     // 30 days from now
-    expect(new Date(range.to).toISOString()).toMatch(/2025-02-14T23:59:59/)
+    const to = new Date(range.to)
+    expect(to.getMonth()).toBe(1) // February
+    expect(to.getDate()).toBe(14)
+    expect(to.getHours()).toBe(23)
+    expect(to.getMinutes()).toBe(59)
   })
 
   it('returns custom range when provided', () => {
@@ -165,8 +183,15 @@ describe('getDateRangeForPeriod', () => {
 
     const range = getDateRangeForPeriod('custom', customRange)
 
-    expect(new Date(range.from).toISOString()).toMatch(/2025-03-01T00:00:00/)
-    expect(new Date(range.to).toISOString()).toMatch(/2025-03-31T23:59:59/)
+    const from = new Date(range.from)
+    expect(from.getMonth()).toBe(2) // March
+    expect(from.getDate()).toBe(1)
+    expect(from.getHours()).toBe(0)
+    const to = new Date(range.to)
+    expect(to.getMonth()).toBe(2) // March
+    expect(to.getDate()).toBe(31)
+    expect(to.getHours()).toBe(23)
+    expect(to.getMinutes()).toBe(59)
   })
 
   it('falls back to upcoming when custom period has no range', () => {
