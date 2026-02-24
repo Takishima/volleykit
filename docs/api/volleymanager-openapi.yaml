@@ -1193,7 +1193,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NominationList'
+                $ref: '#/components/schemas/NominationListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1221,7 +1221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NominationListFinalizeResponse'
+                $ref: '#/components/schemas/NominationListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -6323,9 +6323,9 @@ components:
           format: uuid
         __csrfToken:
           type: string
-    NominationListFinalizeResponse:
+    NominationListResponse:
       type: object
-      description: Response after finalizing a nomination list
+      description: Wrapper for nomination list responses (both update and finalize)
       properties:
         nominationList:
           $ref: '#/components/schemas/NominationList'

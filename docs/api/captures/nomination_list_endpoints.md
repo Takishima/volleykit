@@ -79,63 +79,61 @@ __csrfToken=<csrf-token>
 
 ### Response
 
-Returns the updated nomination list with all nested objects.
+Returns a wrapper object with the updated nomination list.
 
 ```json
 {
-  "__identity": "<nomination-list-uuid>",
-  "game": {
-    "__identity": "<game-uuid>"
-  },
-  "team": {
-    "__identity": "<team-uuid>",
-    "displayName": "#1234 | [Team Name] (2L, ♂, SVRZ)"
-  },
-  "coachPerson": {
-    "__identity": "<person-uuid>",
-    "displayName": "[Coach Name]",
-    "firstName": "[First]",
-    "lastName": "[Last]"
-  },
-  "firstAssistantCoachPerson": {
-    "__identity": "<person-uuid>",
-    "displayName": "[Assistant Name]"
-  },
-  "secondAssistantCoachPerson": null,
-  "indoorPlayerNominations": [
-    {
-      "__identity": "<nomination-uuid>",
-      "indoorPlayer": {
-        "__identity": "<player-uuid>",
-        "person": {
-          "__identity": "<person-uuid>",
-          "displayName": "[Player Name]",
-          "birthday": "1995-03-15T00:00:00.000000+00:00"
+  "nominationList": {
+    "__identity": "<nomination-list-uuid>",
+    "game": {
+      "__identity": "<game-uuid>"
+    },
+    "team": {
+      "__identity": "<team-uuid>",
+      "displayName": "#1234 | [Team Name] (2L, ♂, SVRZ)"
+    },
+    "coachPerson": {
+      "__identity": "<person-uuid>",
+      "displayName": "[Coach Name]",
+      "firstName": "[First]",
+      "lastName": "[Last]"
+    },
+    "firstAssistantCoachPerson": {
+      "__identity": "<person-uuid>",
+      "displayName": "[Assistant Name]"
+    },
+    "secondAssistantCoachPerson": null,
+    "indoorPlayerNominations": [
+      {
+        "__identity": "<nomination-uuid>",
+        "indoorPlayer": {
+          "__identity": "<player-uuid>",
+          "person": {
+            "__identity": "<person-uuid>",
+            "displayName": "[Player Name]",
+            "birthday": "1995-03-15T00:00:00.000000+00:00"
+          }
+        },
+        "shirtNumber": 7,
+        "isCaptain": true,
+        "isLibero": false,
+        "indoorPlayerLicenseCategory": {
+          "shortName": "SEN"
         }
-      },
-      "shirtNumber": 7,
-      "isCaptain": true,
-      "isLibero": false,
-      "indoorPlayerLicenseCategory": {
-        "shortName": "SEN"
       }
+    ],
+    "closed": false,
+    "closedAt": null,
+    "closedBy": null,
+    "checked": false,
+    "checkedAt": null,
+    "checkedBy": null,
+    "isClosedForTeam": true,
+    "nominationListValidation": {
+      "__identity": "<validation-uuid>",
+      "hasValidationIssues": false,
+      "nominationListValidationIssues": []
     }
-  ],
-  "closed": false,
-  "closedAt": null,
-  "closedBy": null,
-  "checked": false,
-  "checkedAt": null,
-  "checkedBy": null,
-  "isClosedForTeam": true,
-  "nominationListValidation": {
-    "__identity": "<validation-uuid>",
-    "hasValidationIssues": false,
-    "nominationListValidationIssues": []
-  },
-  "_permissions": {
-    "object": { "create": true, "update": true, "delete": false },
-    "properties": { ... }
   }
 }
 ```
@@ -175,11 +173,7 @@ Returns a wrapper object with the finalized nomination list.
     "checked": false,
     "isClosedForTeam": true,
     "coachPerson": { ... },
-    "indoorPlayerNominations": [ ... ],
-    "_permissions": {
-      "object": { "create": false, "update": false, "delete": false },
-      "properties": { ... }
-    }
+    "indoorPlayerNominations": [ ... ]
   }
 }
 ```

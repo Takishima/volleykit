@@ -4358,8 +4358,8 @@ export interface components {
             "nominationList[nominationListValidation][__identity]"?: string;
             __csrfToken: string;
         };
-        /** @description Response after finalizing a nomination list */
-        NominationListFinalizeResponse: {
+        /** @description Wrapper for nomination list responses (both update and finalize) */
+        NominationListResponse: {
             nominationList?: components["schemas"]["NominationList"];
         };
         /** @description Validation results for a nomination list */
@@ -5782,7 +5782,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NominationList"];
+                    "application/json": components["schemas"]["NominationListResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5812,7 +5812,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NominationListFinalizeResponse"];
+                    "application/json": components["schemas"]["NominationListResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];

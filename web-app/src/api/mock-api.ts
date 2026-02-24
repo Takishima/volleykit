@@ -34,7 +34,7 @@ import type {
   AssociationSettings,
   Season,
   NominationList,
-  NominationListFinalizeResponse,
+  NominationListResponse,
   Scoresheet,
   FileResource,
   GameDetails,
@@ -649,7 +649,7 @@ export const mockApi = {
     teamId: string,
     playerNominationIds: string[],
     _validationId?: string
-  ): Promise<NominationListFinalizeResponse> {
+  ): Promise<NominationListResponse> {
     await delay(MOCK_MUTATION_DELAY_MS)
 
     const store = useDemoStore.getState()

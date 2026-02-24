@@ -46,7 +46,7 @@ export type NominationList = Schemas['NominationList']
 export type IndoorPlayerNomination = Schemas['IndoorPlayerNomination']
 export type PossibleNomination = Schemas['PossibleNomination']
 export type PossibleNominationsResponse = Schemas['PossibleNominationsResponse']
-export type NominationListFinalizeResponse = Schemas['NominationListFinalizeResponse']
+export type NominationListResponse = Schemas['NominationListResponse']
 export type Scoresheet = Schemas['Scoresheet']
 export type FileResource = Schemas['FileResource']
 export type GameDetails = Schemas['GameDetails']
@@ -614,7 +614,7 @@ export const api = {
     playerNominationIds: string[],
     validationId?: string,
     coachIds?: { head?: string; firstAssistant?: string; secondAssistant?: string }
-  ): Promise<NominationListFinalizeResponse> {
+  ): Promise<NominationListResponse> {
     const body: Record<string, unknown> = {
       'nominationList[__identity]': nominationListId,
       'nominationList[game][__identity]': gameId,
@@ -647,7 +647,7 @@ export const api = {
       }
     }
 
-    return apiRequest<NominationListFinalizeResponse>(
+    return apiRequest<NominationListResponse>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist/finalize',
       'POST',
       body,
