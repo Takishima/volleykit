@@ -721,11 +721,19 @@ export interface paths {
         /**
          * Update scoresheet
          * @description Updates an existing scoresheet. Used to save scoresheet data before finalization.
-         *     The scoresheet must already exist (created when accessing the eScoresheet interface).
+         *     The scoresheet must already exist (use POST to create one first if game.scoresheet is null).
          *     Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
          */
         put: operations["updateScoresheet"];
-        post?: never;
+        /**
+         * Create scoresheet
+         * @description Creates a new scoresheet for a game that doesn't have one yet.
+         *     Used when game.scoresheet is null. The request body does NOT include
+         *     scoresheet[__identity] — the server generates a new UUID.
+         *     Typically called after validation and file upload.
+         *     Note: Content-Type must be text/plain;charset=UTF-8 (not application/x-www-form-urlencoded).
+         */
+        post: operations["createScoresheet"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4117,6 +4125,36 @@ export interface components {
             updatedBy?: string;
             _permissions?: components["schemas"]["Permissions"];
         };
+        /** @description Request to create a new scoresheet (no scoresheet[__identity] — server generates it) */
+        ScoresheetCreateRequest: {
+            /**
+             * Format: uuid
+             * @description The game identifier (required)
+             */
+            "scoresheet[game][__identity]": string;
+            /** @enum {string} */
+            "scoresheet[isSimpleScoresheet]"?: "true" | "false";
+            /** Format: uuid */
+            "scoresheet[writerPerson][__identity]"?: string;
+            /**
+             * Format: uuid
+             * @description Validation record from prior validate call
+             */
+            "scoresheet[scoresheetValidation][__identity]"?: string;
+            /**
+             * Format: uuid
+             * @description File resource from prior upload
+             */
+            "scoresheet[file][__identity]"?: string;
+            /** @enum {string} */
+            "scoresheet[hasFile]"?: "true" | "false";
+            "scoresheet[closedAt]"?: string;
+            "scoresheet[closedBy]"?: string;
+            "scoresheet[emergencySubstituteReferees]"?: string;
+            "scoresheet[notFoundButNominatedPersons]"?: string;
+            "scoresheet[reminderAboutOpenScoresheetSentAt]"?: string;
+            __csrfToken: string;
+        };
         /** @description Request to update a scoresheet */
         ScoresheetUpdateRequest: {
             /**
@@ -5628,6 +5666,32 @@ export interface operations {
         };
         responses: {
             /** @description Scoresheet updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Scoresheet"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createScoresheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/plain": components["schemas"]["ScoresheetCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Scoresheet created successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
