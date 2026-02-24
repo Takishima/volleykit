@@ -140,12 +140,12 @@ The description contains structured data in `Label: Value` format, separated by 
 | Pattern                                                        | Example                                                             | Extracted Value                |
 | -------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------ |
 | `Match: #{id}` / `Spiel: #{id}`                                | `Match: #392936`                                                    | Game number: `392936`          |
-| `Ligue: #{id} \| {category} \| {gender}`                       | `Ligue: #6758 \| Mobilière Volley Cup \| ♀`                        | League category, gender symbol |
+| `Ligue: #{id} \| {category} \| {gender}`                       | `Ligue: #6758 \| Mobilière Volley Cup \| ♀`                         | League category, gender symbol |
 | `Salle: #{id} \| {name}` / `Halle: #{id} \| {name}`            | `Salle: #1477 \| TH St. Johann (E)`                                 | Hall ID: `1477`, Hall name     |
 | `ARB 1: {name} \| {email} \| {phone}`                          | `ARB 1: Pierre Martin \| pierre.martin@example.org \| +41795678901` | Referee name                   |
 | `1. SR: {name} \| {email} \| {phone}`                          | `1. SR: Sandra Huber \| sandra.huber@example.com \| +41799012345`   | Referee name (German)          |
-| `Equipe recevante: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Equipe recevante: #10008 \| TV St. Johann (3L, ♀, SVRBA)`         | Association code: `SVRBA`      |
-| `Heimteam: #{id} \| {team} ({cat}, {gender}, {assoc})`         | `Heimteam: #20 \| Volley Amriswil (NLA, ♂, SV)`                    | Association code: `SV`         |
+| `Equipe recevante: #{id} \| {team} ({cat}, {gender}, {assoc})` | `Equipe recevante: #10008 \| TV St. Johann (3L, ♀, SVRBA)`          | Association code: `SVRBA`      |
+| `Heimteam: #{id} \| {team} ({cat}, {gender}, {assoc})`         | `Heimteam: #20 \| Volley Amriswil (NLA, ♂, SV)`                     | Association code: `SV`         |
 
 ### From GEO
 

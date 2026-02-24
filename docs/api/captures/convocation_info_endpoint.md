@@ -64,19 +64,19 @@ The "Informations de convocation" dialog shows:
 ### Match Information (Informations du match)
 
 | Field                | Example                              |
-| -------------------- | ------------------------------------ | -------------------------- | -------------------------------------- |
+| -------------------- | ------------------------------------ | ------------------------- | -------------------------------------- |
 | N° match             | #382417                              |
-| Catégorie de ligue   | SVRZ                                 | 3L                         |
-| Ligue                | #6652                                | 3L                         | ♂                                     |
-| Genre                | ♂                                   |
-| Phase                | #13012                               | Hin- und Rückrunde         |
-| Groupe               | #27108                               | Herren 3. Liga Gruppe B    |
+| Catégorie de ligue   | SVRZ                                 | 3L                        |
+| Ligue                | #6652                                | 3L                        | ♂                                      |
+| Genre                | ♂                                    |
+| Phase                | #13012                               | Hin- und Rückrunde        |
+| Groupe               | #27108                               | Herren 3. Liga Gruppe B   |
 | Jour de match        | 6                                    |
 | Date/heure           | 08.12.2025 20:30                     |
-| Salle                | #2146                                | [Hall Name]                | [Street Address], [Postal Code] [City] |
+| Salle                | #2146                                | [Hall Name]               | [Street Address], [Postal Code] [City] |
 | Plus code            | [Plus Code]                          |
 | Equipe recevante     | #3926                                | [Team Name] (3L, ♂, SVRZ) |
-| Responsable d'équipe | [Contact Name]                       | [email@example.com]        |
+| Responsable d'équipe | [Contact Name]                       | [email@example.com]       |
 | Equipe visiteuse     | #85                                  | [Team Name] (3L, ♂, SVRZ) |
 | Responsable d'équipe | Multiple contacts with email & phone |
 | Arbitres             | ARB 1, ARB 2 with contact info       |
