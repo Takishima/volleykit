@@ -712,8 +712,11 @@ export const api = {
     scorerPersonId: string,
     isSimpleScoresheet: boolean = false
   ): Promise<ScoresheetValidation> {
+    // Empty-string fields are required by the Neos Flow backend to clear server-side state
+    // during validation. Omitting them causes 500 errors during property mapping.
     const body: Record<string, unknown> = {
       'scoresheet[game][__identity]': gameId,
+      'scoresheet[writerPerson][__identity]': scorerPersonId,
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
       'scoresheet[scoresheetValidation]': '',
       'scoresheet[notFoundButNominatedPersons]': '',
@@ -722,10 +725,6 @@ export const api = {
       'scoresheet[closedBy]': '',
       'scoresheet[file]': '',
       'scoresheet[hasFile]': 'false',
-    }
-
-    if (scorerPersonId) {
-      body['scoresheet[writerPerson][__identity]'] = scorerPersonId
     }
 
     return apiRequest<ScoresheetValidation>(
