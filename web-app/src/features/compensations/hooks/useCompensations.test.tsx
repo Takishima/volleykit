@@ -237,6 +237,96 @@ describe('useCompensations', () => {
     expect(result.current.data![0]!.__identity).toBe('unpaid-1')
   })
 
+  it('treats undefined paymentDone as unpaid when filtering for unpaid compensations', async () => {
+    const compensations = [
+      createMockCompensation({
+        __identity: 'paid-1',
+        convocationCompensation: {
+          __identity: 'c1',
+          paymentDone: true,
+          gameCompensation: 50,
+          travelExpenses: 20,
+        },
+      }),
+      createMockCompensation({
+        __identity: 'undefined-payment-1',
+        convocationCompensation: {
+          __identity: 'c2',
+          gameCompensation: 50,
+          travelExpenses: 20,
+        },
+      }),
+    ]
+
+    const mockSearchCompensations = vi.fn().mockResolvedValue({
+      items: compensations,
+      totalItemsCount: 2,
+    })
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const { result } = renderHook(() => useCompensations(false), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should include compensations where paymentDone is undefined (not explicitly paid)
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data![0]!.__identity).toBe('undefined-payment-1')
+  })
+
+  it('excludes undefined paymentDone when filtering for paid compensations', async () => {
+    const compensations = [
+      createMockCompensation({
+        __identity: 'paid-1',
+        convocationCompensation: {
+          __identity: 'c1',
+          paymentDone: true,
+          gameCompensation: 50,
+          travelExpenses: 20,
+        },
+      }),
+      createMockCompensation({
+        __identity: 'undefined-payment-1',
+        convocationCompensation: {
+          __identity: 'c2',
+          gameCompensation: 50,
+          travelExpenses: 20,
+        },
+      }),
+    ]
+
+    const mockSearchCompensations = vi.fn().mockResolvedValue({
+      items: compensations,
+      totalItemsCount: 2,
+    })
+
+    const { getApiClient } = await import('@/api/client')
+    vi.mocked(getApiClient).mockReturnValue({
+      searchCompensations: mockSearchCompensations,
+      updateCompensation: vi.fn(),
+    } as unknown as ReturnType<typeof getApiClient>)
+
+    const { result } = renderHook(() => useCompensations(true), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Should only return explicitly paid compensations, not undefined ones
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data![0]!.__identity).toBe('paid-1')
+  })
+
   it('returns empty array when items is null', async () => {
     const mockSearchCompensations = vi.fn().mockResolvedValue({
       items: null,

@@ -194,7 +194,13 @@ export function useCompensations(paidFilter?: boolean) {
       if (paidFilter === undefined) {
         return items
       }
-      return items.filter((record) => record.convocationCompensation?.paymentDone === paidFilter)
+      // Use !== instead of === for unpaid filter because paymentDone may be undefined
+      // when not set by the API (the field is optional). For unpaid (paidFilter=false),
+      // we want everything that isn't explicitly paid (true).
+      if (paidFilter) {
+        return items.filter((record) => record.convocationCompensation?.paymentDone === true)
+      }
+      return items.filter((record) => record.convocationCompensation?.paymentDone !== true)
     },
     staleTime: COMPENSATIONS_STALE_TIME_MS,
   })
