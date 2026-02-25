@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.18.1
+
+### Patch Changes
+
+- [#949](https://github.com/Takishima/volleykit/pull/949) [`db70e6d`](https://github.com/Takishima/volleykit/commit/db70e6da353e7031bc911a0b5ce2e4544afff541) Thanks [@Takishima](https://github.com/Takishima)! - Fixed scoresheet creation using POST instead of PUT for new scoresheets
+
 ## 1.18.0
 
 ### Minor Changes
