@@ -993,6 +993,61 @@ describe('API Client', () => {
     })
   })
 
+  describe('validateScoresheet', () => {
+    it('sends POST request to validateScoresheet endpoint', async () => {
+      let capturedUrl: string | null = null
+      let capturedMethod: string | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', ({ request }) => {
+          capturedUrl = request.url
+          capturedMethod = request.method
+          return HttpResponse.json({ __identity: 'val-1', hasValidationIssues: false })
+        })
+      )
+
+      await api.validateScoresheet('game-1', 'scorer-1')
+
+      expect(capturedUrl).toContain('scoresheet/validateScoresheet')
+      expect(capturedMethod).toBe('POST')
+    })
+
+    it('includes game and scorer in request body', async () => {
+      let capturedBody: URLSearchParams | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', async ({ request }) => {
+          const text = await request.text()
+          capturedBody = new URLSearchParams(text)
+          return HttpResponse.json({ __identity: 'val-1', hasValidationIssues: false })
+        })
+      )
+
+      await api.validateScoresheet('game-1', 'scorer-1', true)
+
+      expect(capturedBody?.get('scoresheet[game][__identity]')).toBe('game-1')
+      expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
+      expect(capturedBody?.get('scoresheet[isSimpleScoresheet]')).toBe('true')
+    })
+
+    it('returns validation result with identity', async () => {
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', () => {
+          return HttpResponse.json({
+            __identity: 'val-123',
+            hasValidationIssues: true,
+            scoresheetValidationIssues: [{ __identity: 'issue-1' }],
+          })
+        })
+      )
+
+      const result = await api.validateScoresheet('game-1', 'scorer-1')
+
+      expect(result.__identity).toBe('val-123')
+      expect(result.hasValidationIssues).toBe(true)
+    })
+  })
+
   describe('finalizeScoresheet', () => {
     it('sends POST request to finalize endpoint', async () => {
       let capturedUrl: string | null = null
@@ -1006,13 +1061,13 @@ describe('API Client', () => {
         })
       )
 
-      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1')
+      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
 
       expect(capturedUrl).toContain('scoresheet/finalize')
       expect(capturedMethod).toBe('POST')
     })
 
-    it('includes file resource ID when provided', async () => {
+    it('includes file resource ID and sets hasFile to true', async () => {
       let capturedBody: URLSearchParams | null = null
 
       server.use(
@@ -1029,6 +1084,22 @@ describe('API Client', () => {
       expect(capturedBody?.get('scoresheet[hasFile]')).toBe('true')
     })
 
+    it('includes scoresheet identity in body', async () => {
+      let capturedBody: URLSearchParams | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
+          const text = await request.text()
+          capturedBody = new URLSearchParams(text)
+          return HttpResponse.json({})
+        })
+      )
+
+      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
+
+      expect(capturedBody?.get('scoresheet[__identity]')).toBe('ss-1')
+    })
+
     it('includes validation ID when provided', async () => {
       let capturedBody: URLSearchParams | null = null
 
@@ -1040,25 +1111,9 @@ describe('API Client', () => {
         })
       )
 
-      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', undefined, 'val-1')
+      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1', 'val-1')
 
       expect(capturedBody?.get('scoresheet[scoresheetValidation][__identity]')).toBe('val-1')
-    })
-
-    it('sets hasFile to false when no file provided', async () => {
-      let capturedBody: URLSearchParams | null = null
-
-      server.use(
-        http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
-          const text = await request.text()
-          capturedBody = new URLSearchParams(text)
-          return HttpResponse.json({})
-        })
-      )
-
-      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1')
-
-      expect(capturedBody?.get('scoresheet[hasFile]')).toBe('false')
     })
   })
 

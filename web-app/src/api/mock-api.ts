@@ -36,6 +36,7 @@ import type {
   NominationList,
   NominationListResponse,
   Scoresheet,
+  ScoresheetValidation,
   FileResource,
   GameDetails,
   PossibleNominationsResponse,
@@ -710,11 +711,25 @@ export const mockApi = {
     }
   },
 
+  async validateScoresheet(
+    _gameId: string,
+    _scorerPersonId: string,
+    _isSimpleScoresheet: boolean = false
+  ): Promise<ScoresheetValidation> {
+    await delay(MOCK_MUTATION_DELAY_MS)
+
+    return {
+      __identity: crypto.randomUUID(),
+      hasValidationIssues: false,
+      scoresheetValidationIssues: [],
+    }
+  },
+
   async finalizeScoresheet(
-    scoresheetId: string | undefined,
+    scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    fileResourceId?: string,
+    fileResourceId: string,
     _validationId?: string,
     isSimpleScoresheet: boolean = false
   ): Promise<Scoresheet> {

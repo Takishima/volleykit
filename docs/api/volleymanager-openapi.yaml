@@ -6307,6 +6307,9 @@ components:
         "nominationList[firstAssistantCoachPerson][__identity]":
           type: string
           format: uuid
+        "nominationList[secondAssistantCoachPerson]":
+          type: string
+          description: Empty string to clear, or use [__identity] suffix with UUID to set
         "nominationList[indoorPlayerNominations][0][__identity]":
           type: string
           format: uuid

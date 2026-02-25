@@ -4342,6 +4342,8 @@ export interface components {
             "nominationList[coachPerson][__identity]"?: string;
             /** Format: uuid */
             "nominationList[firstAssistantCoachPerson][__identity]"?: string;
+            /** @description Empty string to clear, or use [__identity] suffix with UUID to set */
+            "nominationList[secondAssistantCoachPerson]"?: string;
             /** Format: uuid */
             "nominationList[indoorPlayerNominations][0][__identity]"?: string;
             /**
