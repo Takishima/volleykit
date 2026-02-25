@@ -32,18 +32,30 @@ Generate title and body from commits:
 - Title: Conventional commit format (e.g., `feat(scope): description`)
 - Body: `## Summary` (bullet points) + `## Test plan` (checklist)
 
+**IMPORTANT**: Always use a heredoc to pass the PR body so that newlines are preserved correctly. Never put the body inline in `jq --arg` with `\n` escapes — they will be rendered as literal text.
+
 Create PR via GitHub API:
 
 ```bash
-bash -c 'BRANCH=$(git rev-parse --abbrev-ref HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; jq -n --arg title "PR_TITLE_HERE" --arg body "PR_BODY_HERE" --arg head "$BRANCH" --arg base "main" "{title: \$title, body: \$body, head: \$head, base: \$base}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/pulls" -d @- | jq "{number, html_url}"'
+bash -c 'BODY=$(cat <<'\''EOF'\''
+PR_BODY_HERE
+EOF
+)
+BRANCH=$(git rev-parse --abbrev-ref HEAD); REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; jq -n --arg title "PR_TITLE_HERE" --arg body "$BODY" --arg head "$BRANCH" --arg base "main" "{title: \$title, body: \$body, head: \$head, base: \$base}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/pulls" -d @- | jq "{number, html_url}"'
 ```
 
-Replace `PR_TITLE_HERE` and `PR_BODY_HERE` with generated content.
+Replace `PR_TITLE_HERE` with the title and `PR_BODY_HERE` with the multiline body content (real newlines, not `\n` escapes).
 
 ### Step 3b: Update PR (if exists)
 
+**IMPORTANT**: Always use a heredoc to pass the PR body so that newlines are preserved correctly.
+
 ```bash
-bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; jq -n --arg title "PR_TITLE_HERE" --arg body "PR_BODY_HERE" "{title: \$title, body: \$body}" | curl -s -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/pulls/PR_NUMBER_HERE" -d @- | jq "{number, html_url}"'
+bash -c 'BODY=$(cat <<'\''EOF'\''
+PR_BODY_HERE
+EOF
+)
+REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; jq -n --arg title "PR_TITLE_HERE" --arg body "$BODY" "{title: \$title, body: \$body}" | curl -s -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/pulls/PR_NUMBER_HERE" -d @- | jq "{number, html_url}"'
 ```
 
 ### Step 4: Wait for Claude Code Review
