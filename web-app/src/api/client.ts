@@ -707,26 +707,20 @@ export const api = {
   },
 
   async finalizeScoresheet(
-    scoresheetId: string | undefined,
+    scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    fileResourceId?: string,
+    fileResourceId: string,
     validationId?: string,
     isSimpleScoresheet: boolean = false
   ): Promise<Scoresheet> {
     const body: Record<string, unknown> = {
+      'scoresheet[__identity]': scoresheetId,
       'scoresheet[game][__identity]': gameId,
       'scoresheet[writerPerson][__identity]': scorerPersonId,
-      'scoresheet[hasFile]': fileResourceId ? 'true' : 'false',
+      'scoresheet[file][__identity]': fileResourceId,
+      'scoresheet[hasFile]': 'true',
       'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
-    }
-
-    if (scoresheetId) {
-      body['scoresheet[__identity]'] = scoresheetId
-    }
-
-    if (fileResourceId) {
-      body['scoresheet[file][__identity]'] = fileResourceId
     }
 
     if (validationId) {

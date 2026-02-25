@@ -208,7 +208,7 @@ export async function finalizeRoster(
   )
 }
 
-/** Finalizes scoresheet with optional file upload. */
+/** Finalizes scoresheet with file upload. */
 export async function finalizeScoresheetWithFile(
   apiClient: ReturnType<typeof getApiClient>,
   gameId: string,
@@ -224,15 +224,21 @@ export async function finalizeScoresheetWithFile(
     logger.debug('[VS] skip scoresheet finalize: scoresheet already closed')
     return
   }
+  if (!scoresheet?.__identity) {
+    logger.debug('[VS] skip scoresheet finalize: no scoresheet identity (save first)')
+    return
+  }
+  if (!fileResourceId) {
+    logger.debug('[VS] skip scoresheet finalize: no file uploaded')
+    return
+  }
 
-  // scoresheet.__identity may be undefined for games where the scoresheet
-  // entity hasn't been created yet. The server resolves it from the game identity.
   await apiClient.finalizeScoresheet(
-    scoresheet?.__identity,
+    scoresheet.__identity,
     gameId,
     scorerId,
     fileResourceId,
-    scoresheet?.scoresheetValidation?.__identity,
-    scoresheet?.isSimpleScoresheet ?? false
+    scoresheet.scoresheetValidation?.__identity,
+    scoresheet.isSimpleScoresheet ?? false
   )
 }

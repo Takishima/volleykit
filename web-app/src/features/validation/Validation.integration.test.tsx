@@ -402,7 +402,7 @@ describe('Validation Integration', () => {
         ],
       })
 
-      await mockApi.finalizeScoresheet('scoresheet-1', gameId, scorerId)
+      await mockApi.finalizeScoresheet('scoresheet-1', gameId, scorerId, 'resource-123')
 
       // Game should be marked as validated
       const validatedData = useDemoStore.getState().validatedGames[gameId]

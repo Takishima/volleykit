@@ -711,10 +711,10 @@ export const mockApi = {
   },
 
   async finalizeScoresheet(
-    scoresheetId: string | undefined,
+    scoresheetId: string,
     gameId: string,
     scorerPersonId: string,
-    fileResourceId?: string,
+    fileResourceId: string,
     _validationId?: string,
     isSimpleScoresheet: boolean = false
   ): Promise<Scoresheet> {

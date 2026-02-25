@@ -1006,13 +1006,13 @@ describe('API Client', () => {
         })
       )
 
-      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1')
+      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
 
       expect(capturedUrl).toContain('scoresheet/finalize')
       expect(capturedMethod).toBe('POST')
     })
 
-    it('includes file resource ID when provided', async () => {
+    it('includes file resource ID and sets hasFile to true', async () => {
       let capturedBody: URLSearchParams | null = null
 
       server.use(
@@ -1029,6 +1029,22 @@ describe('API Client', () => {
       expect(capturedBody?.get('scoresheet[hasFile]')).toBe('true')
     })
 
+    it('includes scoresheet identity in body', async () => {
+      let capturedBody: URLSearchParams | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
+          const text = await request.text()
+          capturedBody = new URLSearchParams(text)
+          return HttpResponse.json({})
+        })
+      )
+
+      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
+
+      expect(capturedBody?.get('scoresheet[__identity]')).toBe('ss-1')
+    })
+
     it('includes validation ID when provided', async () => {
       let capturedBody: URLSearchParams | null = null
 
@@ -1040,25 +1056,9 @@ describe('API Client', () => {
         })
       )
 
-      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', undefined, 'val-1')
+      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1', 'val-1')
 
       expect(capturedBody?.get('scoresheet[scoresheetValidation][__identity]')).toBe('val-1')
-    })
-
-    it('sets hasFile to false when no file provided', async () => {
-      let capturedBody: URLSearchParams | null = null
-
-      server.use(
-        http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
-          const text = await request.text()
-          capturedBody = new URLSearchParams(text)
-          return HttpResponse.json({})
-        })
-      )
-
-      await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1')
-
-      expect(capturedBody?.get('scoresheet[hasFile]')).toBe('false')
     })
   })
 
