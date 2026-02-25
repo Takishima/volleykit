@@ -208,7 +208,22 @@ export async function finalizeRoster(
   )
 }
 
-/** Finalizes scoresheet with file upload. */
+/** Validates scoresheet on the server and returns the validation identity. */
+export async function validateScoresheetBeforeFinalize(
+  apiClient: ReturnType<typeof getApiClient>,
+  gameId: string,
+  scorerId: string,
+  isSimpleScoresheet: boolean
+): Promise<string | undefined> {
+  const validation = await apiClient.validateScoresheet(gameId, scorerId, isSimpleScoresheet)
+  logger.debug('[VS] scoresheet validated', {
+    validationId: validation.__identity,
+    hasIssues: validation.hasValidationIssues,
+  })
+  return validation.__identity
+}
+
+/** Finalizes scoresheet with file upload. Validates on the server first. */
 export async function finalizeScoresheetWithFile(
   apiClient: ReturnType<typeof getApiClient>,
   gameId: string,
@@ -233,12 +248,23 @@ export async function finalizeScoresheetWithFile(
     return
   }
 
+  const isSimple = scoresheet.isSimpleScoresheet ?? false
+
+  // Validate scoresheet on the server to get a fresh validation identity.
+  // The volleymanager workflow requires this step before finalization.
+  const validationId = await validateScoresheetBeforeFinalize(
+    apiClient,
+    gameId,
+    scorerId,
+    isSimple
+  )
+
   await apiClient.finalizeScoresheet(
     scoresheet.__identity,
     gameId,
     scorerId,
     fileResourceId,
-    scoresheet.scoresheetValidation?.__identity,
-    scoresheet.isSimpleScoresheet ?? false
+    validationId,
+    isSimple
   )
 }

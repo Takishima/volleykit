@@ -993,6 +993,61 @@ describe('API Client', () => {
     })
   })
 
+  describe('validateScoresheet', () => {
+    it('sends POST request to validateScoresheet endpoint', async () => {
+      let capturedUrl: string | null = null
+      let capturedMethod: string | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', ({ request }) => {
+          capturedUrl = request.url
+          capturedMethod = request.method
+          return HttpResponse.json({ __identity: 'val-1', hasValidationIssues: false })
+        })
+      )
+
+      await api.validateScoresheet('game-1', 'scorer-1')
+
+      expect(capturedUrl).toContain('scoresheet/validateScoresheet')
+      expect(capturedMethod).toBe('POST')
+    })
+
+    it('includes game and scorer in request body', async () => {
+      let capturedBody: URLSearchParams | null = null
+
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', async ({ request }) => {
+          const text = await request.text()
+          capturedBody = new URLSearchParams(text)
+          return HttpResponse.json({ __identity: 'val-1', hasValidationIssues: false })
+        })
+      )
+
+      await api.validateScoresheet('game-1', 'scorer-1', true)
+
+      expect(capturedBody?.get('scoresheet[game][__identity]')).toBe('game-1')
+      expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
+      expect(capturedBody?.get('scoresheet[isSimpleScoresheet]')).toBe('true')
+    })
+
+    it('returns validation result with identity', async () => {
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', () => {
+          return HttpResponse.json({
+            __identity: 'val-123',
+            hasValidationIssues: true,
+            scoresheetValidationIssues: [{ __identity: 'issue-1' }],
+          })
+        })
+      )
+
+      const result = await api.validateScoresheet('game-1', 'scorer-1')
+
+      expect(result.__identity).toBe('val-123')
+      expect(result.hasValidationIssues).toBe(true)
+    })
+  })
+
   describe('finalizeScoresheet', () => {
     it('sends POST request to finalize endpoint', async () => {
       let capturedUrl: string | null = null

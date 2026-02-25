@@ -48,6 +48,7 @@ export type PossibleNomination = Schemas['PossibleNomination']
 export type PossibleNominationsResponse = Schemas['PossibleNominationsResponse']
 export type NominationListResponse = Schemas['NominationListResponse']
 export type Scoresheet = Schemas['Scoresheet']
+export type ScoresheetValidation = Schemas['ScoresheetValidation']
 export type FileResource = Schemas['FileResource']
 export type GameDetails = Schemas['GameDetails']
 export type PersonSearchResult = Schemas['PersonSearchResult']
@@ -703,6 +704,34 @@ export const api = {
       method,
       body,
       'text/plain;charset=UTF-8'
+    )
+  },
+
+  async validateScoresheet(
+    gameId: string,
+    scorerPersonId: string,
+    isSimpleScoresheet: boolean = false
+  ): Promise<ScoresheetValidation> {
+    const body: Record<string, unknown> = {
+      'scoresheet[game][__identity]': gameId,
+      'scoresheet[isSimpleScoresheet]': isSimpleScoresheet ? 'true' : 'false',
+      'scoresheet[scoresheetValidation]': '',
+      'scoresheet[notFoundButNominatedPersons]': '',
+      'scoresheet[emergencySubstituteReferees]': '',
+      'scoresheet[closedAt]': '',
+      'scoresheet[closedBy]': '',
+      'scoresheet[file]': '',
+      'scoresheet[hasFile]': 'false',
+    }
+
+    if (scorerPersonId) {
+      body['scoresheet[writerPerson][__identity]'] = scorerPersonId
+    }
+
+    return apiRequest<ScoresheetValidation>(
+      '/sportmanager.indoorvolleyball/api%5cscoresheet/validateScoresheet',
+      'POST',
+      body
     )
   },
 

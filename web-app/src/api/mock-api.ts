@@ -36,6 +36,7 @@ import type {
   NominationList,
   NominationListResponse,
   Scoresheet,
+  ScoresheetValidation,
   FileResource,
   GameDetails,
   PossibleNominationsResponse,
@@ -707,6 +708,20 @@ export const mockApi = {
       writerPerson: { __identity: scorerPersonId },
       isSimpleScoresheet,
       hasFile: false,
+    }
+  },
+
+  async validateScoresheet(
+    _gameId: string,
+    _scorerPersonId: string,
+    _isSimpleScoresheet: boolean = false
+  ): Promise<ScoresheetValidation> {
+    await delay(MOCK_MUTATION_DELAY_MS)
+
+    return {
+      __identity: crypto.randomUUID(),
+      hasValidationIssues: false,
+      scoresheetValidationIssues: [],
     }
   },
 

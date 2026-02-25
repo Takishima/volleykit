@@ -66,6 +66,7 @@ describe('useValidationState', () => {
   const mockGetGameWithScoresheet = vi.fn()
   const mockUpdateNominationList = vi.fn()
   const mockUpdateScoresheet = vi.fn()
+  const mockValidateScoresheet = vi.fn()
   const mockFinalizeNominationList = vi.fn()
   const mockFinalizeScoresheet = vi.fn()
   const mockUploadResource = vi.fn()
@@ -77,10 +78,17 @@ describe('useValidationState', () => {
       selector({ dataSource: 'api' } as ReturnType<typeof authStore.useAuthStore.getState>)
     )
 
+    mockValidateScoresheet.mockResolvedValue({
+      __identity: 'fresh-validation-id',
+      hasValidationIssues: false,
+      scoresheetValidationIssues: [],
+    })
+
     vi.mocked(apiClient.getApiClient).mockReturnValue({
       getGameWithScoresheet: mockGetGameWithScoresheet,
       updateNominationList: mockUpdateNominationList,
       updateScoresheet: mockUpdateScoresheet,
+      validateScoresheet: mockValidateScoresheet,
       finalizeNominationList: mockFinalizeNominationList,
       finalizeScoresheet: mockFinalizeScoresheet,
       uploadResource: mockUploadResource,

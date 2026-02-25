@@ -45,6 +45,7 @@ import type {
   NominationList,
   NominationListResponse,
   Scoresheet,
+  ScoresheetValidation,
   FileResource,
   GameDetails,
   PossibleNominationsResponse,
@@ -285,6 +286,10 @@ export const calendarApi = {
 
   async updateScoresheet(): Promise<Scoresheet> {
     throw new CalendarModeNotSupportedError('Scoresheet updates')
+  },
+
+  async validateScoresheet(): Promise<ScoresheetValidation> {
+    throw new CalendarModeNotSupportedError('Scoresheet validation')
   },
 
   async finalizeScoresheet(): Promise<Scoresheet> {
