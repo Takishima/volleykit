@@ -284,6 +284,20 @@ async function handleSuccessfulLoginResult(
     return rejectNonRefereeUser(set)
   }
 
+  // Sync server-side active association with client's selection BEFORE
+  // setting authenticated state. This ensures the API returns data for
+  // the correct association when React re-renders and queries fire after
+  // the state update. Without this ordering, queries race with the
+  // switchRoleAndAttribute call and may return data for the wrong association.
+  if (activeOccupationId) {
+    try {
+      await apiClient.switchRoleAndAttribute(activeOccupationId)
+    } catch (error) {
+      // Log but don't fail login - user can manually switch if needed
+      logger.warn('Failed to sync active association after login:', error)
+    }
+  }
+
   set({
     status: 'authenticated',
     csrfToken: result.csrfToken,
@@ -294,19 +308,6 @@ async function handleSuccessfulLoginResult(
     activeOccupationId,
     _lastAuthTimestamp: Date.now(),
   })
-
-  // Sync server-side active association with client's selection.
-  // This ensures the API returns data for the correct association,
-  // especially after logout/re-login when the server's default
-  // may differ from the client's chosen occupation.
-  if (activeOccupationId) {
-    try {
-      await apiClient.switchRoleAndAttribute(activeOccupationId)
-    } catch (error) {
-      // Log but don't fail login - user can manually switch if needed
-      logger.warn('Failed to sync active association after login:', error)
-    }
-  }
 
   // Extract calendar code from dashboard HTML if not already stored.
   // The calendar code is unique per referee and doesn't change, so we only
@@ -521,6 +522,20 @@ export const useAuthStore = create<AuthState>()(
               return rejectNonRefereeUser(set)
             }
 
+            // Sync server-side active association with client's selection BEFORE
+            // setting authenticated state. This ensures the API returns data for
+            // the correct association when React re-renders and queries fire after
+            // the state update. Without this ordering, queries race with the
+            // switchRoleAndAttribute call and may return data for the wrong association.
+            if (activeOccupationId) {
+              try {
+                await apiClient.switchRoleAndAttribute(activeOccupationId)
+              } catch (error) {
+                // Log but don't fail login - user can manually switch if needed
+                logger.warn('Failed to sync active association after login:', error)
+              }
+            }
+
             set({
               status: 'authenticated',
               csrfToken: existingCsrfToken,
@@ -531,19 +546,6 @@ export const useAuthStore = create<AuthState>()(
               activeOccupationId,
               _lastAuthTimestamp: Date.now(),
             })
-
-            // Sync server-side active association with client's selection.
-            // This ensures the API returns data for the correct association,
-            // especially after logout/re-login when the server's default
-            // may differ from the client's chosen occupation.
-            if (activeOccupationId) {
-              try {
-                await apiClient.switchRoleAndAttribute(activeOccupationId)
-              } catch (error) {
-                // Log but don't fail login - user can manually switch if needed
-                logger.warn('Failed to sync active association after login:', error)
-              }
-            }
 
             // Extract calendar code from dashboard HTML if not already stored
             if (!currentState.calendarCode && dashboardHtml) {
