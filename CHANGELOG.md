@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.19.0
+
+### Minor Changes
+
+- [#952](https://github.com/Takishima/volleykit/pull/952) [`fab1101`](https://github.com/Takishima/volleykit/commit/fab11016e497c72bf055b4eea73e3e623a57073b) Thanks [@Takishima](https://github.com/Takishima)! - Align game validation API with OpenAPI spec: make finalizeScoresheet required fields strict, add validateScoresheet call before finalization, and update NominationListFinalizeRequest spec
+
+### Patch Changes
+
+- [#955](https://github.com/Takishima/volleykit/pull/955) [`5c4360b`](https://github.com/Takishima/volleykit/commit/5c4360bcb2a78bda5c99283f29825520118b390c) Thanks [@Takishima](https://github.com/Takishima)! - Fixed compensation games not displaying on initial login by ensuring server-side association context is synced before setting authenticated state
+
+- [#953](https://github.com/Takishima/volleykit/pull/953) [`4faf6e1`](https://github.com/Takishima/volleykit/commit/4faf6e124c315256d0b5f367cb636be0121bf157) Thanks [@Takishima](https://github.com/Takishima)! - Fixed compensation tab showing empty for pending past items when paymentDone is undefined
+
 ## 1.18.1
 
 ### Patch Changes
