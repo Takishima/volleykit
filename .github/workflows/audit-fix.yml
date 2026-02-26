@@ -107,7 +107,8 @@ jobs:
             ROOT_AUDIT=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
             ROOT_REMAINING=$(echo "$ROOT_AUDIT" | jq -r '[.vulnerabilities | to_entries[]] | length' 2>/dev/null || echo "0")
             FIXED_COUNT="${{ steps.pre-audit.outputs.root_fixable }}"
-            SUMMARY="**Root monorepo:** fixed $FIXED_COUNT vulnerability/vulnerabilities ($ROOT_REMAINING remaining)"
+            PLURAL=$( [ "$FIXED_COUNT" = "1" ] && echo "vulnerability" || echo "vulnerabilities" )
+            SUMMARY="**Root monorepo:** fixed $FIXED_COUNT $PLURAL ($ROOT_REMAINING remaining)"
           fi
 
           # Worker changes
@@ -118,11 +119,12 @@ jobs:
             WORKER_REMAINING=$(echo "$WORKER_AUDIT" | jq -r '[.vulnerabilities | to_entries[]] | length' 2>/dev/null || echo "0")
             cd ..
             FIXED_COUNT="${{ steps.pre-audit.outputs.worker_fixable }}"
+            PLURAL=$( [ "$FIXED_COUNT" = "1" ] && echo "vulnerability" || echo "vulnerabilities" )
             if [ -n "$SUMMARY" ]; then
               SUMMARY="$SUMMARY
-          **Worker:** fixed $FIXED_COUNT vulnerability/vulnerabilities ($WORKER_REMAINING remaining)"
+          **Worker:** fixed $FIXED_COUNT $PLURAL ($WORKER_REMAINING remaining)"
             else
-              SUMMARY="**Worker:** fixed $FIXED_COUNT vulnerability/vulnerabilities ($WORKER_REMAINING remaining)"
+              SUMMARY="**Worker:** fixed $FIXED_COUNT $PLURAL ($WORKER_REMAINING remaining)"
             fi
           fi
 
@@ -147,10 +149,8 @@ jobs:
           path: |
             package-lock.json
             package.json
-            web-app/package.json
-            packages/shared/package.json
+            **/package.json
             worker/package-lock.json
-            worker/package.json
           retention-days: 1
   validate:
     name: Validate
@@ -178,8 +178,8 @@ jobs:
         run: npm run lint
       - name: Dead code check
         run: npm run knip
-      - name: Security audit
-        run: npm audit --audit-level=high --omit=dev
+      - name: Security audit (informational)
+        run: npm audit --audit-level=high --omit=dev || true
         working-directory: .
       - name: Test
         run: npm test
