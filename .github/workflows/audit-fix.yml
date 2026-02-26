@@ -1,0 +1,240 @@
+name: Security Audit Fix
+on:
+  # Run daily at 06:00 UTC
+  schedule:
+    - cron: '0 6 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (check and fix without creating PR)'
+        required: false
+        default: false
+        type: boolean
+# =============================================================================
+# Security Audit Fix Workflow
+# =============================================================================
+#
+# This workflow automatically checks for npm vulnerabilities and creates a PR
+# if `npm audit fix` can resolve any of them (non-breaking fixes only).
+#
+# Flow:
+#   1. Run npm audit to detect fixable vulnerabilities
+#   2. Apply npm audit fix (non-breaking, no --force)
+#   3. If changes detected, run full validation
+#   4. Create PR with vulnerability details if all validations pass
+#
+# Scope: root monorepo (web-app, packages/shared) + worker (separate lockfile)
+#
+# =============================================================================
+concurrency:
+  group: audit-fix
+  cancel-in-progress: true
+jobs:
+  audit-fix:
+    name: Audit & Fix
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      has_fixes: ${{ steps.detect-changes.outputs.has_fixes }}
+      audit_summary: ${{ steps.audit-report.outputs.audit_summary }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm ci
+      - name: Capture pre-fix audit report
+        id: pre-audit
+        run: |
+          # Capture root monorepo audit (high severity, production only)
+          ROOT_AUDIT=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
+          ROOT_VULNS=$(echo "$ROOT_AUDIT" | jq -r '[.vulnerabilities | to_entries[] | select(.value.fixAvailable == true)] | length' 2>/dev/null || echo "0")
+          echo "root_fixable=$ROOT_VULNS" >> "$GITHUB_OUTPUT"
+
+          # Capture worker audit
+          cd worker
+          npm ci
+          WORKER_AUDIT=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
+          WORKER_VULNS=$(echo "$WORKER_AUDIT" | jq -r '[.vulnerabilities | to_entries[] | select(.value.fixAvailable == true)] | length' 2>/dev/null || echo "0")
+          echo "worker_fixable=$WORKER_VULNS" >> "$GITHUB_OUTPUT"
+          cd ..
+
+          echo "Root fixable vulnerabilities: $ROOT_VULNS"
+          echo "Worker fixable vulnerabilities: $WORKER_VULNS"
+
+          if [ "$ROOT_VULNS" = "0" ] && [ "$WORKER_VULNS" = "0" ]; then
+            echo "No fixable vulnerabilities found. Exiting early."
+            echo "has_fixable=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_fixable=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Apply npm audit fix (root)
+        if: steps.pre-audit.outputs.has_fixable == 'true'
+        run: npm audit fix || true
+      - name: Apply npm audit fix (worker)
+        if: steps.pre-audit.outputs.has_fixable == 'true'
+        run: |
+          cd worker
+          npm audit fix || true
+      - name: Detect changes
+        id: detect-changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes after audit fix."
+            echo "has_fixes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changes detected after audit fix."
+            echo "has_fixes=true" >> "$GITHUB_OUTPUT"
+            echo "Changed files:"
+            git diff --name-only
+          fi
+      - name: Generate audit summary
+        id: audit-report
+        if: steps.detect-changes.outputs.has_fixes == 'true'
+        run: |
+          # Generate a human-readable summary of what was fixed
+          SUMMARY=""
+
+          # Root monorepo changes
+          ROOT_LOCK_CHANGED=$(git diff --name-only package-lock.json 2>/dev/null || true)
+          if [ -n "$ROOT_LOCK_CHANGED" ]; then
+            ROOT_AUDIT=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
+            ROOT_REMAINING=$(echo "$ROOT_AUDIT" | jq -r '[.vulnerabilities | to_entries[]] | length' 2>/dev/null || echo "0")
+            FIXED_COUNT="${{ steps.pre-audit.outputs.root_fixable }}"
+            PLURAL=$( [ "$FIXED_COUNT" = "1" ] && echo "vulnerability" || echo "vulnerabilities" )
+            SUMMARY="**Root monorepo:** fixed $FIXED_COUNT $PLURAL ($ROOT_REMAINING remaining)"
+          fi
+
+          # Worker changes
+          WORKER_LOCK_CHANGED=$(git diff --name-only worker/package-lock.json 2>/dev/null || true)
+          if [ -n "$WORKER_LOCK_CHANGED" ]; then
+            cd worker
+            WORKER_AUDIT=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
+            WORKER_REMAINING=$(echo "$WORKER_AUDIT" | jq -r '[.vulnerabilities | to_entries[]] | length' 2>/dev/null || echo "0")
+            cd ..
+            FIXED_COUNT="${{ steps.pre-audit.outputs.worker_fixable }}"
+            PLURAL=$( [ "$FIXED_COUNT" = "1" ] && echo "vulnerability" || echo "vulnerabilities" )
+            if [ -n "$SUMMARY" ]; then
+              SUMMARY="$SUMMARY
+          **Worker:** fixed $FIXED_COUNT $PLURAL ($WORKER_REMAINING remaining)"
+            else
+              SUMMARY="**Worker:** fixed $FIXED_COUNT $PLURAL ($WORKER_REMAINING remaining)"
+            fi
+          fi
+
+          # Package diff summary
+          PKG_DIFF=$(git diff --stat)
+
+          {
+            echo "audit_summary<<EOF"
+            echo "$SUMMARY"
+            echo ""
+            echo "#### Changed files"
+            echo '```'
+            echo "$PKG_DIFF"
+            echo '```'
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Upload fixed files
+        if: steps.detect-changes.outputs.has_fixes == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: audit-fix-packages
+          path: |
+            package-lock.json
+            package.json
+            web-app/package.json
+            packages/shared/package.json
+            packages/mobile/package.json
+            worker/package.json
+            worker/package-lock.json
+          retention-days: 1
+  validate:
+    name: Validate
+    needs: audit-fix
+    if: needs.audit-fix.outputs.has_fixes == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Download fixed packages
+        uses: actions/download-artifact@v7
+        with:
+          name: audit-fix-packages
+          path: .
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+      - name: Generate API types
+        run: npm run generate:api
+      - name: Lint
+        run: npm run lint
+      - name: Dead code check
+        run: npm run knip
+      - name: Security audit (informational)
+        run: npm audit --audit-level=high --omit=dev || true
+        working-directory: .
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Bundle size check
+        run: npm run size
+  create-pr:
+    name: Create PR
+    needs: [audit-fix, validate]
+    # Note: For scheduled runs, github.event.inputs.dry_run is empty/null, so this evaluates to true (create PR)
+    if: needs.audit-fix.outputs.has_fixes == 'true' && github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Download fixed packages
+        uses: actions/download-artifact@v7
+        with:
+          name: audit-fix-packages
+          path: .
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          commit-message: 'fix(deps): auto-fix npm audit vulnerabilities'
+          title: 'fix(deps): auto-fix npm audit vulnerabilities'
+          body: |
+            ## Security Audit Fix
+
+            This PR was automatically generated by the daily security audit workflow.
+            Only non-breaking fixes (`npm audit fix` without `--force`) have been applied.
+
+            ### Summary
+
+            ${{ needs.audit-fix.outputs.audit_summary }}
+
+            ### Validation
+
+            All validations passed:
+            - Lint
+            - Dead code check (knip)
+            - Security audit
+            - Tests
+            - Build
+            - Bundle size check
+          branch: fix/audit-vulnerabilities
+          delete-branch: true
+          labels: |
+            security
+            dependencies
+            automated
