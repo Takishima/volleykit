@@ -80,10 +80,6 @@ export {
 export { api } from './real-api'
 export type { ApiClient } from './real-api'
 
-// Export the API client directly for use in auth store
-// (auth store calls switchRoleAndAttribute after login to sync server state)
-export { api as apiClient } from './real-api'
-
 // Re-export DataSource from auth store for consumers that import from client
 export type { DataSource } from '@/shared/stores/auth'
 

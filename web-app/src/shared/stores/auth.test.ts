@@ -49,7 +49,7 @@ vi.mock('@/api/client', () => ({
   captureSessionToken: mockCaptureSessionToken,
   getSessionHeaders: mockGetSessionHeaders,
   getSessionToken: mockGetSessionToken,
-  apiClient: {
+  api: {
     switchRoleAndAttribute: mockSwitchRoleAndAttribute,
   },
 }))

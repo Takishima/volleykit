@@ -20,14 +20,8 @@ import {
 } from './validation'
 import { scoreNameMatch } from './search-utils'
 
-import {
-  buildFormData,
-  clearCsrfToken,
-  getCsrfToken,
-  setSessionToken,
-  getSessionToken,
-  clearSessionToken,
-} from './form-serialization'
+import { buildFormData, getCsrfToken } from './form-serialization'
+import { captureSessionToken, getSessionHeaders, clearSession } from './session'
 
 import { HttpStatus, BYTES_PER_KB } from '@/shared/utils/constants'
 import {
@@ -64,38 +58,8 @@ type ScoresheetValidation = Schemas['ScoresheetValidation']
 type FileResource = Schemas['FileResource']
 type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
 
-const API_BASE = API_BASE_URL
-
-if (!import.meta.env.DEV && !API_BASE) {
+if (!import.meta.env.DEV && !API_BASE_URL) {
   console.warn('VITE_API_PROXY_URL is not configured for production. API calls will fail.')
-}
-
-/**
- * Session token header name used by the Cloudflare Worker for iOS Safari PWA.
- */
-const SESSION_TOKEN_HEADER = 'X-Session-Token'
-
-/**
- * Capture session token from response headers.
- */
-function captureSessionToken(response: Response): void {
-  const token = response.headers.get(SESSION_TOKEN_HEADER)
-  if (token) {
-    setSessionToken(token)
-  }
-}
-
-/**
- * Get headers for sending session token with requests.
- */
-function getSessionHeaders(): Record<string, string> {
-  const token = getSessionToken()
-  return token ? { [SESSION_TOKEN_HEADER]: token } : {}
-}
-
-function clearSession() {
-  clearCsrfToken()
-  clearSessionToken()
 }
 
 // Generic fetch wrapper
@@ -105,7 +69,7 @@ async function apiRequest<T>(
   body?: Record<string, unknown>,
   requestContentType?: string
 ): Promise<T> {
-  let url = `${API_BASE}${endpoint}`
+  let url = `${API_BASE_URL}${endpoint}`
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -748,7 +712,7 @@ export const api = {
       formData.append('__csrfToken', csrfToken)
     }
 
-    const url = `${API_BASE}/sportmanager.resourcemanagement/api%5cpersistentresource/upload`
+    const url = `${API_BASE_URL}/sportmanager.resourcemanagement/api%5cpersistentresource/upload`
 
     const response = await fetch(url, {
       method: 'POST',
@@ -791,7 +755,7 @@ export const api = {
     }
 
     const response = await fetch(
-      `${API_BASE}/sportmanager.security/api%5cparty/switchRoleAndAttribute`,
+      `${API_BASE_URL}/sportmanager.security/api%5cparty/switchRoleAndAttribute`,
       {
         method: 'PUT',
         headers: {

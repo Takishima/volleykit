@@ -13,7 +13,7 @@
  */
 
 import {
-  apiClient,
+  api,
   captureSessionToken,
   CAPTURE_SESSION_TOKEN_HEADER,
   clearSession,
@@ -40,10 +40,9 @@ import {
 import type { AuthState, UserProfile } from '@/shared/stores/auth'
 import { logger } from '@/shared/utils/logger'
 
-const API_BASE = API_BASE_URL
-const LOGIN_PAGE_URL = `${API_BASE}/login`
-const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`
-const LOGOUT_URL = `${API_BASE}/logout`
+const LOGIN_PAGE_URL = `${API_BASE_URL}/login`
+const AUTH_URL = `${API_BASE_URL}/sportmanager.security/authentication/authenticate`
+const LOGOUT_URL = `${API_BASE_URL}/logout`
 const SESSION_CHECK_TIMEOUT_MS = 10_000
 /** Grace period after login during which session checks are skipped */
 const SESSION_CHECK_GRACE_PERIOD_MS = 5_000
@@ -151,7 +150,7 @@ async function handleSuccessfulLoginResult(
 
   if (activeOccupationId) {
     try {
-      await apiClient.switchRoleAndAttribute(activeOccupationId)
+      await api.switchRoleAndAttribute(activeOccupationId)
     } catch (error) {
       logger.warn('Failed to sync active association after login:', error)
     }
@@ -186,7 +185,7 @@ async function ensureSessionEstablished(): Promise<void> {
     return
   }
 
-  const response = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
+  const response = await fetch(`${API_BASE_URL}/sportmanager.volleyball/main/dashboard`, {
     credentials: 'include',
     cache: 'no-store',
     redirect: 'manual',
@@ -288,7 +287,7 @@ export async function performApiLogin(
 
   if (existingCsrfToken) {
     // Already logged in - fetch dashboard to get associations
-    const dashboardResponse = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
+    const dashboardResponse = await fetch(`${API_BASE_URL}/sportmanager.volleyball/main/dashboard`, {
       credentials: 'include',
       cache: 'no-store',
       headers: getSessionHeaders(),
@@ -318,7 +317,7 @@ export async function performApiLogin(
 
     if (activeOccupationId) {
       try {
-        await apiClient.switchRoleAndAttribute(activeOccupationId)
+        await api.switchRoleAndAttribute(activeOccupationId)
       } catch (error) {
         logger.warn('Failed to sync active association after login:', error)
       }
@@ -406,7 +405,7 @@ export async function performApiSessionCheck(
       : timeoutController.signal
 
     try {
-      const response = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
+      const response = await fetch(`${API_BASE_URL}/sportmanager.volleyball/main/dashboard`, {
         credentials: 'include',
         redirect: 'follow',
         signal: fetchSignal,
