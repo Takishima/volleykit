@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "volleykit",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -51,7 +50,9 @@
           "icon": "./assets/notification-icon.png",
           "color": "#0ea5e9"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
