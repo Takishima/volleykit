@@ -14,6 +14,7 @@ import { useEffect, useRef } from 'react'
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useActionQueueStore, initializeActionQueueStore } from '@/shared/stores/action-queue'
+import { useAuthStore } from '@/shared/stores/auth'
 import { useToastStore } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
 
@@ -27,6 +28,7 @@ const log = createLogger('PendingActionsIndicator')
 function useAutoSync() {
   const isOnline = useNetworkStatus()
   const wasOnlineRef = useRef(isOnline)
+  const dataSource = useAuthStore((state) => state.dataSource)
   const { sync, pendingCount, isSyncing } = useActionQueueStore()
   const { addToast } = useToastStore()
   const { t, tInterpolate } = useTranslation()
@@ -41,8 +43,8 @@ function useAutoSync() {
     const wasOnline = wasOnlineRef.current
     wasOnlineRef.current = isOnline
 
-    // Detect transition from offline to online
-    if (!wasOnline && isOnline && pendingCount > 0) {
+    // Detect transition from offline to online (only sync in API mode)
+    if (!wasOnline && isOnline && pendingCount > 0 && dataSource === 'api') {
       log.info('Connectivity restored, syncing pending actions:', { count: pendingCount })
 
       sync()
@@ -72,7 +74,7 @@ function useAutoSync() {
           log.error('Failed to sync pending actions:', error)
         })
     }
-  }, [isOnline, pendingCount, sync, addToast, t, tInterpolate])
+  }, [isOnline, pendingCount, dataSource, sync, addToast, t, tInterpolate])
 
   return { isSyncing }
 }

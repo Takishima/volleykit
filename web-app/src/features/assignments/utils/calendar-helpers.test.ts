@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
 
+vi.mock('@/api/constants', () => ({
+  API_BASE_URL: 'https://api.example.com',
+}))
+
 import {
   extractCalendarCode,
   validateCalendarCode,
@@ -193,12 +197,10 @@ describe('validateCalendarCode', () => {
 
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch)
-    vi.stubEnv('VITE_API_PROXY_URL', 'https://api.example.com')
   })
 
   afterEach(() => {
     mockFetch.mockReset()
-    vi.unstubAllEnvs()
   })
 
   describe('format validation', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
 import { server } from '@/test/msw/server'
-import { setCsrfToken, clearSession } from '@/api/client'
+import { setCsrfToken, clearSession } from '@/api/session'
 
 import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from './auth'
 
@@ -17,20 +17,39 @@ afterAll(() => {
 
 // Mock the API client
 // Use vi.hoisted to ensure the mock function is defined before vi.mock hoists
-const { mockSwitchRoleAndAttribute } = vi.hoisted(() => ({
+const {
+  mockSwitchRoleAndAttribute,
+  mockSetCsrfToken,
+  mockClearSession,
+  mockCaptureSessionToken,
+  mockGetSessionHeaders,
+  mockGetSessionToken,
+} = vi.hoisted(() => ({
   mockSwitchRoleAndAttribute: vi.fn(),
+  mockSetCsrfToken: vi.fn(),
+  mockClearSession: vi.fn(),
+  mockCaptureSessionToken: vi.fn(),
+  mockGetSessionHeaders: vi.fn(),
+  mockGetSessionToken: vi.fn(),
 }))
 
 // Track mock session token state for tests
 let mockSessionToken: string | null = null
 
+// Share the same mock functions between @/api/session and @/api/client
+// so assertions work regardless of which module the caller imports from.
+vi.mock('@/api/session', () => ({
+  setCsrfToken: mockSetCsrfToken,
+  clearSession: mockClearSession,
+}))
+
 vi.mock('@/api/client', () => ({
-  setCsrfToken: vi.fn(),
-  clearSession: vi.fn(),
-  captureSessionToken: vi.fn(),
-  getSessionHeaders: vi.fn(() => (mockSessionToken ? { 'X-Session-Token': mockSessionToken } : {})),
-  getSessionToken: vi.fn(() => mockSessionToken),
-  apiClient: {
+  setCsrfToken: mockSetCsrfToken,
+  clearSession: mockClearSession,
+  captureSessionToken: mockCaptureSessionToken,
+  getSessionHeaders: mockGetSessionHeaders,
+  getSessionToken: mockGetSessionToken,
+  api: {
     switchRoleAndAttribute: mockSwitchRoleAndAttribute,
   },
 }))
@@ -237,6 +256,11 @@ describe('useAuthStore', () => {
     // Default: session token exists so ensureSessionEstablished returns early
     // This prevents extra fetch calls in most tests
     mockSessionToken = 'existing-session-token'
+    // Configure session header/token mocks to read from mockSessionToken
+    mockGetSessionHeaders.mockImplementation(() =>
+      mockSessionToken ? { 'X-Session-Token': mockSessionToken } : {}
+    )
+    mockGetSessionToken.mockImplementation(() => mockSessionToken)
   })
 
   afterEach(() => {

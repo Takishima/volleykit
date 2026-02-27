@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { API_BASE_URL } from '@/api/constants'
 import { MS_PER_HOUR } from '@/shared/utils/constants'
 import { logger } from '@/shared/utils/logger'
 
@@ -175,7 +176,7 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
     // Only clear session if the CORS proxy worker was updated (auth logic may have changed).
     // This allows web-app-only updates without forcing users to re-login.
     let shouldClearSession = false
-    const apiProxyUrl = import.meta.env.VITE_API_PROXY_URL
+    const apiProxyUrl = API_BASE_URL
 
     if (apiProxyUrl) {
       try {

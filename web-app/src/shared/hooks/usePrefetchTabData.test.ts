@@ -78,7 +78,7 @@ describe('prefetchAllTabData', () => {
       seasonEndDate: '2025-05-31',
     })
 
-    await prefetchAllTabData(queryClient, 'occupation-123')
+    await prefetchAllTabData(queryClient, 'occupation-123', api)
 
     expect(api.searchAssignments).toHaveBeenCalledTimes(1)
     expect(api.searchCompensations).toHaveBeenCalledTimes(1)
@@ -107,7 +107,7 @@ describe('prefetchAllTabData', () => {
 
     const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery')
 
-    await prefetchAllTabData(queryClient, 'occupation-456')
+    await prefetchAllTabData(queryClient, 'occupation-456', api)
 
     // Verify prefetchQuery was called 5 times
     expect(prefetchSpy).toHaveBeenCalledTimes(5)
@@ -154,7 +154,7 @@ describe('prefetchAllTabData', () => {
     vi.mocked(api.getActiveSeason).mockResolvedValue({})
 
     // Should not throw, failures are caught internally
-    await expect(prefetchAllTabData(queryClient, 'occupation-123')).resolves.toBeUndefined()
+    await expect(prefetchAllTabData(queryClient, 'occupation-123', api)).resolves.toBeUndefined()
 
     // All APIs should have been called despite first failure
     expect(api.searchAssignments).toHaveBeenCalled()
@@ -174,7 +174,7 @@ describe('prefetchAllTabData', () => {
     vi.mocked(api.getActiveSeason).mockRejectedValue(new Error('Error 5'))
 
     // Should not throw
-    await expect(prefetchAllTabData(queryClient, 'occupation-123')).resolves.toBeUndefined()
+    await expect(prefetchAllTabData(queryClient, 'occupation-123', api)).resolves.toBeUndefined()
   })
 
   it('uses correct search configurations for assignments', async () => {
@@ -195,7 +195,7 @@ describe('prefetchAllTabData', () => {
     vi.mocked(api.getAssociationSettings).mockResolvedValue({})
     vi.mocked(api.getActiveSeason).mockResolvedValue({})
 
-    await prefetchAllTabData(queryClient, 'occupation-123')
+    await prefetchAllTabData(queryClient, 'occupation-123', api)
 
     // Verify assignments config has correct structure
     expect(api.searchAssignments).toHaveBeenCalledWith(
@@ -239,7 +239,7 @@ describe('prefetchAllTabData', () => {
     vi.mocked(api.getAssociationSettings).mockResolvedValue({})
     vi.mocked(api.getActiveSeason).mockResolvedValue({})
 
-    await prefetchAllTabData(queryClient, 'occupation-123')
+    await prefetchAllTabData(queryClient, 'occupation-123', api)
 
     // Verify compensations config - no date filter, sorted descending
     expect(api.searchCompensations).toHaveBeenCalledWith(
@@ -275,7 +275,7 @@ describe('prefetchAllTabData', () => {
     vi.mocked(api.getAssociationSettings).mockResolvedValue({})
     vi.mocked(api.getActiveSeason).mockResolvedValue({})
 
-    await prefetchAllTabData(queryClient, 'occupation-123')
+    await prefetchAllTabData(queryClient, 'occupation-123', api)
 
     // Verify exchanges config has date filter and ascending order
     expect(api.searchExchanges).toHaveBeenCalledWith(
@@ -323,7 +323,7 @@ describe('prefetchAllTabData', () => {
       seasonStartDate: '2024-09-01',
     })
 
-    await prefetchAllTabData(queryClient, 'occupation-123')
+    await prefetchAllTabData(queryClient, 'occupation-123', api)
 
     // Verify data is cached - getQueriesData returns cached queries
     const cachedQueries = queryClient.getQueriesData({ queryKey: ['assignments'] })

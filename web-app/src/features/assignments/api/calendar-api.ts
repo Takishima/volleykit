@@ -14,15 +14,13 @@
  * - Network errors: Throws an error that should be handled by the caller
  */
 
+import { API_BASE_URL } from '@/api/constants'
 import { HttpStatus } from '@/shared/utils/constants'
 
 import { parseCalendarFeed, type CalendarAssignment, type ParseResult } from './ical'
 
 // Re-export types for consumers
 export type { CalendarAssignment, ParseResult } from './ical'
-
-/** Base URL for API requests - uses proxy URL if set */
-const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || ''
 
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/

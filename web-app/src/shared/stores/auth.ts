@@ -1,33 +1,20 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import {
-  apiClient,
-  captureSessionToken,
-  CAPTURE_SESSION_TOKEN_HEADER,
-  clearSession,
-  getSessionHeaders,
-  getSessionToken,
-  setCsrfToken,
-} from '@/api/client'
+import { clearSession, setCsrfToken } from '@/api/session'
 import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
 import {
-  extractActivePartyFromHtml,
   hasMultipleAssociations,
   type AttributeValue,
   type RoleDefinition,
 } from '@/features/auth/utils/active-party-parser'
 import {
-  extractLoginFormFields,
-  extractCsrfTokenFromPage,
-  submitLoginCredentials,
-  isDashboardHtmlContent,
-} from '@/features/auth/utils/auth-parsers'
-import { extractCalendarCodeFromHtml } from '@/features/auth/utils/calendar-code-extractor'
-import {
+  performApiLogin,
+  performApiLogout,
+  performApiSessionCheck,
   filterRefereeOccupations,
-  parseOccupationsFromActiveParty,
-} from '@/features/auth/utils/parseOccupations'
+  SESSION_CHECK_GRACE_PERIOD_MS,
+} from '@/features/auth/utils/api-auth-flow'
 import { logger } from '@/shared/utils/logger'
 
 import { useDemoStore } from './demo'
@@ -86,7 +73,7 @@ export interface Occupation {
   clubName?: string
 }
 
-interface AuthState {
+export interface AuthState {
   status: AuthStatus
   user: UserProfile | null
   error: string | null
@@ -133,14 +120,6 @@ interface AuthState {
   getAuthMode: () => 'full' | 'calendar' | 'demo' | 'none'
 }
 
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
-const LOGIN_PAGE_URL = `${API_BASE}/login`
-const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`
-const LOGOUT_URL = `${API_BASE}/logout`
-const SESSION_CHECK_TIMEOUT_MS = 10_000
-/** Grace period after login during which session checks are skipped */
-const SESSION_CHECK_GRACE_PERIOD_MS = 5_000
-
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
 
@@ -151,318 +130,8 @@ const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
  */
 export const CALENDAR_ASSOCIATION = 'CAL'
 
-/**
- * Error key for users without a referee role.
- * This key is used by LoginPage to display a translated error message.
- * The actual translations are in i18n/locales under auth.noRefereeRole.
- */
-export const NO_REFEREE_ROLE_ERROR_KEY = 'auth.noRefereeRole'
-
-/**
- * Rejects a login attempt for users without a referee role.
- * Invalidates the server session and clears local state.
- *
- * @returns false to indicate login was rejected
- */
-async function rejectNonRefereeUser(set: (state: Partial<AuthState>) => void): Promise<false> {
-  // Invalidate the server session
-  try {
-    await fetch(LOGOUT_URL, { credentials: 'include', redirect: 'manual' })
-  } catch {
-    // Ignore logout errors - we're rejecting the login anyway
-  }
-  clearSession()
-  set({ status: 'error', error: NO_REFEREE_ROLE_ERROR_KEY })
-  return false
-}
-
-/**
- * Extracts the calendar code from dashboard HTML.
- *
- * The dashboard HTML contains the calendar code (uniqueId) embedded in the
- * active party JSON data. This is unique per referee and doesn't change.
- *
- * @param dashboardHtml - The dashboard HTML content
- * @returns The 6-character calendar code, or null if not found
- */
-function extractCalendarCodeFromDashboard(dashboardHtml: string): string | null {
-  const code = extractCalendarCodeFromHtml(dashboardHtml)
-  if (code) {
-    logger.info('Extracted calendar code from dashboard HTML')
-  } else {
-    logger.info('Calendar code not found in dashboard HTML')
-  }
-  return code
-}
-
-/**
- * Derives user occupations and active occupation ID from active party data.
- * Used during login and session restoration to populate the association dropdown.
- *
- * Uses groupedEligibleAttributeValues as the primary source for associations.
- * Falls back to eligibleAttributeValues if groupedEligibleAttributeValues is empty,
- * which can happen on some pages or with certain user configurations.
- *
- * IMPORTANT: Preserves existing occupations if new parsing returns empty.
- * This prevents the association dropdown from disappearing when loading a page
- * that doesn't have complete activeParty data embedded in the HTML.
- */
-function deriveUserWithOccupations(
-  activeParty: {
-    __identity?: string
-    groupedEligibleAttributeValues?: AttributeValue[] | null
-    eligibleAttributeValues?: AttributeValue[] | null
-  } | null,
-  currentUser: UserProfile | null,
-  currentActiveOccupationId: string | null
-): { user: UserProfile; activeOccupationId: string | null } {
-  // Use groupedEligibleAttributeValues first, fall back to eligibleAttributeValues
-  const attributeValues = activeParty?.groupedEligibleAttributeValues?.length
-    ? activeParty.groupedEligibleAttributeValues
-    : (activeParty?.eligibleAttributeValues ?? null)
-
-  const parsedOccupations = parseOccupationsFromActiveParty(attributeValues)
-
-  // Preserve existing occupations if parsing returns empty
-  // This prevents the dropdown from disappearing when navigating to pages
-  // that don't have complete activeParty data
-  const occupations =
-    parsedOccupations.length > 0 ? parsedOccupations : (currentUser?.occupations ?? [])
-
-  // Validate that the persisted activeOccupationId exists in the new occupations list.
-  // This prevents stale occupation IDs from previous sessions/users from being used,
-  // which would cause the wrong association to be selected after login.
-  const isPersistedIdValid =
-    currentActiveOccupationId !== null &&
-    occupations.some((occ) => occ.id === currentActiveOccupationId)
-  const activeOccupationId = isPersistedIdValid
-    ? currentActiveOccupationId
-    : (occupations[0]?.id ?? null)
-
-  // Use the person's __identity from activeParty as the user id
-  // This matches the submittedByPerson.__identity format used in exchanges
-  const userId = activeParty?.__identity ?? currentUser?.id ?? 'user'
-
-  const user = currentUser
-    ? { ...currentUser, id: userId, occupations }
-    : {
-        id: userId,
-        firstName: '',
-        lastName: '',
-        occupations,
-      }
-
-  return { user, activeOccupationId }
-}
-
-/**
- * Processes a successful login result: extracts user data, validates referee role,
- * and syncs the active association with the server.
- *
- * This helper function reduces code duplication between the main login flow
- * and the retry flow for first-login session token issues.
- *
- * @returns true if login completed successfully, false if rejected (non-referee)
- */
-async function handleSuccessfulLoginResult(
-  result: { csrfToken: string; dashboardHtml: string },
-  get: () => AuthState,
-  set: (state: Partial<AuthState>) => void
-): Promise<boolean> {
-  const activeParty = extractActivePartyFromHtml(result.dashboardHtml)
-  setCsrfToken(result.csrfToken)
-
-  const currentState = get()
-  const { user, activeOccupationId } = deriveUserWithOccupations(
-    activeParty,
-    currentState.user,
-    currentState.activeOccupationId
-  )
-
-  // Reject users without referee role - this app is for referees only
-  if (user.occupations.length === 0) {
-    return rejectNonRefereeUser(set)
-  }
-
-  // Sync server-side active association with client's selection BEFORE
-  // setting authenticated state. This ensures the API returns data for
-  // the correct association when React re-renders and queries fire after
-  // the state update. Without this ordering, queries race with the
-  // switchRoleAndAttribute call and may return data for the wrong association.
-  if (activeOccupationId) {
-    try {
-      await apiClient.switchRoleAndAttribute(activeOccupationId)
-    } catch (error) {
-      // Log but don't fail login - user can manually switch if needed
-      logger.warn('Failed to sync active association after login:', error)
-    }
-  }
-
-  set({
-    status: 'authenticated',
-    csrfToken: result.csrfToken,
-    eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
-    groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-    eligibleRoles: activeParty?.eligibleRoles ?? null,
-    user,
-    activeOccupationId,
-    _lastAuthTimestamp: Date.now(),
-  })
-
-  // Extract calendar code from dashboard HTML if not already stored.
-  // The calendar code is unique per referee and doesn't change, so we only
-  // need to extract it once and persist it across sessions in localStorage.
-  if (!get().calendarCode) {
-    const code = extractCalendarCodeFromDashboard(result.dashboardHtml)
-    if (code) {
-      set({ calendarCode: code })
-    }
-  }
-
-  return true
-}
-
-/**
- * Ensures a session is established before fetching the login page.
- *
- * The Neos Flow framework may not create a session on GET /login, but requires
- * the form's __trustedProperties to match the session state when submitting.
- * If no session exists when the form is generated, but one is created during
- * authentication, the HMAC validation fails.
- *
- * This function proactively establishes a session by fetching an authenticated
- * endpoint (which triggers session creation even for unauthenticated users).
- *
- * iOS Safari PWA fix: Uses X-Capture-Session-Token header to request the proxy
- * to convert redirect responses to JSON. This is necessary because fetch with
- * `redirect: 'manual'` returns an opaque redirect for cross-origin requests,
- * hiding all response headers including the session token.
- */
-async function ensureSessionEstablished(): Promise<void> {
-  if (getSessionToken()) {
-    return // Already have a session
-  }
-
-  // Fetch the dashboard endpoint to trigger session creation.
-  // The Neos Flow framework creates a session when handling authenticated routes,
-  // even if the user is redirected to login.
-  //
-  // We send X-Capture-Session-Token: true to request the proxy to convert
-  // redirect responses to JSON, which allows us to capture the session token
-  // from the headers (redirect responses with redirect: 'manual' would otherwise
-  // be opaque with inaccessible headers in iOS Safari PWA).
-  const response = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
-    credentials: 'include',
-    cache: 'no-store',
-    redirect: 'manual',
-    headers: {
-      ...getSessionHeaders(),
-      [CAPTURE_SESSION_TOKEN_HEADER]: 'true',
-    },
-  })
-
-  // Capture session token from response headers.
-  // The proxy converts redirects with session tokens to JSON when we send
-  // X-Capture-Session-Token: true, so the headers are accessible.
-  captureSessionToken(response)
-
-  // If the response is JSON (proxy converted a redirect), parse it.
-  // The session token is also in the X-Session-Token header, but we capture
-  // it above. The JSON response is mainly informational.
-  const contentType = response.headers.get('Content-Type')
-  if (contentType?.includes('application/json')) {
-    try {
-      const data = (await response.json()) as {
-        sessionCaptured?: boolean
-        redirectUrl?: string
-      }
-      logger.info('Session establishment response:', {
-        sessionCaptured: data.sessionCaptured,
-        hasToken: !!getSessionToken(),
-      })
-    } catch {
-      // JSON parsing failed, continue with fallback
-    }
-  }
-
-  // If we still don't have a token, try fetching the login page itself.
-  // Some server configurations may set the session cookie on the login page.
-  if (!getSessionToken()) {
-    const loginResponse = await fetch(LOGIN_PAGE_URL, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: getSessionHeaders(),
-    })
-    captureSessionToken(loginResponse)
-  }
-}
-
-/**
- * Fetches the login page with iOS Safari PWA session token handling.
- * Ensures a session is established before fetching to guarantee the form's
- * __trustedProperties is generated correctly for the session state.
- *
- * @returns The login page response with form fields for the established session
- * @throws Error if fetching the login page fails
- */
-async function fetchLoginPageWithSessionHandling(): Promise<Response> {
-  const hadTokenBeforeRequest = !!getSessionToken()
-
-  // Proactively establish a session before fetching the login page.
-  // This ensures the form's __trustedProperties matches the session state
-  // when we submit credentials.
-  if (!hadTokenBeforeRequest) {
-    await ensureSessionEstablished()
-  }
-
-  // cache: "no-store" is critical for iOS Safari PWA - prevents using stale cached cookies
-  // See: https://developer.apple.com/forums/thread/89050
-  const response = await fetch(LOGIN_PAGE_URL, {
-    credentials: 'include',
-    cache: 'no-store',
-    headers: getSessionHeaders(),
-  })
-
-  if (!response.ok) {
-    throw new Error('Failed to load login page')
-  }
-
-  captureSessionToken(response)
-
-  return response
-}
-
-/**
- * Checks if the response URL indicates the login page.
- * Used to detect stale sessions that redirect to login.
- */
-function isResponseUrlLoginPage(url: string | undefined): boolean {
-  if (!url) return false
-  const pathname = new URL(url).pathname.toLowerCase()
-  return pathname === '/login' || pathname.endsWith('/login')
-}
-
-/**
- * Checks if HTML content represents a login page.
- * Used as fallback for PWA standalone mode where response.url may not update.
- *
- * Note: This heuristic is intentionally permissive to catch various login page
- * implementations. It checks for common login form indicators rather than
- * exact matches.
- */
-function isLoginPageHtmlContent(html: string): boolean {
-  // A page is a login page if it has login form elements AND is not a dashboard
-  // (dashboard pages may have login-related strings in navigation but aren't login pages)
-  const hasLoginFormIndicators =
-    html.includes('action="/login"') ||
-    (html.includes('id="username"') && html.includes('id="password"'))
-
-  // Don't misidentify dashboard as login page in iOS PWA mode
-  // Dashboard pages have CSRF tokens and authenticated content
-  const hasDashboardIndicators = isDashboardHtmlContent(html)
-
-  return hasLoginFormIndicators && !hasDashboardIndicators
-}
+// Re-export for consumers that import from auth store
+export { NO_REFEREE_ROLE_ERROR_KEY } from '@/features/auth/utils/api-auth-flow'
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -484,97 +153,8 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (username: string, password: string): Promise<boolean> => {
         set({ status: 'loading', error: null, lockedUntil: null })
-
         try {
-          const loginPageResponse = await fetchLoginPageWithSessionHandling()
-          const html = await loginPageResponse.text()
-          const existingCsrfToken = extractCsrfTokenFromPage(html)
-
-          if (existingCsrfToken) {
-            // Already logged in - the login page redirect doesn't contain activeParty data
-            // We need to fetch the dashboard explicitly to get the user's associations
-            const dashboardResponse = await fetch(
-              `${API_BASE}/sportmanager.volleyball/main/dashboard`,
-              { credentials: 'include', cache: 'no-store', headers: getSessionHeaders() }
-            )
-
-            // Capture session token from response headers (iOS Safari PWA)
-            captureSessionToken(dashboardResponse)
-
-            let activeParty = null
-            let dashboardHtml = ''
-            if (dashboardResponse.ok) {
-              dashboardHtml = await dashboardResponse.text()
-              activeParty = extractActivePartyFromHtml(dashboardHtml)
-            }
-
-            setCsrfToken(existingCsrfToken)
-
-            const currentState = get()
-            const { user, activeOccupationId } = deriveUserWithOccupations(
-              activeParty,
-              currentState.user,
-              currentState.activeOccupationId
-            )
-
-            // Reject users without referee role - this app is for referees only
-            if (user.occupations.length === 0) {
-              return rejectNonRefereeUser(set)
-            }
-
-            // Sync server-side active association with client's selection BEFORE
-            // setting authenticated state. This ensures the API returns data for
-            // the correct association when React re-renders and queries fire after
-            // the state update. Without this ordering, queries race with the
-            // switchRoleAndAttribute call and may return data for the wrong association.
-            if (activeOccupationId) {
-              try {
-                await apiClient.switchRoleAndAttribute(activeOccupationId)
-              } catch (error) {
-                // Log but don't fail login - user can manually switch if needed
-                logger.warn('Failed to sync active association after login:', error)
-              }
-            }
-
-            set({
-              status: 'authenticated',
-              csrfToken: existingCsrfToken,
-              eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
-              groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-              eligibleRoles: activeParty?.eligibleRoles ?? null,
-              user,
-              activeOccupationId,
-              _lastAuthTimestamp: Date.now(),
-            })
-
-            // Extract calendar code from dashboard HTML if not already stored
-            if (!currentState.calendarCode && dashboardHtml) {
-              const code = extractCalendarCodeFromDashboard(dashboardHtml)
-              if (code) {
-                set({ calendarCode: code })
-              }
-            }
-
-            return true
-          }
-
-          const formFields = extractLoginFormFields(html)
-          if (!formFields) {
-            throw new Error('Could not extract form fields from login page')
-          }
-
-          const result = await submitLoginCredentials(AUTH_URL, username, password, formFields)
-
-          if (result.success) {
-            return handleSuccessfulLoginResult(result, get, set)
-          }
-
-          set({
-            status: 'error',
-            error: result.error,
-            lockedUntil: result.lockedUntil ?? null,
-          })
-          return false
+          return await performApiLogin(username, password, get, set)
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Login failed'
           set({ status: 'error', error: message, lockedUntil: null })
@@ -587,14 +167,7 @@ export const useAuthStore = create<AuthState>()(
 
         // Only call server logout for API mode
         if (currentDataSource === 'api') {
-          try {
-            await fetch(LOGOUT_URL, {
-              credentials: 'include',
-              redirect: 'manual',
-            })
-          } catch (error) {
-            logger.error('Logout request failed:', error)
-          }
+          await performApiLogout()
         }
 
         if (currentDataSource === 'demo') {
@@ -667,139 +240,15 @@ export const useAuthStore = create<AuthState>()(
           return existingPromise
         }
 
-        let resolvePromise!: (value: boolean) => void
-        const promise = new Promise<boolean>((resolve) => {
-          resolvePromise = resolve
-        })
-
-        set({ _checkSessionPromise: promise })
-        ;(async () => {
-          // Helper to handle invalid session - clears state and resolves false
-          const handleInvalidSession = (logMessage: string): void => {
-            logger.info(logMessage)
-            clearSession()
-            set({ status: 'idle', user: null, csrfToken: null, _lastAuthTimestamp: null })
-            resolvePromise(false)
-          }
-
+        const promise = (async () => {
           try {
-            const timeoutController = new AbortController()
-            const timeoutId = setTimeout(() => timeoutController.abort(), SESSION_CHECK_TIMEOUT_MS)
-
-            // Combine timeout signal with external signal if provided
-            const fetchSignal = signal
-              ? AbortSignal.any([timeoutController.signal, signal])
-              : timeoutController.signal
-
-            try {
-              const response = await fetch(`${API_BASE}/sportmanager.volleyball/main/dashboard`, {
-                credentials: 'include',
-                redirect: 'follow',
-                signal: fetchSignal,
-                cache: 'no-store',
-                headers: getSessionHeaders(),
-              })
-
-              clearTimeout(timeoutId)
-
-              // Capture session token from response headers (iOS Safari PWA)
-              captureSessionToken(response)
-
-              // Detect stale session: if the server redirected us to the login page,
-              // the session is invalid. This commonly happens when session cookies
-              // expire but the app still has persisted auth state.
-              if (isResponseUrlLoginPage(response.url)) {
-                handleInvalidSession('Session check: redirected to login page, session is stale')
-                return
-              }
-
-              // Read response body once - needed for PWA fallback and dashboard processing
-              const html = response.ok ? await response.text() : ''
-
-              // iOS PWA standalone mode fix: In iOS Safari PWA standalone mode,
-              // both response.url and response.redirected may be unreliable.
-              // Use content-based detection as the most reliable fallback.
-              // Check if the response is actually a login page regardless of redirect status.
-              if (isLoginPageHtmlContent(html)) {
-                handleInvalidSession(
-                  'Session check: detected login page via content analysis, session is stale'
-                )
-                return
-              }
-
-              if (response.ok) {
-                const csrfToken = extractCsrfTokenFromPage(html)
-                const currentState = get()
-
-                // If we can't find a CSRF token and don't have one stored,
-                // the session is invalid (dashboard pages always have CSRF tokens).
-                if (!csrfToken && !currentState.csrfToken) {
-                  handleInvalidSession('Session check: no CSRF token found, session is invalid')
-                  return
-                }
-
-                const activeParty = extractActivePartyFromHtml(html)
-                const { user, activeOccupationId } = deriveUserWithOccupations(
-                  activeParty,
-                  currentState.user,
-                  currentState.activeOccupationId
-                )
-
-                if (csrfToken) {
-                  setCsrfToken(csrfToken)
-                }
-
-                set({
-                  status: 'authenticated',
-                  csrfToken: csrfToken ?? currentState.csrfToken,
-                  // calendarCode is preserved from localStorage - no extraction needed
-                  // Preserve existing attribute values if new values are missing
-                  // This prevents the association dropdown from disappearing when
-                  // checkSession fetches a page without activeParty data
-                  eligibleAttributeValues:
-                    activeParty?.eligibleAttributeValues ?? currentState.eligibleAttributeValues,
-                  groupedEligibleAttributeValues:
-                    activeParty?.groupedEligibleAttributeValues ??
-                    currentState.groupedEligibleAttributeValues,
-                  eligibleRoles: activeParty?.eligibleRoles ?? currentState.eligibleRoles,
-                  user,
-                  activeOccupationId,
-                  _lastAuthTimestamp: Date.now(),
-                })
-                resolvePromise(true)
-                return
-              }
-
-              set({ status: 'idle', user: null })
-              resolvePromise(false)
-            } catch (error) {
-              clearTimeout(timeoutId)
-
-              if (error instanceof Error && error.name === 'AbortError') {
-                // Check if this was an external abort (not timeout)
-                if (signal?.aborted) {
-                  // External abort - don't log, don't update state
-                  // Let the caller handle it via the wrapped promise
-                  resolvePromise(false)
-                  return
-                }
-                // Timeout abort
-                logger.error('Session check timed out')
-                set({ status: 'idle', user: null })
-                resolvePromise(false)
-                return
-              }
-
-              throw error
-            }
-          } catch (error) {
-            logger.error('Session check failed:', error)
-            set({ status: 'idle', user: null })
-            resolvePromise(false)
+            return await performApiSessionCheck(get, set, signal)
           } finally {
             set({ _checkSessionPromise: null })
           }
         })()
+
+        set({ _checkSessionPromise: promise })
 
         // If caller provided a signal, wrap the promise to handle abortion
         if (signal) {

@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { api, type AssociationSettings, type Season } from '@/api/client'
+import { getApiClient, type AssociationSettings, type Season } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { SETTINGS_STALE_TIME_MS, SEASON_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -16,10 +16,11 @@ export function useAssociationSettings(): UseQueryResult<AssociationSettings, Er
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
+  const apiClient = getApiClient(dataSource)
 
   return useQuery({
     queryKey: queryKeys.settings.association(activeOccupationId),
-    queryFn: () => api.getAssociationSettings(),
+    queryFn: () => apiClient.getAssociationSettings(),
     staleTime: SETTINGS_STALE_TIME_MS,
     enabled: !isDemoMode,
   })
@@ -36,10 +37,11 @@ export function useActiveSeason(): UseQueryResult<Season, Error> {
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
+  const apiClient = getApiClient(dataSource)
 
   return useQuery({
     queryKey: queryKeys.seasons.active(activeOccupationId),
-    queryFn: () => api.getActiveSeason(),
+    queryFn: () => apiClient.getActiveSeason(),
     staleTime: SEASON_STALE_TIME_MS,
     enabled: !isDemoMode,
   })

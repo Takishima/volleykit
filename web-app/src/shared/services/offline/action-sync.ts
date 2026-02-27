@@ -8,8 +8,8 @@
  * - Session expiry detection
  */
 
-import { api } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { api } from '@/api/real-api'
 import { createLogger } from '@/shared/utils/logger'
 
 import {
