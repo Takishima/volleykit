@@ -12,14 +12,6 @@ import { mockApi } from './mock-api'
 import { calendarApi } from '@/features/assignments/api/calendar-client'
 import { api } from './real-api'
 
-import {
-  setCsrfToken as setToken,
-  clearCsrfToken,
-  getSessionToken,
-  setSessionToken,
-  clearSessionToken,
-} from './form-serialization'
-
 // Re-export schema types
 export type Schemas = components['schemas']
 export type Assignment = Schemas['Assignment']
@@ -74,53 +66,15 @@ export interface PropertyOrdering {
   isSetByUser?: boolean
 }
 
-// CSRF token management - re-export for external use
-export function setCsrfToken(token: string | null) {
-  setToken(token)
-}
-
-/**
- * Session token header name used by the Cloudflare Worker for iOS Safari PWA.
- * The worker sends session cookies via this header to bypass ITP cookie blocking.
- */
-const SESSION_TOKEN_HEADER = 'X-Session-Token'
-
-/**
- * Header to request session token capture from redirect responses.
- * When this header is present, the worker converts redirect responses with session tokens
- * to JSON, allowing the client to capture tokens from redirects (which would otherwise
- * be opaque due to redirect: 'manual').
- */
-export const CAPTURE_SESSION_TOKEN_HEADER = 'X-Capture-Session-Token'
-
-/**
- * Capture session token from response headers.
- * The Cloudflare Worker sends session cookies as X-Session-Token header
- * to bypass iOS Safari ITP blocking third-party cookies in PWA mode.
- */
-export function captureSessionToken(response: Response): void {
-  const token = response.headers.get(SESSION_TOKEN_HEADER)
-  if (token) {
-    setSessionToken(token)
-  }
-}
-
-/**
- * Get headers for sending session token with requests.
- * Returns the X-Session-Token header if a token is stored.
- */
-export function getSessionHeaders(): Record<string, string> {
-  const token = getSessionToken()
-  return token ? { [SESSION_TOKEN_HEADER]: token } : {}
-}
-
-// Re-export getSessionToken for use in login flow
-export { getSessionToken }
-
-export function clearSession() {
-  clearCsrfToken()
-  clearSessionToken()
-}
+// Session management — re-export from dedicated module
+export {
+  setCsrfToken,
+  clearSession,
+  captureSessionToken,
+  getSessionHeaders,
+  getSessionToken,
+  CAPTURE_SESSION_TOKEN_HEADER,
+} from './session'
 
 // Re-export the real API client and its type for backwards compatibility
 export { api } from './real-api'

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { clearSession, setCsrfToken } from '@/api/client'
+import { clearSession, setCsrfToken } from '@/api/session'
 import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
 import {
   hasMultipleAssociations,
