@@ -250,6 +250,7 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
+  const apiClient = getApiClient(dataSource)
   const demoAssignments = useDemoStore((state) => state.assignments)
   const demoAssociationCode = useDemoStore((state) => state.activeAssociationCode)
   const validatedGames = useDemoStore((state) => state.validatedGames)
@@ -331,7 +332,7 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
     queryFn: async ({ signal }) => {
       // Fetch all pages because API doesn't support server-side filtering
       // by validation status - we must filter client-side after fetching.
-      const allItems = await fetchAllAssignmentPages(config, signal)
+      const allItems = await fetchAllAssignmentPages(apiClient, config, signal)
       // Filter by validation closed status
       return filterByValidationClosed(allItems, deadlineHours)
     },

@@ -13,12 +13,16 @@ type AnyFunction = (...args: any[]) => any
 const QUERY_SETTLE_DELAY_MS = 10
 
 // Mock dependencies
-vi.mock('@/api/client', () => ({
-  api: {
+vi.mock('@/api/client', async () => {
+  const mockApi = {
     getAssociationSettings: vi.fn(),
     getActiveSeason: vi.fn(),
-  },
-}))
+  }
+  return {
+    api: mockApi,
+    getApiClient: vi.fn(() => mockApi),
+  }
+})
 
 vi.mock('@/shared/stores/auth', () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>

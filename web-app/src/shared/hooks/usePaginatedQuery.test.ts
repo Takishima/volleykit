@@ -222,7 +222,7 @@ describe('fetchAllAssignmentPages', () => {
       totalItemsCount: 1,
     })
 
-    const result = await fetchAllAssignmentPages({})
+    const result = await fetchAllAssignmentPages(api, {})
 
     expect(result.length).toBe(1)
     expect(api.searchAssignments).toHaveBeenCalledTimes(1)
@@ -246,7 +246,7 @@ describe('fetchAllAssignmentPages', () => {
         totalItemsCount: 150,
       })
 
-    const result = await fetchAllAssignmentPages({})
+    const result = await fetchAllAssignmentPages(api, {})
 
     expect(result.length).toBe(150)
     expect(api.searchAssignments).toHaveBeenCalledTimes(2)
@@ -270,7 +270,7 @@ describe('fetchAllAssignmentPages', () => {
       }
     })
 
-    const result = await fetchAllAssignmentPages({})
+    const result = await fetchAllAssignmentPages(api, {})
 
     expect(result.length).toBe(MAX_FETCH_ALL_PAGES * DEFAULT_PAGE_SIZE)
     expect(api.searchAssignments).toHaveBeenCalledTimes(MAX_FETCH_ALL_PAGES)
@@ -289,7 +289,7 @@ describe('fetchAllAssignmentPages', () => {
         totalItemsCount: 100,
       })
 
-    const result = await fetchAllAssignmentPages({})
+    const result = await fetchAllAssignmentPages(api, {})
 
     expect(result.length).toBe(1)
     expect(api.searchAssignments).toHaveBeenCalledTimes(2)
@@ -299,7 +299,9 @@ describe('fetchAllAssignmentPages', () => {
     const controller = new AbortController()
     controller.abort()
 
-    await expect(fetchAllAssignmentPages({}, controller.signal)).rejects.toThrow('Aborted')
+    await expect(
+      fetchAllAssignmentPages({ searchAssignments: vi.fn() }, {}, controller.signal)
+    ).rejects.toThrow('Aborted')
   })
 
   it('handles abort signal between requests', async () => {
@@ -317,7 +319,7 @@ describe('fetchAllAssignmentPages', () => {
       }
     })
 
-    await expect(fetchAllAssignmentPages({}, controller.signal)).rejects.toThrow('Aborted')
+    await expect(fetchAllAssignmentPages(api, {}, controller.signal)).rejects.toThrow('Aborted')
   })
 
   it('detects stalled responses and breaks', async () => {
@@ -338,7 +340,7 @@ describe('fetchAllAssignmentPages', () => {
         totalItemsCount: 200, // Same as before - stalled
       })
 
-    const result = await fetchAllAssignmentPages({})
+    const result = await fetchAllAssignmentPages(api, {})
 
     // Should break after detecting stall (not fetch third page)
     expect(result.length).toBe(200)
@@ -362,7 +364,7 @@ describe('fetchAllAssignmentPages', () => {
         totalItemsCount: 200,
       })
 
-    await fetchAllAssignmentPages({ propertyFilters: [] })
+    await fetchAllAssignmentPages(api, { propertyFilters: [] })
 
     expect(api.searchAssignments).toHaveBeenNthCalledWith(
       1,
@@ -382,7 +384,7 @@ describe('fetchAllAssignmentPages', () => {
       totalItemsCount: 0,
     } as unknown as Awaited<ReturnType<typeof api.searchAssignments>>)
 
-    const result = await fetchAllAssignmentPages({})
+    const result = await fetchAllAssignmentPages(api, {})
 
     // Empty array from null items should trigger break
     expect(result.length).toBe(0)

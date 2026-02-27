@@ -1,4 +1,4 @@
-import { api, type SearchConfiguration, type Assignment } from '@/api/client'
+import type { SearchConfiguration, Assignment, ApiClient } from '@/api/client'
 import { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '@/shared/utils/constants'
 import { createLogger } from '@/shared/utils/logger'
 
@@ -106,6 +106,7 @@ export function parseDateOrFallback(dateString: string | undefined | null, fallb
  * @returns Array of all fetched assignments
  */
 export async function fetchAllAssignmentPages(
+  apiClient: Pick<ApiClient, 'searchAssignments'>,
   config: SearchConfiguration,
   signal?: AbortSignal
 ): Promise<Assignment[]> {
@@ -122,7 +123,7 @@ export async function fetchAllAssignmentPages(
     }
 
     const pageConfig = { ...config, offset, limit: DEFAULT_PAGE_SIZE }
-    const response = await api.searchAssignments(pageConfig)
+    const response = await apiClient.searchAssignments(pageConfig)
 
     // Check for cancellation after async operation completes
     // (request may have finished while abort was signaled)

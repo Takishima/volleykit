@@ -214,7 +214,7 @@ export function AppShell() {
       // In demo mode, data comes directly from the store, so no prefetch needed.
       if (dataSource === 'api') {
         // Don't await - let prefetch happen in background while user interacts
-        prefetchAllTabData(queryClient, id).catch(() => {
+        prefetchAllTabData(queryClient, id, getApiClient('api')).catch(() => {
           // Errors are already logged in prefetchAllTabData, no action needed
         })
       }

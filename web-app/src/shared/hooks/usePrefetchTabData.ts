@@ -1,6 +1,6 @@
 import { startOfDay, endOfDay, addDays } from 'date-fns'
 
-import { api, type SearchConfiguration } from '@/api/client'
+import type { SearchConfiguration, ApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { getSeasonDateRange } from '@/shared/utils/date-helpers'
 import { createLogger } from '@/shared/utils/logger'
@@ -36,7 +36,8 @@ const log = createLogger('prefetchTabData')
  */
 export async function prefetchAllTabData(
   queryClient: QueryClient,
-  newOccupationId: string
+  newOccupationId: string,
+  apiClient: ApiClient
 ): Promise<void> {
   const now = new Date()
 
@@ -105,7 +106,7 @@ export async function prefetchAllTabData(
     queryClient
       .prefetchQuery({
         queryKey: queryKeys.assignments.list(upcomingAssignmentsConfig, newOccupationId),
-        queryFn: () => api.searchAssignments(upcomingAssignmentsConfig),
+        queryFn: () => apiClient.searchAssignments(upcomingAssignmentsConfig),
         staleTime: ASSIGNMENTS_STALE_TIME_MS,
       })
       .catch((err) => log.warn('Failed to prefetch assignments:', err)),
@@ -114,7 +115,7 @@ export async function prefetchAllTabData(
     queryClient
       .prefetchQuery({
         queryKey: queryKeys.compensations.list(compensationsConfig, newOccupationId),
-        queryFn: () => api.searchCompensations(compensationsConfig),
+        queryFn: () => apiClient.searchCompensations(compensationsConfig),
         staleTime: COMPENSATIONS_STALE_TIME_MS,
       })
       .catch((err) => log.warn('Failed to prefetch compensations:', err)),
@@ -123,7 +124,7 @@ export async function prefetchAllTabData(
     queryClient
       .prefetchQuery({
         queryKey: queryKeys.exchanges.list(exchangesConfig, newOccupationId),
-        queryFn: () => api.searchExchanges(exchangesConfig),
+        queryFn: () => apiClient.searchExchanges(exchangesConfig),
         staleTime: EXCHANGES_STALE_TIME_MS,
       })
       .catch((err) => log.warn('Failed to prefetch exchanges:', err)),
@@ -132,7 +133,7 @@ export async function prefetchAllTabData(
     queryClient
       .prefetchQuery({
         queryKey: queryKeys.settings.association(newOccupationId),
-        queryFn: () => api.getAssociationSettings(),
+        queryFn: () => apiClient.getAssociationSettings(),
         staleTime: SETTINGS_STALE_TIME_MS,
       })
       .catch((err) => log.warn('Failed to prefetch settings:', err)),
@@ -141,7 +142,7 @@ export async function prefetchAllTabData(
     queryClient
       .prefetchQuery({
         queryKey: queryKeys.seasons.active(newOccupationId),
-        queryFn: () => api.getActiveSeason(),
+        queryFn: () => apiClient.getActiveSeason(),
         staleTime: SEASON_STALE_TIME_MS,
       })
       .catch((err) => log.warn('Failed to prefetch season:', err)),

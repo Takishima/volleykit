@@ -252,12 +252,7 @@ export async function finalizeScoresheetWithFile(
 
   // Validate scoresheet on the server to get a fresh validation identity.
   // The volleymanager workflow requires this step before finalization.
-  const validationId = await validateScoresheetBeforeFinalize(
-    apiClient,
-    gameId,
-    scorerId,
-    isSimple
-  )
+  const validationId = await validateScoresheetBeforeFinalize(apiClient, gameId, scorerId, isSimple)
 
   await apiClient.finalizeScoresheet(
     scoresheet.__identity,
