@@ -2,19 +2,17 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import { clearSession, setCsrfToken } from '@/api/session'
-import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
+import { fetchCalendarAssignments } from '@/features/assignments'
 import {
   hasMultipleAssociations,
   type AttributeValue,
   type RoleDefinition,
-} from '@/features/auth/utils/active-party-parser'
-import {
   performApiLogin,
   performApiLogout,
   performApiSessionCheck,
   filterRefereeOccupations,
   SESSION_CHECK_GRACE_PERIOD_MS,
-} from '@/features/auth/utils/api-auth-flow'
+} from '@/features/auth'
 import { logger } from '@/shared/utils/logger'
 
 import { useDemoStore } from './demo'
@@ -131,7 +129,7 @@ const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
 export const CALENDAR_ASSOCIATION = 'CAL'
 
 // Re-export for consumers that import from auth store
-export { NO_REFEREE_ROLE_ERROR_KEY } from '@/features/auth/utils/api-auth-flow'
+export { NO_REFEREE_ROLE_ERROR_KEY } from '@/features/auth'
 
 export const useAuthStore = create<AuthState>()(
   persist(

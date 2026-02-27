@@ -1,7 +1,8 @@
 import { createElement } from 'react'
 
+import { isFromCalendarMode } from '@volleykit/shared/utils'
+
 import type { Assignment, CompensationRecord } from '@/api/client'
-import { isFromCalendarMode } from '@/features/assignments/utils/assignment-helpers'
 import { Wallet, FileText } from '@/shared/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 

@@ -1,5 +1,6 @@
+import { getTeamNames } from '@volleykit/shared/utils'
+
 import type { Assignment, NominationList } from '@/api/client'
-import { getTeamNames } from '@/features/assignments/utils/assignment-helpers'
 import type {
   RosterModifications,
   CoachModifications,

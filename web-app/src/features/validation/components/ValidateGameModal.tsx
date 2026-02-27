@@ -1,7 +1,8 @@
 import { memo, useState, useCallback, useMemo } from 'react'
 
+import { getTeamNames } from '@volleykit/shared/utils'
+
 import type { Assignment, IndoorPlayerNomination, NominationList } from '@/api/client'
-import { getTeamNames } from '@/features/assignments/utils/assignment-helpers'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
 import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
 import { Modal } from '@/shared/components/Modal'

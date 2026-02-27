@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 
 import type { CompensationRecord, Assignment } from '@/api/client'
 import { getApiClient } from '@/api/client'
-import * as useConvocationsModule from '@/features/validation/hooks/useConvocations'
+import * as compensationHooks from '../hooks/useCompensations'
 import { COMPENSATION_LOOKUP_LIMIT } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
@@ -23,15 +23,19 @@ vi.mock('@/shared/stores/demo', () => ({
   useDemoStore: vi.fn(),
 }))
 
-vi.mock('@/features/validation/hooks/useConvocations', () => ({
-  useUpdateCompensation: vi.fn(),
-  useUpdateAssignmentCompensation: vi.fn(),
-  COMPENSATION_ERROR_KEYS: {
-    ASSIGNMENT_NOT_FOUND: 'compensations.assignmentNotFoundInCache',
-    COMPENSATION_NOT_FOUND: 'compensations.compensationNotFound',
-    COMPENSATION_MISSING_ID: 'compensations.compensationMissingId',
-  },
-}))
+vi.mock('../hooks/useCompensations', async (importOriginal) => {
+  const actual = await importOriginal<typeof compensationHooks>()
+  return {
+    ...actual,
+    useUpdateCompensation: vi.fn(),
+    useUpdateAssignmentCompensation: vi.fn(),
+    COMPENSATION_ERROR_KEYS: {
+      ASSIGNMENT_NOT_FOUND: 'compensations.assignmentNotFoundInCache',
+      COMPENSATION_NOT_FOUND: 'compensations.compensationNotFound',
+      COMPENSATION_MISSING_ID: 'compensations.compensationMissingId',
+    },
+  }
+})
 
 // Shared QueryClient for tests
 let queryClient: QueryClient
@@ -125,7 +129,7 @@ describe('EditCompensationModal', () => {
 
     mockGetAssignmentCompensation.mockReturnValue(null)
 
-    vi.mocked(useConvocationsModule.useUpdateCompensation).mockReturnValue({
+    vi.mocked(compensationHooks.useUpdateCompensation).mockReturnValue({
       mutate: mockMutate,
       mutateAsync: vi.fn(),
       isPending: false,
@@ -144,7 +148,7 @@ describe('EditCompensationModal', () => {
       submittedAt: 0,
     })
 
-    vi.mocked(useConvocationsModule.useUpdateAssignmentCompensation).mockReturnValue({
+    vi.mocked(compensationHooks.useUpdateAssignmentCompensation).mockReturnValue({
       mutate: mockAssignmentMutate,
       mutateAsync: vi.fn(),
       isPending: false,

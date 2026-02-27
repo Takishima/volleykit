@@ -9,8 +9,7 @@
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { queryKeys, type SearchConfiguration } from '../api/queryKeys'
-import type { GameExchange } from '../api/validation'
+import { queryKeys, type SearchConfiguration, type GameExchange } from '../api'
 
 /** Stale time for exchanges list (2 minutes - shorter since exchanges change frequently) */
 export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000

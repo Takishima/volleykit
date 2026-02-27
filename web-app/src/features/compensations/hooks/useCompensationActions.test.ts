@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { CompensationRecord } from '@/api/client'
-import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
+import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
 import * as authStore from '@/shared/stores/auth'
 import { toast } from '@/shared/stores/toast'
 

@@ -9,7 +9,7 @@ import { Platform } from 'react-native'
 
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import type { BiometricAdapter } from '@volleykit/shared/types/platform'
+import type { BiometricAdapter } from '@volleykit/shared/types'
 
 /**
  * Map LocalAuthentication authentication type to our BiometricType

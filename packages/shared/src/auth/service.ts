@@ -15,7 +15,7 @@ import {
   analyzeAuthResponseHtml,
   parseOccupationsFromActiveParty,
 } from './parsers'
-import type { UserProfile, Occupation } from '../stores/auth'
+import type { UserProfile, Occupation } from '../stores'
 
 /** Default delay in ms to allow browser to process Set-Cookie headers */
 const DEFAULT_COOKIE_PROCESSING_DELAY_MS = 100

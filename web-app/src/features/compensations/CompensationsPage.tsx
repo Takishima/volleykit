@@ -6,7 +6,6 @@ import { useShallow } from 'zustand/react/shallow'
 import type { CompensationRecord } from '@/api/client'
 import { TOUR_DUMMY_COMPENSATION } from '@/features/compensations/compensations'
 import { CompensationCard } from '@/features/compensations/components/CompensationCard'
-import { useCompensations } from '@/features/validation/hooks/useConvocations'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
@@ -19,6 +18,7 @@ import { groupByWeek, getSeasonDateRange } from '@/shared/utils/date-helpers'
 import type { SwipeConfig } from '@/types/swipe'
 
 import { useCompensationActions } from './hooks/useCompensationActions'
+import { useCompensations } from './hooks/useCompensations'
 import { createCompensationActions, isCompensationEditable } from './utils/compensation-actions'
 
 const EditCompensationModal = lazy(() =>

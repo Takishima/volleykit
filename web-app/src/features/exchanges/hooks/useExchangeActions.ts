@@ -1,13 +1,11 @@
 import { useCallback } from 'react'
 
 import type { GameExchange } from '@/api/client'
-import { getConvocationIdFromExchange } from '@/features/exchanges/utils/exchange-actions'
-import {
-  useApplyForExchange,
-  useRemoveOwnExchange,
-} from '@/features/validation/hooks/useConvocations'
 import { useModalState } from '@/shared/hooks/useModalState'
 import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
+
+import { useApplyForExchange, useRemoveOwnExchange } from './useExchanges'
+import { getConvocationIdFromExchange } from '../utils/exchange-actions'
 
 interface UseExchangeActionsResult {
   takeOverModal: {

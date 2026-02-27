@@ -4,7 +4,7 @@
  * Provides access to translated strings based on the current language setting.
  */
 
-import { useSettingsStore } from '../stores/settings'
+import { useSettingsStore } from '../stores'
 import { locales } from './locales'
 import type { TranslationKey, Language, Translations } from './types'
 

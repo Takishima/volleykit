@@ -3,7 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { Assignment } from '@/api/client'
-import * as useConvocations from '@/features/validation/hooks/useConvocations'
+import * as assignmentHooks from './hooks/useAssignments'
+import * as calendarHooks from './hooks/useCalendarAssignments'
 import * as authStore from '@/shared/stores/auth'
 
 import { AssignmentsPage } from './AssignmentsPage'
@@ -42,7 +43,8 @@ const mockUseTour = vi.hoisted(() => ({
   }),
 }))
 
-vi.mock('@/features/validation/hooks/useConvocations')
+vi.mock('./hooks/useAssignments')
+vi.mock('./hooks/useCalendarAssignments')
 vi.mock('@/shared/hooks/useTour', () => mockUseTour)
 vi.mock('@/shared/stores/auth')
 vi.mock('@/features/referee-backup', () => ({
@@ -181,7 +183,7 @@ function createMockQueryResult(
 
 // Create a mock for calendar assignments
 function createMockCalendarQueryResult(
-  data: useConvocations.CalendarAssignment[] | undefined = [],
+  data: calendarHooks.CalendarAssignment[] | undefined = [],
   isLoading = false,
   error: Error | null = null
 ) {
@@ -196,7 +198,7 @@ function createMockCalendarQueryResult(
     isSuccess: status === 'success' && data !== undefined,
     status,
     refetch: vi.fn(),
-  } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>
+  } as unknown as ReturnType<typeof calendarHooks.useCalendarAssignments>
 }
 
 describe('AssignmentsPage', () => {
@@ -207,12 +209,12 @@ describe('AssignmentsPage', () => {
     mockAuthStoreState()
 
     // Default mocks - empty data
-    vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(createMockQueryResult([]))
-    vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
+    vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(createMockQueryResult([]))
+    vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
       createMockQueryResult([])
     )
     // Mock calendar assignments (empty by default - calendar mode not active)
-    vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+    vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
       createMockCalendarQueryResult([])
     )
   })
@@ -246,7 +248,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should show count badge when upcoming data is available', () => {
-      vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(
         createMockQueryResult([createMockAssignment(), createMockAssignment()])
       )
 
@@ -257,7 +259,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should show count badge when validation closed data is available', () => {
-      vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
         createMockQueryResult([
           createMockAssignment(),
           createMockAssignment(),
@@ -276,7 +278,7 @@ describe('AssignmentsPage', () => {
 
   describe('Content Display - Upcoming Tab', () => {
     it('should show loading state', () => {
-      vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(
         createMockQueryResult(undefined, true)
       )
 
@@ -286,7 +288,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should show error state with retry button', () => {
-      vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(
         createMockQueryResult(undefined, false, new Error('Failed to load'))
       )
 
@@ -297,7 +299,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should show empty state when no upcoming assignments', () => {
-      vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(createMockQueryResult([]))
+      vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(createMockQueryResult([]))
 
       renderWithProviders(<AssignmentsPage />)
 
@@ -306,7 +308,7 @@ describe('AssignmentsPage', () => {
 
     it('should show assignments when data is available', () => {
       const assignment = createMockAssignment()
-      vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(
         createMockQueryResult([assignment])
       )
 
@@ -319,7 +321,7 @@ describe('AssignmentsPage', () => {
 
   describe('Content Display - Validation Closed Tab', () => {
     it('should show loading state on validation closed tab', () => {
-      vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
         createMockQueryResult(undefined, true)
       )
 
@@ -330,7 +332,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should show error state on validation closed tab', () => {
-      vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
         createMockQueryResult(undefined, false, new Error('Network error'))
       )
 
@@ -341,7 +343,7 @@ describe('AssignmentsPage', () => {
     })
 
     it('should show empty state when no validation closed assignments', () => {
-      vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
         createMockQueryResult([])
       )
 
@@ -365,7 +367,7 @@ describe('AssignmentsPage', () => {
           },
         },
       } as Partial<Assignment>)
-      vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue(
+      vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
         createMockQueryResult([assignment])
       )
 
@@ -401,7 +403,7 @@ describe('AssignmentsPage', () => {
   describe('Error Handling', () => {
     it('should call refetch when retry button is clicked on upcoming tab', () => {
       const mockRefetch = vi.fn()
-      vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue({
+      vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue({
         ...createMockQueryResult(undefined, false, new Error('Failed')),
         refetch: mockRefetch,
       } as unknown as UseQueryResult<Assignment[], Error>)
@@ -414,7 +416,7 @@ describe('AssignmentsPage', () => {
 
     it('should call refetch when retry button is clicked on validation closed tab', () => {
       const mockRefetch = vi.fn()
-      vi.mocked(useConvocations.useValidationClosedAssignments).mockReturnValue({
+      vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue({
         ...createMockQueryResult(undefined, false, new Error('Failed')),
         refetch: mockRefetch,
       } as unknown as UseQueryResult<Assignment[], Error>)
@@ -440,8 +442,8 @@ describe('AssignmentsPage', () => {
     }
 
     function createMockCalendarAssignment(
-      overrides: Partial<useConvocations.CalendarAssignment> = {}
-    ): useConvocations.CalendarAssignment {
+      overrides: Partial<calendarHooks.CalendarAssignment> = {}
+    ): calendarHooks.CalendarAssignment {
       const startTime = getFutureDateString(GAME_START_HOURS_FROM_NOW)
       const endTime = getFutureDateString(GAME_END_HOURS_FROM_NOW)
       return {
@@ -494,7 +496,7 @@ describe('AssignmentsPage', () => {
 
     describe('Data Display', () => {
       it('should show loading state for calendar data', () => {
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult(undefined, true)
         )
 
@@ -508,7 +510,7 @@ describe('AssignmentsPage', () => {
           homeTeam: 'Calendar Team A',
           awayTeam: 'Calendar Team B',
         })
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
@@ -524,7 +526,7 @@ describe('AssignmentsPage', () => {
         const calendarAssignment = createMockCalendarAssignment({
           role: 'referee2',
         })
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
@@ -539,7 +541,7 @@ describe('AssignmentsPage', () => {
         const calendarAssignment = createMockCalendarAssignment({
           leagueCategory: 'NLB',
         })
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
@@ -554,7 +556,7 @@ describe('AssignmentsPage', () => {
 
     describe('Empty States', () => {
       it('should show calendar-specific empty state when no calendar data', () => {
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([])
         )
 
@@ -568,7 +570,7 @@ describe('AssignmentsPage', () => {
 
       it('should show calendar-specific no upcoming message', () => {
         // Return an empty array but with isSuccess true
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([])
         )
 
@@ -583,10 +585,10 @@ describe('AssignmentsPage', () => {
     describe('Error Handling', () => {
       it('should show error state with retry button for calendar data', () => {
         const mockRefetch = vi.fn()
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue({
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue({
           ...createMockCalendarQueryResult(undefined, false, new Error('Calendar fetch failed')),
           refetch: mockRefetch,
-        } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>)
+        } as unknown as ReturnType<typeof calendarHooks.useCalendarAssignments>)
 
         renderWithProviders(<AssignmentsPage />)
 
@@ -596,10 +598,10 @@ describe('AssignmentsPage', () => {
 
       it('should call refetch when retry button is clicked for calendar error', () => {
         const mockRefetch = vi.fn()
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue({
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue({
           ...createMockCalendarQueryResult(undefined, false, new Error('Failed')),
           refetch: mockRefetch,
-        } as unknown as ReturnType<typeof useConvocations.useCalendarAssignments>)
+        } as unknown as ReturnType<typeof calendarHooks.useCalendarAssignments>)
 
         renderWithProviders(<AssignmentsPage />)
         fireEvent.click(screen.getByRole('button', { name: /retry/i }))
@@ -614,7 +616,7 @@ describe('AssignmentsPage', () => {
         const calendarAssignment = createMockCalendarAssignment({
           leagueCategory: '3L',
         })
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
@@ -639,7 +641,7 @@ describe('AssignmentsPage', () => {
             awayTeam: 'Team Delta',
           }),
         ]
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult(assignments)
         )
 
@@ -659,7 +661,7 @@ describe('AssignmentsPage', () => {
           createMockCalendarAssignment({ gameId: 'game-2' }),
           createMockCalendarAssignment({ gameId: 'game-3' }),
         ]
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult(assignments)
         )
 
@@ -679,7 +681,7 @@ describe('AssignmentsPage', () => {
         const calendarAssignment = createMockCalendarAssignment({
           startTime: futureDate.toISOString(),
         })
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
@@ -693,7 +695,7 @@ describe('AssignmentsPage', () => {
         const calendarAssignment = createMockCalendarAssignment({
           address: 'Sporthalle, 3000 Bern',
         })
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
@@ -708,28 +710,28 @@ describe('AssignmentsPage', () => {
       it('should use useCalendarAssignments when in calendar mode', () => {
         mockAuthStoreState({ isCalendarMode: () => true })
         const calendarAssignment = createMockCalendarAssignment()
-        vi.mocked(useConvocations.useCalendarAssignments).mockReturnValue(
+        vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue(
           createMockCalendarQueryResult([calendarAssignment])
         )
 
         renderWithProviders(<AssignmentsPage />)
 
         // Should use calendar data
-        expect(useConvocations.useCalendarAssignments).toHaveBeenCalled()
+        expect(calendarHooks.useCalendarAssignments).toHaveBeenCalled()
         expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
       })
 
       it('should use useUpcomingAssignments when NOT in calendar mode', () => {
         mockAuthStoreState({ isCalendarMode: () => false })
         const apiAssignment = createMockAssignment()
-        vi.mocked(useConvocations.useUpcomingAssignments).mockReturnValue(
+        vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue(
           createMockQueryResult([apiAssignment])
         )
 
         renderWithProviders(<AssignmentsPage />)
 
         // Should use API data
-        expect(useConvocations.useUpcomingAssignments).toHaveBeenCalled()
+        expect(assignmentHooks.useUpcomingAssignments).toHaveBeenCalled()
         expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
       })
     })

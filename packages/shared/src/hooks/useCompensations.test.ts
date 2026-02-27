@@ -13,7 +13,7 @@ import {
   DEFAULT_PAGE_SIZE,
   type CompensationsApiClient,
 } from './useCompensations'
-import type { CompensationRecord } from '../api/validation'
+import type { CompensationRecord } from '../api'
 
 /** Small delay for tests that need to wait a tick without triggering queries */
 const TEST_TICK_MS = 50

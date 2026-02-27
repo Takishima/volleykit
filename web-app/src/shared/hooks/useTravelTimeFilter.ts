@@ -8,7 +8,7 @@ import { useQueries } from '@tanstack/react-query'
 
 import type { GameExchange } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { useActiveAssociationCode } from '@/features/auth'
 import {
   calculateTravelTime,
   calculateMockTravelTime,

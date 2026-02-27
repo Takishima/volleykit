@@ -3,7 +3,7 @@
  */
 
 import { createContext, useContext } from 'react'
-import type { StorageAdapter, SecureStorageAdapter } from '../types/platform'
+import type { StorageAdapter, SecureStorageAdapter } from '../types'
 
 /**
  * Default no-op storage adapter (for SSR/testing)

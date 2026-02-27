@@ -287,11 +287,14 @@ export async function performApiLogin(
 
   if (existingCsrfToken) {
     // Already logged in - fetch dashboard to get associations
-    const dashboardResponse = await fetch(`${API_BASE_URL}/sportmanager.volleyball/main/dashboard`, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: getSessionHeaders(),
-    })
+    const dashboardResponse = await fetch(
+      `${API_BASE_URL}/sportmanager.volleyball/main/dashboard`,
+      {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: getSessionHeaders(),
+      }
+    )
 
     captureSessionToken(dashboardResponse)
 

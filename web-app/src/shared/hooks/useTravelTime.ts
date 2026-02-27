@@ -10,7 +10,7 @@ import { useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { useActiveAssociationCode } from '@/features/auth'
 import {
   calculateTravelTime,
   calculateMockTravelTime,

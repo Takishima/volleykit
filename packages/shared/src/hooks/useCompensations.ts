@@ -9,8 +9,7 @@
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { queryKeys, type SearchConfiguration } from '../api/queryKeys'
-import type { CompensationRecord } from '../api/validation'
+import { queryKeys, type SearchConfiguration, type CompensationRecord } from '../api'
 
 /** Stale time for compensations list (5 minutes) */
 export const COMPENSATIONS_STALE_TIME_MS = 5 * 60 * 1000
