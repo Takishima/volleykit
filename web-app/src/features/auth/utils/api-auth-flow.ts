@@ -21,6 +21,7 @@ import {
   getSessionToken,
   setCsrfToken,
 } from '@/api/client'
+import { API_BASE_URL } from '@/api/constants'
 import {
   extractActivePartyFromHtml,
   type AttributeValue,
@@ -39,7 +40,7 @@ import {
 import type { AuthState, UserProfile } from '@/shared/stores/auth'
 import { logger } from '@/shared/utils/logger'
 
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
+const API_BASE = API_BASE_URL
 const LOGIN_PAGE_URL = `${API_BASE}/login`
 const AUTH_URL = `${API_BASE}/sportmanager.security/authentication/authenticate`
 const LOGOUT_URL = `${API_BASE}/logout`

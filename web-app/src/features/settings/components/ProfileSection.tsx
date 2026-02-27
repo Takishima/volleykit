@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from 'react'
 
+import { API_BASE_URL } from '@/api/constants'
 import { Badge } from '@/shared/components/Badge'
 import { Card, CardContent, CardHeader } from '@/shared/components/Card'
 import { Calendar } from '@/shared/components/icons'
@@ -8,7 +9,7 @@ import { useAuthStore } from '@/shared/stores/auth'
 import type { UserProfile } from '@/shared/stores/auth'
 import { getOccupationLabelKey } from '@/shared/utils/occupation-labels'
 
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
+const API_BASE = API_BASE_URL
 
 interface ProfileSectionProps {
   user: UserProfile

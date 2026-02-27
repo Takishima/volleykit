@@ -6,6 +6,12 @@
 
 import { BYTES_PER_MB } from '@/shared/utils/constants'
 
+/**
+ * Base URL for API requests through the CORS proxy.
+ * Empty string for relative URLs (local dev or when proxy is not configured).
+ */
+export const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || ''
+
 /** Maximum file size in megabytes */
 const MAX_FILE_SIZE_MB = 10
 

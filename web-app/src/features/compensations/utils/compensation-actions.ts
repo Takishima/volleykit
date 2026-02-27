@@ -2,6 +2,7 @@ import { createElement } from 'react'
 
 import type { Assignment, CompensationRecord } from '@/api/client'
 import { captureSessionToken, getSessionHeaders } from '@/api/client'
+import { API_BASE_URL } from '@/api/constants'
 import { isFromCalendarMode } from '@/features/assignments/utils/assignment-helpers'
 import { Wallet, FileText } from '@/shared/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
@@ -153,10 +154,8 @@ export function createCompensationActions(
   }
 }
 
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
-
 export async function downloadCompensationPDF(compensationId: string): Promise<void> {
-  const url = `${API_BASE}/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=${encodeURIComponent(compensationId)}`
+  const url = `${API_BASE_URL}/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=${encodeURIComponent(compensationId)}`
 
   try {
     const response = await fetch(url, {

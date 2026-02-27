@@ -30,7 +30,12 @@ import {
 } from './form-serialization'
 
 import { HttpStatus, BYTES_PER_KB } from '@/shared/utils/constants'
-import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
+import {
+  API_BASE_URL,
+  MAX_FILE_SIZE_BYTES,
+  ALLOWED_FILE_TYPES,
+  DEFAULT_SEARCH_RESULTS_LIMIT,
+} from './constants'
 import { parseErrorResponse } from './error-handling'
 import {
   ASSIGNMENT_PROPERTIES,
@@ -59,8 +64,7 @@ type ScoresheetValidation = Schemas['ScoresheetValidation']
 type FileResource = Schemas['FileResource']
 type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
 
-// Base URL configuration - uses proxy URL if set, otherwise empty string for relative URLs
-const API_BASE = import.meta.env.VITE_API_PROXY_URL || ''
+const API_BASE = API_BASE_URL
 
 if (!import.meta.env.DEV && !API_BASE) {
   console.warn('VITE_API_PROXY_URL is not configured for production. API calls will fail.')

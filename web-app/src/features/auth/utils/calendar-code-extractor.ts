@@ -9,6 +9,7 @@
  * to fetch ALL assignments across ALL associations the referee belongs to.
  */
 
+import { API_BASE_URL } from '@/api/constants'
 import { logger } from '@/shared/utils/logger'
 
 /** Calendar codes are exactly 6 alphanumeric characters */
@@ -110,6 +111,6 @@ export function isValidCalendarCode(code: string): boolean {
  * @returns The full iCal URL
  */
 export function getCalendarUrl(code: string, proxyUrl?: string): string {
-  const baseUrl = proxyUrl ?? import.meta.env.VITE_API_PROXY_URL ?? ''
+  const baseUrl = proxyUrl ?? API_BASE_URL
   return `${baseUrl}/iCal/referee/${code}`
 }
