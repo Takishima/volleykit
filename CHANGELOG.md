@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.19.1
+
+### Patch Changes
+
+- [#960](https://github.com/Takishima/volleykit/pull/960) [`be408c1`](https://github.com/Takishima/volleykit/commit/be408c12f80e7f76598418a9ed3adacb7ce7cb60) Thanks [@Takishima](https://github.com/Takishima)! - Fixed compensation games not displaying in "past but not closed" tab after initial login
+
 ## 1.19.0
 
 ### Minor Changes
