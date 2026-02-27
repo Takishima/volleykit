@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { useAssignmentConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
-import { useActiveAssociationCode } from '@/features/auth'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { ExpandableCard } from '@/shared/components/ExpandableCard'
 import { useDateFormat } from '@/shared/hooks/useDateFormat'
 import { useSbbUrl } from '@/shared/hooks/useSbbUrl'

@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
-import { useActiveAssociationCode } from '@/features/auth'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { useTravelTimeAvailable } from '@/shared/hooks/useTravelTime'
 import { clearTravelTimeCache, getTravelTimeCacheStats } from '@/shared/services/transport'
 import {

@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/react/shallow'
 import type { Assignment } from '@/api/client'
 import { TOUR_DUMMY_ASSIGNMENT } from '@/features/assignments/assignments'
 import { AssignmentCard } from '@/features/assignments/components/AssignmentCard'
-import { isAssignmentCompensationEditable } from '@/features/compensations'
+import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-actions'
 import {
   useMyOnCallAssignments,
   OnCallCard,

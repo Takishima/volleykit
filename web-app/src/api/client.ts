@@ -9,7 +9,7 @@
 import type { components } from './schema'
 
 import { mockApi } from './mock-api'
-import { calendarApi } from '@/features/assignments'
+import { calendarApi } from '@/features/assignments/api/calendar-client'
 import { api } from './real-api'
 
 // Re-export schema types

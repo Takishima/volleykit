@@ -17,7 +17,7 @@ import { useState, useEffect, useCallback, useId, useRef, useSyncExternalStore }
 
 import { useShallow } from 'zustand/react/shallow'
 
-import { useActiveAssociationCode } from '@/features/auth'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { isOjpConfigured } from '@/shared/services/transport'
 import { useAuthStore, type Occupation } from '@/shared/stores/auth'
 import { useSettingsStore } from '@/shared/stores/settings'

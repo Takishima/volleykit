@@ -30,7 +30,7 @@ vi.mock('@/shared/stores/auth')
 vi.mock('@/shared/stores/demo')
 vi.mock('@/shared/stores/settings')
 vi.mock('@/shared/hooks/useTour', () => mockUseTour)
-vi.mock('@/features/assignments', () => ({
+vi.mock('@/features/assignments/hooks/useCalendarConflicts', () => ({
   useCalendarConflicts: () => ({
     conflicts: new Map(),
     assignments: [],
@@ -39,10 +39,12 @@ vi.mock('@/features/assignments', () => ({
     error: null,
     hasCalendarCode: false,
   }),
+}))
+vi.mock('@/features/assignments/utils/conflict-detection', () => ({
   hasMinimumGapFromAssignments: () => true,
   DEFAULT_SAME_LOCATION_DISTANCE_KM: 5,
 }))
-vi.mock('@/features/auth', () => ({
+vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
 vi.mock('@/shared/hooks/useTravelTime', () => ({

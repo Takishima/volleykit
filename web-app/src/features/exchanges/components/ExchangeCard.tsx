@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react'
 import { format, parseISO } from 'date-fns'
 
 import type { GameExchange } from '@/api/client'
-import { useActiveAssociationCode } from '@/features/auth'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { ExpandableCard } from '@/shared/components/ExpandableCard'
 import {
   MapPin,

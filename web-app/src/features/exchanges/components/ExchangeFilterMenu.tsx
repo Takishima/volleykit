@@ -2,7 +2,7 @@ import { useState, useCallback, memo, useMemo } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
-import { useActiveAssociationCode } from '@/features/auth'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import {
   SlidersHorizontal,
   X,

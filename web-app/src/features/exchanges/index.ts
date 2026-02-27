@@ -7,7 +7,6 @@ export {
   useApplyForExchange,
   useRemoveOwnExchange,
   useAddToExchange,
-  type ExchangeStatus,
 } from './hooks/useExchanges'
 export { useExchangeActions } from './hooks/useExchangeActions'
 

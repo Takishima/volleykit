@@ -5,9 +5,6 @@ export { CompensationsPage } from './CompensationsPage'
 export { useCompensations } from './hooks/useCompensations'
 export { useCompensationActions } from './hooks/useCompensationActions'
 
-// Utils
-export { isAssignmentCompensationEditable } from './utils/compensation-actions'
-
 // Components
 export { CompensationCard } from './components/CompensationCard'
 export { EditCompensationModal } from './components/EditCompensationModal'

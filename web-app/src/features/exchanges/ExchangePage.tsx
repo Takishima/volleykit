@@ -3,12 +3,12 @@ import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
+import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
 import {
-  useCalendarConflicts,
   hasMinimumGapFromAssignments,
   DEFAULT_SAME_LOCATION_DISTANCE_KM,
-} from '@/features/assignments'
-import { useActiveAssociationCode } from '@/features/auth'
+} from '@/features/assignments/utils/conflict-detection'
+import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
