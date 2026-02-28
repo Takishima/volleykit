@@ -174,8 +174,11 @@ export const api = {
         propertyRenderConfiguration: ASSIGNMENT_PROPERTIES,
       }
     )
-    validateResponse(data, assignmentsResponseSchema, 'searchAssignments')
-    return data as AssignmentsResponse
+    return validateResponse(
+      data,
+      assignmentsResponseSchema,
+      'searchAssignments'
+    ) as AssignmentsResponse
   },
 
   async getAssignmentDetails(convocationId: string, properties: string[]): Promise<Assignment> {
@@ -186,8 +189,7 @@ export const api = {
     const data = await apiRequest<unknown>(
       `/indoorvolleyball.refadmin/api%5crefereeconvocation/showWithNestedObjects?${query}`
     )
-    validateResponse(data, assignmentSchema, 'getAssignmentDetails')
-    return data as Assignment
+    return validateResponse(data, assignmentSchema, 'getAssignmentDetails') as Assignment
   },
 
   // Compensations
@@ -200,8 +202,11 @@ export const api = {
         propertyRenderConfiguration: COMPENSATION_PROPERTIES,
       }
     )
-    validateResponse(data, compensationsResponseSchema, 'searchCompensations')
-    return data as CompensationsResponse
+    return validateResponse(
+      data,
+      compensationsResponseSchema,
+      'searchCompensations'
+    ) as CompensationsResponse
   },
 
   async getCompensationDetails(compensationId: string): Promise<ConvocationCompensationDetailed> {
@@ -215,8 +220,11 @@ export const api = {
     const data = await apiRequest<unknown>(
       `/indoorvolleyball.refadmin/api%5cconvocationcompensation/showWithNestedObjects?${query}`
     )
-    validateResponse(data, compensationDetailedSchema, 'getCompensationDetails')
-    return data as ConvocationCompensationDetailed
+    return validateResponse(
+      data,
+      compensationDetailedSchema,
+      'getCompensationDetails'
+    ) as ConvocationCompensationDetailed
   },
 
   async updateCompensation(
@@ -251,8 +259,7 @@ export const api = {
         propertyRenderConfiguration: EXCHANGE_PROPERTIES,
       }
     )
-    validateResponse(data, exchangesResponseSchema, 'searchExchanges')
-    return data as ExchangesResponse
+    return validateResponse(data, exchangesResponseSchema, 'searchExchanges') as ExchangesResponse
   },
 
   async applyForExchange(exchangeId: string): Promise<PickExchangeResponse> {
@@ -263,8 +270,11 @@ export const api = {
         'refereeGameExchange[__identity]': exchangeId,
       }
     )
-    validateResponse(data, pickExchangeResponseSchema, 'applyForExchange')
-    return data as PickExchangeResponse
+    return validateResponse(
+      data,
+      pickExchangeResponseSchema,
+      'applyForExchange'
+    ) as PickExchangeResponse
   },
 
   /**
@@ -306,16 +316,18 @@ export const api = {
     const data = await apiRequest<unknown>(
       '/indoorvolleyball.refadmin/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty'
     )
-    validateResponse(data, associationSettingsSchema, 'getAssociationSettings')
-    return data as Schemas['AssociationSettings']
+    return validateResponse(
+      data,
+      associationSettingsSchema,
+      'getAssociationSettings'
+    ) as Schemas['AssociationSettings']
   },
 
   async getActiveSeason(): Promise<Schemas['Season']> {
     const data = await apiRequest<unknown>(
       '/sportmanager.indoorvolleyball/api%5cindoorseason/getActiveIndoorSeason'
     )
-    validateResponse(data, seasonSchema, 'getActiveSeason')
-    return data as Schemas['Season']
+    return validateResponse(data, seasonSchema, 'getActiveSeason') as Schemas['Season']
   },
 
   // Nominations
@@ -332,8 +344,11 @@ export const api = {
         onlyRelevantGender: options?.onlyRelevantGender ?? true,
       }
     )
-    validateResponse(data, possibleNominationsResponseSchema, 'getPossiblePlayerNominations')
-    return data as PossibleNominationsResponse
+    return validateResponse(
+      data,
+      possibleNominationsResponseSchema,
+      'getPossiblePlayerNominations'
+    ) as PossibleNominationsResponse
   },
 
   // Person search
@@ -366,8 +381,11 @@ export const api = {
             propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
           }
         )
-        validateResponse(data, personSearchResponseSchema, 'searchPersons')
-        return data as PersonSearchResponse
+        return validateResponse(
+          data,
+          personSearchResponseSchema,
+          'searchPersons'
+        ) as PersonSearchResponse
       }
 
       const [original, swapped] = await Promise.all([
@@ -432,8 +450,11 @@ export const api = {
         propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
       }
     )
-    validateResponse(data, personSearchResponseSchema, 'searchPersons')
-    return data as PersonSearchResponse
+    return validateResponse(
+      data,
+      personSearchResponseSchema,
+      'searchPersons'
+    ) as PersonSearchResponse
   },
 
   // Game details and scoresheet
@@ -522,8 +543,8 @@ export const api = {
         propertyRenderConfiguration: properties,
       }
     )
-    validateResponse(data, gameDetailsResponseSchema, 'getGameWithScoresheet')
-    return (data as { game: Schemas['GameDetails'] }).game
+    const validated = validateResponse(data, gameDetailsResponseSchema, 'getGameWithScoresheet')
+    return (validated as { game: Schemas['GameDetails'] }).game
   },
 
   async updateNominationList(
@@ -567,8 +588,7 @@ export const api = {
       body,
       'text/plain;charset=UTF-8'
     )
-    validateResponse(data, nominationListSchema, 'updateNominationList')
-    return data as NominationList
+    return validateResponse(data, nominationListSchema, 'updateNominationList') as NominationList
   },
 
   async finalizeNominationList(
@@ -617,8 +637,11 @@ export const api = {
       body,
       'text/plain;charset=UTF-8'
     )
-    validateResponse(data, nominationListResponseSchema, 'finalizeNominationList')
-    return data as NominationListResponse
+    return validateResponse(
+      data,
+      nominationListResponseSchema,
+      'finalizeNominationList'
+    ) as NominationListResponse
   },
 
   async updateScoresheet(
@@ -670,8 +693,7 @@ export const api = {
       body,
       'text/plain;charset=UTF-8'
     )
-    validateResponse(data, scoresheetSchema, 'updateScoresheet')
-    return data as Scoresheet
+    return validateResponse(data, scoresheetSchema, 'updateScoresheet') as Scoresheet
   },
 
   async validateScoresheet(
@@ -699,8 +721,11 @@ export const api = {
       'POST',
       body
     )
-    validateResponse(data, scoresheetValidationSchema, 'validateScoresheet')
-    return data as ScoresheetValidation
+    return validateResponse(
+      data,
+      scoresheetValidationSchema,
+      'validateScoresheet'
+    ) as ScoresheetValidation
   },
 
   async finalizeScoresheet(
@@ -730,8 +755,7 @@ export const api = {
       body,
       'text/plain;charset=UTF-8'
     )
-    validateResponse(data, scoresheetSchema, 'finalizeScoresheet')
-    return data as Scoresheet
+    return validateResponse(data, scoresheetSchema, 'finalizeScoresheet') as Scoresheet
   },
 
   async uploadResource(file: File): Promise<FileResource[]> {
@@ -775,8 +799,7 @@ export const api = {
     }
 
     const data: unknown = await response.json()
-    validateResponse(data, fileResourceArraySchema, 'uploadResource')
-    return data as FileResource[]
+    return validateResponse(data, fileResourceArraySchema, 'uploadResource') as FileResource[]
   },
 
   /**
@@ -852,8 +875,11 @@ export const api = {
         propertyRenderConfiguration: REFEREE_BACKUP_PROPERTIES,
       }
     )
-    validateResponse(data, refereeBackupResponseSchema, 'searchRefereeBackups')
-    return data as RefereeBackupSearchResponse
+    return validateResponse(
+      data,
+      refereeBackupResponseSchema,
+      'searchRefereeBackups'
+    ) as RefereeBackupSearchResponse
   },
 }
 

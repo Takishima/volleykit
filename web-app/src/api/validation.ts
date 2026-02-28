@@ -26,6 +26,8 @@
  */
 import { z } from 'zod'
 
+import type { ZodLikeSchema } from '@volleykit/shared/api'
+
 import { logger } from '@/shared/utils/logger'
 
 // Re-export all base schemas from shared package
@@ -65,6 +67,7 @@ export {
   type AssignmentsResponse,
   type CompensationsResponse,
   type ExchangesResponse,
+  type ZodLikeSchema,
 } from '@volleykit/shared/api'
 
 // Common field schemas for web-specific extensions
@@ -162,18 +165,6 @@ export const refereeBackupResponseSchema = z.object({
 // ============================================================================
 // Validation helper (re-exported from shared with web-specific logging)
 // ============================================================================
-
-/**
- * A structural type for Zod schemas that works with both Zod 3 and Zod 4.
- * This avoids type incompatibilities between versions.
- */
-interface ZodLikeSchema<T> {
-  safeParse(
-    data: unknown
-  ):
-    | { success: true; data: T }
-    | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
-}
 
 /**
  * Validates API response data against a Zod schema.

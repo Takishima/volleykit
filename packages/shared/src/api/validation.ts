@@ -488,7 +488,7 @@ export interface Season {
  * A structural type for Zod schemas that works with both Zod 3 and Zod 4.
  * This avoids type incompatibilities between versions.
  */
-interface ZodLikeSchema<T> {
+export interface ZodLikeSchema<T> {
   safeParse(
     data: unknown
   ):

@@ -1410,6 +1410,62 @@ describe('API Client', () => {
       expect(result.name).toBe('2025')
     })
 
+    it('searchCompensations rejects response with non-array items', async () => {
+      server.use(
+        http.post('*/api%5crefereeconvocationcompensation/search', () => {
+          return HttpResponse.json({ items: 'not-an-array', totalItemsCount: 0 })
+        })
+      )
+
+      await expect(api.searchCompensations({})).rejects.toThrow(
+        /Invalid API response for searchCompensations/
+      )
+    })
+
+    it('searchExchanges rejects response with non-array items', async () => {
+      server.use(
+        http.post('*/api%5crefereegameexchange/search', () => {
+          return HttpResponse.json({ items: 'not-an-array', totalItemsCount: 0 })
+        })
+      )
+
+      await expect(api.searchExchanges({})).rejects.toThrow(
+        /Invalid API response for searchExchanges/
+      )
+    })
+
+    it('getPossiblePlayerNominations rejects response with non-array items', async () => {
+      server.use(
+        http.post(
+          '*/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList',
+          () => {
+            return HttpResponse.json({ items: 'not-an-array', totalItemsCount: 0 })
+          }
+        )
+      )
+
+      await expect(api.getPossiblePlayerNominations('nl-1')).rejects.toThrow(
+        /Invalid API response for getPossiblePlayerNominations/
+      )
+    })
+
+    it('uploadResource rejects non-array response', async () => {
+      server.use(
+        http.post('*/api%5cpersistentresource/upload', () => {
+          return HttpResponse.json({ __identity: UUID1 })
+        })
+      )
+
+      function createMockFile(name: string, type: string, size: number = 1024): File {
+        const content = new Uint8Array(size)
+        return new File([content], name, { type })
+      }
+
+      await expect(
+        api.uploadResource(createMockFile('test.pdf', 'application/pdf'))
+      ).rejects.toThrow(/Invalid API response for uploadResource/)
+    })
+
     it('getPossiblePlayerNominations validates response', async () => {
       server.use(
         http.post(
