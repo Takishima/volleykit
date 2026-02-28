@@ -395,7 +395,7 @@ jobs:
 
           if [ "$CHANGESET_COUNT" -eq 0 ]; then
             echo "has_changeset=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::No changeset found. If this PR includes user-facing changes, please run 'npx changeset' to add a changelog entry."
+            echo "::warning::No changeset found. If this PR includes user-facing changes, please run 'pnpm exec changeset' to add a changelog entry."
           else
             echo "has_changeset=true" >> "$GITHUB_OUTPUT"
             echo "Found $CHANGESET_COUNT changeset(s)"
@@ -414,7 +414,7 @@ jobs:
             echo "If this PR includes user-facing changes (features, fixes), please add a changeset:" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo '```bash' >> "$GITHUB_STEP_SUMMARY"
-            echo 'npx changeset' >> "$GITHUB_STEP_SUMMARY"
+            echo 'pnpm exec changeset' >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "If this PR is docs-only or internal, no changeset is needed." >> "$GITHUB_STEP_SUMMARY"

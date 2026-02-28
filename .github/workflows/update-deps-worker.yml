@@ -24,7 +24,7 @@ on:
 # Worker Dependency Update Workflow
 # =============================================================================
 #
-# This workflow automatically updates npm dependencies for the worker,
+# This workflow automatically updates dependencies for the worker,
 # runs full validation, and creates a PR if successful.
 #
 # Flow:

@@ -24,7 +24,7 @@ on:
 # Web App Dependency Update Workflow
 # =============================================================================
 #
-# This workflow automatically updates npm dependencies for the web app,
+# This workflow automatically updates dependencies for the web app,
 # runs full validation, and creates a PR if successful.
 #
 # Flow:

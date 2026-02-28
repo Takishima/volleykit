@@ -57,7 +57,7 @@ jobs:
             actions: read
           # Use opus model for higher quality responses
           claude_args: '--model opus'
-          # Allow Claude to use npm commands for running tests, builds, and linting
+          # Allow Claude to use pnpm commands for running tests, builds, and linting
           allowed_tools: |
             Bash(pnpm:*)
             # gh CLI for basic issue/PR operations (view, list, comment)
