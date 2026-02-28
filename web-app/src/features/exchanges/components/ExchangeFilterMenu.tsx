@@ -13,6 +13,7 @@ import {
   Award,
 } from '@/shared/components/icons'
 import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
+import { features } from '@/shared/config/features'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useSettingsStore } from '@/shared/stores/settings'
 import { formatTravelTime, MINUTES_PER_HOUR } from '@/shared/utils/format-travel-time'
@@ -346,7 +347,7 @@ function ExchangeFilterMenuComponent({
           )}
 
           {/* Travel time filter */}
-          {isTravelTimeFilterAvailable && (
+          {features.transport && isTravelTimeFilterAvailable && (
             <FilterToggleRow
               icon={<TrainFront className="w-full h-full" />}
               label={t('exchange.filterByTravelTime')}

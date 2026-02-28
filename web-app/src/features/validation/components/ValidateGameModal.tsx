@@ -9,6 +9,7 @@ import { Modal } from '@/shared/components/Modal'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { WizardStepContainer } from '@/shared/components/WizardStepContainer'
 import { WizardStepIndicator } from '@/shared/components/WizardStepIndicator'
+import { features } from '@/shared/config/features'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useSettingsStore } from '@/shared/stores/settings'
 
@@ -162,9 +163,10 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     setOCRDismissedForAssignment(assignmentId)
   }, [assignmentId])
 
-  // Determine if OCR entry should be shown
+  // Determine if OCR entry should be shown (features.ocr)
   // Note: OCR is available for validated games too (for debugging/re-verification purposes)
-  const shouldShowOCREntry = isOpen && isOCREnabled && !ocrDismissed && !wizard.isLoadingGameDetails
+  const shouldShowOCREntry =
+    features.ocr && isOpen && isOCREnabled && !ocrDismissed && !wizard.isLoadingGameDetails
 
   const navigation = {
     isFirstStep: wizard.isFirstStep,

@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { Settings, X, MapPin, TrainFront, Clock } from '@/shared/components/icons'
 import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
+import { features } from '@/shared/config/features'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useTravelTimeAvailable } from '@/shared/hooks/useTravelTime'
 import { useSettingsStore } from '@/shared/stores/settings'
@@ -199,7 +200,7 @@ function ExchangeSettingsSheetComponent({ dataTour }: ExchangeSettingsSheetProps
           )}
 
           {/* Max Travel Time slider */}
-          {canShowTravelTimeSlider && (
+          {features.transport && canShowTravelTimeSlider && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <TrainFront className="w-5 h-5 text-text-muted dark:text-text-muted-dark" />

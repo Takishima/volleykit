@@ -4,6 +4,7 @@ import type { Assignment } from '@/api/client'
 import { useAssignmentConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
 import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { ExpandableCard } from '@/shared/components/ExpandableCard'
+import { features } from '@/shared/config/features'
 import { useDateFormat } from '@/shared/hooks/useDateFormat'
 import { useSbbUrl } from '@/shared/hooks/useSbbUrl'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -106,7 +107,7 @@ function AssignmentCardComponent({
     [linesman1, linesman2, linesman3, linesman4]
   ) as string[]
 
-  // Get transport settings for the association
+  // Get transport settings for the association (features.transport)
   const isTransportEnabled = useSettingsStore((state) =>
     state.isTransportEnabledForAssociation(associationCode)
   )
@@ -117,7 +118,7 @@ function AssignmentCardComponent({
   const hallId = game?.hall?.__identity
   const gameStartingDateTime = game?.startingDateTime
 
-  // Hook to fetch trip data on demand and generate SBB URL with station ID
+  // Hook to fetch trip data on demand and generate SBB URL with station ID (features.transport)
   const { isLoading: isSbbLoading, openSbbConnection } = useSbbUrl({
     hallCoords,
     hallId,
@@ -127,8 +128,10 @@ function AssignmentCardComponent({
     language: locale,
   })
 
-  // Show SBB button if transport is enabled and we have the required data
-  const showSbbButton = Boolean(isTransportEnabled && city && gameStartingDateTime)
+  // Show SBB button if transport feature is enabled and we have the required data
+  const showSbbButton = Boolean(
+    features.transport && isTransportEnabled && city && gameStartingDateTime
+  )
 
   // Detect if this is a single-ball hall (NLA/NLB only)
   const singleBallMatch = detectSingleBallHall(assignment)
