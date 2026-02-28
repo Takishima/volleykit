@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.21.0
+
+### Minor Changes
+
+- [#971](https://github.com/Takishima/volleykit/pull/971) [`87f2a72`](https://github.com/Takishima/volleykit/commit/87f2a72589e4191a3443d1e52e0ac7b73af9e858) Thanks [@Takishima](https://github.com/Takishima)! - Add Zod response validation to all API client detail and mutation endpoints
+
+### Patch Changes
+
+- Updated dependencies [[`87f2a72`](https://github.com/Takishima/volleykit/commit/87f2a72589e4191a3443d1e52e0ac7b73af9e858)]:
+  - @volleykit/shared@1.21.0
+
 ## 1.20.0
 
 ### Patch Changes
