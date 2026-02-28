@@ -136,7 +136,7 @@ jobs:
         run: ncu --target minor -u
       - name: Reinstall dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
       - name: Run Expo Doctor
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
