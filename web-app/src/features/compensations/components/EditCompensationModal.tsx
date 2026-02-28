@@ -1,25 +1,11 @@
 import { useState, useCallback, useEffect, useMemo, memo } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
+import { getTeamNames, getTeamNamesFromCompensation } from '@volleykit/shared/utils'
 
-import type { Assignment, CompensationRecord } from '@/api/client'
 import { getApiClient } from '@/api/client'
+import type { Assignment, CompensationRecord } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import {
-  getTeamNames,
-  getTeamNamesFromCompensation,
-} from '@/features/assignments/utils/assignment-helpers'
-import {
-  useBatchUpdateCompensations,
-  type BatchUpdateResult,
-} from '@/features/compensations/hooks/useCompensations'
-import { isCompensationEditable } from '@/features/compensations/utils/compensation-actions'
-import {
-  useUpdateCompensation,
-  useUpdateAssignmentCompensation,
-  COMPENSATION_ERROR_KEYS,
-  type CompensationErrorKey,
-} from '@/features/validation/hooks/useConvocations'
 import { Button } from '@/shared/components/Button'
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
 import { Modal } from '@/shared/components/Modal'
@@ -38,6 +24,16 @@ import {
   parseLocalizedNumber,
 } from '@/shared/utils/distance'
 import { logger } from '@/shared/utils/logger'
+
+import {
+  useBatchUpdateCompensations,
+  useUpdateCompensation,
+  useUpdateAssignmentCompensation,
+  COMPENSATION_ERROR_KEYS,
+  type CompensationErrorKey,
+  type BatchUpdateResult,
+} from '../hooks/useCompensations'
+import { isCompensationEditable } from '../utils/compensation-actions'
 
 interface EditCompensationModalProps {
   assignment?: Assignment

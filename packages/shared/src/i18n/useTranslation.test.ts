@@ -5,7 +5,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
 
-import { useSettingsStore } from '../stores/settings'
+import { useSettingsStore } from '../stores'
 
 import { translate, useTranslation } from './useTranslation'
 

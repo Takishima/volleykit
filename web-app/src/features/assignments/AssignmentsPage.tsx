@@ -11,12 +11,6 @@ import {
   OnCallCard,
   type OnCallAssignment,
 } from '@/features/referee-backup'
-import {
-  useUpcomingAssignments,
-  useValidationClosedAssignments,
-  useCalendarAssignments,
-} from '@/features/validation/hooks/useConvocations'
-import type { CalendarAssignment } from '@/features/validation/hooks/useConvocations'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
@@ -27,6 +21,8 @@ import { useAuthStore } from '@/shared/stores/auth'
 import { groupByWeek } from '@/shared/utils/date-helpers'
 
 import { useAssignmentActions } from './hooks/useAssignmentActions'
+import { useUpcomingAssignments, useValidationClosedAssignments } from './hooks/useAssignments'
+import { useCalendarAssignments, type CalendarAssignment } from './hooks/useCalendarAssignments'
 import { useCalendarAssociationFilter } from './hooks/useCalendarAssociationFilter'
 import { useDailyGameBadge } from './hooks/useDailyGameBadge'
 import { createAssignmentActions } from './utils/assignment-actions'

@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { CompensationRecord } from '@/api/client'
-import * as useConvocations from '@/features/validation/hooks/useConvocations'
+import * as compensationHooks from './hooks/useCompensations'
 
 import { CompensationsPage } from './CompensationsPage'
 
@@ -22,7 +22,7 @@ const mockUseTour = vi.hoisted(() => ({
   }),
 }))
 
-vi.mock('@/features/validation/hooks/useConvocations')
+vi.mock('./hooks/useCompensations')
 vi.mock('@/shared/hooks/useTour', () => mockUseTour)
 vi.mock('@/shared/hooks/useCompensationActions', () => ({
   useCompensationActions: () => ({
@@ -90,7 +90,7 @@ describe('CompensationsPage', () => {
     vi.clearAllMocks()
 
     // Default mocks - single useCompensations hook with dynamic filter
-    vi.mocked(useConvocations.useCompensations).mockReturnValue(createMockQueryResult([]))
+    vi.mocked(compensationHooks.useCompensations).mockReturnValue(createMockQueryResult([]))
   })
 
   describe('Tab Navigation', () => {
@@ -149,7 +149,7 @@ describe('CompensationsPage', () => {
 
   describe('Content Display', () => {
     it('should show loading state', () => {
-      vi.mocked(useConvocations.useCompensations).mockReturnValue(
+      vi.mocked(compensationHooks.useCompensations).mockReturnValue(
         createMockQueryResult(undefined, true)
       )
 
@@ -159,7 +159,7 @@ describe('CompensationsPage', () => {
     })
 
     it('should show error state with retry button', () => {
-      vi.mocked(useConvocations.useCompensations).mockReturnValue(
+      vi.mocked(compensationHooks.useCompensations).mockReturnValue(
         createMockQueryResult(undefined, false, new Error('Failed to load'))
       )
 
@@ -170,7 +170,7 @@ describe('CompensationsPage', () => {
     })
 
     it('should show empty state when no compensations', () => {
-      vi.mocked(useConvocations.useCompensations).mockReturnValue(createMockQueryResult([]))
+      vi.mocked(compensationHooks.useCompensations).mockReturnValue(createMockQueryResult([]))
 
       render(<CompensationsPage />)
 
@@ -182,7 +182,7 @@ describe('CompensationsPage', () => {
 
     it('should show compensations when data is available', () => {
       const compensation = createMockCompensation()
-      vi.mocked(useConvocations.useCompensations).mockReturnValue(
+      vi.mocked(compensationHooks.useCompensations).mockReturnValue(
         createMockQueryResult([compensation])
       )
 
@@ -196,7 +196,7 @@ describe('CompensationsPage', () => {
     it('should call useCompensations with false for Pending (Past) tab (default)', () => {
       render(<CompensationsPage />)
 
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false)
+      expect(compensationHooks.useCompensations).toHaveBeenCalledWith(false)
     })
 
     it('should call useCompensations with true for Closed tab', () => {
@@ -204,7 +204,7 @@ describe('CompensationsPage', () => {
 
       fireEvent.click(screen.getByRole('tab', { name: /^closed$/i }))
 
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(true)
+      expect(compensationHooks.useCompensations).toHaveBeenCalledWith(true)
     })
 
     it('should call useCompensations with false for Pending (Future) tab', () => {
@@ -212,7 +212,7 @@ describe('CompensationsPage', () => {
 
       fireEvent.click(screen.getByRole('tab', { name: /pending \(future\)/i }))
 
-      expect(useConvocations.useCompensations).toHaveBeenCalledWith(false)
+      expect(compensationHooks.useCompensations).toHaveBeenCalledWith(false)
     })
   })
 })

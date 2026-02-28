@@ -11,7 +11,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createAuthService } from './service'
 import type { AuthServiceConfig } from './types'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores'
 
 // Mock fetch globally
 const mockFetch = vi.fn()

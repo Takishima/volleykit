@@ -6,7 +6,7 @@
  */
 
 import { MS_PER_HOUR } from './date-helpers'
-import type { components } from '../api/schema'
+import type { components } from '../api'
 
 // Use OpenAPI schema types which have full nested structure
 type Schemas = components['schemas']

@@ -121,9 +121,8 @@ export interface UserData {
   occupations: OccupationData[]
 }
 
-// OccupationType is defined in stores/auth.ts to avoid circular imports
-// Re-export it here for API consumers
-import type { OccupationType } from '../stores/auth'
+// OccupationType is defined in stores/auth.ts - re-export it here for API consumers
+import type { OccupationType } from '../stores'
 export type { OccupationType }
 
 /**

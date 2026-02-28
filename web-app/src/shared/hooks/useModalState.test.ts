@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
+import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
 
 import { useModalState } from './useModalState'
 

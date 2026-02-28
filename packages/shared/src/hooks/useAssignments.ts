@@ -11,8 +11,7 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { addDays, startOfDay, endOfDay, subDays } from 'date-fns'
 
-import { queryKeys, type SearchConfiguration } from '../api/queryKeys'
-import type { Assignment } from '../api/validation'
+import { queryKeys, type SearchConfiguration, type Assignment } from '../api'
 
 /** Default page size for API requests */
 export const DEFAULT_PAGE_SIZE = 50

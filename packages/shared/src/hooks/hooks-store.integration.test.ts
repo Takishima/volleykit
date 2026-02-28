@@ -13,7 +13,7 @@ import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
 
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores'
 import { useAuth } from './useAuth'
 import { useAssignments, type AssignmentsApiClient } from './useAssignments'
 import { useCompensations, type CompensationsApiClient } from './useCompensations'

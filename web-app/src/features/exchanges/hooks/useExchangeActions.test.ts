@@ -2,8 +2,8 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
-import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
-import * as useConvocations from '@/features/validation/hooks/useConvocations'
+import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
+import * as exchangeHooks from './useExchanges'
 import * as authStore from '@/shared/stores/auth'
 import * as settingsStore from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
@@ -12,7 +12,7 @@ import { useExchangeActions } from './useExchangeActions'
 
 import type { UseMutationResult } from '@tanstack/react-query'
 
-vi.mock('@/features/validation/hooks/useConvocations')
+vi.mock('./useExchanges')
 vi.mock('@/shared/stores/auth')
 vi.mock('@/shared/stores/settings')
 vi.mock('@/shared/stores/toast', () => ({
@@ -82,11 +82,11 @@ describe('useExchangeActions', () => {
       >)
     )
 
-    vi.mocked(useConvocations.useApplyForExchange).mockReturnValue({
+    vi.mocked(exchangeHooks.useApplyForExchange).mockReturnValue({
       mutateAsync: mockApplyMutate,
     } as unknown as UseMutationResult<void, Error, string>)
 
-    vi.mocked(useConvocations.useRemoveOwnExchange).mockReturnValue({
+    vi.mocked(exchangeHooks.useRemoveOwnExchange).mockReturnValue({
       mutateAsync: mockRemoveOwnMutate,
     } as unknown as UseMutationResult<void, Error, string>)
   })

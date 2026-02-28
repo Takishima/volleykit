@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
-import { MODAL_CLEANUP_DELAY } from '@/features/assignments/utils/assignment-helpers'
+import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
 
 export interface ModalState<T> {
   /** Whether the modal is currently open */

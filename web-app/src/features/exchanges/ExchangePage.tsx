@@ -9,11 +9,6 @@ import {
   DEFAULT_SAME_LOCATION_DISTANCE_KM,
 } from '@/features/assignments/utils/conflict-detection'
 import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
-import { ActiveFilterIcons } from '@/features/exchanges/components/ActiveFilterIcons'
-import { ExchangeCard } from '@/features/exchanges/components/ExchangeCard'
-import { ExchangeFilterMenu } from '@/features/exchanges/components/ExchangeFilterMenu'
-import { TOUR_DUMMY_EXCHANGE } from '@/features/exchanges/exchange'
-import { useGameExchanges, type ExchangeStatus } from '@/features/validation/hooks/useConvocations'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
@@ -30,7 +25,12 @@ import { calculateCarDistanceKm } from '@/shared/utils/distance'
 import { extractCoordinates } from '@/shared/utils/geo-location'
 import type { SwipeConfig } from '@/types/swipe'
 
+import { ActiveFilterIcons } from './components/ActiveFilterIcons'
+import { ExchangeCard } from './components/ExchangeCard'
+import { ExchangeFilterMenu } from './components/ExchangeFilterMenu'
+import { TOUR_DUMMY_EXCHANGE } from './exchange'
 import { useExchangeActions } from './hooks/useExchangeActions'
+import { useGameExchanges, type ExchangeStatus } from './hooks/useExchanges'
 import { createExchangeActions } from './utils/exchange-actions'
 
 const TakeOverExchangeModal = lazy(() =>

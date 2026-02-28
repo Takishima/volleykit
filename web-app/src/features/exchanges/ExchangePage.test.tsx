@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
-import * as useConvocations from '@/features/validation/hooks/useConvocations'
+import * as exchangeHooks from './hooks/useExchanges'
 import * as authStore from '@/shared/stores/auth'
 import * as demoStore from '@/shared/stores/demo'
 import * as settingsStore from '@/shared/stores/settings'
@@ -25,7 +25,7 @@ const mockUseTour = vi.hoisted(() => ({
   }),
 }))
 
-vi.mock('@/features/validation/hooks/useConvocations')
+vi.mock('./hooks/useExchanges')
 vi.mock('@/shared/stores/auth')
 vi.mock('@/shared/stores/demo')
 vi.mock('@/shared/stores/settings')
@@ -39,6 +39,10 @@ vi.mock('@/features/assignments/hooks/useCalendarConflicts', () => ({
     error: null,
     hasCalendarCode: false,
   }),
+}))
+vi.mock('@/features/assignments/utils/conflict-detection', () => ({
+  hasMinimumGapFromAssignments: () => true,
+  DEFAULT_SAME_LOCATION_DISTANCE_KM: 5,
 }))
 vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
@@ -160,7 +164,7 @@ describe('ExchangePage', () => {
       (selector?: (state: any) => any) => (selector ? selector(defaultState) : defaultState)
     )
 
-    vi.mocked(useConvocations.useGameExchanges).mockReturnValue(createMockQueryResult([]))
+    vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([]))
   })
 
   describe('Filter Menu', () => {
@@ -260,7 +264,7 @@ describe('ExchangePage', () => {
         userRefereeLevelGradationValue: 2,
       })
 
-      vi.mocked(useConvocations.useGameExchanges).mockReturnValue(
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(
         createMockQueryResult([exchangeN1, exchangeN2, exchangeN3])
       )
     })
@@ -340,9 +344,7 @@ describe('ExchangePage', () => {
 
     it('should show filtered empty state message when no exchanges match level', () => {
       // Only return exchanges requiring higher level than user has
-      vi.mocked(useConvocations.useGameExchanges).mockReturnValue(
-        createMockQueryResult([exchangeN1])
-      )
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([exchangeN1]))
 
       // Mock filter as enabled
       const stateWithFilter = {
@@ -390,7 +392,7 @@ describe('ExchangePage', () => {
     })
 
     it('should switch to Added by Me tab when clicked', () => {
-      vi.mocked(useConvocations.useGameExchanges).mockReturnValue(createMockQueryResult([]))
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([]))
 
       render(<ExchangePage />)
 

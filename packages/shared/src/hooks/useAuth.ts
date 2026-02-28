@@ -5,7 +5,7 @@
  * Placeholder for now - implementation in Phase 2
  */
 
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores'
 
 export const useAuth = () => {
   const status = useAuthStore((state) => state.status)

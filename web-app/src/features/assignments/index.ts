@@ -4,7 +4,7 @@ export { AssignmentsPage } from './AssignmentsPage'
 // Hooks
 export { useAssignments, useUpcomingAssignments, usePastAssignments } from './hooks/useAssignments'
 export { useAssignmentActions } from './hooks/useAssignmentActions'
-export { useCalendarAssignments } from './hooks/useCalendarAssignments'
+export { useCalendarAssignments, type CalendarAssignment } from './hooks/useCalendarAssignments'
 export { useCalendarTheme } from './hooks/useCalendarTheme'
 
 // Components

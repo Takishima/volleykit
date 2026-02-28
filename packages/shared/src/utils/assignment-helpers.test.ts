@@ -18,7 +18,7 @@ import {
   isActionAvailable,
   formatTeamMatchup,
 } from './assignment-helpers'
-import type { components } from '../api/schema'
+import type { components } from '../api'
 
 type Assignment = components['schemas']['Assignment']
 type CompensationRecord = components['schemas']['CompensationRecord']
