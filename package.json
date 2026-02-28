@@ -1,29 +1,22 @@
 {
   "name": "volleykit",
   "private": true,
-  "workspaces": [
-    "packages/shared",
-    "packages/mobile",
-    "web-app",
-    "ocr-poc",
-    "help-site",
-    "worker"
-  ],
+  "packageManager": "pnpm@10.29.3",
   "scripts": {
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:status": "changeset status",
-    "generate:api": "npm run generate:api --workspace=web-app",
-    "lint": "npm run lint --workspaces --if-present",
+    "generate:api": "pnpm --filter volleykit-web run generate:api",
+    "lint": "pnpm -r run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
-    "test": "npm run test --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present",
-    "mobile:start": "npm run start --workspace=@volleykit/mobile",
-    "mobile:ios": "npm run ios --workspace=@volleykit/mobile",
-    "mobile:android": "npm run android --workspace=@volleykit/mobile",
-    "shared:build": "npm run build --workspace=@volleykit/shared",
-    "shared:test": "npm run test --workspace=@volleykit/shared"
+    "test": "pnpm -r run test",
+    "build": "pnpm -r run build",
+    "mobile:start": "pnpm --filter @volleykit/mobile run start",
+    "mobile:ios": "pnpm --filter @volleykit/mobile run ios",
+    "mobile:android": "pnpm --filter @volleykit/mobile run android",
+    "shared:build": "pnpm --filter @volleykit/shared run build",
+    "shared:test": "pnpm --filter @volleykit/shared run test"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
@@ -38,21 +31,24 @@
     "prettier": "^3.8.1",
     "typescript": "~5.9.3"
   },
-  "overrides": {
-    "fast-xml-parser": "^5.3.4",
-    "@types/react": "^19.2.14",
-    "axios": "^1.12.0",
-    "wrangler": {
-      "miniflare": {
-        "zod": "^3.25.76",
-        "ws": "^8.18.3"
-      }
+  "pnpm": {
+    "overrides": {
+      "fast-xml-parser": "^5.3.4",
+      "@types/react": "^19.2.14",
+      "axios": "^1.12.0",
+      "jsdom": "^27.4.0",
+      "@xmldom/xmldom": "^0.8.11",
+      "react": "^19.2.4",
+      "react-native-screens": "~4.23.0",
+      "devalue": "^5.6.3"
     },
-    "jsdom": "^27.4.0",
-    "@xmldom/xmldom": "^0.8.11",
-    "react": "^19.2.4",
-    "react-native-screens": "~4.23.0",
-    "devalue": "^5.6.3"
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msw",
+      "sharp",
+      "unrs-resolver",
+      "workerd"
+    ]
   },
   "engines": {
     "node": ">=22.0.0"

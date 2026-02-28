@@ -45,7 +45,7 @@ jobs:
         with:
           working-directory: packages/mobile
       - name: Generate API types
-        run: npm run generate:api
+        run: pnpm run generate:api
         working-directory: .
       - name: Setup EAS
         uses: expo/expo-github-action@v8

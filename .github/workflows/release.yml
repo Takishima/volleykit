@@ -38,15 +38,15 @@ jobs:
         with:
           working-directory: web-app
       - name: Generate API types
-        run: npm run generate:api
+        run: pnpm run generate:api
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Knip (dead code detection)
-        run: npm run knip
+        run: pnpm run knip
       - name: Test
-        run: npm test
+        run: pnpm test
       - name: Build
-        run: npm run build
+        run: pnpm run build
   release:
     needs: validate
     runs-on: ubuntu-latest
@@ -70,12 +70,14 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install root dependencies (changesets)
-        run: npm install
+        run: pnpm install
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
@@ -99,10 +101,10 @@ jobs:
         run: |
           # Run changeset version (monorepo workspaces are configured in root package.json)
           # web-app/CHANGELOG.md is a symlink to ../CHANGELOG.md
-          npx changeset version
+          pnpm exec changeset version
 
-          # Sync package-lock.json with the new version in package.json
-          npm install --package-lock-only
+          # Sync pnpm-lock.yaml with the new version in package.json
+          pnpm install --lockfile-only
       - name: Sync mobile app.json version
         if: steps.check_changesets.outputs.changeset_count != '0'
         run: |

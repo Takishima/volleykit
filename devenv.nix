@@ -19,11 +19,11 @@
   languages.javascript = {
     enable = true;
     package = pkgs.nodejs_22;
-    npm = {
+    pnpm = {
       enable = true;
       install.enable = true;
     };
-    # Root directory for npm workspaces - installs all workspace dependencies
+    # Root directory for pnpm workspaces - installs all workspace dependencies
     directory = ".";
   };
 
@@ -35,94 +35,94 @@
   scripts = {
     # Workspace-wide commands
     lint.exec = ''
-      npm run lint
+      pnpm run lint
     '';
 
     test.exec = ''
-      npm run test
+      pnpm run test
     '';
 
     build.exec = ''
-      npm run build
+      pnpm run build
     '';
 
     format.exec = ''
-      npm run format
+      pnpm run format
     '';
 
     format-check.exec = ''
-      npm run format:check
+      pnpm run format:check
     '';
 
     # Web app
     web-dev.exec = ''
-      cd web-app && npm run dev
+      cd web-app && pnpm run dev
     '';
 
     web-build.exec = ''
-      cd web-app && VITE_BASE_PATH=/volleykit/ npm run build
+      cd web-app && VITE_BASE_PATH=/volleykit/ pnpm run build
     '';
 
     web-preview.exec = ''
-      cd web-app && VITE_BASE_PATH=/volleykit/ npm run preview
+      cd web-app && VITE_BASE_PATH=/volleykit/ pnpm run preview
     '';
 
     web-test.exec = ''
-      cd web-app && npm test
+      cd web-app && pnpm test
     '';
 
     web-lint.exec = ''
-      cd web-app && npm run lint
+      cd web-app && pnpm run lint
     '';
 
     generate-api.exec = ''
-      npm run generate:api
+      pnpm run generate:api
     '';
 
     # Shared package
     shared-build.exec = ''
-      npm run shared:build
+      pnpm run shared:build
     '';
 
     shared-test.exec = ''
-      npm run shared:test
+      pnpm run shared:test
     '';
 
     # Mobile app
     mobile-start.exec = ''
-      npm run mobile:start
+      pnpm run mobile:start
     '';
 
     mobile-ios.exec = ''
-      npm run mobile:ios
+      pnpm run mobile:ios
     '';
 
     mobile-android.exec = ''
-      npm run mobile:android
+      pnpm run mobile:android
     '';
 
     # Cloudflare Worker
     worker-dev.exec = ''
-      cd worker && npm run dev
+      cd worker && pnpm run dev
     '';
 
     worker-deploy.exec = ''
-      cd worker && npx wrangler deploy
+      cd worker && pnpm exec wrangler deploy
     '';
 
     # Help site
     help-dev.exec = ''
-      cd help-site && npm run dev
+      cd help-site && pnpm run dev
     '';
 
     help-build.exec = ''
-      cd help-site && npm run build
+      cd help-site && pnpm run build
     '';
   };
 
   # Background process for development with production-like base path
   # Run with: devenv up
-  processes.web.exec = "cd web-app && VITE_BASE_PATH=/volleykit/ npm run dev";
+  processes.web.exec = "cd web-app && VITE_BASE_PATH=/volleykit/ pnpm run dev";
 
   # Treefmt for code formatting
   treefmt = {
@@ -136,8 +136,8 @@
           enable = true;
           indent_size = 2;
         };
-        # Use the workspace-installed Prettier so treefmt and npm run format
-        # always produce identical output (avoids version drift between nix and npm).
+        # Use the workspace-installed Prettier so treefmt and pnpm run format
+        # always produce identical output (avoids version drift between nix and pnpm).
         prettier = {
           enable = true;
           package = pkgs.writeShellScriptBin "prettier" ''

@@ -7,9 +7,6 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "overrides": {
-    "axios": "^1.12.0"
-  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -78,7 +75,7 @@
     "@tailwindcss/vite": "^4.2.0",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-persist-client": "^5.90.22",
-    "@volleykit/shared": "*",
+    "@volleykit/shared": "workspace:*",
     "date-fns": "^4.1.0",
     "fuse.js": "^7.1.0",
     "idb": "^8.0.3",

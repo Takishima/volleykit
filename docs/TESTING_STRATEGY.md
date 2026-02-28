@@ -303,16 +303,16 @@ it('sends correct request body', async () => {
 
 ```bash
 # Unit + Integration tests (fast, run frequently)
-npm test
+pnpm test
 
 # Unit tests with coverage
-npm run test:coverage
+pnpm run test:coverage
 
 # E2E tests (slow, run before PR)
-npm run build && npm run test:e2e
+pnpm run build && pnpm run test:e2e
 
 # Single browser E2E
-npx playwright test --project=chromium
+pnpm exec playwright test --project=chromium
 ```
 
 ## Coverage Requirements

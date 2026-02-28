@@ -79,13 +79,13 @@ console.log('Login attempt:', { username, password: '[REDACTED]' })
 
 | Check            | What to look for                                    |
 | ---------------- | --------------------------------------------------- |
-| New dependencies | Check npm audit, bundle size, maintenance status    |
+| New dependencies | Check pnpm audit, bundle size, maintenance status   |
 | CDN scripts      | Avoid external scripts; bundle dependencies instead |
 | Permissions      | Review what APIs new packages access                |
 
 ```bash
 # Check for vulnerabilities before adding dependencies
-npm audit
+pnpm audit
 ```
 
 ## CORS & Network
@@ -119,7 +119,7 @@ These files have elevated security sensitivity:
 | Security Misconfiguration | ESLint security plugins, strict CSP in worker     |
 | XSS                       | React escaping, no-unsanitized ESLint rules       |
 | Insecure Deserialization  | JSON.parse with typed validation (Zod)            |
-| Vulnerable Components     | npm audit, Dependabot alerts                      |
+| Vulnerable Components     | pnpm audit, Dependabot alerts                     |
 | Logging & Monitoring      | Structured logging without sensitive data         |
 
 ## When to Escalate

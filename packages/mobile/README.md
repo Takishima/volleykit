@@ -22,10 +22,10 @@ React Native mobile app for iOS and Android.
 ## Development
 
 ```bash
-npm start             # Start Expo dev server
-npm run ios           # Run on iOS simulator
-npm run android       # Run on Android emulator
-npm run prebuild      # Generate native projects
+pnpm start            # Start Expo dev server
+pnpm run ios          # Run on iOS simulator
+pnpm run android      # Run on Android emulator
+pnpm run prebuild     # Generate native projects
 ```
 
 ## Project Structure

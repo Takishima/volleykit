@@ -44,14 +44,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install root dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
       - name: Install npm-check-updates
-        run: npm install -g npm-check-updates@17
+        run: pnpm add -g npm-check-updates@17
       - name: Check for updates
         id: check-updates
         working-directory: packages/mobile
@@ -134,7 +136,7 @@ jobs:
         run: ncu --target minor -u
       - name: Reinstall dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
-        run: npm install
+        run: pnpm install
       - name: Run Expo Doctor
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
@@ -162,7 +164,7 @@ jobs:
         with:
           name: updated-packages-mobile
           path: |
-            package-lock.json
+            pnpm-lock.yaml
             packages/mobile/package.json
             packages/shared/package.json
           retention-days: 1
@@ -187,17 +189,17 @@ jobs:
         with:
           working-directory: packages/mobile
       - name: Generate API types
-        run: npm run generate:api
+        run: pnpm run generate:api
         working-directory: .
       - name: TypeScript check
-        run: npm run typecheck
+        run: pnpm run typecheck
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Security audit
-        run: npm audit --audit-level=high --omit=dev
+        run: pnpm audit --audit-level high --prod
         working-directory: .
       - name: Test
-        run: npm test -- --passWithNoTests
+        run: pnpm test --passWithNoTests
   create-pr:
     name: Create PR
     needs: [update, validate]

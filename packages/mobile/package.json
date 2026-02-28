@@ -41,7 +41,7 @@
     "@react-navigation/native-stack": "^7.3.16",
     "@tanstack/react-query": "^5.90.21",
     "@tanstack/react-query-persist-client": "^5.90.22",
-    "@volleykit/shared": "*",
+    "@volleykit/shared": "workspace:*",
     "date-fns": "^4.1.0",
     "expo": "~55.0.3",
     "expo-calendar": "~55.0.8",

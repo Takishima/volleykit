@@ -87,7 +87,7 @@ cd "$WEB_APP_DIR"
 # Generate API types if OpenAPI spec changed
 if [ "$HAS_OPENAPI" = true ]; then
   echo "OpenAPI spec changed, generating types..."
-  npm run generate:api
+  pnpm run generate:api
 fi
 
 # Create temp directory for parallel job outputs
@@ -135,16 +135,16 @@ echo -e "${BLUE}Running format, lint, knip, and test in parallel...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 # Run format, lint, knip, and test in parallel
-run_validation "format" "npm run format:check" &
+run_validation "format" "pnpm run format:check" &
 FORMAT_PID=$!
 
-run_validation "lint" "npm run lint" &
+run_validation "lint" "pnpm run lint" &
 LINT_PID=$!
 
-run_validation "knip" "npm run knip" &
+run_validation "knip" "pnpm run knip" &
 KNIP_PID=$!
 
-run_validation "test" "npm test" &
+run_validation "test" "pnpm test" &
 TEST_PID=$!
 
 # Track job completion
@@ -206,7 +206,7 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ "$FORMAT_RESULT" -eq 0 ] && [ "$LINT_RESULT" -eq 0 ] && [ "$KNIP_RESULT" -eq 0 ] && [ "$TEST_RESULT" -eq 0 ]; then
   echo "Running build..."
-  if npm run build; then
+  if pnpm run build; then
     echo -e "${GREEN}Build passed${NC}"
   else
     echo -e "${RED}Build failed${NC}"

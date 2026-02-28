@@ -41,7 +41,7 @@ Single source of truth for Claude Code Review. This file is automatically loaded
 | XSS          | `dangerouslySetInnerHTML`, dynamic `href`, unvalidated URLs       |
 | Injection    | String interpolation in URLs (use `URLSearchParams`)              |
 | Credentials  | Hardcoded secrets, tokens in localStorage, sensitive data in logs |
-| Dependencies | New packages with network access, npm audit warnings              |
+| Dependencies | New packages with network access, pnpm audit warnings             |
 
 ### Sensitive Files (Require extra scrutiny)
 

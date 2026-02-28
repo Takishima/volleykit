@@ -18,9 +18,9 @@ A multi-platform app suite for Swiss volleyball referees, providing an improved 
 ## Quick Start
 
 ```bash
-npm install                        # Install all dependencies
-cd web-app && npm run dev          # Start web dev server (localhost:5173)
-cd packages/mobile && npm start    # Start Expo dev server
+pnpm install                       # Install all dependencies
+cd web-app && pnpm run dev         # Start web dev server (localhost:5173)
+cd packages/mobile && pnpm start   # Start Expo dev server
 ```
 
 ## Documentation

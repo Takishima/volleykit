@@ -1,0 +1,7 @@
+packages:
+  - packages/shared
+  - packages/mobile
+  - web-app
+  - ocr-poc
+  - help-site
+  - worker

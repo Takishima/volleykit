@@ -8,13 +8,13 @@ This document explains how to capture screenshots for the help site documentatio
 cd web-app
 
 # Install Playwright browser
-npx playwright install chromium
+pnpm exec playwright install chromium
 
 # Build the app
-npm run build
+pnpm run build
 
 # Capture screenshots
-npm run screenshots:help
+pnpm run screenshots:help
 ```
 
 ## What Gets Captured
@@ -43,7 +43,7 @@ Travel screenshots require the production site with OJP API configured. Run from
 ```bash
 # Set PRODUCTION_URL and run specific travel tests
 PRODUCTION_URL=https://takishima.github.io/volleykit/ \
-  npx playwright test e2e/capture-screenshots.spec.ts \
+  pnpm exec playwright test e2e/capture-screenshots.spec.ts \
   --project=chromium \
   -g "travel-time|journey-details"
 ```
@@ -70,7 +70,7 @@ Some screenshots require manual capture or specific conditions:
 
 ```bash
 # Run a specific screenshot test
-npx playwright test e2e/capture-screenshots.spec.ts \
+pnpm exec playwright test e2e/capture-screenshots.spec.ts \
   --project=chromium \
   -g "assignment-detail"
 ```

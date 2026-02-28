@@ -26,12 +26,12 @@ A Progressive Web App (PWA) for Swiss volleyball referee management.
 ## Development
 
 ```bash
-npm install
-npm run dev           # Start dev server (localhost:5173)
-npm run build         # Production build
-npm run lint          # ESLint check
-npm test              # Unit tests (Vitest)
-npm run test:e2e      # E2E tests (Playwright)
+pnpm install
+pnpm run dev          # Start dev server (localhost:5173)
+pnpm run build        # Production build
+pnpm run lint         # ESLint check
+pnpm test             # Unit tests (Vitest)
+pnpm run test:e2e     # E2E tests (Playwright)
 ```
 
 ## Project Structure

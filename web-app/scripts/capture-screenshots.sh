@@ -68,37 +68,37 @@ echo "================================"
 echo ""
 
 # Check if Playwright is installed
-if ! npx playwright --version &>/dev/null; then
+if ! pnpm exec playwright --version &>/dev/null; then
   echo "⚠️  Playwright not found. Installing..."
-  npm install
+  pnpm install
 fi
 
 # Check if Chromium is installed
-if ! npx playwright install --dry-run chromium 2>&1 | grep -q "already installed"; then
+if ! pnpm exec playwright install --dry-run chromium 2>&1 | grep -q "already installed"; then
   echo "📦 Installing Chromium browser..."
-  npx playwright install chromium
+  pnpm exec playwright install chromium
 fi
 
 # Build the app
 echo "🔨 Building the app..."
-npm run build
+pnpm run build
 
 # Determine which tests to run
 case $CAPTURE_MODE in
 all)
   echo "📷 Capturing all screenshots..."
-  npx playwright test e2e/capture-screenshots.spec.ts --project=chromium
+  pnpm exec playwright test e2e/capture-screenshots.spec.ts --project=chromium
   ;;
 travel)
   echo "🚂 Capturing travel screenshots..."
   echo "   Using production URL: $PRODUCTION_URL"
   export PRODUCTION_URL
   # Remove test.skip for travel tests temporarily by using grep pattern that includes them
-  npx playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "travel-time|journey-details"
+  pnpm exec playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "travel-time|journey-details"
   ;;
 single)
   echo "📷 Capturing screenshot: $SINGLE_TEST"
-  npx playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "$SINGLE_TEST"
+  pnpm exec playwright test e2e/capture-screenshots.spec.ts --project=chromium -g "$SINGLE_TEST"
   ;;
 esac
 
