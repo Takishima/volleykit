@@ -260,6 +260,206 @@ export const personSearchResponseSchema = z.object({
   totalItemsCount: z.number().optional(),
 })
 
+// ============================================================================
+// Detail / mutation response schemas
+// ============================================================================
+
+// Compensation detail response (showWithNestedObjects wrapper)
+export const compensationDetailedSchema = z
+  .object({
+    convocationCompensation: convocationCompensationSchema.optional(),
+  })
+  .passthrough()
+
+// Pick exchange response (pickFromRefereeGameExchange wrapper)
+export const pickExchangeResponseSchema = z
+  .object({
+    refereeGameExchange: z
+      .object({
+        __identity: uuidSchema.optional(),
+        status: z.string().optional(),
+      })
+      .passthrough(),
+  })
+  .passthrough()
+
+// File resource schema (upload response)
+export const fileResourceSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    persistentResource: z
+      .object({
+        __identity: uuidSchema.optional(),
+        filename: z.string().optional(),
+        mediaType: z.string().optional(),
+        fileSize: z.number().optional(),
+      })
+      .passthrough()
+      .optional(),
+    publicResourceUri: z.string().optional(),
+  })
+  .passthrough()
+
+// File resource array schema (upload response is an array)
+export const fileResourceArraySchema = z.array(fileResourceSchema)
+
+// Scoresheet validation schema
+export const scoresheetValidationSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    hasValidationIssues: z.boolean().optional(),
+    hasValidationIssuesForAssociationUserContext: z.boolean().optional(),
+    hasValidationIssuesForClubUserContext: z.boolean().optional(),
+    areValidationIssuesAddressedByChampionshipOperator: z.boolean().optional(),
+    scoresheetValidationIssues: z.array(z.object({}).passthrough()).optional(),
+  })
+  .passthrough()
+
+// Scoresheet schema
+export const scoresheetSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    game: z.object({ __identity: uuidSchema.optional() }).passthrough().optional(),
+    isSimpleScoresheet: z.boolean().optional(),
+    writerPerson: personSummarySchema.optional().nullable(),
+    scoresheetValidation: scoresheetValidationSchema.optional().nullable(),
+    file: fileResourceSchema.optional().nullable(),
+    hasFile: z.boolean().optional(),
+    closedAt: dateTimeSchema,
+  })
+  .passthrough()
+
+// Indoor player nomination schema
+const indoorPlayerNominationSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    indoorPlayer: z
+      .object({
+        __identity: uuidSchema.optional(),
+        person: personSummarySchema.optional(),
+      })
+      .passthrough()
+      .optional(),
+    indoorPlayerLicenseCategory: z
+      .object({
+        __identity: uuidSchema.optional(),
+        shortName: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough()
+
+// Nomination list schema
+export const nominationListSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    game: z.object({ __identity: uuidSchema.optional() }).passthrough().optional(),
+    team: z
+      .object({
+        __identity: uuidSchema.optional(),
+        displayName: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+    indoorPlayerNominations: z.array(indoorPlayerNominationSchema).optional(),
+    coachPerson: personSummarySchema.optional().nullable(),
+    firstAssistantCoachPerson: personSummarySchema.optional().nullable(),
+    secondAssistantCoachPerson: personSummarySchema.optional().nullable(),
+    closed: z.boolean().optional(),
+    closedAt: dateTimeSchema,
+    checked: z.boolean().optional(),
+    isClosedForTeam: z.boolean().optional(),
+    nominationListValidation: z.object({}).passthrough().optional().nullable(),
+    _permissions: permissionsSchema,
+  })
+  .passthrough()
+
+// Nomination list response (finalize wrapper)
+export const nominationListResponseSchema = z
+  .object({
+    nominationList: nominationListSchema.optional(),
+  })
+  .passthrough()
+
+// Game details schema (showWithNestedObjects response)
+export const gameDetailsSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    scoresheet: scoresheetSchema.optional().nullable(),
+    nominationListOfTeamHome: nominationListSchema.optional().nullable(),
+    nominationListOfTeamAway: nominationListSchema.optional().nullable(),
+    group: z
+      .object({
+        __identity: uuidSchema.optional(),
+        hasNoScoresheet: z.boolean().optional(),
+      })
+      .passthrough()
+      .optional()
+      .nullable(),
+  })
+  .passthrough()
+
+// Game details response wrapper
+export const gameDetailsResponseSchema = z
+  .object({
+    game: gameDetailsSchema,
+  })
+  .passthrough()
+
+// Association settings schema
+export const associationSettingsSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    usesGameExchange: z.boolean().optional(),
+    hoursAfterGameStartForRefereeToEditGameList: z.number().optional(),
+    isRefereeDataManagementAllowed: z.boolean().optional(),
+  })
+  .passthrough()
+
+// Season schema
+export const seasonSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    name: z.string().optional(),
+    displayName: z.string().optional(),
+    seasonStartDate: dateTimeSchema,
+    seasonEndDate: dateTimeSchema,
+    active: z.boolean().optional(),
+  })
+  .passthrough()
+
+// Possible player nomination schema
+const possibleNominationSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    indoorPlayer: z
+      .object({
+        __identity: uuidSchema.optional(),
+        person: personSummarySchema.optional(),
+      })
+      .passthrough()
+      .optional(),
+    indoorPlayerLicenseCategory: z
+      .object({
+        __identity: uuidSchema.optional(),
+        shortName: z.string().optional(),
+      })
+      .passthrough()
+      .optional(),
+    teamDisplayName: z.string().optional(),
+    isInSameTeam: z.boolean().optional(),
+    isInSameClub: z.boolean().optional(),
+    isInSameGender: z.boolean().optional(),
+  })
+  .passthrough()
+
+// Possible nominations response schema
+export const possibleNominationsResponseSchema = z.object({
+  items: z.array(possibleNominationSchema).optional(),
+  totalItemsCount: z.number().optional(),
+})
+
 // Type exports inferred from Zod schemas
 export type Assignment = z.infer<typeof assignmentSchema>
 export type CompensationRecord = z.infer<typeof compensationRecordSchema>
@@ -288,7 +488,7 @@ export interface Season {
  * A structural type for Zod schemas that works with both Zod 3 and Zod 4.
  * This avoids type incompatibilities between versions.
  */
-interface ZodLikeSchema<T> {
+export interface ZodLikeSchema<T> {
   safeParse(
     data: unknown
   ):

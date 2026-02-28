@@ -12,11 +12,17 @@ import { server } from '@/test/msw/server'
 
 import { api, setCsrfToken, clearSession } from './client'
 
+// Valid UUIDs for mock data that passes Zod validation
+const UUID1 = 'a1111111-1111-4111-a111-111111111111'
+const UUID2 = 'a2222222-2222-4222-a222-222222222222'
+const UUID3 = 'a3333333-3333-4333-a333-333333333333'
+
 // Valid mock response structures that pass Zod validation
 const mockAssignmentsResponse = { items: [], totalItemsCount: 0 }
 const mockCompensationsResponse = { items: [], totalItemsCount: 0 }
 const mockExchangesResponse = { items: [], totalItemsCount: 0 }
 const mockPersonSearchResponse = { items: [], totalItemsCount: 0 }
+const mockPossibleNominationsResponse = { items: [], totalItemsCount: 0 }
 
 describe('API Client', () => {
   beforeEach(() => {
@@ -237,7 +243,7 @@ describe('API Client', () => {
       let capturedMethod: string | null = null
       const mockDetailsResponse = {
         convocationCompensation: {
-          __identity: 'comp-123',
+          __identity: UUID1,
           distanceInMetres: 48000,
           correctionReason: 'Test reason',
         },
@@ -275,7 +281,7 @@ describe('API Client', () => {
     it('returns detailed compensation data', async () => {
       const mockDetailsResponse = {
         convocationCompensation: {
-          __identity: 'comp-123',
+          __identity: UUID1,
           distanceInMetres: 48000,
           distanceFormatted: '48.0',
           correctionReason: 'Ich wohne in Oberengstringen',
@@ -381,7 +387,7 @@ describe('API Client', () => {
           capturedBody = new URLSearchParams(text)
           return HttpResponse.json({
             refereeGameExchange: {
-              __identity: 'exchange-123',
+              __identity: UUID1,
               status: 'applied',
               appliedAt: new Date().toISOString(),
             },
@@ -389,12 +395,12 @@ describe('API Client', () => {
         })
       )
 
-      const result = await api.applyForExchange('exchange-123')
+      const result = await api.applyForExchange(UUID1)
 
       expect(capturedMethod).toBe('PUT')
       expect(capturedUrl).toContain('pickFromRefereeGameExchange')
-      expect(capturedBody?.get('refereeGameExchange[__identity]')).toBe('exchange-123')
-      expect(result.refereeGameExchange.__identity).toBe('exchange-123')
+      expect(capturedBody?.get('refereeGameExchange[__identity]')).toBe(UUID1)
+      expect(result.refereeGameExchange.__identity).toBe(UUID1)
       expect(result.refereeGameExchange.status).toBe('applied')
     })
   })
@@ -650,12 +656,12 @@ describe('API Client', () => {
 
       server.use(
         http.post('*/api%5cpersistentresource/upload', () => {
-          return HttpResponse.json([{ __identity: 'res-1' }])
+          return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
 
       const result = await api.uploadResource(pdfFile)
-      expect(result).toEqual([{ __identity: 'res-1' }])
+      expect(result).toEqual([{ __identity: UUID1 }])
     })
 
     it('accepts JPEG files', async () => {
@@ -663,12 +669,12 @@ describe('API Client', () => {
 
       server.use(
         http.post('*/api%5cpersistentresource/upload', () => {
-          return HttpResponse.json([{ __identity: 'res-1' }])
+          return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
 
       const result = await api.uploadResource(jpegFile)
-      expect(result).toEqual([{ __identity: 'res-1' }])
+      expect(result).toEqual([{ __identity: UUID1 }])
     })
 
     it('accepts PNG files', async () => {
@@ -676,12 +682,12 @@ describe('API Client', () => {
 
       server.use(
         http.post('*/api%5cpersistentresource/upload', () => {
-          return HttpResponse.json([{ __identity: 'res-1' }])
+          return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
 
       const result = await api.uploadResource(pngFile)
-      expect(result).toEqual([{ __identity: 'res-1' }])
+      expect(result).toEqual([{ __identity: UUID1 }])
     })
 
     it('sends POST request with FormData', async () => {
@@ -692,7 +698,7 @@ describe('API Client', () => {
         http.post('*/api%5cpersistentresource/upload', ({ request }) => {
           capturedMethod = request.method
           capturedContentType = request.headers.get('Content-Type')
-          return HttpResponse.json([{ __identity: 'res-1' }])
+          return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
 
@@ -712,7 +718,7 @@ describe('API Client', () => {
       server.use(
         http.post('*/api%5cpersistentresource/upload', async ({ request }) => {
           capturedFormData = await request.formData()
-          return HttpResponse.json([{ __identity: 'res-1' }])
+          return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
 
@@ -750,6 +756,13 @@ describe('API Client', () => {
   })
 
   describe('getAssignmentDetails', () => {
+    const validAssignment = {
+      __identity: UUID1,
+      refereeGame: { __identity: UUID2 },
+      refereeConvocationStatus: 'active',
+      refereePosition: 'head-one',
+    }
+
     it('sends GET request with convocation ID', async () => {
       let capturedUrl: string | null = null
       let capturedMethod: string | null = null
@@ -758,7 +771,7 @@ describe('API Client', () => {
         http.get('*/api%5crefereeconvocation/showWithNestedObjects', ({ request }) => {
           capturedUrl = request.url
           capturedMethod = request.method
-          return HttpResponse.json({})
+          return HttpResponse.json(validAssignment)
         })
       )
 
@@ -774,7 +787,7 @@ describe('API Client', () => {
       server.use(
         http.get('*/api%5crefereeconvocation/showWithNestedObjects', ({ request }) => {
           capturedUrl = request.url
-          return HttpResponse.json({})
+          return HttpResponse.json(validAssignment)
         })
       )
 
@@ -1002,7 +1015,7 @@ describe('API Client', () => {
         http.post('*/api%5cscoresheet/validateScoresheet', ({ request }) => {
           capturedUrl = request.url
           capturedMethod = request.method
-          return HttpResponse.json({ __identity: 'val-1', hasValidationIssues: false })
+          return HttpResponse.json({ __identity: UUID1, hasValidationIssues: false })
         })
       )
 
@@ -1019,7 +1032,7 @@ describe('API Client', () => {
         http.post('*/api%5cscoresheet/validateScoresheet', async ({ request }) => {
           const text = await request.text()
           capturedBody = new URLSearchParams(text)
-          return HttpResponse.json({ __identity: 'val-1', hasValidationIssues: false })
+          return HttpResponse.json({ __identity: UUID1, hasValidationIssues: false })
         })
       )
 
@@ -1034,16 +1047,16 @@ describe('API Client', () => {
       server.use(
         http.post('*/api%5cscoresheet/validateScoresheet', () => {
           return HttpResponse.json({
-            __identity: 'val-123',
+            __identity: UUID1,
             hasValidationIssues: true,
-            scoresheetValidationIssues: [{ __identity: 'issue-1' }],
+            scoresheetValidationIssues: [{ __identity: UUID2 }],
           })
         })
       )
 
       const result = await api.validateScoresheet('game-1', 'scorer-1')
 
-      expect(result.__identity).toBe('val-123')
+      expect(result.__identity).toBe(UUID1)
       expect(result.hasValidationIssues).toBe(true)
     })
   })
@@ -1124,7 +1137,7 @@ describe('API Client', () => {
       server.use(
         http.get('*/api%5cgame/showWithNestedObjects', ({ request }) => {
           capturedUrl = request.url
-          return HttpResponse.json({ game: { __identity: 'game-1' } })
+          return HttpResponse.json({ game: { __identity: UUID1 } })
         })
       )
 
@@ -1138,10 +1151,10 @@ describe('API Client', () => {
 
     it('returns the game object from the response wrapper', async () => {
       const gameData = {
-        __identity: 'game-1',
-        scoresheet: { __identity: 'ss-1', closedAt: null },
-        nominationListOfTeamHome: { __identity: 'nl-home' },
-        nominationListOfTeamAway: { __identity: 'nl-away' },
+        __identity: UUID1,
+        scoresheet: { __identity: UUID2, closedAt: null },
+        nominationListOfTeamHome: { __identity: UUID3 },
+        nominationListOfTeamAway: { __identity: 'a4444444-4444-4444-a444-444444444444' },
       }
 
       server.use(
@@ -1196,6 +1209,276 @@ describe('API Client', () => {
 
       expect(capturedUrl).toContain('getActiveIndoorSeason')
       expect(capturedMethod).toBe('GET')
+    })
+  })
+
+  describe('response validation', () => {
+    it('getAssignmentDetails validates response against assignmentSchema', async () => {
+      server.use(
+        http.get('*/api%5crefereeconvocation/showWithNestedObjects', () => {
+          return HttpResponse.json({ __identity: 'not-a-uuid' })
+        })
+      )
+
+      await expect(api.getAssignmentDetails('conv-1', [])).rejects.toThrow(
+        /Invalid API response for getAssignmentDetails/
+      )
+    })
+
+    it('getAssignmentDetails accepts valid assignment response', async () => {
+      server.use(
+        http.get('*/api%5crefereeconvocation/showWithNestedObjects', () => {
+          return HttpResponse.json({
+            __identity: UUID1,
+            refereeGame: { __identity: UUID2 },
+            refereeConvocationStatus: 'active',
+            refereePosition: 'head-one',
+          })
+        })
+      )
+
+      const result = await api.getAssignmentDetails('conv-1', [])
+
+      expect(result.__identity).toBe(UUID1)
+    })
+
+    it('getCompensationDetails validates response', async () => {
+      server.use(
+        http.get('*/api%5cconvocationcompensation/showWithNestedObjects', () => {
+          return HttpResponse.json({
+            convocationCompensation: { __identity: UUID1, distanceInMetres: 48000 },
+          })
+        })
+      )
+
+      const result = await api.getCompensationDetails(UUID1)
+
+      expect(result.convocationCompensation?.distanceInMetres).toBe(48000)
+    })
+
+    it('applyForExchange validates response', async () => {
+      server.use(
+        http.put('*/api%5crefereegameexchange/pickFromRefereeGameExchange', () => {
+          return HttpResponse.json({
+            refereeGameExchange: { __identity: UUID1, status: 'applied' },
+          })
+        })
+      )
+
+      const result = await api.applyForExchange(UUID1)
+
+      expect(result.refereeGameExchange.status).toBe('applied')
+    })
+
+    it('searchPersons validates response', async () => {
+      server.use(
+        http.get('*/api%5celasticsearchperson/search', () => {
+          return HttpResponse.json(mockPersonSearchResponse)
+        })
+      )
+
+      const result = await api.searchPersons({ lastName: 'test' })
+
+      expect(result.items).toEqual([])
+    })
+
+    it('getGameWithScoresheet validates response', async () => {
+      server.use(
+        http.get('*/api%5cgame/showWithNestedObjects', () => {
+          return HttpResponse.json({ game: { __identity: UUID1 } })
+        })
+      )
+
+      const result = await api.getGameWithScoresheet('game-1')
+
+      expect(result.__identity).toBe(UUID1)
+    })
+
+    it('getGameWithScoresheet rejects response missing game wrapper', async () => {
+      server.use(
+        http.get('*/api%5cgame/showWithNestedObjects', () => {
+          return HttpResponse.json({ notGame: {} })
+        })
+      )
+
+      await expect(api.getGameWithScoresheet('game-1')).rejects.toThrow(
+        /Invalid API response for getGameWithScoresheet/
+      )
+    })
+
+    it('updateNominationList validates response', async () => {
+      server.use(
+        http.put('*/api%5cnominationlist', () => {
+          return HttpResponse.json({ __identity: UUID1 })
+        })
+      )
+
+      const result = await api.updateNominationList('nl-1', 'game-1', 'team-1', [])
+
+      expect(result.__identity).toBe(UUID1)
+    })
+
+    it('finalizeNominationList validates response', async () => {
+      server.use(
+        http.post('*/api%5cnominationlist/finalize', () => {
+          return HttpResponse.json({ nominationList: { __identity: UUID1 } })
+        })
+      )
+
+      const result = await api.finalizeNominationList('nl-1', 'game-1', 'team-1', [])
+
+      expect(result.nominationList?.__identity).toBe(UUID1)
+    })
+
+    it('updateScoresheet validates response', async () => {
+      server.use(
+        http.put('*/api%5cscoresheet', () => {
+          return HttpResponse.json({ __identity: UUID1, hasFile: false })
+        })
+      )
+
+      const result = await api.updateScoresheet('ss-1', 'game-1', 'scorer-1', false)
+
+      expect(result.__identity).toBe(UUID1)
+    })
+
+    it('validateScoresheet validates response', async () => {
+      server.use(
+        http.post('*/api%5cscoresheet/validateScoresheet', () => {
+          return HttpResponse.json({ __identity: UUID1, hasValidationIssues: false })
+        })
+      )
+
+      const result = await api.validateScoresheet('game-1', 'scorer-1')
+
+      expect(result.hasValidationIssues).toBe(false)
+    })
+
+    it('finalizeScoresheet validates response', async () => {
+      server.use(
+        http.post('*/api%5cscoresheet/finalize', () => {
+          return HttpResponse.json({ __identity: UUID1, hasFile: true })
+        })
+      )
+
+      const result = await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-1')
+
+      expect(result.__identity).toBe(UUID1)
+    })
+
+    it('uploadResource validates response', async () => {
+      server.use(
+        http.post('*/api%5cpersistentresource/upload', () => {
+          return HttpResponse.json([{ __identity: UUID1 }])
+        })
+      )
+
+      function createMockFile(name: string, type: string, size: number = 1024): File {
+        const content = new Uint8Array(size)
+        return new File([content], name, { type })
+      }
+
+      const result = await api.uploadResource(createMockFile('test.pdf', 'application/pdf'))
+
+      expect(result[0].__identity).toBe(UUID1)
+    })
+
+    it('getAssociationSettings validates response', async () => {
+      server.use(
+        http.get(
+          '*/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty',
+          () => {
+            return HttpResponse.json({ __identity: UUID1, usesGameExchange: true })
+          }
+        )
+      )
+
+      const result = await api.getAssociationSettings()
+
+      expect(result.usesGameExchange).toBe(true)
+    })
+
+    it('getActiveSeason validates response', async () => {
+      server.use(
+        http.get('*/api%5cindoorseason/getActiveIndoorSeason', () => {
+          return HttpResponse.json({ __identity: UUID1, name: '2025', active: true })
+        })
+      )
+
+      const result = await api.getActiveSeason()
+
+      expect(result.name).toBe('2025')
+    })
+
+    it('searchCompensations rejects response with non-array items', async () => {
+      server.use(
+        http.post('*/api%5crefereeconvocationcompensation/search', () => {
+          return HttpResponse.json({ items: 'not-an-array', totalItemsCount: 0 })
+        })
+      )
+
+      await expect(api.searchCompensations({})).rejects.toThrow(
+        /Invalid API response for searchCompensations/
+      )
+    })
+
+    it('searchExchanges rejects response with non-array items', async () => {
+      server.use(
+        http.post('*/api%5crefereegameexchange/search', () => {
+          return HttpResponse.json({ items: 'not-an-array', totalItemsCount: 0 })
+        })
+      )
+
+      await expect(api.searchExchanges({})).rejects.toThrow(
+        /Invalid API response for searchExchanges/
+      )
+    })
+
+    it('getPossiblePlayerNominations rejects response with non-array items', async () => {
+      server.use(
+        http.post(
+          '*/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList',
+          () => {
+            return HttpResponse.json({ items: 'not-an-array', totalItemsCount: 0 })
+          }
+        )
+      )
+
+      await expect(api.getPossiblePlayerNominations('nl-1')).rejects.toThrow(
+        /Invalid API response for getPossiblePlayerNominations/
+      )
+    })
+
+    it('uploadResource rejects non-array response', async () => {
+      server.use(
+        http.post('*/api%5cpersistentresource/upload', () => {
+          return HttpResponse.json({ __identity: UUID1 })
+        })
+      )
+
+      function createMockFile(name: string, type: string, size: number = 1024): File {
+        const content = new Uint8Array(size)
+        return new File([content], name, { type })
+      }
+
+      await expect(
+        api.uploadResource(createMockFile('test.pdf', 'application/pdf'))
+      ).rejects.toThrow(/Invalid API response for uploadResource/)
+    })
+
+    it('getPossiblePlayerNominations validates response', async () => {
+      server.use(
+        http.post(
+          '*/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList',
+          () => {
+            return HttpResponse.json(mockPossibleNominationsResponse)
+          }
+        )
+      )
+
+      const result = await api.getPossiblePlayerNominations('nl-1')
+
+      expect(result.items).toEqual([])
     })
   })
 })
