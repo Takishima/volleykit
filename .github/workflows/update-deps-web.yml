@@ -128,11 +128,8 @@ jobs:
           ncu --target "$NCU_TARGET" -u
           cd ..
 
-          # Install updated dependencies
-          pnpm install
-
-          # Regenerate pnpm-lock.yaml
-          pnpm install --lockfile-only
+          # Install updated dependencies (--no-frozen-lockfile needed since ncu modified package.json)
+          pnpm install --no-frozen-lockfile
       - name: Upload updated files
         if: steps.check-updates.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v5
