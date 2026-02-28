@@ -59,13 +59,13 @@ export function SettingsPage() {
 
       <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
 
-      <HomeLocationSection />
+      {features.homeLocation && <HomeLocationSection />}
 
       {features.transport && <TravelSettingsSection />}
 
       <DataRetentionSection />
 
-      <HelpToursSection isDemoMode={isDemoMode} />
+      {features.helpTours && <HelpToursSection isDemoMode={isDemoMode} />}
 
       {isDemoMode && (
         <DemoSection activeAssociationCode={activeAssociationCode} onRefreshData={refreshData} />

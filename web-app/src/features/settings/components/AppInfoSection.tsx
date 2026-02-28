@@ -9,8 +9,8 @@ import { usePwaStandalone } from '@/shared/hooks/usePwaStandalone'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useSettingsStore } from '@/shared/stores/settings'
 
-// Build OCR POC URL relative to the app's base path (features.ocr)
-const OCR_POC_URL = `${import.meta.env.BASE_URL}ocr-poc/`
+// Build OCR POC URL relative to the app's base path (features.ocrPoc)
+const OCR_POC_URL = features.ocrPoc ? `${import.meta.env.BASE_URL}ocr-poc/` : ''
 
 interface AppInfoSectionProps {
   showUpdates: boolean
@@ -129,8 +129,8 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
           </>
         )}
 
-        {/* Experimental features (features.ocr) */}
-        {features.ocr && (
+        {/* Experimental features (features.ocr / features.ocrPoc) */}
+        {(features.ocr || features.ocrPoc) && (
           <>
             <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
             <div className="space-y-4">
@@ -140,45 +140,53 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
               <p className="text-sm text-text-muted dark:text-text-muted-dark">
                 {t('settings.experimental.description')}
               </p>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="font-medium text-text-primary dark:text-text-primary-dark text-sm">
-                    {t('settings.experimental.ocrPoc')}
-                  </p>
-                  <p className="text-xs text-text-muted dark:text-text-muted-dark">
-                    {t('settings.experimental.ocrPocDescription')}
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() => window.open(OCR_POC_URL, '_blank', 'noopener,noreferrer')}
-                  aria-label={t('settings.experimental.openOcrPoc')}
-                >
-                  {t('settings.experimental.openOcrPoc')}
-                </Button>
-              </div>
 
-              {/* OCR Validation Toggle */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                    {t('settings.experimental.ocrValidation')}
+              {/* OCR POC standalone app link (features.ocrPoc) */}
+              {features.ocrPoc && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <p className="font-medium text-text-primary dark:text-text-primary-dark text-sm">
+                      {t('settings.experimental.ocrPoc')}
+                    </p>
+                    <p className="text-xs text-text-muted dark:text-text-muted-dark">
+                      {t('settings.experimental.ocrPocDescription')}
+                    </p>
                   </div>
-                  <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
-                    {t('settings.experimental.ocrValidationDescription')}
-                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => window.open(OCR_POC_URL, '_blank', 'noopener,noreferrer')}
+                    aria-label={t('settings.experimental.openOcrPoc')}
+                  >
+                    {t('settings.experimental.openOcrPoc')}
+                  </Button>
                 </div>
-                <ToggleSwitch
-                  checked={isOCREnabled}
-                  onChange={handleToggleOCR}
-                  label={t('settings.experimental.ocrValidation')}
-                />
-              </div>
-              <div className="text-xs text-text-muted dark:text-text-muted-dark">
-                {isOCREnabled
-                  ? t('settings.experimental.ocrValidationEnabled')
-                  : t('settings.experimental.ocrValidationDisabled')}
-              </div>
+              )}
+
+              {/* OCR Validation Toggle (features.ocr) */}
+              {features.ocr && (
+                <>
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                        {t('settings.experimental.ocrValidation')}
+                      </div>
+                      <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
+                        {t('settings.experimental.ocrValidationDescription')}
+                      </div>
+                    </div>
+                    <ToggleSwitch
+                      checked={isOCREnabled}
+                      onChange={handleToggleOCR}
+                      label={t('settings.experimental.ocrValidation')}
+                    />
+                  </div>
+                  <div className="text-xs text-text-muted dark:text-text-muted-dark">
+                    {isOCREnabled
+                      ? t('settings.experimental.ocrValidationEnabled')
+                      : t('settings.experimental.ocrValidationDisabled')}
+                  </div>
+                </>
+              )}
             </div>
           </>
         )}

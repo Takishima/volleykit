@@ -17,6 +17,7 @@ import {
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator'
 import { PendingActionsIndicator } from '@/shared/components/PendingActionsIndicator'
 import { TourModeBanner } from '@/shared/components/tour/TourModeBanner'
+import { features } from '@/shared/config/features'
 import { prefetchAllTabData } from '@/shared/hooks/usePrefetchTabData'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore, type Occupation } from '@/shared/stores/auth'
@@ -251,8 +252,8 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
-                {/* Pending actions indicator */}
-                <PendingActionsIndicator />
+                {/* Pending actions indicator (features.offline) */}
+                {features.offline && <PendingActionsIndicator />}
 
                 {/* Calendar Mode Indicator */}
                 {dataSource === 'calendar' && (
@@ -435,8 +436,8 @@ export function AppShell() {
         </div>
       )}
 
-      {/* Tour mode banner */}
-      <TourModeBanner />
+      {/* Tour mode banner (features.helpTours) */}
+      {features.helpTours && <TourModeBanner />}
 
       {/* Main content
           pb-16 (4rem/64px) provides padding to prevent content from being hidden

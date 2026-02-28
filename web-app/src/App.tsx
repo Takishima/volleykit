@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, lazy, Suspense } from 'react'
 
 import { QueryClient } from '@tanstack/react-query'
+// features.offline — Replace with QueryClientProvider from @tanstack/react-query when removing offline feature
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
@@ -14,11 +15,14 @@ import { LoadingState } from '@/shared/components/LoadingSpinner'
 import { PageErrorBoundary } from '@/shared/components/PageErrorBoundary'
 import { ReloadPrompt } from '@/shared/components/ReloadPrompt'
 import { ToastContainer } from '@/shared/components/Toast'
+import { features } from '@/shared/config/features'
+// features.offline — Cache warming for offline support (delete this import when removing offline feature)
 import { useCacheWarming } from '@/shared/hooks/useCacheWarming'
 import { ASSIGNMENTS_STALE_TIME_MS, OFFLINE_GC_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
+// features.offline — IndexedDB persistence and action queue (delete these imports when removing offline feature)
 import { persistOptions, clearPersistedCache, clearAllActions } from '@/shared/services/offline'
 import { useAuthStore, registerCacheCleanup } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
@@ -52,10 +56,10 @@ const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 )
 
-// Lazy load TourProvider since it's only needed for first-time users
-const TourProvider = lazy(() =>
-  import('@/shared/components/tour').then((m) => ({ default: m.TourProvider }))
-)
+// Lazy load TourProvider since it's only needed for first-time users (features.helpTours)
+const TourProvider = features.helpTours
+  ? lazy(() => import('@/shared/components/tour').then((m) => ({ default: m.TourProvider })))
+  : ({ children }: { children: React.ReactNode }) => <>{children}</>
 
 /**
  * Global error handler for React Query mutations.
@@ -268,9 +272,11 @@ export default function App() {
     // preventing any race conditions with React re-renders.
     const unregisterCacheCleanup = registerCacheCleanup(() => {
       queryClient.resetQueries()
-      // Also clear the persisted IndexedDB cache and action queue (async, but fire-and-forget is fine here)
-      clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
-      clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
+      // features.offline — Also clear the persisted IndexedDB cache and action queue
+      if (features.offline) {
+        clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
+        clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
+      }
     })
 
     // Track state to detect changes

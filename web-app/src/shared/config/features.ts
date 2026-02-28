@@ -12,4 +12,12 @@ export const features = {
   transport: true,
   /** OCR scoresheet scanning (experimental) */
   ocr: true,
+  /** OCR proof-of-concept standalone app (link in settings, CI build/deploy) */
+  ocrPoc: true,
+  /** Interactive guided tours for new users */
+  helpTours: true,
+  /** Home location setting with geocoding (enables distance calculations) */
+  homeLocation: true,
+  /** Offline support: IndexedDB cache persistence and action queue */
+  offline: true,
 } as const
