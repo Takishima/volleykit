@@ -1,8 +1,8 @@
 name: Setup Node.js with Dependencies
-description: Sets up Node.js, caches node_modules, and installs dependencies for monorepo
+description: Sets up Node.js, pnpm, caches dependencies, and installs for monorepo
 inputs:
   working-directory:
-    description: The working directory for npm commands (for backwards compatibility)
+    description: The working directory for pnpm commands (for backwards compatibility)
     required: true
   node-version:
     description: Node.js version to use
@@ -19,6 +19,8 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -42,24 +44,24 @@ runs:
       uses: actions/cache@v5
       with:
         path: node_modules
-        key: root-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('package-lock.json') }}
+        key: root-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('pnpm-lock.yaml') }}
         restore-keys: |
-          root-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-          root-node-modules-v3-${{ runner.os }}-main-
-          root-node-modules-v3-${{ runner.os }}-
+          root-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          root-node-modules-v4-${{ runner.os }}-main-
+          root-node-modules-v4-${{ runner.os }}-
     # Cache workspace node_modules (for any local-only modules)
     - name: Cache node_modules
       id: cache-node-modules
       uses: actions/cache@v5
       with:
         path: ${{ inputs.working-directory }}/node_modules
-        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('package-lock.json') }}
+        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-main-
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v3-${{ runner.os }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-main-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-
     # Install from root to handle workspaces correctly
     - name: Install dependencies
       if: steps.cache-root-modules.outputs.cache-hit != 'true' || steps.cache-node-modules.outputs.cache-hit != 'true'
       shell: bash
-      run: npm ci
+      run: pnpm install --frozen-lockfile

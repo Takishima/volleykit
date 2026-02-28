@@ -134,25 +134,25 @@ If CI was failing in Step 6, fix those issues now:
 **For web-app failures:**
 
 ```bash
-cd web-app && npm run lint && npm test && npm run build
+cd web-app && pnpm run lint && pnpm test && pnpm run build
 ```
 
 **For shared library failures:**
 
 ```bash
-cd packages/shared && npm run lint && npm test && npm run build
+cd packages/shared && pnpm run lint && pnpm test && pnpm run build
 ```
 
 **For mobile app failures:**
 
 ```bash
-cd packages/mobile && npm run typecheck && npm run lint && npm test
+cd packages/mobile && pnpm run typecheck && pnpm run lint && pnpm test
 ```
 
 **For worker failures:**
 
 ```bash
-cd worker && npm run lint && npm test
+cd worker && pnpm run lint && pnpm test
 ```
 
 Note: Match the local commands to the specific CI check that failed. The `html_url` will indicate which package/workflow failed.

@@ -24,7 +24,7 @@ on:
 # Worker Dependency Update Workflow
 # =============================================================================
 #
-# This workflow automatically updates npm dependencies for the worker,
+# This workflow automatically updates dependencies for the worker,
 # runs full validation, and creates a PR if successful.
 #
 # Flow:
@@ -50,12 +50,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install npm-check-updates
-        run: npm install -g npm-check-updates@17
+        run: pnpm add -g npm-check-updates@17
       - name: Determine update target
         id: update-target
         run: |
@@ -104,17 +106,17 @@ jobs:
           cd ..
 
           # Install updated dependencies
-          npm install
+          pnpm install
 
-          # Regenerate package-lock.json
-          npm install --package-lock-only
+          # Regenerate pnpm-lock.yaml
+          pnpm install --lockfile-only
       - name: Upload updated files
         if: steps.check-updates.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: updated-packages-worker
           path: |
-            package-lock.json
+            pnpm-lock.yaml
             worker/package.json
           retention-days: 1
   validate:
@@ -138,16 +140,16 @@ jobs:
         with:
           working-directory: worker
       - name: TypeScript check
-        run: npx tsc --noEmit
+        run: pnpm exec tsc --noEmit
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
       - name: Security audit
-        run: npm audit --audit-level=high --omit=dev
+        run: pnpm audit --audit-level high --prod
         working-directory: .
       - name: Test
-        run: npm test
+        run: pnpm test
       - name: Build (dry-run)
-        run: npx wrangler deploy --dry-run
+        run: pnpm exec wrangler deploy --dry-run
   create-pr:
     name: Create PR
     needs: [update, validate]
@@ -169,8 +171,8 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
-          commit-message: 'chore(worker): update npm dependencies'
-          title: 'chore(worker): update npm dependencies'
+          commit-message: 'chore(worker): update dependencies'
+          title: 'chore(worker): update dependencies'
           body: |
             ## Dependency Updates
 

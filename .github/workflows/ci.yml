@@ -63,7 +63,7 @@ jobs:
           working-directory: web-app
       - name: Generate API cache key
         id: api-cache-key
-        run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'web-app/package-lock.json') }}" >> $GITHUB_OUTPUT
+        run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
       - name: Cache generated API types
         id: api-cache
         uses: actions/cache@v5
@@ -74,7 +74,7 @@ jobs:
           key: ${{ steps.api-cache-key.outputs.key }}
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
+        run: pnpm run generate:api
       # Upload API types as artifact for downstream jobs (both locations)
       - name: Upload API types
         uses: actions/upload-artifact@v5
@@ -104,7 +104,7 @@ jobs:
           # - GHSA-3ppc-4f35-3m26: minimatch ReDoS (transitive via eslint, no fix until eslint 10)
           # - GHSA-jmr7-xgp7-cmfj: fast-xml-parser DoS (transitive via ojp-sdk-next, no upstream fix)
           IGNORED_ADVISORIES="GHSA-3ppc-4f35-3m26 GHSA-jmr7-xgp7-cmfj"
-          AUDIT_JSON=$(npm audit --audit-level=high --omit=dev --json 2>/dev/null || true)
+          AUDIT_JSON=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
           FOUND=$(echo "$AUDIT_JSON" | jq -r '.vulnerabilities | keys[]' 2>/dev/null || true)
 
           # First pass: collect packages with directly ignored advisories
@@ -141,7 +141,7 @@ jobs:
 
           if [ -n "$(echo "$UNIGNORED" | xargs)" ]; then
             echo "::error::New vulnerabilities found:$UNIGNORED"
-            npm audit --audit-level=high --omit=dev
+            pnpm audit --audit-level high --prod
             exit 1
           fi
           echo "All vulnerabilities are known/ignored. Audit passed."
@@ -171,11 +171,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: web-app/.eslintcache
-          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/tsconfig.json', 'web-app/package-lock.json') }}
+          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/tsconfig.json', 'pnpm-lock.yaml') }}
           restore-keys: |
             eslint-${{ runner.os }}-
       - name: Lint
-        run: npm run lint -- --cache --cache-location .eslintcache
+        run: pnpm run lint --cache --cache-location .eslintcache
   # Dead code detection - needs API types from setup
   knip:
     name: Dead Code Check
@@ -197,7 +197,7 @@ jobs:
           name: api-types
           path: .
       - name: Check for dead code
-        run: npm run knip
+        run: pnpm run knip
   # Unit tests - needs API types from setup
   # PRs: only run tests affected by changed files (--changed)
   # main: run all tests for full coverage validation
@@ -229,17 +229,17 @@ jobs:
         uses: actions/cache@v5
         with:
           path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
+          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
       - name: Run tests
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # PRs: only run tests affected by changes since base branch
-            npm test -- --changed origin/${{ github.base_ref }}
+            pnpm test --changed origin/${{ github.base_ref }}
           else
             # main branch: run all tests
-            npm test
+            pnpm test
           fi
   # Build once - artifact shared by bundle-size, e2e, and lighthouse
   build:
@@ -267,11 +267,11 @@ jobs:
         uses: actions/cache@v5
         with:
           path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('web-app/package-lock.json', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
+          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
       - name: Build
-        run: npm run build
+        run: pnpm run build
       - name: Upload build artifact
         uses: actions/upload-artifact@v5
         with:
@@ -299,7 +299,7 @@ jobs:
           name: web-app-dist
           path: web-app/dist
       - name: Check bundle size
-        run: npm run size
+        run: pnpm run size
   # E2E tests - per browser, uses build artifact
   # PRs: chromium only (fast feedback)
   # main: chromium + firefox + webkit (full coverage)
@@ -335,7 +335,7 @@ jobs:
           name: web-app-dist
           path: web-app/dist
       - name: Run E2E tests
-        run: npx playwright test --project=${{ matrix.browser }} --retries=2
+        run: pnpm exec playwright test --project=${{ matrix.browser }} --retries=2
       - name: Upload test results
         uses: actions/upload-artifact@v5
         if: ${{ !cancelled() }}
@@ -383,8 +383,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
       - name: Install changeset CLI
-        run: npm install -g @changesets/cli
+        run: pnpm add -g @changesets/cli
       - name: Check for changesets
         id: changeset_check
         run: |
@@ -393,7 +395,7 @@ jobs:
 
           if [ "$CHANGESET_COUNT" -eq 0 ]; then
             echo "has_changeset=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::No changeset found. If this PR includes user-facing changes, please run 'npx changeset' to add a changelog entry."
+            echo "::warning::No changeset found. If this PR includes user-facing changes, please run 'pnpm exec changeset' to add a changelog entry."
           else
             echo "has_changeset=true" >> "$GITHUB_OUTPUT"
             echo "Found $CHANGESET_COUNT changeset(s)"
@@ -412,7 +414,7 @@ jobs:
             echo "If this PR includes user-facing changes (features, fixes), please add a changeset:" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo '```bash' >> "$GITHUB_STEP_SUMMARY"
-            echo 'npx changeset' >> "$GITHUB_STEP_SUMMARY"
+            echo 'pnpm exec changeset' >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "If this PR is docs-only or internal, no changeset is needed." >> "$GITHUB_STEP_SUMMARY"

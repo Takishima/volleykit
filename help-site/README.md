@@ -11,9 +11,9 @@ Documentation and help pages built with Astro.
 ## Development
 
 ```bash
-npm run dev           # Start dev server
-npm run build         # Build static site
-npm run preview       # Preview production build
+pnpm run dev          # Start dev server
+pnpm run build        # Build static site
+pnpm run preview      # Preview production build
 ```
 
 ## Project Structure
@@ -39,5 +39,5 @@ public/
 Search is powered by Pagefind and generated at build time:
 
 ```bash
-npm run build  # Runs astro build && pagefind
+pnpm run build  # Runs astro build && pagefind
 ```

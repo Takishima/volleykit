@@ -48,7 +48,7 @@ jobs:
             4. ✅ No array index as React keys
             5. ✅ Clean up all intervals/timeouts/subscriptions
             6. ✅ Use modern React 18+ patterns (no isMountedRef)
-            7. ✅ Run full CI validation: npm run generate:api && npm run lint && npm test && npm run build
+            7. ✅ Run full CI validation: pnpm run generate:api && pnpm run lint && pnpm test && pnpm run build
             8. ✅ Ensure accessibility (ARIA attributes, keyboard navigation)
 
             If your changes don't meet these guidelines, fix them before completing the task.
@@ -57,9 +57,9 @@ jobs:
             actions: read
           # Use opus model for higher quality responses
           claude_args: '--model opus'
-          # Allow Claude to use npm commands for running tests, builds, and linting
+          # Allow Claude to use pnpm commands for running tests, builds, and linting
           allowed_tools: |
-            Bash(npm:*)
+            Bash(pnpm:*)
             # gh CLI for basic issue/PR operations (view, list, comment)
             Bash(gh issue create:*)
             Bash(gh issue edit:*)

@@ -13,15 +13,15 @@ A Cloudflare Worker that proxies requests to volleymanager.volleyball.ch with pr
 ## Development
 
 ```bash
-npm install
-npm run dev      # Start local development server
-npm test         # Run tests
+pnpm install
+pnpm run dev     # Start local development server
+pnpm test        # Run tests
 ```
 
 ## Deployment
 
 ```bash
-npx wrangler deploy
+pnpm exec wrangler deploy
 ```
 
 ## Deployment Checklist

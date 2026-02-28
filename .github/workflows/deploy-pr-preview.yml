@@ -38,10 +38,10 @@ jobs:
           path: |
             web-app/src/api/schema.ts
             packages/shared/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'package-lock.json') }}
+          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
-        run: npm run generate:api
+        run: pnpm run generate:api
       # Cache ESLint results per branch
       - name: Cache ESLint
         uses: actions/cache@v5
@@ -52,7 +52,7 @@ jobs:
             eslint-${{ runner.os }}-${{ github.head_ref }}-
             eslint-${{ runner.os }}-
       - name: Lint
-        run: npm run lint -- --cache --cache-location .eslintcache
+        run: pnpm run lint --cache --cache-location .eslintcache
       # Cache Vitest results per branch
       - name: Cache Vitest
         uses: actions/cache@v5
@@ -63,7 +63,7 @@ jobs:
             vitest-${{ runner.os }}-${{ github.head_ref }}-
             vitest-${{ runner.os }}-
       - name: Test
-        run: npm test
+        run: pnpm test
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
         uses: actions/cache@v5
@@ -74,7 +74,7 @@ jobs:
             vite-${{ runner.os }}-${{ github.head_ref }}-
             vite-${{ runner.os }}-
       - name: Build for PR Preview
-        run: npm run build
+        run: pnpm run build
         env:
           VITE_DEMO_MODE_ONLY: 'true'
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
@@ -112,7 +112,7 @@ jobs:
             astro-${{ runner.os }}-${{ github.head_ref }}-
             astro-${{ runner.os }}-
       - name: Build Help Site
-        run: npm run build
+        run: pnpm run build
         env:
           ASTRO_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/help
       - name: Upload help-site artifact
@@ -143,7 +143,7 @@ jobs:
             ocr-poc-eslint-${{ runner.os }}-${{ github.head_ref }}-
             ocr-poc-eslint-${{ runner.os }}-
       - name: Lint OCR POC
-        run: npm run lint -- --cache --cache-location .eslintcache
+        run: pnpm run lint --cache --cache-location .eslintcache
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
         uses: actions/cache@v5
@@ -154,7 +154,7 @@ jobs:
             ocr-poc-vite-${{ runner.os }}-${{ github.head_ref }}-
             ocr-poc-vite-${{ runner.os }}-
       - name: Build OCR POC
-        run: npm run build
+        run: pnpm run build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}

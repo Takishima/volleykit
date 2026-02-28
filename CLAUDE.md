@@ -53,6 +53,8 @@ volleykit/
 └── .github/workflows/        # CI, deploy, release
 ```
 
+**Package manager**: pnpm (workspaces defined in `pnpm-workspace.yaml`)
+
 **Shared imports**: `import { useAssignments } from '@volleykit/shared/hooks'`
 
 ## Code Standards
@@ -68,7 +70,7 @@ volleykit/
 For `feat:`/`fix:` commits, add a changeset:
 
 ```bash
-npx changeset  # Interactive
+pnpm exec changeset  # Interactive
 ```
 
 Or create `.changeset/<name>.md`:
@@ -92,13 +94,13 @@ Added dark mode toggle
 ## Quick Commands
 
 ```bash
-npm install                    # Root: all dependencies
-npm run generate:api           # Generate API types (required before build)
+pnpm install                    # Root: all dependencies
+pnpm run generate:api           # Generate API types (required before build)
 
-cd web-app && npm run dev      # Start dev server
-cd web-app && npm run build    # Production build
+cd web-app && pnpm run dev      # Start dev server
+cd web-app && pnpm run build    # Production build
 
-cd packages/mobile && npm start  # Expo dev server
+cd packages/mobile && pnpm start  # Expo dev server
 ```
 
 ## Definition of Done

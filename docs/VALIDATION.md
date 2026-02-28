@@ -10,7 +10,7 @@ The pre-commit hook (`scripts/pre-commit-validate.sh`) runs automatically in Cla
 
 1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
 2. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-3. **Format (auto-fix)** - Run `npm run format` to auto-fix formatting issues
+3. **Format (auto-fix)** - Run `pnpm run format` to auto-fix formatting issues
 4. **Run in PARALLEL**: lint, knip, test
 5. **Run build** - Production build (only if parallel steps pass)
 
@@ -22,26 +22,26 @@ Run from `web-app/` directory:
 
 ```bash
 # Generate API types (if OpenAPI spec changed)
-npm run generate:api
+pnpm run generate:api
 
 # Formatting
-npm run format:check  # Check only
-npm run format        # Auto-fix
+pnpm run format:check  # Check only
+pnpm run format        # Auto-fix
 
 # Linting (0 warnings allowed)
-npm run lint          # Check only
-npm run lint:fix      # Auto-fix where possible
+pnpm run lint          # Check only
+pnpm run lint:fix      # Auto-fix where possible
 
 # Dead code detection
-npm run knip
+pnpm run knip
 
 # Tests
-npm test              # Run all tests
-npm run test:watch    # Watch mode
-npm run test:coverage # With coverage report
+pnpm test              # Run all tests
+pnpm run test:watch    # Watch mode
+pnpm run test:coverage # With coverage report
 
 # Build
-npm run build         # Production build (includes tsc)
+pnpm run build         # Production build (includes tsc)
 ```
 
 ### When Validation Runs
@@ -63,9 +63,9 @@ npm run build         # Production build (includes tsc)
 Run from `packages/mobile/` directory:
 
 ```bash
-npm run typecheck     # TypeScript check
-npm run lint          # ESLint
-npm test              # Jest tests
+pnpm run typecheck     # TypeScript check
+pnpm run lint          # ESLint
+pnpm test              # Jest tests
 ```
 
 ## Worker Validation
@@ -73,8 +73,8 @@ npm test              # Jest tests
 Run from `worker/` directory:
 
 ```bash
-npm run lint          # ESLint
-npm test              # Tests
+pnpm run lint          # ESLint
+pnpm test              # Tests
 ```
 
 ## E2E Tests (Web App)
@@ -82,8 +82,8 @@ npm test              # Tests
 Run from `web-app/` directory:
 
 ```bash
-npm run test:e2e      # Run all E2E tests (headless)
-npm run test:e2e:ui   # Interactive Playwright UI mode
+pnpm run test:e2e      # Run all E2E tests (headless)
+pnpm run test:e2e:ui   # Interactive Playwright UI mode
 ```
 
 ### E2E Configuration
@@ -102,8 +102,8 @@ E2E tests use POMs in `e2e/pages/` for maintainable selectors.
 
 ```bash
 cd web-app
-npm run build
-npm run size
+pnpm run build
+pnpm run size
 ```
 
 ### Size Limits (gzipped)

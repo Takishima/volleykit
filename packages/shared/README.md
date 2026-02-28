@@ -25,10 +25,10 @@ import { t } from '@volleykit/shared/i18n'
 ## Development
 
 ```bash
-npm run dev           # Watch mode
-npm run build         # Build with tsup
-npm test              # Run tests
-npm run typecheck     # TypeScript check
+pnpm run dev          # Watch mode
+pnpm run build        # Build with tsup
+pnpm test             # Run tests
+pnpm run typecheck    # TypeScript check
 ```
 
 ## API Types
@@ -36,5 +36,5 @@ npm run typecheck     # TypeScript check
 Generated from OpenAPI spec. Regenerate with:
 
 ```bash
-cd ../web-app && npm run generate:api
+cd ../web-app && pnpm run generate:api
 ```
