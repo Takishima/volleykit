@@ -14,6 +14,7 @@ import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
 import { Tabs, TabPanel } from '@/shared/components/Tabs'
 import { WeekSeparator } from '@/shared/components/WeekSeparator'
+import { features } from '@/shared/config/features'
 import { useTour } from '@/shared/hooks/useTour'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useTravelTimeFilter } from '@/shared/hooks/useTravelTimeFilter'
@@ -345,8 +346,8 @@ export function ExchangePage() {
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null
   const isDistanceFilterAvailable = homeLocation !== null
-  // isTravelTimeAvailable from hook already includes association-specific transport check and homeLocation
-  const isTravelTimeFilterAvailable = isTravelTimeAvailable
+  // isTravelTimeAvailable from hook already includes association-specific transport check and homeLocation (features.transport)
+  const isTravelTimeFilterAvailable = features.transport && isTravelTimeAvailable
   // Game gap filter is available when calendar data exists (demo mode or calendar code)
   const isGameGapFilterAvailable = hasCalendarCode && calendarAssignments.length > 0
 

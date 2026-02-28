@@ -15,6 +15,7 @@ export { SafeValidationCompleteModal } from './SafeValidationCompleteModal'
 export { ValidationSuccessToast } from './ValidationSuccessToast'
 export { StepRenderer } from './StepRenderer'
 export { ValidatedModeButtons, ReadOnlyStepButtons, EditModeButtons } from './WizardButtons'
+// features.ocr — OCR components (delete these exports when removing OCR feature)
 export { OCRCaptureModal } from './OCRCaptureModal'
 export { OCRPanel } from './OCRPanel'
 export { PlayerComparisonList } from './PlayerComparisonList'

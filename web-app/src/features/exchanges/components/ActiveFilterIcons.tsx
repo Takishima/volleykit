@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 
 import { User, MapPin, TrainFront, CalendarX2, Award } from '@/shared/components/icons'
+import { features } from '@/shared/config/features'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
 export interface ActiveFilterIconsProps {
@@ -59,7 +60,7 @@ function ActiveFilterIconsComponent({
           <MapPin className="w-full h-full" />
         </span>
       )}
-      {travelTimeActive && (
+      {features.transport && travelTimeActive && (
         <span
           className="w-5 h-5 p-0.5 rounded-full bg-primary-100 text-primary-600 dark:bg-primary-900 dark:text-primary-300"
           aria-hidden="true"

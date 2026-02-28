@@ -16,6 +16,7 @@ import {
   User,
 } from '@/shared/components/icons'
 import { TravelTimeBadge } from '@/shared/components/TravelTimeBadge'
+import { features } from '@/shared/config/features'
 import { useDateLocale } from '@/shared/hooks/useDateFormat'
 import { useSbbUrl } from '@/shared/hooks/useSbbUrl'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -112,7 +113,7 @@ function ExchangeCardComponent({
   const leagueCategory = game?.group?.phase?.league?.leagueCategory?.name
   const gender = game?.group?.phase?.league?.gender
 
-  // Get transport settings for the association
+  // Get transport settings for the association (features.transport)
   const isTransportEnabled = useSettingsStore((state) =>
     state.isTransportEnabledForAssociation(associationCode)
   )
@@ -123,7 +124,7 @@ function ExchangeCardComponent({
   const hallId = game?.hall?.__identity
   const gameStartingDateTime = game?.startingDateTime
 
-  // Hook to fetch trip data on demand and generate SBB URL with station ID
+  // Hook to fetch trip data on demand and generate SBB URL with station ID (features.transport)
   const { isLoading: isSbbLoading, openSbbConnection } = useSbbUrl({
     hallCoords,
     hallId,
@@ -133,8 +134,8 @@ function ExchangeCardComponent({
     language: locale,
   })
 
-  // Show SBB button if transport is enabled and we have the required data
-  const showSbbButton = isTransportEnabled && city && gameStartingDateTime
+  // Show SBB button if transport feature is enabled and we have the required data
+  const showSbbButton = features.transport && isTransportEnabled && city && gameStartingDateTime
 
   return (
     <ExpandableCard
@@ -191,8 +192,8 @@ function ExchangeCardComponent({
                   {t('common.distanceUnit')}
                 </span>
               )}
-              {/* Travel time badge */}
-              {(travelTimeMinutes !== undefined || travelTimeLoading) && (
+              {/* Travel time badge (features.transport) */}
+              {features.transport && (travelTimeMinutes !== undefined || travelTimeLoading) && (
                 <TravelTimeBadge
                   durationMinutes={travelTimeMinutes ?? undefined}
                   isLoading={travelTimeLoading}

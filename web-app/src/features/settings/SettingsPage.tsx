@@ -1,6 +1,7 @@
 import { useShallow } from 'zustand/react/shallow'
 
 import { Button } from '@/shared/components/Button'
+import { features } from '@/shared/config/features'
 import { useTour } from '@/shared/hooks/useTour'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -11,13 +12,13 @@ import {
   ProfileSection,
   PreferencesSection,
   HomeLocationSection,
-  TravelSettingsSection,
   DataProtectionSection,
   HelpToursSection,
   DataRetentionSection,
   DemoSection,
   AppInfoSection,
 } from './components'
+import { TravelSettingsSection } from './components/TravelSettingsSection'
 
 export function SettingsPage() {
   const { user, logout, dataSource, isCalendarMode } = useAuthStore(
@@ -58,13 +59,13 @@ export function SettingsPage() {
 
       <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
 
-      <HomeLocationSection />
+      {features.homeLocation && <HomeLocationSection />}
 
-      <TravelSettingsSection />
+      {features.transport && <TravelSettingsSection />}
 
       <DataRetentionSection />
 
-      <HelpToursSection isDemoMode={isDemoMode} />
+      {features.helpTours && <HelpToursSection isDemoMode={isDemoMode} />}
 
       {isDemoMode && (
         <DemoSection activeAssociationCode={activeAssociationCode} onRefreshData={refreshData} />
