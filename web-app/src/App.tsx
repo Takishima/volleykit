@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, lazy, Suspense } from 'react'
 
-import { QueryClient } from '@tanstack/react-query'
-// features.offline — Replace with QueryClientProvider from @tanstack/react-query when removing offline feature
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+// features.offline — IndexedDB query cache persistence (delete this import when removing offline feature)
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
@@ -60,6 +60,20 @@ const SettingsPage = lazy(() =>
 const TourProvider = features.helpTours
   ? lazy(() => import('@/shared/components/tour').then((m) => ({ default: m.TourProvider })))
   : ({ children }: { children: React.ReactNode }) => <>{children}</>
+
+// features.offline — Use PersistQueryClientProvider for IndexedDB cache persistence, or plain QueryClientProvider
+const QueryProvider = features.offline
+  ? ({ children }: { children: React.ReactNode }) => (
+      <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+        {children}
+      </PersistQueryClientProvider>
+    )
+  : ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+// features.offline — Cache warming no-op when offline is disabled
+const useOfflineCacheWarming: () => void = features.offline ? useCacheWarming : () => {}
 
 /**
  * Global error handler for React Query mutations.
@@ -122,8 +136,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation()
   const isDemoMode = dataSource === 'demo'
 
-  // Warm cache with critical data after login for offline support
-  useCacheWarming()
+  // Warm cache with critical data after login for offline support (features.offline)
+  useOfflineCacheWarming()
 
   // Only verify session for API mode - demo and calendar modes don't need server verification
   const shouldVerifySession = status === 'authenticated' && dataSource === 'api'
@@ -313,7 +327,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <PWAProvider>
-        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+        <QueryProvider>
           <BrowserRouter basename={BASE_PATH}>
             <QueryErrorHandler>
               <Routes>
@@ -392,7 +406,7 @@ export default function App() {
           </BrowserRouter>
           <ReloadPrompt />
           <ToastContainer />
-        </PersistQueryClientProvider>
+        </QueryProvider>
       </PWAProvider>
     </ErrorBoundary>
   )
