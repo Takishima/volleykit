@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.20.0
+
+### Patch Changes
+
+- [#964](https://github.com/Takishima/volleykit/pull/964) [`139af61`](https://github.com/Takishima/volleykit/commit/139af61f3edc27233e6f1644770618cb9710dfd2) Thanks [@Takishima](https://github.com/Takishima)! - Refactor API client, auth flow, and session management into dedicated modules
+
 ## 1.19.1
 
 ### Patch Changes

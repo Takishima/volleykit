@@ -1,5 +1,11 @@
 # @volleykit/mobile
 
+## 1.20.0
+
+### Minor Changes
+
+- [#963](https://github.com/Takishima/volleykit/pull/963) [`113b804`](https://github.com/Takishima/volleykit/commit/113b8049d81900e0d3f03a3471ba031308078421) Thanks [@Takishima](https://github.com/Takishima)! - Upgrade to Expo SDK 55 with React Native 0.83 and unified package versioning
+
 ## 1.16.0
 
 ### Patch Changes
