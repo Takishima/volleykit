@@ -332,7 +332,7 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.56.0
+        specifier: ^8.56.1
         version: 8.56.1(eslint@9.39.3(jiti@2.6.1))(typescript@5.9.3)
       vitest:
         specifier: ^4.0.18
@@ -347,13 +347,13 @@ importers:
   web-app:
     dependencies:
       '@tailwindcss/vite':
-        specifier: ^4.2.0
+        specifier: ^4.2.1
         version: 4.2.1(vite@7.3.1(@types/node@25.3.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(yaml@2.8.2))
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.4)
       '@tanstack/react-query-persist-client':
-        specifier: ^5.90.22
+        specifier: ^5.90.23
         version: 5.90.23(@tanstack/react-query@5.90.21(react@19.2.4))(react@19.2.4)
       '@volleykit/shared':
         specifier: workspace:*
@@ -389,10 +389,10 @@ importers:
         specifier: ^5.5.6
         version: 5.5.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-dom:
-        specifier: ^7.13.0
+        specifier: ^7.13.1
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       tailwindcss:
-        specifier: ^4.2.0
+        specifier: ^4.2.1
         version: 4.2.1
       zod:
         specifier: ^4.3.6
@@ -423,7 +423,7 @@ importers:
         specifier: ^14.6.1
         version: 14.6.1(@testing-library/dom@10.4.1)
       '@types/node':
-        specifier: ^25.3.0
+        specifier: ^25.3.2
         version: 25.3.2
       '@types/react':
         specifier: ^19.2.14
@@ -441,7 +441,7 @@ importers:
         specifier: ^4.0.18
         version: 4.0.18(vitest@4.0.18(@types/node@25.3.2)(happy-dom@20.7.0)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.31.1)(msw@2.12.10(@types/node@25.3.2)(typescript@5.9.3))(terser@5.46.0)(yaml@2.8.2))
       eslint:
-        specifier: ^10.0.1
+        specifier: ^10.0.2
         version: 10.0.2(jiti@2.6.1)
       eslint-import-resolver-typescript:
         specifier: ^4.4.4
@@ -459,7 +459,7 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1(eslint@10.0.2(jiti@2.6.1))
       eslint-plugin-react-refresh:
-        specifier: ^0.5.0
+        specifier: ^0.5.2
         version: 0.5.2(eslint@10.0.2(jiti@2.6.1))
       eslint-plugin-security:
         specifier: ^4.0.0
@@ -495,7 +495,7 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.56.0
+        specifier: ^8.56.1
         version: 8.56.1(eslint@10.0.2(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^7.3.1
