@@ -45,6 +45,18 @@ export {
   compensationsResponseSchema,
   exchangesResponseSchema,
   personSearchResponseSchema,
+  // Detail / mutation schemas
+  compensationDetailedSchema,
+  pickExchangeResponseSchema,
+  fileResourceArraySchema,
+  scoresheetValidationSchema,
+  scoresheetSchema,
+  nominationListSchema,
+  nominationListResponseSchema,
+  gameDetailsResponseSchema,
+  associationSettingsSchema,
+  seasonSchema,
+  possibleNominationsResponseSchema,
   // Types
   type Assignment,
   type CompensationRecord,
