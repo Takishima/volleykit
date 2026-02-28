@@ -26,9 +26,9 @@
  */
 import { z } from 'zod'
 
-import type { ZodLikeSchema } from '@volleykit/shared/api'
-
 import { logger } from '@/shared/utils/logger'
+
+import type { ZodLikeSchema } from '@volleykit/shared/api'
 
 // Re-export all base schemas from shared package
 export {
