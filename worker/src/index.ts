@@ -48,6 +48,10 @@ import {
 const OCR_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] as const
 const OCR_RATE_LIMIT_RETRY_SECONDS = 60
 
+// OJP configuration constants
+/** Maximum request body size for OJP requests (64 KB) */
+const OJP_MAX_BODY_SIZE_BYTES = 64 * 1024
+
 /**
  * Cloudflare Rate Limiter binding interface.
  * @see https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
@@ -689,6 +693,19 @@ export default {
       try {
         // Forward the request body to OJP API with server-side auth
         const ojpBody = await request.text()
+
+        // Validate body size to prevent abuse (OJP XML requests are typically a few KB)
+        if (ojpBody.length > OJP_MAX_BODY_SIZE_BYTES) {
+          return new Response(JSON.stringify({ error: 'Request body too large' }), {
+            status: 413,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          })
+        }
+
         const ojpResponse = await fetch('https://api.opentransportdata.swiss/ojp20', {
           method: 'POST',
           headers: {
