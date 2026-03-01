@@ -62,6 +62,7 @@ interface Env {
   RATE_LIMITER: RateLimiter
   KILL_SWITCH?: string // Set to "true" to disable the proxy
   MISTRAL_API_KEY?: string // API key for Mistral OCR
+  OJP_API_KEY?: string // API key for Swiss public transport OJP 2.0 API
   AUTH_LOCKOUT?: AuthLockoutKV // KV namespace for auth lockout state
 }
 
@@ -88,8 +89,17 @@ function securityHeaders(): HeadersInit {
       "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'",
     'X-Frame-Options': 'SAMEORIGIN',
     'X-Content-Type-Options': 'nosniff',
-    'X-XSS-Protection': '1; mode=block',
+    // X-XSS-Protection set to '0' per MDN recommendation:
+    // '1; mode=block' is deprecated and can introduce timing side-channel attacks.
+    // Modern CSP headers make the XSS auditor redundant.
+    'X-XSS-Protection': '0',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
+    // HSTS: enforce HTTPS for 1 year including subdomains
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+    // Restrict browser features not used by the proxy
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+    // Prevent cross-origin window references
+    'Cross-Origin-Opener-Policy': 'same-origin',
   }
 }
 
@@ -388,9 +398,16 @@ export default {
       }
 
       // Rate limiting for OCR endpoint
+      // CF-Connecting-IP is always present in production (set by Cloudflare edge).
+      // Skip rate limiting if absent (test/dev only) to avoid a shared 'unknown' bucket.
       if (env.RATE_LIMITER) {
-        const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown'
-        const { success } = await env.RATE_LIMITER.limit({ key: clientIP })
+        const clientIP = request.headers.get('CF-Connecting-IP')
+        if (!clientIP) {
+          console.warn('CF-Connecting-IP header missing — skipping rate limit')
+        }
+        const { success } = clientIP
+          ? await env.RATE_LIMITER.limit({ key: clientIP })
+          : { success: true }
 
         if (!success) {
           return new Response(JSON.stringify({ error: 'Too many requests' }), {
@@ -583,11 +600,176 @@ export default {
       }
     }
 
+    // OJP proxy endpoint - proxies requests to Swiss public transport OJP 2.0 API
+    // Keeps the API key server-side instead of exposing it in the client bundle
+    if (url.pathname === '/ojp') {
+      const origin = request.headers.get('Origin')
+      let allowedOrigins: string[]
+      try {
+        allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS)
+      } catch {
+        return new Response('Server configuration error', {
+          status: 500,
+          headers: { 'Content-Type': 'text/plain' },
+        })
+      }
+
+      if (!isAllowedOrigin(origin, allowedOrigins)) {
+        const errorHeaders: HeadersInit = {
+          'Content-Type': 'text/plain',
+          ...securityHeaders(),
+        }
+        if (origin) {
+          Object.assign(errorHeaders, corsHeaders(origin))
+        }
+        return new Response('Forbidden: Origin not allowed', {
+          status: 403,
+          headers: errorHeaders,
+        })
+      }
+
+      // Handle CORS preflight for OJP
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: corsHeaders(origin!),
+        })
+      }
+
+      // Rate limiting for OJP endpoint
+      // CF-Connecting-IP is always present in production (set by Cloudflare edge).
+      // Skip rate limiting if absent (test/dev only) to avoid a shared 'unknown' bucket.
+      if (env.RATE_LIMITER) {
+        const clientIP = request.headers.get('CF-Connecting-IP')
+        if (!clientIP) {
+          console.warn('CF-Connecting-IP header missing — skipping rate limit')
+        }
+        const { success } = clientIP
+          ? await env.RATE_LIMITER.limit({ key: clientIP })
+          : { success: true }
+
+        if (!success) {
+          return new Response(JSON.stringify({ error: 'Too many requests' }), {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': '60',
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          })
+        }
+      }
+
+      // Only allow POST for OJP
+      if (request.method !== 'POST') {
+        return new Response('Method Not Allowed', {
+          status: 405,
+          headers: {
+            'Content-Type': 'text/plain',
+            Allow: 'POST',
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        })
+      }
+
+      // Check if OJP API key is configured
+      if (!env.OJP_API_KEY) {
+        return new Response(JSON.stringify({ error: 'OJP service not configured' }), {
+          status: 503,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        })
+      }
+
+      try {
+        // Forward the request body to OJP API with server-side auth
+        const ojpBody = await request.text()
+        const ojpResponse = await fetch('https://api.opentransportdata.swiss/ojp20', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${env.OJP_API_KEY}`,
+            'Content-Type': request.headers.get('Content-Type') || 'application/xml',
+          },
+          body: ojpBody,
+        })
+
+        if (!ojpResponse.ok) {
+          const errorText = await ojpResponse.text()
+          console.error('OJP API error:', ojpResponse.status, errorText)
+
+          if (ojpResponse.status === 401) {
+            return new Response(JSON.stringify({ error: 'OJP service authentication failed' }), {
+              status: 503,
+              headers: {
+                'Content-Type': 'application/json',
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            })
+          }
+
+          if (ojpResponse.status === 429) {
+            return new Response(JSON.stringify({ error: 'OJP service rate limit exceeded' }), {
+              status: 429,
+              headers: {
+                'Content-Type': 'application/json',
+                'Retry-After': '60',
+                ...corsHeaders(origin!),
+                ...securityHeaders(),
+              },
+            })
+          }
+
+          return new Response(JSON.stringify({ error: 'OJP request failed' }), {
+            status: 502,
+            headers: {
+              'Content-Type': 'application/json',
+              ...corsHeaders(origin!),
+              ...securityHeaders(),
+            },
+          })
+        }
+
+        // Return the OJP API response
+        const ojpResult = await ojpResponse.text()
+        return new Response(ojpResult, {
+          status: 200,
+          headers: {
+            'Content-Type': ojpResponse.headers.get('Content-Type') || 'application/xml',
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        })
+      } catch (error) {
+        console.error('OJP proxy error:', error)
+        return new Response(JSON.stringify({ error: 'Internal server error during OJP request' }), {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders(origin!),
+            ...securityHeaders(),
+          },
+        })
+      }
+    }
+
     // Rate limiting check (100 requests per minute per IP)
     // Uses Cloudflare's Rate Limiter binding configured in wrangler.toml
+    // CF-Connecting-IP is always present in production (set by Cloudflare edge).
+    // Skip rate limiting if absent (test/dev only) to avoid a shared 'unknown' bucket.
     if (env.RATE_LIMITER) {
-      const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown'
-      const { success } = await env.RATE_LIMITER.limit({ key: clientIP })
+      const clientIP = request.headers.get('CF-Connecting-IP')
+      if (!clientIP) {
+        console.warn('CF-Connecting-IP header missing — skipping rate limit')
+      }
+      const { success } = clientIP
+        ? await env.RATE_LIMITER.limit({ key: clientIP })
+        : { success: true }
 
       if (!success) {
         return new Response('Too Many Requests', {
@@ -763,10 +945,12 @@ export default {
 
     // Auth lockout check - block auth requests from locked-out IPs
     // This is tamper-proof as the state is stored server-side in KV
-    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown'
+    // CF-Connecting-IP is always present in production (set by Cloudflare edge).
+    // If absent (test/dev), auth lockout is skipped to avoid a shared 'unknown' bucket.
+    const clientIP = request.headers.get('CF-Connecting-IP')
     const isAuthReq = isAuthRequest(url.pathname, request.method)
 
-    if (isAuthReq && env.AUTH_LOCKOUT) {
+    if (isAuthReq && env.AUTH_LOCKOUT && clientIP) {
       const lockoutState = await getAuthLockoutState(env.AUTH_LOCKOUT, clientIP)
       const lockoutStatus = checkLockoutStatus(lockoutState)
 
@@ -903,7 +1087,7 @@ export default {
       // Track auth attempts for lockout
       // Must clone response to read body without consuming it
       let responseBodyForCheck: string | undefined
-      if (isAuthReq && env.AUTH_LOCKOUT) {
+      if (isAuthReq && env.AUTH_LOCKOUT && clientIP) {
         // Clone response to read body for auth result detection
         const clonedResponse = response.clone()
         try {

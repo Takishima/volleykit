@@ -2510,6 +2510,7 @@ describe('Integration: OCR Endpoint', () => {
       method: 'POST',
       headers: {
         Origin: 'https://example.com',
+        'CF-Connecting-IP': '192.168.1.1',
       },
       body: formData,
     })
@@ -2954,7 +2955,10 @@ describe('Security Headers', () => {
 
     const response = await worker.fetch(request, mockEnv)
 
-    expect(response.headers.get('X-XSS-Protection')).toBe('1; mode=block')
+    // '0' disables the deprecated XSS auditor (MDN recommendation).
+    // Modern CSP headers make it redundant; '1; mode=block' can introduce
+    // timing side-channel vulnerabilities.
+    expect(response.headers.get('X-XSS-Protection')).toBe('0')
 
     vi.unstubAllGlobals()
   })

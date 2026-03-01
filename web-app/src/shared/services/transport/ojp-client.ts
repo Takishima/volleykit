@@ -5,6 +5,7 @@
  * The SDK is loaded lazily to reduce initial bundle size.
  */
 
+import { API_BASE_URL } from '@/api/constants'
 import { MINUTES_PER_HOUR, SECONDS_PER_MINUTE } from '@/shared/utils/constants'
 
 import { TransportApiError } from './types'
@@ -24,8 +25,17 @@ async function loadOjpSdk(): Promise<typeof import('ojp-sdk-next')> {
   return ojpSdk
 }
 
-/** OJP 2.0 API endpoint */
-const OJP_API_ENDPOINT = 'https://api.opentransportdata.swiss/ojp20'
+/**
+ * OJP 2.0 API endpoint.
+ * Routes through the Cloudflare Worker proxy to keep the API key server-side.
+ * Falls back to the direct endpoint if VITE_OJP_API_KEY is set (legacy/dev).
+ */
+function getOjpEndpoint(): string {
+  if (API_BASE_URL) {
+    return `${API_BASE_URL}/ojp`
+  }
+  return 'https://api.opentransportdata.swiss/ojp20'
+}
 
 /** Minimum delay between API requests (50 req/min = 1.2s to be safe) */
 const RATE_LIMIT_DELAY_MS = 1200
@@ -49,8 +59,15 @@ async function waitForRateLimit(): Promise<void> {
 
 /**
  * Check if the OJP API is configured.
+ * In production, the API key is server-side (worker proxy) so we only need the proxy URL.
+ * In development, VITE_OJP_API_KEY can be used for direct access.
  */
 export function isOjpConfigured(): boolean {
+  // Production: proxy URL is configured, key lives server-side
+  if (API_BASE_URL) {
+    return true
+  }
+  // Development fallback: direct API key
   const apiKey = import.meta.env.VITE_OJP_API_KEY
   return Boolean(apiKey && apiKey !== 'your_api_key_here')
 }
@@ -69,9 +86,7 @@ export async function calculateTravelTime(
   to: Coordinates,
   options: TravelTimeOptions = {}
 ): Promise<TravelTimeResult> {
-  const apiKey = import.meta.env.VITE_OJP_API_KEY
-
-  if (!apiKey || apiKey === 'your_api_key_here') {
+  if (!isOjpConfigured()) {
     throw new TransportApiError('OJP API key not configured', 'API_NOT_CONFIGURED')
   }
 
@@ -82,8 +97,11 @@ export async function calculateTravelTime(
     // Load SDK lazily
     const { SDK, TripRequest, Place } = await loadOjpSdk()
 
-    // Create SDK instance using static factory method
-    const sdk = SDK.create('VolleyKit', { url: OJP_API_ENDPOINT, authToken: apiKey }, 'de')
+    // When using the worker proxy, the API key is added server-side.
+    // Pass a placeholder token — the proxy ignores it and uses its own.
+    const ojpEndpoint = getOjpEndpoint()
+    const authToken = import.meta.env.VITE_OJP_API_KEY || 'proxy'
+    const sdk = SDK.create('VolleyKit', { url: ojpEndpoint, authToken }, 'de')
 
     // Create places from coordinates
     const fromPlace = Place.initWithCoords(from.longitude, from.latitude)
