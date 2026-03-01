@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.21.1
+
+### Patch Changes
+
+- [#972](https://github.com/Takishima/volleykit/pull/972) [`c6d1bbd`](https://github.com/Takishima/volleykit/commit/c6d1bbd11af42e96d1675c37ceb7ea4a5f616889) Thanks [@Takishima](https://github.com/Takishima)! - Hardened worker security headers, fixed rate limiter shared bucket, and moved OJP API key server-side through worker proxy
+
 ## 1.21.0
 
 ### Minor Changes
