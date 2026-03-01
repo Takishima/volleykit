@@ -59,6 +59,12 @@ TARGET_HOST = "https://volleymanager.volleyball.ch"
 #   - Set via: npx wrangler secret put MISTRAL_API_KEY
 #   - Or configure in Cloudflare Dashboard > Workers > volleykit-proxy > Settings > Variables
 #
+# OJP_API_KEY: API key for Swiss public transport OJP 2.0 API
+#   - Required for the /ojp endpoint (travel time calculations)
+#   - Get a key from: https://api-manager.opentransportdata.swiss/
+#   - Set via: npx wrangler secret put OJP_API_KEY
+#   - Keeps the API key server-side instead of exposing it in the client bundle
+#
 # Note: Secrets are not stored in this file for security reasons.
 # =============================================================================
 

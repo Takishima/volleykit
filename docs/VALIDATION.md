@@ -115,7 +115,7 @@ pnpm run size
 | PDF Library (lazy)   | 185 KB |
 | Image Cropper (lazy) | 10 KB  |
 | CSS                  | 12 KB  |
-| Total JS             | 520 KB |
+| Total JS             | 580 KB |
 
 ### Bundle Analysis
 

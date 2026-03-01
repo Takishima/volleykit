@@ -68,12 +68,19 @@ console.log('Login attempt:', { username, password: '[REDACTED]' })
 
 ### Sensitive Data Exposure
 
-| Check           | What to look for                                          |
-| --------------- | --------------------------------------------------------- |
-| Error messages  | Don't expose stack traces or internal paths to users      |
-| API responses   | Don't log full response bodies (may contain PII)          |
-| Form data       | Use `type="password"` for sensitive inputs                |
-| Browser storage | Never store tokens in localStorage (use httpOnly cookies) |
+| Check           | What to look for                                                       |
+| --------------- | ---------------------------------------------------------------------- |
+| Error messages  | Don't expose stack traces or internal paths to users                   |
+| API responses   | Don't log full response bodies (may contain PII)                       |
+| Form data       | Use `type="password"` for sensitive inputs                             |
+| Browser storage | Never store tokens in localStorage (use httpOnly cookies)              |
+| Env var prefix  | `VITE_` vars are embedded in the client bundle — never use for secrets |
+
+> **Known exception:** The CSRF token is persisted in localStorage via the
+> Zustand auth store's `partialize`. This is intentional — it enables
+> state-changing requests to succeed after page reload. The token's value
+> is scoped to the user's session and rotated on login. The session token
+> itself is encrypted via Web Crypto AES-GCM before being stored.
 
 ### Third-Party Dependencies
 
@@ -90,11 +97,13 @@ pnpm audit
 
 ## CORS & Network
 
-| Check             | What to look for                              |
-| ----------------- | --------------------------------------------- |
-| Fetch credentials | Use `credentials: 'include'` only when needed |
-| CORS headers      | Verify worker allows only expected origins    |
-| Redirect handling | Validate redirect URLs against allowlist      |
+| Check              | What to look for                                 |
+| ------------------ | ------------------------------------------------ |
+| Fetch credentials  | Use `credentials: 'include'` only when needed    |
+| CORS headers       | Verify worker allows only expected origins       |
+| Redirect handling  | Validate redirect URLs against allowlist         |
+| Security headers   | HSTS, Permissions-Policy, COOP set by worker     |
+| API keys in client | Proxy through worker; never use `VITE_` for keys |
 
 ## Files to Watch
 
