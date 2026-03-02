@@ -191,17 +191,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Download web-app artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: web-app-dist
           path: deploy
       - name: Download help-site artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: help-site-dist
           path: deploy/help
       - name: Download ocr-poc artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ocr-poc-dist
           path: deploy/ocr-poc
