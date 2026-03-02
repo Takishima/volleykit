@@ -61,14 +61,14 @@ jobs:
         run: eas build --platform ios --profile development --non-interactive --local --output ./volleykit-${{ inputs.version }}.ipa
       - name: Upload APK artifact
         if: inputs.platform == 'android'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-apk-${{ inputs.version }}
           path: packages/mobile/volleykit-${{ inputs.version }}.apk
           retention-days: 30
       - name: Upload IPA artifact
         if: inputs.platform == 'ios'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ios-ipa-${{ inputs.version }}
           path: packages/mobile/volleykit-${{ inputs.version }}.ipa

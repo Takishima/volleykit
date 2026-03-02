@@ -102,7 +102,7 @@ jobs:
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
       - name: Upload web-app artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-app-dist
           path: web-app/dist
@@ -134,7 +134,7 @@ jobs:
         env:
           ASTRO_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}help
       - name: Upload help-site artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: help-site-dist
           path: help-site/dist
@@ -177,7 +177,7 @@ jobs:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       - name: Upload ocr-poc artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ocr-poc-dist
           path: ocr-poc/dist
