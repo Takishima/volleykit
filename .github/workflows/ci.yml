@@ -77,7 +77,7 @@ jobs:
         run: pnpm run generate:api
       # Upload API types as artifact for downstream jobs (both locations)
       - name: Upload API types
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: api-types
           path: |
@@ -273,7 +273,7 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Upload build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: web-app-dist
           path: web-app/dist
@@ -337,7 +337,7 @@ jobs:
       - name: Run E2E tests
         run: pnpm exec playwright test --project=${{ matrix.browser }} --retries=2
       - name: Upload test results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.browser }}
