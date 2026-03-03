@@ -11,11 +11,38 @@ import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
 
 /**
+ * Common surname particles that indicate the token is part of a compound
+ * surname rather than a standalone first name (e.g. "di Martino", "von Berg").
+ */
+const SURNAME_PARTICLES = new Set([
+  'de',
+  'del',
+  'della',
+  'di',
+  'du',
+  'von',
+  'van',
+  'den',
+  'der',
+  'la',
+  'le',
+  'las',
+  'los',
+  'dos',
+  'da',
+  'das',
+])
+
+/**
  * Parses a search input string into search filters.
  * Supports flexible token parsing:
  * - Single word: treated as lastName
  * - Two words: treated as firstName and lastName
  * - Four-digit number at end: treated as yearOfBirth
+ *
+ * When the first token is a surname particle (e.g. "di", "von", "de"),
+ * the entire name is treated as a lastName to preserve compound surnames
+ * like "di Martino" or "de la Cruz".
  *
  * Note: When two name tokens are provided, the first is treated as firstName
  * and the second as lastName. The API layer searches both orderings in parallel,
@@ -24,6 +51,7 @@ import { useAuthStore } from '@/shared/stores/auth'
  * @example
  * parseSearchInput("müller") // { lastName: "müller" }
  * parseSearchInput("hans müller") // { firstName: "hans", lastName: "müller" }
+ * parseSearchInput("di martino") // { lastName: "di martino" }
  * parseSearchInput("müller 1985") // { lastName: "müller", yearOfBirth: "1985" }
  * parseSearchInput("hans müller 1985") // { firstName: "hans", lastName: "müller", yearOfBirth: "1985" }
  */
@@ -47,9 +75,16 @@ export function parseSearchInput(input: string): PersonSearchFilter {
   if (tokens.length === 1) {
     result.lastName = tokens[0]
   } else if (tokens.length >= 2) {
-    // First token as firstName, rest as lastName
-    result.firstName = tokens[0]
-    result.lastName = tokens.slice(1).join(' ')
+    // If the first token is a surname particle (e.g. "di", "von", "de"),
+    // treat the entire input as a lastName to preserve compound surnames
+    // like "di Martino", "von Berg", "de la Cruz".
+    if (SURNAME_PARTICLES.has(tokens[0]!.toLowerCase())) {
+      result.lastName = tokens.join(' ')
+    } else {
+      // First token as firstName, rest as lastName
+      result.firstName = tokens[0]
+      result.lastName = tokens.slice(1).join(' ')
+    }
   }
 
   return result

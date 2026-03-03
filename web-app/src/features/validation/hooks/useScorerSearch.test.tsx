@@ -143,6 +143,44 @@ describe('parseSearchInput', () => {
       lastName: 'dupont',
     })
   })
+
+  it('treats leading surname particles as part of lastName', () => {
+    // "di martino" should not be split into firstName:"di" + lastName:"martino"
+    expect(parseSearchInput('di martino')).toEqual({
+      lastName: 'di martino',
+    })
+    expect(parseSearchInput('von Berg')).toEqual({
+      lastName: 'von Berg',
+    })
+    expect(parseSearchInput('de la cruz')).toEqual({
+      lastName: 'de la cruz',
+    })
+    expect(parseSearchInput('van der Heyde')).toEqual({
+      lastName: 'van der Heyde',
+    })
+  })
+
+  it('treats leading surname particles with year as lastName + year', () => {
+    expect(parseSearchInput('di martino 1990')).toEqual({
+      lastName: 'di martino',
+      yearOfBirth: '1990',
+    })
+    expect(parseSearchInput('von Berg 1985')).toEqual({
+      lastName: 'von Berg',
+      yearOfBirth: '1985',
+    })
+  })
+
+  it('keeps particles as part of lastName when preceded by a first name', () => {
+    expect(parseSearchInput('marco di martino')).toEqual({
+      firstName: 'marco',
+      lastName: 'di martino',
+    })
+    expect(parseSearchInput('emma von Berg')).toEqual({
+      firstName: 'emma',
+      lastName: 'von Berg',
+    })
+  })
 })
 
 describe('useScorerSearch', () => {
