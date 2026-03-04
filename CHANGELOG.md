@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.21.2
+
+### Patch Changes
+
+- [#979](https://github.com/Takishima/volleykit/pull/979) [`e473418`](https://github.com/Takishima/volleykit/commit/e47341828f6110a1185f9beefe56929da4f08d90) Thanks [@Takishima](https://github.com/Takishima)! - Fixed fuzzy name matching for scorer names with surname particles (e.g. "di martino", "von Berg", "de la Cruz"). Previously, particles like "di" were incorrectly treated as a first name, splitting "di martino" into firstName:"di" + lastName:"martino". Now the parser recognizes common surname particles and keeps them as part of the lastName for accurate search results.
+
+- [#980](https://github.com/Takishima/volleykit/pull/980) [`1574547`](https://github.com/Takishima/volleykit/commit/157454778fac86a2c9865917abc5ea744ec892f5) Thanks [@Takishima](https://github.com/Takishima)! - Updated all dependencies to latest versions
+
 ## 1.21.1
 
 ### Patch Changes

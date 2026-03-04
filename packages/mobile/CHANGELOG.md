@@ -1,5 +1,11 @@
 # @volleykit/mobile
 
+## 1.21.2
+
+### Patch Changes
+
+- [#980](https://github.com/Takishima/volleykit/pull/980) [`1574547`](https://github.com/Takishima/volleykit/commit/157454778fac86a2c9865917abc5ea744ec892f5) Thanks [@Takishima](https://github.com/Takishima)! - Updated all dependencies to latest versions
+
 ## 1.21.0
 
 ### Patch Changes
