@@ -33,7 +33,7 @@ import {
 } from './validation'
 import { scoreNameMatch } from './search-utils'
 
-import { buildFormData, getCsrfToken } from './form-serialization'
+import { getCsrfToken } from './form-serialization'
 import { captureSessionToken, getSessionHeaders, clearSession } from './session'
 
 import { HttpStatus, BYTES_PER_KB } from '@/shared/utils/constants'
@@ -44,6 +44,7 @@ import {
   DEFAULT_SEARCH_RESULTS_LIMIT,
 } from './constants'
 import { parseErrorResponse } from './error-handling'
+import { apiRequest } from './transport'
 import {
   ASSIGNMENT_PROPERTIES,
   EXCHANGE_PROPERTIES,
@@ -71,87 +72,6 @@ type ScoresheetValidation = Schemas['ScoresheetValidation']
 type FileResource = Schemas['FileResource']
 type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
 
-if (!import.meta.env.DEV && !API_BASE_URL) {
-  console.warn('VITE_API_PROXY_URL is not configured for production. API calls will fail.')
-}
-
-// Generic fetch wrapper
-async function apiRequest<T>(
-  endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
-  body?: Record<string, unknown>,
-  requestContentType?: string
-): Promise<T> {
-  let url = `${API_BASE_URL}${endpoint}`
-
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-    ...getSessionHeaders(),
-  }
-
-  if (method === 'GET' && body) {
-    const params = buildFormData(body, { includeCsrfToken: false })
-    url = `${url}?${params.toString()}`
-  }
-
-  if (method !== 'GET' && body) {
-    headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
-  }
-
-  const response = await fetch(url, {
-    method,
-    headers,
-    credentials: 'include',
-    // Explicitly convert URLSearchParams to string to ensure correct serialization
-    // on iOS Safari PWA where passing URLSearchParams with a non-default Content-Type
-    // (e.g. text/plain) may result in an empty or malformed request body.
-    body: method !== 'GET' && body ? buildFormData(body).toString() : undefined,
-  })
-
-  // Capture session token from response headers (iOS Safari PWA)
-  captureSessionToken(response)
-
-  if (!response.ok) {
-    if (
-      response.status === HttpStatus.UNAUTHORIZED ||
-      response.status === HttpStatus.FORBIDDEN ||
-      response.status === HttpStatus.NOT_ACCEPTABLE
-    ) {
-      clearSession()
-      throw new Error('Session expired. Please log in again.')
-    }
-    const errorMessage = await parseErrorResponse(response)
-    throw new Error(`${method} ${endpoint}: ${errorMessage}`)
-  }
-
-  const contentType = response.headers.get('Content-Type') || ''
-
-  // Try to parse JSON first, regardless of Content-Type header.
-  // The VolleyManager API sometimes returns JSON with incorrect Content-Type: text/html header.
-  try {
-    return await response.json()
-  } catch {
-    // JSON parsing failed - now check if this looks like a stale session
-    // Detect stale session: when the API returns HTML instead of JSON with status 200,
-    // it means the session expired and the server is returning a login page.
-    // This commonly happens with TYPO3 Neos/Flow backends that don't return proper 401.
-    if (contentType.includes('text/html')) {
-      // Check if pathname ends with "/login" to avoid false positives on paths
-      // like "/api/v2/login-history" or "/user/login-preferences"
-      const pathname = new URL(response.url).pathname.toLowerCase()
-      const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
-      if (isLoginPage) {
-        clearSession()
-        throw new Error('Session expired. Please log in again.')
-      }
-    }
-
-    throw new Error(
-      `${method} ${endpoint}: Invalid JSON response (Content-Type: ${contentType || 'unknown'}, status: ${response.status})`
-    )
-  }
-}
-
 /** Properties requested from the Elasticsearch person search endpoint */
 const PERSON_SEARCH_PROPERTIES = [
   'displayName',
@@ -162,7 +82,7 @@ const PERSON_SEARCH_PROPERTIES = [
   'gender',
 ] as const
 
-// API Methods
+// API Methods — checked against the shared ApiClient interface for type safety
 export const api = {
   // Assignments
   async searchAssignments(config: SearchConfiguration = {}): Promise<AssignmentsResponse> {
@@ -883,4 +803,5 @@ export const api = {
   },
 }
 
-export type ApiClient = typeof api
+// Re-export ApiClient from shared for backwards compatibility
+export type { ApiClient } from '@volleykit/shared/api'
