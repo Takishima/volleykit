@@ -76,9 +76,14 @@ export {
   CAPTURE_SESSION_TOKEN_HEADER,
 } from './session'
 
-// Re-export the real API client and its type for backwards compatibility
+// Re-export the real API client
 export { api } from './real-api'
-export type { ApiClient } from './real-api'
+
+// ApiClient type: use the concrete implementation type for web-app consumers.
+// The shared ApiClient interface (from @volleykit/shared/api) defines the
+// cross-platform contract; structural typing via getApiClient() ensures
+// all implementations (real, mock, calendar) conform to the same shape.
+export type ApiClient = typeof api
 
 // Re-export DataSource from auth store for consumers that import from client
 export type { DataSource } from '@/shared/stores/auth'

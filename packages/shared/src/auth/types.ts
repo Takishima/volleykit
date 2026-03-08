@@ -111,6 +111,26 @@ export interface AuthServiceConfig {
 }
 
 /**
+ * Platform-agnostic authentication provider interface.
+ *
+ * Defines the contract for authentication operations. The concrete
+ * implementation (e.g., createAuthService) handles the protocol-specific
+ * details (HTML form parsing, CSRF, redirect handling).
+ */
+export interface AuthProvider {
+  /** Authenticate with credentials and return a session token. */
+  login(username: string, password: string): Promise<LoginResult>
+  /** End the current session. */
+  logout(): Promise<void>
+  /** Check if the current session is still valid. */
+  checkSession(): Promise<{
+    valid: boolean
+    csrfToken?: string
+    activeParty?: ActiveParty | null
+  }>
+}
+
+/**
  * HTTP status codes used in auth flow.
  */
 export const HTTP_STATUS = {
