@@ -29,6 +29,9 @@ async function handleResponse(response: Response, method: string, endpoint: stri
   captureSessionToken(response)
 
   if (!response.ok) {
+    // 401/403 are standard auth failures. 406 (NOT_ACCEPTABLE) is also treated as
+    // session expiry because the VolleyManager API returns 406 when the session cookie
+    // is stale/invalid. Applied uniformly across all transport functions for consistency.
     if (
       response.status === HttpStatus.UNAUTHORIZED ||
       response.status === HttpStatus.FORBIDDEN ||
