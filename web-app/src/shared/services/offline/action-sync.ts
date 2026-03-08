@@ -8,8 +8,8 @@
  * - Session expiry detection
  */
 
+import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { api } from '@/api/real-api'
 import { createLogger } from '@/shared/utils/logger'
 
 import {
@@ -83,9 +83,12 @@ function isConflictError(error: unknown): boolean {
  * Execute a single action against the API.
  */
 async function executeAction(action: OfflineAction): Promise<void> {
+  // Offline sync always uses the real API client (mutations cannot run in demo/calendar mode)
+  const apiClient = getApiClient('api')
+
   switch (action.type) {
     case 'updateCompensation':
-      await api.updateCompensation(action.payload.compensationId, action.payload.data)
+      await apiClient.updateCompensation(action.payload.compensationId, action.payload.data)
       break
 
     case 'updateAssignmentCompensation':
@@ -99,20 +102,20 @@ async function executeAction(action: OfflineAction): Promise<void> {
     case 'batchUpdateCompensations':
       // Execute batch updates sequentially
       for (const compensationId of action.payload.compensationIds) {
-        await api.updateCompensation(compensationId, action.payload.data)
+        await apiClient.updateCompensation(compensationId, action.payload.data)
       }
       break
 
     case 'applyForExchange':
-      await api.applyForExchange(action.payload.exchangeId)
+      await apiClient.applyForExchange(action.payload.exchangeId)
       break
 
     case 'addToExchange':
-      await api.addToExchange(action.payload.convocationId)
+      await apiClient.addToExchange(action.payload.convocationId)
       break
 
     case 'removeOwnExchange':
-      await api.removeOwnExchange(action.payload.convocationId)
+      await apiClient.removeOwnExchange(action.payload.convocationId)
       break
 
     default: {
