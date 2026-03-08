@@ -1,12 +1,12 @@
 /**
  * Platform-agnostic API client interface for VolleyKit.
  *
- * This module defines the contract for API clients without platform-specific
- * implementations. The actual implementation differs between:
+ * This module defines the contract for data-access clients without
+ * platform-specific implementations. The actual implementation differs between:
  * - Web: Uses fetch with Vite proxy and CSRF token management
  * - Mobile: Uses fetch with native credential storage
  *
- * Extracted from web-app/src/api/client.ts
+ * Authentication is handled separately by AuthService (see auth/service.ts).
  */
 
 import type { SearchConfiguration } from './queryKeys'
@@ -16,6 +16,15 @@ import type {
   GameExchange,
   AssociationSettings,
   Season,
+  ConvocationCompensationDetailed,
+  Scoresheet,
+  ScoresheetValidation,
+  FileResource,
+  NominationList,
+  NominationListResponse,
+  GameDetails,
+  PossibleNominationsResponse,
+  PersonSearchResponse,
 } from './validation'
 
 // Re-export types from validation for convenience
@@ -25,6 +34,15 @@ export type {
   GameExchange,
   AssociationSettings,
   Season,
+  ConvocationCompensationDetailed,
+  Scoresheet,
+  ScoresheetValidation,
+  FileResource,
+  NominationList,
+  NominationListResponse,
+  GameDetails,
+  PossibleNominationsResponse,
+  PersonSearchResponse,
   SearchConfiguration,
 }
 
@@ -70,32 +88,121 @@ export interface PaginatedResponse<T> {
 }
 
 /**
+ * Coach assignment identifiers for nomination list operations.
+ */
+export interface CoachIds {
+  head?: string
+  firstAssistant?: string
+  secondAssistant?: string
+}
+
+/**
  * Platform-agnostic API client interface.
- * Implementations provide platform-specific fetch and credential handling.
+ *
+ * Defines the contract for all data-access operations. Each platform provides
+ * its own implementation (real API, demo mock, calendar feed, etc.).
+ *
+ * Authentication is handled separately by AuthService.
  */
 export interface ApiClient {
-  // Authentication
-  login(username: string, password: string): Promise<ApiResult<LoginResponse>>
-  logout(): Promise<void>
-  checkSession(): Promise<boolean>
-
   // Assignments
-  searchAssignments(config: SearchConfiguration): Promise<PaginatedResponse<Assignment>>
-  getAssignmentDetails(id: string, expand?: string[]): Promise<Assignment>
+  searchAssignments(config?: SearchConfiguration): Promise<PaginatedResponse<Assignment>>
+  getAssignmentDetails(convocationId: string, properties: string[]): Promise<Assignment>
 
   // Compensations
-  searchCompensations(config: SearchConfiguration): Promise<PaginatedResponse<CompensationRecord>>
-  updateCompensation(id: string, data: CompensationUpdateData): Promise<CompensationRecord>
+  searchCompensations(config?: SearchConfiguration): Promise<PaginatedResponse<CompensationRecord>>
+  getCompensationDetails(compensationId: string): Promise<ConvocationCompensationDetailed>
+  updateCompensation(
+    compensationId: string,
+    data: { distanceInMetres?: number; correctionReason?: string }
+  ): Promise<void>
 
   // Exchanges
-  searchExchanges(config: SearchConfiguration): Promise<PaginatedResponse<GameExchange>>
+  searchExchanges(config?: SearchConfiguration): Promise<PaginatedResponse<GameExchange>>
   applyForExchange(exchangeId: string): Promise<PickExchangeResponse>
-  addToExchange(assignmentId: string, reason?: string): Promise<void>
+  addToExchange(convocationId: string): Promise<void>
   removeOwnExchange(convocationId: string): Promise<void>
 
   // Settings
   getAssociationSettings(): Promise<AssociationSettings>
   getActiveSeason(): Promise<Season>
+
+  // Person search
+  searchPersons(
+    filters: { firstName?: string; lastName?: string; yearOfBirth?: string },
+    options?: { offset?: number; limit?: number }
+  ): Promise<PersonSearchResponse>
+
+  // Game validation
+  getGameWithScoresheet(gameId: string): Promise<GameDetails>
+  getPossiblePlayerNominations(
+    nominationListId: string,
+    options?: { onlyFromMyTeam?: boolean; onlyRelevantGender?: boolean }
+  ): Promise<PossibleNominationsResponse>
+  updateNominationList(
+    nominationListId: string,
+    gameId: string,
+    teamId: string,
+    playerNominationIds: string[],
+    coachIds?: CoachIds
+  ): Promise<NominationList>
+  finalizeNominationList(
+    nominationListId: string,
+    gameId: string,
+    teamId: string,
+    playerNominationIds: string[],
+    validationId?: string,
+    coachIds?: CoachIds
+  ): Promise<NominationListResponse>
+
+  // Scoresheet
+  updateScoresheet(
+    scoresheetId: string | undefined,
+    gameId: string,
+    scorerPersonId: string,
+    isSimpleScoresheet?: boolean,
+    fileResourceId?: string
+  ): Promise<Scoresheet>
+  validateScoresheet(
+    gameId: string,
+    scorerPersonId: string,
+    isSimpleScoresheet?: boolean
+  ): Promise<ScoresheetValidation>
+  finalizeScoresheet(
+    scoresheetId: string,
+    gameId: string,
+    scorerPersonId: string,
+    fileResourceId: string,
+    validationId?: string,
+    isSimpleScoresheet?: boolean
+  ): Promise<Scoresheet>
+
+  // File upload
+  uploadResource(file: File): Promise<FileResource[]>
+
+  // Role management
+  switchRoleAndAttribute(attributeValueId: string): Promise<void>
+
+  // Referee backup
+  searchRefereeBackups(
+    config?: SearchConfiguration
+  ): Promise<PaginatedResponse<Record<string, unknown>>>
+}
+
+/**
+ * Response from applying for/picking a referee game exchange.
+ * Matches the PickExchangeResponse schema from the OpenAPI spec.
+ */
+export interface PickExchangeResponse {
+  refereeGameExchange: {
+    __identity: string
+    status: 'open' | 'applied' | 'closed'
+    refereePosition: string
+    submittingType: 'referee' | 'admin'
+    submittedAt: string
+    appliedAt: string | null
+    [key: string]: unknown
+  }
 }
 
 /**
@@ -142,22 +249,6 @@ export interface OccupationData {
 export interface CompensationUpdateData {
   kilometers?: number
   reason?: string
-}
-
-/**
- * Response from applying for/picking a referee game exchange.
- * Matches the PickExchangeResponse schema from the OpenAPI spec.
- */
-export interface PickExchangeResponse {
-  refereeGameExchange: {
-    __identity: string
-    status: 'open' | 'applied' | 'closed'
-    refereePosition: string
-    submittingType: 'referee' | 'admin'
-    submittedAt: string
-    appliedAt: string | null
-    [key: string]: unknown
-  }
 }
 
 /**

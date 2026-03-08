@@ -460,6 +460,94 @@ export const possibleNominationsResponseSchema = z.object({
   totalItemsCount: z.number().optional(),
 })
 
+// ============================================================================
+// Referee Backup (Pikett) Schemas
+// ============================================================================
+
+// Person details for a backup referee
+const backupRefereePersonSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    persistenceObjectIdentifier: uuidSchema.optional(),
+    associationId: z.number().optional().nullable(),
+    displayName: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    gender: z.enum(['m', 'f']).optional().nullable(),
+    correspondenceLanguage: z.string().optional(),
+    primaryEmailAddress: z
+      .object({
+        emailAddress: z.string().optional(),
+        isPrimary: z.boolean().optional(),
+        __identity: uuidSchema.optional(),
+      })
+      .passthrough()
+      .optional()
+      .nullable(),
+    primaryPhoneNumber: z
+      .object({
+        localNumber: z.string().optional(),
+        normalizedLocalNumber: z.string().optional(),
+        numberType: z.string().optional(),
+        isPrimary: z.boolean().optional(),
+        __identity: uuidSchema.optional(),
+      })
+      .passthrough()
+      .optional()
+      .nullable(),
+  })
+  .passthrough()
+
+// Indoor referee details for backup assignment
+const backupIndoorRefereeSchema = z
+  .object({
+    __identity: uuidSchema.optional(),
+    persistenceObjectIdentifier: uuidSchema.optional(),
+    person: backupRefereePersonSchema.optional(),
+    refereeInformation: z.string().optional(),
+    transportationMode: z.string().optional().nullable(),
+    validated: z.boolean().optional(),
+    mobilePhoneNumbers: z.string().optional().nullable(),
+    privatePostalAddresses: z.string().optional().nullable(),
+  })
+  .passthrough()
+
+// Backup referee assignment
+const backupRefereeAssignmentSchema = z
+  .object({
+    __identity: uuidSchema,
+    indoorReferee: backupIndoorRefereeSchema.optional(),
+    isDispensed: z.boolean().optional(),
+    hasFutureRefereeConvocations: z.boolean().optional(),
+    hasResigned: z.boolean().optional(),
+    unconfirmedFutureRefereeConvocations: z.boolean().optional(),
+    originId: z.number().optional().nullable(),
+    createdBy: z.string().optional().nullable(),
+    updatedBy: z.string().optional().nullable(),
+  })
+  .passthrough()
+
+// Referee backup entry (a single date with assigned backup referees)
+export const refereeBackupEntrySchema = z
+  .object({
+    __identity: uuidSchema,
+    date: z.string().datetime({ offset: true }),
+    weekday: z.string(),
+    calendarWeek: z.number(),
+    joinedNlaReferees: z.string().optional().nullable(),
+    joinedNlbReferees: z.string().optional().nullable(),
+    nlaReferees: z.array(backupRefereeAssignmentSchema).optional(),
+    nlbReferees: z.array(backupRefereeAssignmentSchema).optional(),
+  })
+  .passthrough()
+
+// Referee backup search response
+export const refereeBackupResponseSchema = z.object({
+  items: z.array(refereeBackupEntrySchema),
+  totalItemsCount: z.number(),
+  entityTemplate: z.unknown().optional().nullable(),
+})
+
 // Type exports inferred from Zod schemas
 export type Assignment = z.infer<typeof assignmentSchema>
 export type CompensationRecord = z.infer<typeof compensationRecordSchema>
@@ -468,6 +556,19 @@ export type ValidatedPersonSearchResult = z.infer<typeof personSearchResultSchem
 export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>
 export type CompensationsResponse = z.infer<typeof compensationsResponseSchema>
 export type ExchangesResponse = z.infer<typeof exchangesResponseSchema>
+export type ConvocationCompensationDetailed = z.infer<typeof compensationDetailedSchema>
+// PickExchangeResponse is defined as an interface in client.ts
+export type Scoresheet = z.infer<typeof scoresheetSchema>
+export type ScoresheetValidation = z.infer<typeof scoresheetValidationSchema>
+export type FileResource = z.infer<typeof fileResourceSchema>
+export type NominationList = z.infer<typeof nominationListSchema>
+export type NominationListResponse = z.infer<typeof nominationListResponseSchema>
+export type GameDetails = z.infer<typeof gameDetailsSchema>
+export type GameDetailsResponse = z.infer<typeof gameDetailsResponseSchema>
+export type PossibleNominationsResponse = z.infer<typeof possibleNominationsResponseSchema>
+export type PersonSearchResponse = z.infer<typeof personSearchResponseSchema>
+export type RefereeBackupEntry = z.infer<typeof refereeBackupEntrySchema>
+export type RefereeBackupSearchResponse = z.infer<typeof refereeBackupResponseSchema>
 
 // Association settings type (simplified for mobile)
 export interface AssociationSettings {
