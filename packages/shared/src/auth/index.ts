@@ -13,6 +13,7 @@ export type {
   InflatedAssociationValue,
   RoleDefinition,
   AuthServiceConfig,
+  AuthProvider,
 } from './types'
 
 export { HTTP_STATUS, AUTH_ENDPOINTS } from './types'
