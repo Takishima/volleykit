@@ -80,8 +80,9 @@ export {
 export { api } from './real-api'
 
 // ApiClient type: use the concrete implementation type for web-app consumers.
-// The shared ApiClient interface (from @volleykit/shared/api) is used for
-// compile-time checking via `satisfies` in real-api.ts, mock-api.ts, etc.
+// The shared ApiClient interface (from @volleykit/shared/api) defines the
+// cross-platform contract; structural typing via getApiClient() ensures
+// all implementations (real, mock, calendar) conform to the same shape.
 export type ApiClient = typeof api
 
 // Re-export DataSource from auth store for consumers that import from client

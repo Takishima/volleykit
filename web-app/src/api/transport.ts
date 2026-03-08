@@ -6,14 +6,12 @@
  * testability and make the transport mechanism independently configurable.
  */
 
-import { HttpStatus, BYTES_PER_KB } from '@/shared/utils/constants'
+import { HttpStatus } from '@/shared/utils/constants'
 
 import { API_BASE_URL } from './constants'
 import { parseErrorResponse } from './error-handling'
 import { buildFormData } from './form-serialization'
 import { captureSessionToken, getSessionHeaders, clearSession } from './session'
-
-export { API_BASE_URL, BYTES_PER_KB }
 
 if (!import.meta.env.DEV && !API_BASE_URL) {
   console.warn('VITE_API_PROXY_URL is not configured for production. API calls will fail.')
