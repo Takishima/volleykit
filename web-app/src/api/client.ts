@@ -46,25 +46,8 @@ export interface PersonSearchFilter {
   yearOfBirth?: string
 }
 
-export interface SearchConfiguration {
-  offset?: number
-  limit?: number
-  propertyFilters?: PropertyFilter[]
-  propertyOrderings?: PropertyOrdering[]
-}
-
-export interface PropertyFilter {
-  propertyName: string
-  values?: string[]
-  enumValues?: string[]
-  dateRange?: { from: string; to: string }
-}
-
-export interface PropertyOrdering {
-  propertyName: string
-  descending: boolean
-  isSetByUser?: boolean
-}
+// Re-export search types from shared package (single source of truth)
+export type { SearchConfiguration, PropertyFilter, PropertyOrdering } from '@volleykit/shared/api'
 
 // Session management — re-export from dedicated module
 export {

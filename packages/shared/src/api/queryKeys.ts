@@ -28,17 +28,53 @@
  */
 
 /**
+ * Property filter for Neos Flow API search endpoints.
+ * Supports value matching, enum matching, and date range filtering.
+ */
+export interface PropertyFilter {
+  propertyName: string
+  values?: string[]
+  enumValues?: string[]
+  dateRange?: { from: string; to: string }
+}
+
+/**
+ * Property ordering for Neos Flow API search endpoints.
+ */
+export interface PropertyOrdering {
+  propertyName: string
+  descending: boolean
+  isSetByUser?: boolean
+}
+
+/**
  * Search configuration for list queries.
- * Matches the API's expected filter format.
+ *
+ * Supports two usage patterns:
+ * - **Simplified** (shared hooks / mobile): Uses `fromDate`, `toDate`, `sortField`, `sortDirection`
+ * - **Neos Flow** (web-app API calls): Uses `propertyFilters` and `propertyOrderings`
+ *
+ * Both patterns can coexist; the API client implementation decides which fields to use.
  */
 export interface SearchConfiguration {
-  fromDate?: string
-  toDate?: string
-  status?: string
-  sortField?: string
-  sortDirection?: 'asc' | 'desc'
-  limit?: number
+  /** Starting index for pagination */
   offset?: number
+  /** Number of items to return */
+  limit?: number
+  /** Neos Flow property filters for complex queries */
+  propertyFilters?: PropertyFilter[]
+  /** Neos Flow property orderings for sorting */
+  propertyOrderings?: PropertyOrdering[]
+  /** Simplified date filter (used by shared hooks) */
+  fromDate?: string
+  /** Simplified date filter (used by shared hooks) */
+  toDate?: string
+  /** Simplified status filter (used by shared hooks) */
+  status?: string
+  /** Simplified sort field (used by shared hooks) */
+  sortField?: string
+  /** Simplified sort direction (used by shared hooks) */
+  sortDirection?: 'asc' | 'desc'
 }
 
 /**

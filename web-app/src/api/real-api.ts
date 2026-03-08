@@ -34,17 +34,10 @@ import {
 import { scoreNameMatch } from './search-utils'
 
 import { getCsrfToken } from './form-serialization'
-import { captureSessionToken, getSessionHeaders, clearSession } from './session'
 
-import { HttpStatus, BYTES_PER_KB } from '@/shared/utils/constants'
-import {
-  API_BASE_URL,
-  MAX_FILE_SIZE_BYTES,
-  ALLOWED_FILE_TYPES,
-  DEFAULT_SEARCH_RESULTS_LIMIT,
-} from './constants'
-import { parseErrorResponse } from './error-handling'
-import { apiRequest } from './transport'
+import { BYTES_PER_KB } from '@/shared/utils/constants'
+import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
+import { apiRequest, apiRequestFormData, apiRequestVoid } from './transport'
 import {
   ASSIGNMENT_PROPERTIES,
   EXCHANGE_PROPERTIES,
@@ -697,28 +690,10 @@ export const api = {
       formData.append('__csrfToken', csrfToken)
     }
 
-    const url = `${API_BASE_URL}/sportmanager.resourcemanagement/api%5cpersistentresource/upload`
-
-    const response = await fetch(url, {
-      method: 'POST',
-      credentials: 'include',
-      headers: getSessionHeaders(),
-      body: formData,
-    })
-
-    // Capture session token from response headers (iOS Safari PWA)
-    captureSessionToken(response)
-
-    if (!response.ok) {
-      if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
-        clearSession()
-        throw new Error('Session expired. Please log in again.')
-      }
-      const errorMessage = await parseErrorResponse(response)
-      throw new Error(`POST ${url}: ${errorMessage}`)
-    }
-
-    const data: unknown = await response.json()
+    const data = await apiRequestFormData<unknown>(
+      '/sportmanager.resourcemanagement/api%5cpersistentresource/upload',
+      formData
+    )
     return validateResponse(data, fileResourceArraySchema, 'uploadResource') as FileResource[]
   },
 
@@ -740,37 +715,13 @@ export const api = {
       body.append('__csrfToken', csrfToken)
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/sportmanager.security/api%5cparty/switchRoleAndAttribute`,
-      {
-        method: 'PUT',
-        headers: {
-          Accept: 'application/json',
-          // The real site uses text/plain, not application/x-www-form-urlencoded
-          'Content-Type': 'text/plain;charset=UTF-8',
-          ...getSessionHeaders(),
-        },
-        credentials: 'include',
-        body: body.toString(),
-      }
+    return apiRequestVoid(
+      '/sportmanager.security/api%5cparty/switchRoleAndAttribute',
+      'PUT',
+      body.toString(),
+      // The real site uses text/plain, not application/x-www-form-urlencoded
+      'text/plain;charset=UTF-8'
     )
-
-    // Capture session token from response headers (iOS Safari PWA)
-    captureSessionToken(response)
-
-    if (!response.ok) {
-      // 406 indicates session expiry in TYPO3 Neos/Flow (same as apiRequest)
-      if (
-        response.status === HttpStatus.UNAUTHORIZED ||
-        response.status === HttpStatus.FORBIDDEN ||
-        response.status === HttpStatus.NOT_ACCEPTABLE
-      ) {
-        clearSession()
-        throw new Error('Session expired. Please log in again.')
-      }
-      const errorMessage = await parseErrorResponse(response)
-      throw new Error(`PUT switchRoleAndAttribute: ${errorMessage}`)
-    }
   },
 
   // Referee Backup (Pikett)
@@ -802,6 +753,3 @@ export const api = {
     ) as RefereeBackupSearchResponse
   },
 }
-
-// Re-export ApiClient from shared for backwards compatibility
-export type { ApiClient } from '@volleykit/shared/api'
