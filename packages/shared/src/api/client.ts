@@ -25,6 +25,7 @@ import type {
   GameDetails,
   PossibleNominationsResponse,
   PersonSearchResponse,
+  RefereeBackupEntry,
 } from './validation'
 
 // Re-export types from validation for convenience
@@ -43,6 +44,7 @@ export type {
   GameDetails,
   PossibleNominationsResponse,
   PersonSearchResponse,
+  RefereeBackupEntry,
   SearchConfiguration,
 }
 
@@ -186,7 +188,7 @@ export interface ApiClient {
   // Referee backup
   searchRefereeBackups(
     config?: SearchConfiguration
-  ): Promise<PaginatedResponse<Record<string, unknown>>>
+  ): Promise<PaginatedResponse<RefereeBackupEntry>>
 }
 
 /**
