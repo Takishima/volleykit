@@ -4,6 +4,9 @@
  * Encapsulates the generic fetch logic, session management, and error handling
  * used by the real API client. Separated from endpoint definitions to improve
  * testability and make the transport mechanism independently configurable.
+ *
+ * All API requests should flow through these functions to ensure consistent
+ * session token capture, error handling, and stale-session detection.
  */
 
 import { HttpStatus } from '@/shared/utils/constants'
@@ -18,7 +21,58 @@ if (!import.meta.env.DEV && !API_BASE_URL) {
 }
 
 /**
- * Generic fetch wrapper for API requests.
+ * Shared error handling for all transport functions.
+ * Handles session expiry detection, error parsing, and session token capture.
+ */
+async function handleResponse(response: Response, method: string, endpoint: string): Promise<void> {
+  // Capture session token from response headers (iOS Safari PWA)
+  captureSessionToken(response)
+
+  if (!response.ok) {
+    if (
+      response.status === HttpStatus.UNAUTHORIZED ||
+      response.status === HttpStatus.FORBIDDEN ||
+      response.status === HttpStatus.NOT_ACCEPTABLE
+    ) {
+      clearSession()
+      throw new Error('Session expired. Please log in again.')
+    }
+    const errorMessage = await parseErrorResponse(response)
+    throw new Error(`${method} ${endpoint}: ${errorMessage}`)
+  }
+}
+
+/**
+ * Parse a JSON response, detecting stale sessions that return HTML login pages.
+ */
+function parseJsonResponse<T>(response: Response, method: string, endpoint: string): Promise<T> {
+  const contentType = response.headers.get('Content-Type') || ''
+
+  // Try to parse JSON first, regardless of Content-Type header.
+  // The API sometimes returns JSON with incorrect Content-Type: text/html header.
+  return response.json().catch(() => {
+    // JSON parsing failed - now check if this looks like a stale session
+    // Detect stale session: when the API returns HTML instead of JSON with status 200,
+    // it means the session expired and the server is returning a login page.
+    if (contentType.includes('text/html')) {
+      // Check if pathname ends with "/login" to avoid false positives on paths
+      // like "/api/v2/login-history" or "/user/login-preferences"
+      const pathname = new URL(response.url).pathname.toLowerCase()
+      const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
+      if (isLoginPage) {
+        clearSession()
+        throw new Error('Session expired. Please log in again.')
+      }
+    }
+
+    throw new Error(
+      `${method} ${endpoint}: Invalid JSON response (Content-Type: ${contentType || 'unknown'}, status: ${response.status})`
+    )
+  })
+}
+
+/**
+ * Generic fetch wrapper for API requests with form-encoded bodies.
  *
  * Handles URL construction, header management, session tokens, CSRF,
  * error responses, and stale session detection.
@@ -61,45 +115,63 @@ export async function apiRequest<T>(
     body: method !== 'GET' && body ? buildFormData(body).toString() : undefined,
   })
 
-  // Capture session token from response headers (iOS Safari PWA)
-  captureSessionToken(response)
+  await handleResponse(response, method, endpoint)
+  return parseJsonResponse<T>(response, method, endpoint)
+}
 
-  if (!response.ok) {
-    if (
-      response.status === HttpStatus.UNAUTHORIZED ||
-      response.status === HttpStatus.FORBIDDEN ||
-      response.status === HttpStatus.NOT_ACCEPTABLE
-    ) {
-      clearSession()
-      throw new Error('Session expired. Please log in again.')
-    }
-    const errorMessage = await parseErrorResponse(response)
-    throw new Error(`${method} ${endpoint}: ${errorMessage}`)
-  }
+/**
+ * Send a multipart/form-data request (e.g. file uploads).
+ *
+ * Unlike apiRequest, this accepts a pre-built FormData body and does not
+ * set Content-Type (the browser sets it with the correct boundary).
+ *
+ * @param endpoint - API path relative to the base URL
+ * @param formData - FormData body
+ * @returns Parsed JSON response
+ */
+export async function apiRequestFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`
 
-  const contentType = response.headers.get('Content-Type') || ''
+  const response = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: getSessionHeaders(),
+    body: formData,
+  })
 
-  // Try to parse JSON first, regardless of Content-Type header.
-  // The API sometimes returns JSON with incorrect Content-Type: text/html header.
-  try {
-    return await response.json()
-  } catch {
-    // JSON parsing failed - now check if this looks like a stale session
-    // Detect stale session: when the API returns HTML instead of JSON with status 200,
-    // it means the session expired and the server is returning a login page.
-    if (contentType.includes('text/html')) {
-      // Check if pathname ends with "/login" to avoid false positives on paths
-      // like "/api/v2/login-history" or "/user/login-preferences"
-      const pathname = new URL(response.url).pathname.toLowerCase()
-      const isLoginPage = pathname === '/login' || pathname.endsWith('/login')
-      if (isLoginPage) {
-        clearSession()
-        throw new Error('Session expired. Please log in again.')
-      }
-    }
+  await handleResponse(response, 'POST', endpoint)
+  return parseJsonResponse<T>(response, 'POST', endpoint)
+}
 
-    throw new Error(
-      `${method} ${endpoint}: Invalid JSON response (Content-Type: ${contentType || 'unknown'}, status: ${response.status})`
-    )
-  }
+/**
+ * Send a request that returns no meaningful body (void response).
+ *
+ * Handles session tokens, error responses, and custom content types.
+ * Does not attempt to parse the response body.
+ *
+ * @param endpoint - API path relative to the base URL
+ * @param method - HTTP method
+ * @param body - URL-encoded body string
+ * @param contentType - Content-Type header value
+ */
+export async function apiRequestVoid(
+  endpoint: string,
+  method: 'POST' | 'PUT' | 'DELETE',
+  body: string,
+  contentType: string = 'application/x-www-form-urlencoded'
+): Promise<void> {
+  const url = `${API_BASE_URL}${endpoint}`
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': contentType,
+      ...getSessionHeaders(),
+    },
+    credentials: 'include',
+    body,
+  })
+
+  await handleResponse(response, method, endpoint)
 }
