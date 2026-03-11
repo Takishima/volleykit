@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 
 import type { Assignment, NominationList } from '@/api/client'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
@@ -48,6 +48,10 @@ interface StepRendererProps {
   referenceImageUrl: string | null
   /** How the reference image should be displayed */
   referenceMode: ValidationReferenceMode
+  /** Whether the reference image is currently being shown (quick-compare mode) */
+  showingReference: boolean
+  /** Called when the showing reference state changes */
+  onShowingReferenceChange: (showing: boolean) => void
 }
 
 /**
@@ -67,13 +71,14 @@ export function StepRenderer({
   handlers,
   referenceImageUrl,
   referenceMode,
+  showingReference,
+  onShowingReferenceChange,
 }: StepRendererProps) {
   const { t } = useTranslation()
-  const [showingReference, setShowingReference] = useState(false)
 
   const handleToggleReference = useCallback(() => {
-    setShowingReference((prev) => !prev)
-  }, [])
+    onShowingReferenceChange(!showingReference)
+  }, [showingReference, onShowingReferenceChange])
 
   if (loading.isLoading) {
     return (

@@ -193,6 +193,14 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
   }
 
   const validationReferenceMode = useSettingsStore((s) => s.validationReferenceMode)
+  const [showingReference, setShowingReference] = useState(false)
+  const [prevStepId, setPrevStepId] = useState(wizard.currentStepId)
+
+  // Reset reference view when navigating between steps
+  if (prevStepId !== wizard.currentStepId) {
+    setPrevStepId(wizard.currentStepId)
+    setShowingReference(false)
+  }
 
   const loadingState = {
     isLoading: wizard.isLoadingGameDetails,
@@ -274,7 +282,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           totalSteps={wizard.totalSteps}
           onSwipeNext={wizard.goNext}
           onSwipePrevious={wizard.goBack}
-          swipeEnabled={wizard.isSwipeEnabled}
+          swipeEnabled={wizard.isSwipeEnabled && !showingReference}
         >
           <div className="max-h-80 overflow-y-auto">
             <StepRenderer
@@ -285,6 +293,8 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               handlers={stepHandlers}
               referenceImageUrl={wizard.referenceImageUrl}
               referenceMode={validationReferenceMode}
+              showingReference={showingReference}
+              onShowingReferenceChange={setShowingReference}
             />
           </div>
         </WizardStepContainer>

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 import { X } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
@@ -66,14 +66,21 @@ export function ReferenceImageViewer({
     }
   }, [])
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
-    setZoom((prev) => {
-      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta))
-      if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
-      return newZoom
-    })
+  // Attach wheel listener imperatively with { passive: false } so preventDefault works
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = (e: WheelEvent) => {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
+      setZoom((prev) => {
+        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta))
+        if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
+        return newZoom
+      })
+    }
+    el.addEventListener('wheel', handler, { passive: false })
+    return () => el.removeEventListener('wheel', handler)
   }, [])
 
   const handlePointerDown = useCallback(
@@ -156,7 +163,6 @@ export function ReferenceImageViewer({
       ref={containerRef}
       className={`relative overflow-hidden bg-surface-subtle dark:bg-surface-card-dark select-none ${className}`}
       style={{ touchAction: 'none' }}
-      onWheel={handleWheel}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}

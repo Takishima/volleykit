@@ -64,6 +64,9 @@ export function SplitViewContainer({ referenceImageUrl, children }: SplitViewCon
         onPointerCancel={handleDragEnd}
         role="separator"
         aria-orientation="horizontal"
+        aria-valuenow={Math.round(splitPercent)}
+        aria-valuemin={MIN_SPLIT_PERCENT}
+        aria-valuemax={MAX_SPLIT_PERCENT}
       >
         <GripHorizontal
           className="w-5 h-5 text-text-subtle dark:text-text-subtle-dark"

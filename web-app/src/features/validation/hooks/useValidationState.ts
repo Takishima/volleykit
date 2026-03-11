@@ -218,15 +218,20 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     })
   }, [])
 
+  // Track latest reference image URL for cleanup on unmount
+  const referenceImageUrlRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    referenceImageUrlRef.current = state.referenceImageUrl
+  }, [state.referenceImageUrl])
+
   // Cleanup reference image URL on unmount
   useEffect(() => {
     return () => {
-      const currentState = state
-      if (currentState.referenceImageUrl) {
-        URL.revokeObjectURL(currentState.referenceImageUrl)
+      if (referenceImageUrlRef.current) {
+        URL.revokeObjectURL(referenceImageUrlRef.current)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on unmount
   }, [])
 
   const saveProgress = useCallback(async (): Promise<void> => {
