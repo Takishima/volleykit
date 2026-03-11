@@ -112,50 +112,53 @@ export function StepRenderer({
   // (not when the entire game is validated — that has its own banner in the modal)
   const showFinalizedBanner = !validation.isValidated && validation.isCurrentStepReadOnly
 
-  // Quick-compare mode: show full-screen reference image instead of form
-  if (canShowReference && referenceMode === 'quick-compare' && showingReference) {
-    return (
-      <ReferenceImageViewer
-        imageUrl={referenceImageUrl}
-        onClose={handleToggleReference}
-        showCloseButton
-        className="h-80 rounded-lg"
-      />
-    )
-  }
+  const isQuickCompare = canShowReference && referenceMode === 'quick-compare'
 
   const stepContent = (
     <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
-      {showFinalizedBanner && (
-        <div
-          role="status"
-          className="mb-3 p-2.5 flex items-center gap-2 bg-surface-muted dark:bg-surface-subtle-dark border border-border-strong dark:border-border-strong-dark rounded-lg"
-        >
-          <Lock
-            className="w-4 h-4 flex-shrink-0 text-text-muted dark:text-text-muted-dark"
-            aria-hidden="true"
+      {/* Quick-compare: render viewer always so zoom/pan state is preserved across toggles */}
+      {isQuickCompare && (
+        <div className={showingReference ? undefined : 'hidden'}>
+          <ReferenceImageViewer
+            imageUrl={referenceImageUrl}
+            onClose={handleToggleReference}
+            showCloseButton
+            className="h-80 rounded-lg"
           />
-          <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
-            {isRosterStep
-              ? t('validation.wizard.rosterFinalized')
-              : t('validation.wizard.scoresheetFinalized')}
-          </p>
         </div>
       )}
 
-      {/* Quick-compare toggle button */}
-      {canShowReference && referenceMode === 'quick-compare' && (
-        <button
-          type="button"
-          onClick={handleToggleReference}
-          className="mb-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
-        >
-          <Eye className="w-4 h-4" aria-hidden="true" />
-          {t('validation.referenceImage.showScoresheet')}
-        </button>
-      )}
+      <div className={isQuickCompare && showingReference ? 'hidden' : undefined}>
+        {showFinalizedBanner && (
+          <div
+            role="status"
+            className="mb-3 p-2.5 flex items-center gap-2 bg-surface-muted dark:bg-surface-subtle-dark border border-border-strong dark:border-border-strong-dark rounded-lg"
+          >
+            <Lock
+              className="w-4 h-4 flex-shrink-0 text-text-muted dark:text-text-muted-dark"
+              aria-hidden="true"
+            />
+            <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
+              {isRosterStep
+                ? t('validation.wizard.rosterFinalized')
+                : t('validation.wizard.scoresheetFinalized')}
+            </p>
+          </div>
+        )}
 
-      {currentStepId === 'home-roster' && (
+        {/* Quick-compare toggle button */}
+        {isQuickCompare && (
+          <button
+            type="button"
+            onClick={handleToggleReference}
+            className="mb-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
+          >
+            <Eye className="w-4 h-4" aria-hidden="true" />
+            {t('validation.referenceImage.showScoresheet')}
+          </button>
+        )}
+
+        {currentStepId === 'home-roster' && (
         <HomeRosterPanel
           assignment={assignment}
           onModificationsChange={handlers.setHomeRosterModifications}
@@ -206,6 +209,7 @@ export function StepRenderer({
           scoresheetNotRequired={validation.scoresheetNotRequired}
         />
       )}
+      </div>
     </ModalErrorBoundary>
   )
 
