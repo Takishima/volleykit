@@ -1,3 +1,5 @@
+import { useCallback } from 'react'
+
 import type { Assignment, NominationList } from '@/api/client'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
@@ -6,6 +8,7 @@ import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { HomeRosterPanel, AwayRosterPanel, ScorerPanel, ScoresheetPanel } from '.'
+import { ReferenceImageViewer } from './ReferenceImageViewer'
 
 interface LoadingState {
   isLoading: boolean
@@ -39,6 +42,12 @@ interface StepRendererProps {
   loading: LoadingState
   validation: ValidationInfo
   handlers: StepHandlers
+  /** Object URL for the scoresheet reference image */
+  referenceImageUrl: string | null
+  /** Whether the reference image is currently being shown (quick-compare mode) */
+  showingReference: boolean
+  /** Called when the showing reference state changes */
+  onShowingReferenceChange: (showing: boolean) => void
 }
 
 /**
@@ -48,6 +57,7 @@ interface StepRendererProps {
  * - Loading state while fetching game details
  * - Error state if game details fetch fails
  * - Step-specific panels (HomeRoster, AwayRoster, Scorer, Scoresheet)
+ * - Reference image overlay (quick-compare toggle or split-view)
  */
 export function StepRenderer({
   currentStepId,
@@ -55,8 +65,15 @@ export function StepRenderer({
   loading,
   validation,
   handlers,
+  referenceImageUrl,
+  showingReference,
+  onShowingReferenceChange,
 }: StepRendererProps) {
   const { t } = useTranslation()
+
+  const handleToggleReference = useCallback(() => {
+    onShowingReferenceChange(!showingReference)
+  }, [showingReference, onShowingReferenceChange])
 
   if (loading.isLoading) {
     return (
@@ -81,81 +98,101 @@ export function StepRenderer({
 
   const isStepReadOnly = validation.isValidated || validation.isCurrentStepReadOnly
   const isRosterStep = currentStepId === 'home-roster' || currentStepId === 'away-roster'
+  const isNonScoresheetStep = currentStepId !== 'scoresheet'
+
+  // Reference image is only shown on non-scoresheet steps when an image exists
+  const canShowReference = !!referenceImageUrl && isNonScoresheetStep
 
   // Show finalized banner when the step is read-only due to partial finalization
   // (not when the entire game is validated — that has its own banner in the modal)
   const showFinalizedBanner = !validation.isValidated && validation.isCurrentStepReadOnly
 
-  return (
+  const stepContent = (
     <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
-      {showFinalizedBanner && (
-        <div
-          role="status"
-          className="mb-3 p-2.5 flex items-center gap-2 bg-surface-muted dark:bg-surface-subtle-dark border border-border-strong dark:border-border-strong-dark rounded-lg"
-        >
-          <Lock
-            className="w-4 h-4 flex-shrink-0 text-text-muted dark:text-text-muted-dark"
-            aria-hidden="true"
+      {/* Quick-compare: render viewer always so zoom/pan state is preserved across toggles */}
+      {canShowReference && (
+        <div className={showingReference ? undefined : 'hidden'}>
+          <ReferenceImageViewer
+            imageUrl={referenceImageUrl}
+            onClose={handleToggleReference}
+            showCloseButton
+            className="h-80 rounded-lg"
           />
-          <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
-            {isRosterStep
-              ? t('validation.wizard.rosterFinalized')
-              : t('validation.wizard.scoresheetFinalized')}
-          </p>
         </div>
       )}
 
-      {currentStepId === 'home-roster' && (
-        <HomeRosterPanel
-          assignment={assignment}
-          onModificationsChange={handlers.setHomeRosterModifications}
-          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={isStepReadOnly}
-          initialModifications={validation.state.homeRoster.playerModifications}
-          initialCoachModifications={validation.state.homeRoster.coachModifications}
-          prefetchedNominationList={validation.homeNominationList}
-        />
-      )}
+      <div className={canShowReference && showingReference ? 'hidden' : undefined}>
+        {showFinalizedBanner && (
+          <div
+            role="status"
+            className="mb-3 p-2.5 flex items-center gap-2 bg-surface-muted dark:bg-surface-subtle-dark border border-border-strong dark:border-border-strong-dark rounded-lg"
+          >
+            <Lock
+              className="w-4 h-4 flex-shrink-0 text-text-muted dark:text-text-muted-dark"
+              aria-hidden="true"
+            />
+            <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
+              {isRosterStep
+                ? t('validation.wizard.rosterFinalized')
+                : t('validation.wizard.scoresheetFinalized')}
+            </p>
+          </div>
+        )}
 
-      {currentStepId === 'away-roster' && (
-        <AwayRosterPanel
-          assignment={assignment}
-          onModificationsChange={handlers.setAwayRosterModifications}
-          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={isStepReadOnly}
-          initialModifications={validation.state.awayRoster.playerModifications}
-          initialCoachModifications={validation.state.awayRoster.coachModifications}
-          prefetchedNominationList={validation.awayNominationList}
-        />
-      )}
+        {currentStepId === 'home-roster' && (
+          <HomeRosterPanel
+            assignment={assignment}
+            onModificationsChange={handlers.setHomeRosterModifications}
+            onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+            readOnly={isStepReadOnly}
+            initialModifications={validation.state.homeRoster.playerModifications}
+            initialCoachModifications={validation.state.homeRoster.coachModifications}
+            prefetchedNominationList={validation.homeNominationList}
+          />
+        )}
 
-      {currentStepId === 'scorer' && (
-        <ScorerPanel
-          key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
-          onScorerChange={handlers.setScorer}
-          readOnly={isStepReadOnly}
-          readOnlyScorerName={validation.validatedInfo?.scorerName}
-          readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
-          initialScorer={
-            validation.pendingScorer
-              ? {
-                  __identity: validation.pendingScorer.__identity,
-                  displayName: validation.pendingScorer.displayName,
-                  birthday: validation.pendingScorer.birthday ?? '',
-                }
-              : null
-          }
-        />
-      )}
+        {currentStepId === 'away-roster' && (
+          <AwayRosterPanel
+            assignment={assignment}
+            onModificationsChange={handlers.setAwayRosterModifications}
+            onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+            readOnly={isStepReadOnly}
+            initialModifications={validation.state.awayRoster.playerModifications}
+            initialCoachModifications={validation.state.awayRoster.coachModifications}
+            prefetchedNominationList={validation.awayNominationList}
+          />
+        )}
 
-      {currentStepId === 'scoresheet' && (
-        <ScoresheetPanel
-          onScoresheetChange={handlers.setScoresheet}
-          readOnly={isStepReadOnly}
-          hasScoresheet={validation.validatedInfo?.hasScoresheet}
-          scoresheetNotRequired={validation.scoresheetNotRequired}
-        />
-      )}
+        {currentStepId === 'scorer' && (
+          <ScorerPanel
+            key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
+            onScorerChange={handlers.setScorer}
+            readOnly={isStepReadOnly}
+            readOnlyScorerName={validation.validatedInfo?.scorerName}
+            readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
+            initialScorer={
+              validation.pendingScorer
+                ? {
+                    __identity: validation.pendingScorer.__identity,
+                    displayName: validation.pendingScorer.displayName,
+                    birthday: validation.pendingScorer.birthday ?? '',
+                  }
+                : null
+            }
+          />
+        )}
+
+        {currentStepId === 'scoresheet' && (
+          <ScoresheetPanel
+            onScoresheetChange={handlers.setScoresheet}
+            readOnly={isStepReadOnly}
+            hasScoresheet={validation.validatedInfo?.hasScoresheet}
+            scoresheetNotRequired={validation.scoresheetNotRequired}
+          />
+        )}
+      </div>
     </ModalErrorBoundary>
   )
+
+  return stepContent
 }

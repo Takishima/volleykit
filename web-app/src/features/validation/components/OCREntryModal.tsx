@@ -68,8 +68,8 @@ interface OCREntryModalProps {
   awayRosterCoaches: CoachForComparison[]
   /** Callback when user skips OCR */
   onSkip: () => void
-  /** Callback when user completes OCR */
-  onComplete: () => void
+  /** Callback when user completes OCR, optionally passing the captured image blob */
+  onComplete: (capturedImageBlob?: Blob) => void
   /** Callback to close */
   onClose: () => void
 }
@@ -136,6 +136,9 @@ export function OCREntryModal({
 
   // Image URL for displaying the captured scoresheet
   const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
+
+  // Store the captured image blob to pass to validation state
+  const capturedBlobRef = useRef<Blob | null>(null)
 
   // Expanded sections state
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
@@ -245,6 +248,7 @@ export function OCREntryModal({
       // Create object URL for displaying the image with bounding boxes
       const imageUrl = URL.createObjectURL(blob)
       setCapturedImageUrl(imageUrl)
+      capturedBlobRef.current = blob
 
       try {
         const parsed = await processImage(blob, scoresheetType)
@@ -349,6 +353,7 @@ export function OCREntryModal({
       URL.revokeObjectURL(capturedImageUrl)
     }
     setCapturedImageUrl(null)
+    capturedBlobRef.current = null
     setStep('capture')
     setShowCaptureModal(true)
   }, [reset, capturedImageUrl])
@@ -679,7 +684,7 @@ export function OCREntryModal({
           </button>
           <button
             type="button"
-            onClick={onComplete}
+            onClick={() => onComplete(capturedBlobRef.current ?? undefined)}
             className="flex-1 px-4 py-3 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
           >
             {t('validation.ocr.continueToValidation')}

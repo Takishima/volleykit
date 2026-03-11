@@ -5,6 +5,7 @@ import { getTeamNames } from '@volleykit/shared/utils'
 import type { Assignment, IndoorPlayerNomination, NominationList } from '@/api/client'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
 import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
+import { Eye, EyeOff, FileText } from '@/shared/components/icons'
 import { Modal } from '@/shared/components/Modal'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { WizardStepContainer } from '@/shared/components/WizardStepContainer'
@@ -155,9 +156,19 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     setOCRDismissedForAssignment(assignmentId)
   }, [assignmentId])
 
-  const handleOCRComplete = useCallback(() => {
-    setOCRDismissedForAssignment(assignmentId)
-  }, [assignmentId])
+  const handleOCRComplete = useCallback(
+    (capturedImageBlob?: Blob) => {
+      setOCRDismissedForAssignment(assignmentId)
+      // If OCR captured an image, feed it into the validation state as the scoresheet reference
+      if (capturedImageBlob) {
+        const file = new File([capturedImageBlob], 'scoresheet-ocr.jpg', {
+          type: capturedImageBlob.type || 'image/jpeg',
+        })
+        wizard.setScoresheet(file, false)
+      }
+    },
+    [assignmentId, wizard]
+  )
 
   const handleOCRClose = useCallback(() => {
     setOCRDismissedForAssignment(assignmentId)
@@ -181,6 +192,22 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     allPreviousRequiredStepsDone: wizard.allPreviousRequiredStepsDone,
     currentStepIsOptional: wizard.currentStep.isOptional ?? false,
   }
+
+  const [showingReference, setShowingReference] = useState(false)
+  const [prevStepId, setPrevStepId] = useState(wizard.currentStepId)
+
+  // Reset reference view when navigating between steps
+  if (prevStepId !== wizard.currentStepId) {
+    setPrevStepId(wizard.currentStepId)
+    setShowingReference(false)
+  }
+
+  const isNonScoresheetStep = wizard.currentStepId !== 'scoresheet'
+  const canShowReference = !!wizard.referenceImageUrl && isNonScoresheetStep
+
+  const handleToggleReference = useCallback(() => {
+    setShowingReference((prev) => !prev)
+  }, [])
 
   const loadingState = {
     isLoading: wizard.isLoadingGameDetails,
@@ -262,7 +289,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           totalSteps={wizard.totalSteps}
           onSwipeNext={wizard.goNext}
           onSwipePrevious={wizard.goBack}
-          swipeEnabled={wizard.isSwipeEnabled}
+          swipeEnabled={wizard.isSwipeEnabled && !showingReference}
         >
           <div className="max-h-80 overflow-y-auto">
             <StepRenderer
@@ -271,6 +298,9 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               loading={loadingState}
               validation={validationInfo}
               handlers={stepHandlers}
+              referenceImageUrl={wizard.referenceImageUrl}
+              showingReference={showingReference}
+              onShowingReferenceChange={setShowingReference}
             />
           </div>
         </WizardStepContainer>
@@ -317,7 +347,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           </div>
         )}
 
-        <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
           {wizard.isValidated ? (
             <ValidatedModeButtons
               navigation={navigation}
@@ -348,6 +378,36 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               onValidateAndNext={wizard.handleValidateAndNext}
               onFinish={wizard.handleFinish}
             />
+          )}
+          {/* Quick-compare toggle — between Previous and Validate, always visible */}
+          {canShowReference && (
+            <div className="order-1">
+              <button
+                type="button"
+                onClick={handleToggleReference}
+                className="flex items-center gap-1 p-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
+                aria-pressed={showingReference}
+                aria-label={
+                  showingReference
+                    ? t('validation.referenceImage.hideScoresheet')
+                    : t('validation.referenceImage.showScoresheet')
+                }
+                title={
+                  showingReference
+                    ? t('validation.referenceImage.hideScoresheet')
+                    : t('validation.referenceImage.showScoresheet')
+                }
+              >
+                {showingReference ? (
+                  <EyeOff className="w-5 h-5" aria-hidden="true" />
+                ) : (
+                  <>
+                    <FileText className="w-5 h-5" aria-hidden="true" />
+                    <Eye className="w-4 h-4" aria-hidden="true" />
+                  </>
+                )}
+              </button>
+            </div>
           )}
         </div>
       </Modal>

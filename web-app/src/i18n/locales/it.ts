@@ -499,6 +499,14 @@ const it: Translations = {
       transportApiNote:
         "Quando il calcolo dei tempi di viaggio è abilitato, le coordinate della tua posizione casa vengono inviate all'API dei trasporti pubblici svizzeri (opentransportdata.swiss).",
     },
+    validation: {
+      title: 'Validazione',
+      description:
+        'Scegli come viene visualizzata la foto di riferimento del referto durante la validazione della partita.',
+      quickCompare: 'Confronto rapido',
+      quickCompareDescription:
+        'Tocca un pulsante per alternare tra il modulo e una foto zoomabile del referto.',
+    },
     accessibility: {
       title: 'Accessibilità',
       description: 'Regola le impostazioni di accessibilità per personalizzare la tua esperienza.',
@@ -710,6 +718,14 @@ const it: Translations = {
       noScoresheet: 'Nessun referto caricato',
       notRequired: 'Referto non richiesto',
       notRequiredDescription: 'Questa competizione non richiede il caricamento del referto.',
+      notRequiredOptional:
+        'Puoi comunque aggiungere una foto come riferimento, ma non verrà caricata.',
+    },
+    referenceImage: {
+      showScoresheet: 'Mostra referto',
+      hideScoresheet: 'Nascondi referto',
+      backToForm: 'Torna al modulo',
+      alt: 'Foto di riferimento del referto',
     },
     state: {
       unsavedChangesTitle: 'Modifiche non salvate',

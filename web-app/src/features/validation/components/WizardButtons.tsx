@@ -33,14 +33,14 @@ function ReadOnlyModeButtons({
 
   return (
     <>
-      <div>
+      <div className="order-0">
         {!navigation.isFirstStep && (
           <Button variant="secondary" onClick={onBack}>
             {t('validation.wizard.previous')}
           </Button>
         )}
       </div>
-      <div>
+      <div className="order-2">
         {navigation.isLastStep ? (
           <Button variant={closeVariant} onClick={onClose} disabled={closeDisabled}>
             {closeLabel}
@@ -147,7 +147,7 @@ export function EditModeButtons({
 
   return (
     <>
-      <div>
+      <div className="order-0">
         {navigation.isFirstStep ? (
           <Button variant="secondary" onClick={onAttemptClose} disabled={state.isFinalizing}>
             {t('common.cancel')}
@@ -159,7 +159,7 @@ export function EditModeButtons({
         )}
       </div>
 
-      <div>
+      <div className="order-2">
         {navigation.isLastStep ? (
           <Button
             variant="success"

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -197,11 +197,41 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   }, [])
 
   const setScoresheet = useCallback((file: File | null, uploaded: boolean) => {
-    setState((prev) => ({ ...prev, scoresheet: { file, uploaded } }))
+    setState((prev) => {
+      // Revoke previous reference image URL
+      if (prev.referenceImageUrl) {
+        URL.revokeObjectURL(prev.referenceImageUrl)
+      }
+      // Create new reference image URL for image files
+      const referenceImageUrl =
+        file && file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+      return { ...prev, scoresheet: { file, uploaded }, referenceImageUrl }
+    })
   }, [])
 
   const reset = useCallback(() => {
-    setState(createInitialState())
+    setState((prev) => {
+      if (prev.referenceImageUrl) {
+        URL.revokeObjectURL(prev.referenceImageUrl)
+      }
+      return createInitialState()
+    })
+  }, [])
+
+  // Track latest reference image URL for cleanup on unmount
+  const referenceImageUrlRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    referenceImageUrlRef.current = state.referenceImageUrl
+  }, [state.referenceImageUrl])
+
+  // Cleanup reference image URL on unmount
+  useEffect(() => {
+    return () => {
+      if (referenceImageUrlRef.current) {
+        URL.revokeObjectURL(referenceImageUrlRef.current)
+      }
+    }
   }, [])
 
   const saveProgress = useCallback(async (): Promise<void> => {
@@ -229,8 +259,9 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       })
 
       // Upload scoresheet file if present (cache the resource ID to avoid re-upload on finalize)
+      // Skip upload when scoresheet is not required for this group
       let fileResourceId = uploadedFileResourceIdRef.current
-      if (!fileResourceId && state.scoresheet.file) {
+      if (!fileResourceId && state.scoresheet.file && !scoresheetNotRequired) {
         const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
         fileResourceId = uploadResult[0]?.__identity
         uploadedFileResourceIdRef.current = fileResourceId
@@ -269,7 +300,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isSavingRef.current = false
       setIsSaving(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient, scoresheetNotRequired])
 
   const finalizeValidation = useCallback(async (): Promise<void> => {
     if (isFinalizingRef.current) {
@@ -288,8 +319,9 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       }
 
       // Reuse cached file resource ID from saveProgress if available
+      // Skip upload when scoresheet is not required for this group
       let fileResourceId = uploadedFileResourceIdRef.current
-      if (!fileResourceId && state.scoresheet.file) {
+      if (!fileResourceId && state.scoresheet.file && !scoresheetNotRequired) {
         const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
         fileResourceId = uploadResult[0]?.__identity
         uploadedFileResourceIdRef.current = fileResourceId
@@ -347,7 +379,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isFinalizingRef.current = false
       setIsFinalizing(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient, scoresheetNotRequired])
 
   return {
     state,
@@ -363,6 +395,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     setAwayRosterModifications,
     setScorer,
     setScoresheet,
+    referenceImageUrl: state.referenceImageUrl,
     reset,
     saveProgress,
     finalizeValidation,

@@ -45,6 +45,9 @@ export { Navigation } from 'lucide-react'
 export { SlidersHorizontal } from 'lucide-react'
 export { RotateCcw } from 'lucide-react'
 export { RotateCw } from 'lucide-react'
+export { Eye } from 'lucide-react'
+export { EyeOff } from 'lucide-react'
+export { GripHorizontal } from 'lucide-react'
 
 // Status icons
 export { CheckCircle } from 'lucide-react'

@@ -33,6 +33,7 @@ vi.mock('@/shared/stores/settings', () => ({
     const state = {
       isSafeModeEnabled: false,
       isOCREnabled: false,
+      validationReferenceMode: 'quick-compare',
     }
     // Handle both selector function and direct access patterns
     return typeof selector === 'function' ? selector(state) : state
@@ -106,6 +107,7 @@ describe('ValidateGameModal', () => {
         },
         scorer: { selected: null },
         scoresheet: { file: null, uploaded: false },
+        referenceImageUrl: null,
       },
       isDirty: false,
       completionStatus: {
@@ -123,6 +125,7 @@ describe('ValidateGameModal', () => {
       setAwayRosterModifications: vi.fn(),
       setScorer: vi.fn(),
       setScoresheet: vi.fn(),
+      referenceImageUrl: null,
       reset: vi.fn(),
       saveProgress: vi.fn().mockResolvedValue(undefined),
       finalizeValidation: vi.fn().mockResolvedValue(undefined),
@@ -194,7 +197,7 @@ describe('ValidateGameModal', () => {
   })
 
   describe('wizard navigation', () => {
-    it('shows Home Roster panel by default (first step)', () => {
+    it('shows Scoresheet panel by default (first step)', () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -203,9 +206,8 @@ describe('ValidateGameModal', () => {
         />,
         { wrapper: createWrapper() }
       )
-      // Home Roster panel shows team name and empty roster message
-      expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
-      expect(screen.getByText('No players in roster')).toBeInTheDocument()
+      // Scoresheet panel is the first step (optional)
+      expect(screen.getByText('Upload Scoresheet')).toBeInTheDocument()
     })
 
     it('shows Cancel button on first step', () => {
@@ -232,7 +234,7 @@ describe('ValidateGameModal', () => {
       expect(screen.getByRole('button', { name: /Validate/i, hidden: true })).toBeInTheDocument()
     })
 
-    it('advances to Away Roster panel when Validate is clicked', async () => {
+    it('advances to Home Roster panel when Validate is clicked on step 1', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -245,8 +247,9 @@ describe('ValidateGameModal', () => {
       fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
 
       await waitFor(() => {
-        // Away Roster panel shows team name
-        expect(screen.getByText('VBC Basel')).toBeInTheDocument()
+        // Home Roster panel shows team name
+        expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
+        expect(screen.getByText('No players in roster')).toBeInTheDocument()
       })
     })
 
@@ -268,7 +271,7 @@ describe('ValidateGameModal', () => {
       })
     })
 
-    it('goes back to Home Roster when Previous is clicked from step 2', async () => {
+    it('goes back to Scoresheet when Previous is clicked from step 2', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -278,23 +281,22 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Go to step 2
+      // Go to step 2 (Home Roster)
       fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
 
       await waitFor(() => {
-        expect(screen.getByText('VBC Basel')).toBeInTheDocument()
+        expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
       })
 
-      // Go back to step 1
+      // Go back to step 1 (Scoresheet)
       fireEvent.click(screen.getByRole('button', { name: /Previous/i, hidden: true }))
 
       await waitFor(() => {
-        expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
-        expect(screen.getByText('No players in roster')).toBeInTheDocument()
+        expect(screen.getByText('Upload Scoresheet')).toBeInTheDocument()
       })
     })
 
-    it('shows Scorer panel on step 3', async () => {
+    it('shows Away Roster panel on step 3', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -304,19 +306,18 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Navigate to step 3
+      // Navigate to step 3 (Away Roster)
       fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
       await waitFor(() => expect(screen.getByText('Step 2 of 4')).toBeInTheDocument())
 
       fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
       await waitFor(() => expect(screen.getByText('Step 3 of 4')).toBeInTheDocument())
 
-      // ScorerPanel now shows search input and no-selection message
-      expect(screen.getByPlaceholderText('Search scorer by name...')).toBeInTheDocument()
-      expect(screen.getByText(/No scorer selected/)).toBeInTheDocument()
+      // Away Roster panel shows team name
+      expect(screen.getByText('VBC Basel')).toBeInTheDocument()
     })
 
-    it('shows Scoresheet panel and Finish button on step 4', async () => {
+    it('shows Scorer panel and Finish button on step 4 (last step)', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -326,17 +327,18 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Navigate to step 4 using step indicator (since Validate on step 3 is disabled without scorer)
-      // Use exact match to avoid matching "Scan Scoresheet" button
-      const scoresheetStep = screen.getByRole('button', {
-        name: 'Scoresheet',
+      // Navigate to step 4 using step indicator
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
         hidden: true,
       })
-      fireEvent.click(scoresheetStep)
+      fireEvent.click(scorerStep)
 
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
-      expect(screen.getByText('Upload Scoresheet')).toBeInTheDocument()
+      // ScorerPanel shows search input and no-selection message
+      expect(screen.getByPlaceholderText('Search scorer by name...')).toBeInTheDocument()
+      expect(screen.getByText(/No scorer selected/)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Finish/i, hidden: true })).toBeInTheDocument()
     })
 
@@ -450,12 +452,11 @@ describe('ValidateGameModal', () => {
       )
 
       // Navigate to step 4 using step indicator
-      // Use exact match to avoid matching "Scan Scoresheet" button
-      const scoresheetStep = screen.getByRole('button', {
-        name: 'Scoresheet',
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
         hidden: true,
       })
-      fireEvent.click(scoresheetStep)
+      fireEvent.click(scorerStep)
 
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
@@ -476,13 +477,13 @@ describe('ValidateGameModal', () => {
       await waitFor(() => {
         expect(screen.getByText('Step 1 of 4')).toBeInTheDocument()
       })
-      expect(screen.getByText('VBC Zürich')).toBeInTheDocument()
-      expect(screen.getByText('No players in roster')).toBeInTheDocument()
+      // Step 1 is now Scoresheet
+      expect(screen.getByText('Upload Scoresheet')).toBeInTheDocument()
     })
   })
 
   describe('validation state', () => {
-    it('renders Finish button on last step', async () => {
+    it('renders Finish button on last step (Scorer)', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -492,13 +493,12 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Navigate to last step using step indicator
-      // Use exact match to avoid matching "Scan Scoresheet" button
-      const scoresheetStep = screen.getByRole('button', {
-        name: 'Scoresheet',
+      // Navigate to last step (Scorer) using step indicator
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
         hidden: true,
       })
-      fireEvent.click(scoresheetStep)
+      fireEvent.click(scorerStep)
 
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
@@ -515,14 +515,13 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Navigate to last step using step indicator (not Validate button)
+      // Navigate to last step (Scorer) using step indicator (not Validate button)
       // This allows us to reach the last step without validating previous steps
-      // Use exact match to avoid matching "Scan Scoresheet" button
-      const scoresheetStep = screen.getByRole('button', {
-        name: 'Scoresheet',
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
         hidden: true,
       })
-      fireEvent.click(scoresheetStep)
+      fireEvent.click(scorerStep)
 
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
@@ -533,7 +532,7 @@ describe('ValidateGameModal', () => {
       expect(finishButton).toBeDisabled()
     })
 
-    it('disables Validate button on scorer panel when no scorer is selected', async () => {
+    it('disables Finish button on scorer panel (last step) when no scorer is selected', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -543,19 +542,21 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Validate first two panels to reach step 3
-      fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
-      await waitFor(() => expect(screen.getByText('Step 2 of 4')).toBeInTheDocument())
-
-      fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
-      await waitFor(() => expect(screen.getByText('Step 3 of 4')).toBeInTheDocument())
-
-      // Validate button should be disabled because no scorer is selected
-      const validateButton = screen.getByRole('button', {
-        name: /Validate/i,
+      // Navigate to Scorer (last step) using step indicator
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
         hidden: true,
       })
-      expect(validateButton).toBeDisabled()
+      fireEvent.click(scorerStep)
+      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+
+      // Finish button should be disabled because no scorer is selected and
+      // previous required steps are not marked done
+      const finishButton = screen.getByRole('button', {
+        name: /Finish/i,
+        hidden: true,
+      })
+      expect(finishButton).toBeDisabled()
     })
 
     it('renders both Cancel and Validate buttons on first step', () => {

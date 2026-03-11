@@ -41,6 +41,12 @@ export interface DistanceFilter {
 export type SbbDestinationType = 'address' | 'station'
 
 /**
+ * Validation reference mode for viewing the scoresheet photo during validation.
+ * - 'quick-compare': Toggle button flips between form and full-screen zoomable photo
+ */
+export type ValidationReferenceMode = 'quick-compare'
+
+/**
  * Travel time filter configuration for exchanges.
  * Uses Swiss public transport travel times.
  */
@@ -191,6 +197,10 @@ interface SettingsState {
   isOCREnabled: boolean
   setOCREnabled: (enabled: boolean) => void
 
+  // Validation reference mode (how scoresheet photo is displayed during validation)
+  validationReferenceMode: ValidationReferenceMode
+  setValidationReferenceMode: (mode: ValidationReferenceMode) => void
+
   // Accessibility settings
   preventZoom: boolean
   setPreventZoom: (enabled: boolean) => void
@@ -332,6 +342,9 @@ const GAME_GAP_FILTER_VERSION = 7
 /** Version that added hide own exchanges per-association */
 const HIDE_OWN_EXCHANGES_VERSION = 8
 
+/** Version that added validation reference mode */
+const VALIDATION_REFERENCE_MODE_VERSION = 9
+
 /** V1 state shape (flat settings) */
 interface V1State {
   isSafeModeEnabled?: boolean
@@ -468,6 +481,7 @@ export const useSettingsStore = create<SettingsState>()(
         // Global settings
         isSafeModeEnabled: true,
         isOCREnabled: false,
+        validationReferenceMode: 'quick-compare' as ValidationReferenceMode,
         preventZoom: false,
 
         // Mode tracking
@@ -505,6 +519,10 @@ export const useSettingsStore = create<SettingsState>()(
 
         setOCREnabled: (enabled: boolean) => {
           set({ isOCREnabled: enabled })
+        },
+
+        setValidationReferenceMode: (mode: ValidationReferenceMode) => {
+          set({ validationReferenceMode: mode })
         },
 
         setPreventZoom: (enabled: boolean) => {
@@ -763,11 +781,12 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 8,
+        version: 9,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
           isOCREnabled: state.isOCREnabled,
+          validationReferenceMode: state.validationReferenceMode,
           preventZoom: state.preventZoom,
           // Mode-specific settings stored per mode
           settingsByMode: state.settingsByMode,
@@ -807,6 +826,13 @@ export const useSettingsStore = create<SettingsState>()(
             addHideOwnExchangesByAssociation(state as StateWithModes)
           }
 
+          // v8 → v9: Add validation reference mode (global setting, not per-mode)
+          if (version < VALIDATION_REFERENCE_MODE_VERSION) {
+            if (!(state as Record<string, unknown>).validationReferenceMode) {
+              ;(state as Record<string, unknown>).validationReferenceMode = 'quick-compare'
+            }
+          }
+
           return state
         },
         merge: (persisted, current) => {
@@ -816,6 +842,7 @@ export const useSettingsStore = create<SettingsState>()(
             | {
                 isSafeModeEnabled?: boolean
                 isOCREnabled?: boolean
+                validationReferenceMode?: ValidationReferenceMode
                 preventZoom?: boolean
                 settingsByMode?: Record<DataSource, Partial<ModeSettings>>
               }
@@ -883,6 +910,8 @@ export const useSettingsStore = create<SettingsState>()(
             // Preserve global settings
             isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
             isOCREnabled: persistedState?.isOCREnabled ?? current.isOCREnabled,
+            validationReferenceMode:
+              persistedState?.validationReferenceMode ?? current.validationReferenceMode,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,
             // Preserve mode-specific settings
             settingsByMode: mergedSettingsByMode,
