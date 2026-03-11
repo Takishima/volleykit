@@ -1,6 +1,6 @@
 {
   "name": "@volleykit/mobile",
-  "version": "1.21.2",
+  "version": "1.21.3",
   "expo": {
     "install": {
       "exclude": [

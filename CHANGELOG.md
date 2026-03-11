@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.21.3
+
+### Patch Changes
+
+- [#985](https://github.com/Takishima/volleykit/pull/985) [`d6ee8df`](https://github.com/Takishima/volleykit/commit/d6ee8dfa6468354fd0fdeff9e55aa80567e1b2a7) Thanks [@Takishima](https://github.com/Takishima)! - Fix scoresheet and scorer upload silently skipped when finalizing without safe mode
+
+- [#982](https://github.com/Takishima/volleykit/pull/982) [`c83f94a`](https://github.com/Takishima/volleykit/commit/c83f94a97b5d2eeb594a41cf1bb2e86959311544) Thanks [@Takishima](https://github.com/Takishima)! - Refactored API transport layer to consolidate duplicated fetch logic
+
+- [#983](https://github.com/Takishima/volleykit/pull/983) [`f183b0a`](https://github.com/Takishima/volleykit/commit/f183b0a26e0b16a8bf0717121aa90862fbe8daf1) Thanks [@Takishima](https://github.com/Takishima)! - Updated dependencies across all workspaces
+
 ## 1.21.2
 
 ### Patch Changes
