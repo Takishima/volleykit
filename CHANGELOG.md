@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.22.0
+
+### Minor Changes
+
+- [#986](https://github.com/Takishima/volleykit/pull/986) [`f07e04c`](https://github.com/Takishima/volleykit/commit/f07e04c5c885097131d3b2f96378d12123d6dc3f) Thanks [@Takishima](https://github.com/Takishima)! - Move scoresheet capture to first wizard step with reference photo toggle in the bottom bar, and allow optional scoresheet photo when not required
+
 ## 1.21.3
 
 ### Patch Changes
