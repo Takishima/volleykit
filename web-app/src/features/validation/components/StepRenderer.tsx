@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import type { Assignment, NominationList } from '@/api/client'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
-import { Lock, Eye } from '@/shared/components/icons'
+import { Lock } from '@/shared/components/icons'
 import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import type { ValidationReferenceMode } from '@/shared/stores/settings'
@@ -146,69 +146,57 @@ export function StepRenderer({
           </div>
         )}
 
-        {/* Quick-compare toggle button */}
-        {isQuickCompare && (
-          <button
-            type="button"
-            onClick={handleToggleReference}
-            className="mb-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
-          >
-            <Eye className="w-4 h-4" aria-hidden="true" />
-            {t('validation.referenceImage.showScoresheet')}
-          </button>
+        {currentStepId === 'home-roster' && (
+          <HomeRosterPanel
+            assignment={assignment}
+            onModificationsChange={handlers.setHomeRosterModifications}
+            onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+            readOnly={isStepReadOnly}
+            initialModifications={validation.state.homeRoster.playerModifications}
+            initialCoachModifications={validation.state.homeRoster.coachModifications}
+            prefetchedNominationList={validation.homeNominationList}
+          />
         )}
 
-        {currentStepId === 'home-roster' && (
-        <HomeRosterPanel
-          assignment={assignment}
-          onModificationsChange={handlers.setHomeRosterModifications}
-          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={isStepReadOnly}
-          initialModifications={validation.state.homeRoster.playerModifications}
-          initialCoachModifications={validation.state.homeRoster.coachModifications}
-          prefetchedNominationList={validation.homeNominationList}
-        />
-      )}
+        {currentStepId === 'away-roster' && (
+          <AwayRosterPanel
+            assignment={assignment}
+            onModificationsChange={handlers.setAwayRosterModifications}
+            onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+            readOnly={isStepReadOnly}
+            initialModifications={validation.state.awayRoster.playerModifications}
+            initialCoachModifications={validation.state.awayRoster.coachModifications}
+            prefetchedNominationList={validation.awayNominationList}
+          />
+        )}
 
-      {currentStepId === 'away-roster' && (
-        <AwayRosterPanel
-          assignment={assignment}
-          onModificationsChange={handlers.setAwayRosterModifications}
-          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={isStepReadOnly}
-          initialModifications={validation.state.awayRoster.playerModifications}
-          initialCoachModifications={validation.state.awayRoster.coachModifications}
-          prefetchedNominationList={validation.awayNominationList}
-        />
-      )}
+        {currentStepId === 'scorer' && (
+          <ScorerPanel
+            key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
+            onScorerChange={handlers.setScorer}
+            readOnly={isStepReadOnly}
+            readOnlyScorerName={validation.validatedInfo?.scorerName}
+            readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
+            initialScorer={
+              validation.pendingScorer
+                ? {
+                    __identity: validation.pendingScorer.__identity,
+                    displayName: validation.pendingScorer.displayName,
+                    birthday: validation.pendingScorer.birthday ?? '',
+                  }
+                : null
+            }
+          />
+        )}
 
-      {currentStepId === 'scorer' && (
-        <ScorerPanel
-          key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
-          onScorerChange={handlers.setScorer}
-          readOnly={isStepReadOnly}
-          readOnlyScorerName={validation.validatedInfo?.scorerName}
-          readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
-          initialScorer={
-            validation.pendingScorer
-              ? {
-                  __identity: validation.pendingScorer.__identity,
-                  displayName: validation.pendingScorer.displayName,
-                  birthday: validation.pendingScorer.birthday ?? '',
-                }
-              : null
-          }
-        />
-      )}
-
-      {currentStepId === 'scoresheet' && (
-        <ScoresheetPanel
-          onScoresheetChange={handlers.setScoresheet}
-          readOnly={isStepReadOnly}
-          hasScoresheet={validation.validatedInfo?.hasScoresheet}
-          scoresheetNotRequired={validation.scoresheetNotRequired}
-        />
-      )}
+        {currentStepId === 'scoresheet' && (
+          <ScoresheetPanel
+            onScoresheetChange={handlers.setScoresheet}
+            readOnly={isStepReadOnly}
+            hasScoresheet={validation.validatedInfo?.hasScoresheet}
+            scoresheetNotRequired={validation.scoresheetNotRequired}
+          />
+        )}
       </div>
     </ModalErrorBoundary>
   )
