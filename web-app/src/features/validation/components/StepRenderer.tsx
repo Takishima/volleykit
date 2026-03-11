@@ -147,56 +147,56 @@ export function StepRenderer({
         )}
 
         {currentStepId === 'home-roster' && (
-        <HomeRosterPanel
-          assignment={assignment}
-          onModificationsChange={handlers.setHomeRosterModifications}
-          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={isStepReadOnly}
-          initialModifications={validation.state.homeRoster.playerModifications}
-          initialCoachModifications={validation.state.homeRoster.coachModifications}
-          prefetchedNominationList={validation.homeNominationList}
-        />
-      )}
+          <HomeRosterPanel
+            assignment={assignment}
+            onModificationsChange={handlers.setHomeRosterModifications}
+            onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+            readOnly={isStepReadOnly}
+            initialModifications={validation.state.homeRoster.playerModifications}
+            initialCoachModifications={validation.state.homeRoster.coachModifications}
+            prefetchedNominationList={validation.homeNominationList}
+          />
+        )}
 
-      {currentStepId === 'away-roster' && (
-        <AwayRosterPanel
-          assignment={assignment}
-          onModificationsChange={handlers.setAwayRosterModifications}
-          onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
-          readOnly={isStepReadOnly}
-          initialModifications={validation.state.awayRoster.playerModifications}
-          initialCoachModifications={validation.state.awayRoster.coachModifications}
-          prefetchedNominationList={validation.awayNominationList}
-        />
-      )}
+        {currentStepId === 'away-roster' && (
+          <AwayRosterPanel
+            assignment={assignment}
+            onModificationsChange={handlers.setAwayRosterModifications}
+            onAddPlayerSheetOpenChange={handlers.onAddPlayerSheetOpenChange}
+            readOnly={isStepReadOnly}
+            initialModifications={validation.state.awayRoster.playerModifications}
+            initialCoachModifications={validation.state.awayRoster.coachModifications}
+            prefetchedNominationList={validation.awayNominationList}
+          />
+        )}
 
-      {currentStepId === 'scorer' && (
-        <ScorerPanel
-          key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
-          onScorerChange={handlers.setScorer}
-          readOnly={isStepReadOnly}
-          readOnlyScorerName={validation.validatedInfo?.scorerName}
-          readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
-          initialScorer={
-            validation.pendingScorer
-              ? {
-                  __identity: validation.pendingScorer.__identity,
-                  displayName: validation.pendingScorer.displayName,
-                  birthday: validation.pendingScorer.birthday ?? '',
-                }
-              : null
-          }
-        />
-      )}
+        {currentStepId === 'scorer' && (
+          <ScorerPanel
+            key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
+            onScorerChange={handlers.setScorer}
+            readOnly={isStepReadOnly}
+            readOnlyScorerName={validation.validatedInfo?.scorerName}
+            readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}
+            initialScorer={
+              validation.pendingScorer
+                ? {
+                    __identity: validation.pendingScorer.__identity,
+                    displayName: validation.pendingScorer.displayName,
+                    birthday: validation.pendingScorer.birthday ?? '',
+                  }
+                : null
+            }
+          />
+        )}
 
-      {currentStepId === 'scoresheet' && (
-        <ScoresheetPanel
-          onScoresheetChange={handlers.setScoresheet}
-          readOnly={isStepReadOnly}
-          hasScoresheet={validation.validatedInfo?.hasScoresheet}
-          scoresheetNotRequired={validation.scoresheetNotRequired}
-        />
-      )}
+        {currentStepId === 'scoresheet' && (
+          <ScoresheetPanel
+            onScoresheetChange={handlers.setScoresheet}
+            readOnly={isStepReadOnly}
+            hasScoresheet={validation.validatedInfo?.hasScoresheet}
+            scoresheetNotRequired={validation.scoresheetNotRequired}
+          />
+        )}
       </div>
     </ModalErrorBoundary>
   )
