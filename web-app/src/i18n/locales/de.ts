@@ -730,7 +730,8 @@ const de: Translations = {
       noScoresheet: 'Kein Spielbericht hochgeladen',
       notRequired: 'Spielbericht nicht erforderlich',
       notRequiredDescription: 'Für diesen Wettbewerb ist kein Spielbericht erforderlich.',
-      notRequiredOptional: 'Sie können trotzdem ein Foto als Referenz hinzufügen, es wird jedoch nicht hochgeladen.',
+      notRequiredOptional:
+        'Sie können trotzdem ein Foto als Referenz hinzufügen, es wird jedoch nicht hochgeladen.',
     },
     referenceImage: {
       showScoresheet: 'Spielbericht anzeigen',

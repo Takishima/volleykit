@@ -725,7 +725,8 @@ const fr: Translations = {
       notRequired: 'Feuille de match non requise',
       notRequiredDescription:
         'Cette compétition ne nécessite pas de téléchargement de feuille de match.',
-      notRequiredOptional: 'Vous pouvez quand même ajouter une photo comme référence, mais elle ne sera pas téléchargée.',
+      notRequiredOptional:
+        'Vous pouvez quand même ajouter une photo comme référence, mais elle ne sera pas téléchargée.',
     },
     referenceImage: {
       showScoresheet: 'Afficher la feuille de match',

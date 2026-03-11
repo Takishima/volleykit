@@ -10,10 +10,7 @@ interface PreferencesSectionProps {
   onSetPreventZoom: (enabled: boolean) => void
 }
 
-function PreferencesSectionComponent({
-  preventZoom,
-  onSetPreventZoom,
-}: PreferencesSectionProps) {
+function PreferencesSectionComponent({ preventZoom, onSetPreventZoom }: PreferencesSectionProps) {
   const { t } = useTranslation()
 
   const handleTogglePreventZoom = useCallback(() => {

@@ -718,7 +718,8 @@ const it: Translations = {
       noScoresheet: 'Nessun referto caricato',
       notRequired: 'Referto non richiesto',
       notRequiredDescription: 'Questa competizione non richiede il caricamento del referto.',
-      notRequiredOptional: 'Puoi comunque aggiungere una foto come riferimento, ma non verrà caricata.',
+      notRequiredOptional:
+        'Puoi comunque aggiungere una foto come riferimento, ma non verrà caricata.',
     },
     referenceImage: {
       showScoresheet: 'Mostra referto',

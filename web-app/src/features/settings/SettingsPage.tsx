@@ -36,12 +36,7 @@ export function SettingsPage() {
       refreshData: state.refreshData,
     }))
   )
-  const {
-    isSafeModeEnabled,
-    setSafeMode,
-    preventZoom,
-    setPreventZoom,
-  } = useSettingsStore(
+  const { isSafeModeEnabled, setSafeMode, preventZoom, setPreventZoom } = useSettingsStore(
     useShallow((state) => ({
       isSafeModeEnabled: state.isSafeModeEnabled,
       setSafeMode: state.setSafeMode,
@@ -62,10 +57,7 @@ export function SettingsPage() {
 
       {user && <ProfileSection user={user} />}
 
-      <PreferencesSection
-        preventZoom={preventZoom}
-        onSetPreventZoom={setPreventZoom}
-      />
+      <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
 
       {features.homeLocation && <HomeLocationSection />}
 
