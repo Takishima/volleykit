@@ -5,6 +5,7 @@ import { getTeamNames } from '@volleykit/shared/utils'
 import type { Assignment, IndoorPlayerNomination, NominationList } from '@/api/client'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
 import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
+import { Eye, EyeOff } from '@/shared/components/icons'
 import { Modal } from '@/shared/components/Modal'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { WizardStepContainer } from '@/shared/components/WizardStepContainer'
@@ -202,6 +203,15 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     setShowingReference(false)
   }
 
+  const isNonScoresheetStep = wizard.currentStepId !== 'scoresheet'
+  const canShowReference = !!wizard.referenceImageUrl && isNonScoresheetStep
+  const isQuickCompare = canShowReference && validationReferenceMode === 'quick-compare'
+  const isSplitView = canShowReference && validationReferenceMode === 'split-view'
+
+  const handleToggleReference = useCallback(() => {
+    setShowingReference((prev) => !prev)
+  }, [])
+
   const loadingState = {
     isLoading: wizard.isLoadingGameDetails,
     error: wizard.gameDetailsError,
@@ -284,7 +294,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           onSwipePrevious={wizard.goBack}
           swipeEnabled={wizard.isSwipeEnabled && !showingReference}
         >
-          <div className="max-h-80 overflow-y-auto">
+          <div className={isSplitView ? 'h-80' : 'max-h-80 overflow-y-auto'}>
             <StepRenderer
               currentStepId={wizard.currentStepId}
               assignment={assignment}
@@ -341,7 +351,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           </div>
         )}
 
-        <div className="flex justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-border-default dark:border-border-default-dark mt-4">
           {wizard.isValidated ? (
             <ValidatedModeButtons
               navigation={navigation}
@@ -372,6 +382,26 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               onValidateAndNext={wizard.handleValidateAndNext}
               onFinish={wizard.handleFinish}
             />
+          )}
+          {/* Quick-compare toggle — between Previous and Validate, always visible */}
+          {isQuickCompare && (
+            <div className="order-1">
+              <button
+                type="button"
+                onClick={handleToggleReference}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
+                aria-pressed={showingReference}
+              >
+                {showingReference ? (
+                  <EyeOff className="w-4 h-4" aria-hidden="true" />
+                ) : (
+                  <Eye className="w-4 h-4" aria-hidden="true" />
+                )}
+                {showingReference
+                  ? t('validation.referenceImage.hideScoresheet')
+                  : t('validation.referenceImage.showScoresheet')}
+              </button>
+            </div>
           )}
         </div>
       </Modal>

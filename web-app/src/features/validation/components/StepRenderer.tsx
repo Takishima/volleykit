@@ -3,7 +3,7 @@ import { useCallback } from 'react'
 import type { Assignment, NominationList } from '@/api/client'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
-import { Lock, Eye } from '@/shared/components/icons'
+import { Lock } from '@/shared/components/icons'
 import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import type { ValidationReferenceMode } from '@/shared/stores/settings'
@@ -144,18 +144,6 @@ export function StepRenderer({
                 : t('validation.wizard.scoresheetFinalized')}
             </p>
           </div>
-        )}
-
-        {/* Quick-compare toggle button */}
-        {isQuickCompare && (
-          <button
-            type="button"
-            onClick={handleToggleReference}
-            className="mb-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
-          >
-            <Eye className="w-4 h-4" aria-hidden="true" />
-            {t('validation.referenceImage.showScoresheet')}
-          </button>
         )}
 
         {currentStepId === 'home-roster' && (
