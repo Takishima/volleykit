@@ -325,6 +325,9 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
       // Re-fetch game details to pick up the scoresheet identity created by the save
       const freshGameDetails = await apiClient.getGameWithScoresheet(gameId)
+      if (!freshGameDetails.scoresheet?.__identity) {
+        throw new Error('Scoresheet was not created after save — cannot finalize')
+      }
 
       await finalizeScoresheetWithFile(
         apiClient,
