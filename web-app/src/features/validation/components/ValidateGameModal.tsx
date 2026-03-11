@@ -193,7 +193,6 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     currentStepIsOptional: wizard.currentStep.isOptional ?? false,
   }
 
-  const validationReferenceMode = useSettingsStore((s) => s.validationReferenceMode)
   const [showingReference, setShowingReference] = useState(false)
   const [prevStepId, setPrevStepId] = useState(wizard.currentStepId)
 
@@ -205,8 +204,6 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
 
   const isNonScoresheetStep = wizard.currentStepId !== 'scoresheet'
   const canShowReference = !!wizard.referenceImageUrl && isNonScoresheetStep
-  const isQuickCompare = canShowReference && validationReferenceMode === 'quick-compare'
-  const isSplitView = canShowReference && validationReferenceMode === 'split-view'
 
   const handleToggleReference = useCallback(() => {
     setShowingReference((prev) => !prev)
@@ -294,7 +291,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           onSwipePrevious={wizard.goBack}
           swipeEnabled={wizard.isSwipeEnabled && !showingReference}
         >
-          <div className={isSplitView ? 'h-80' : 'max-h-80 overflow-y-auto'}>
+          <div className="max-h-80 overflow-y-auto">
             <StepRenderer
               currentStepId={wizard.currentStepId}
               assignment={assignment}
@@ -302,7 +299,6 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               validation={validationInfo}
               handlers={stepHandlers}
               referenceImageUrl={wizard.referenceImageUrl}
-              referenceMode={validationReferenceMode}
               showingReference={showingReference}
               onShowingReferenceChange={setShowingReference}
             />
@@ -384,7 +380,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
             />
           )}
           {/* Quick-compare toggle — between Previous and Validate, always visible */}
-          {isQuickCompare && (
+          {canShowReference && (
             <div className="order-1">
               <button
                 type="button"

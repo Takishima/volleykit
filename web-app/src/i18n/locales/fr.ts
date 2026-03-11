@@ -508,11 +508,8 @@ const fr: Translations = {
       description:
         'Choisissez comment la photo de référence de la feuille de match est affichée lors de la validation.',
       quickCompare: 'Comparaison rapide',
-      splitView: 'Vue partagée',
       quickCompareDescription:
         'Appuyez sur un bouton pour basculer entre le formulaire et une photo zoomable de la feuille de match.',
-      splitViewDescription:
-        'Affiche la photo de la feuille de match au-dessus du formulaire avec un séparateur ajustable.',
     },
     accessibility: {
       title: 'Accessibilité',
@@ -728,6 +725,7 @@ const fr: Translations = {
       notRequired: 'Feuille de match non requise',
       notRequiredDescription:
         'Cette compétition ne nécessite pas de téléchargement de feuille de match.',
+      notRequiredOptional: 'Vous pouvez quand même ajouter une photo comme référence, mais elle ne sera pas téléchargée.',
     },
     referenceImage: {
       showScoresheet: 'Afficher la feuille de match',

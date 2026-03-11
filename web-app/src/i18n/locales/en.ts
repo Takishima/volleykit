@@ -493,10 +493,8 @@ const en: Translations = {
       title: 'Validation',
       description: 'Choose how the scoresheet reference photo is shown during game validation.',
       quickCompare: 'Quick Compare',
-      splitView: 'Split View',
       quickCompareDescription:
         'Tap a button to flip between the form and a full-screen zoomable scoresheet photo.',
-      splitViewDescription: 'Show the scoresheet photo above the form with an adjustable divider.',
     },
     accessibility: {
       title: 'Accessibility',
@@ -705,6 +703,7 @@ const en: Translations = {
       noScoresheet: 'No scoresheet uploaded',
       notRequired: 'Scoresheet not required',
       notRequiredDescription: 'This competition does not require a scoresheet upload.',
+      notRequiredOptional: 'You can still add a photo for reference, but it will not be uploaded.',
     },
     referenceImage: {
       showScoresheet: 'Show Scoresheet',

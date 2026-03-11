@@ -504,11 +504,8 @@ const it: Translations = {
       description:
         'Scegli come viene visualizzata la foto di riferimento del referto durante la validazione della partita.',
       quickCompare: 'Confronto rapido',
-      splitView: 'Vista divisa',
       quickCompareDescription:
         'Tocca un pulsante per alternare tra il modulo e una foto zoomabile del referto.',
-      splitViewDescription:
-        'Mostra la foto del referto sopra il modulo con un divisore regolabile.',
     },
     accessibility: {
       title: 'Accessibilità',
@@ -721,6 +718,7 @@ const it: Translations = {
       noScoresheet: 'Nessun referto caricato',
       notRequired: 'Referto non richiesto',
       notRequiredDescription: 'Questa competizione non richiede il caricamento del referto.',
+      notRequiredOptional: 'Puoi comunque aggiungere una foto come riferimento, ma non verrà caricata.',
     },
     referenceImage: {
       showScoresheet: 'Mostra referto',

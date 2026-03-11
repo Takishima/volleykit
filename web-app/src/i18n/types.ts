@@ -374,9 +374,7 @@ export interface Translations {
       title: string
       description: string
       quickCompare: string
-      splitView: string
       quickCompareDescription: string
-      splitViewDescription: string
     }
     accessibility: {
       title: string
@@ -574,6 +572,7 @@ export interface Translations {
       noScoresheet: string
       notRequired: string
       notRequiredDescription: string
+      notRequiredOptional: string
     }
     referenceImage: {
       showScoresheet: string

@@ -259,8 +259,9 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       })
 
       // Upload scoresheet file if present (cache the resource ID to avoid re-upload on finalize)
+      // Skip upload when scoresheet is not required for this group
       let fileResourceId = uploadedFileResourceIdRef.current
-      if (!fileResourceId && state.scoresheet.file) {
+      if (!fileResourceId && state.scoresheet.file && !scoresheetNotRequired) {
         const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
         fileResourceId = uploadResult[0]?.__identity
         uploadedFileResourceIdRef.current = fileResourceId
@@ -299,7 +300,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isSavingRef.current = false
       setIsSaving(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient, scoresheetNotRequired])
 
   const finalizeValidation = useCallback(async (): Promise<void> => {
     if (isFinalizingRef.current) {
@@ -318,8 +319,9 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       }
 
       // Reuse cached file resource ID from saveProgress if available
+      // Skip upload when scoresheet is not required for this group
       let fileResourceId = uploadedFileResourceIdRef.current
-      if (!fileResourceId && state.scoresheet.file) {
+      if (!fileResourceId && state.scoresheet.file && !scoresheetNotRequired) {
         const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
         fileResourceId = uploadResult[0]?.__identity
         uploadedFileResourceIdRef.current = fileResourceId
@@ -358,7 +360,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       isFinalizingRef.current = false
       setIsFinalizing(false)
     }
-  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient])
+  }, [gameId, gameDetailsQuery.data, state, apiClient, queryClient, scoresheetNotRequired])
 
   return {
     state,

@@ -6,11 +6,9 @@ import type { UseValidationStateResult } from '@/features/validation/hooks/useVa
 import { Lock } from '@/shared/components/icons'
 import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { ValidationReferenceMode } from '@/shared/stores/settings'
 
 import { HomeRosterPanel, AwayRosterPanel, ScorerPanel, ScoresheetPanel } from '.'
 import { ReferenceImageViewer } from './ReferenceImageViewer'
-import { SplitViewContainer } from './SplitViewContainer'
 
 interface LoadingState {
   isLoading: boolean
@@ -46,8 +44,6 @@ interface StepRendererProps {
   handlers: StepHandlers
   /** Object URL for the scoresheet reference image */
   referenceImageUrl: string | null
-  /** How the reference image should be displayed */
-  referenceMode: ValidationReferenceMode
   /** Whether the reference image is currently being shown (quick-compare mode) */
   showingReference: boolean
   /** Called when the showing reference state changes */
@@ -70,7 +66,6 @@ export function StepRenderer({
   validation,
   handlers,
   referenceImageUrl,
-  referenceMode,
   showingReference,
   onShowingReferenceChange,
 }: StepRendererProps) {
@@ -112,12 +107,10 @@ export function StepRenderer({
   // (not when the entire game is validated — that has its own banner in the modal)
   const showFinalizedBanner = !validation.isValidated && validation.isCurrentStepReadOnly
 
-  const isQuickCompare = canShowReference && referenceMode === 'quick-compare'
-
   const stepContent = (
     <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
       {/* Quick-compare: render viewer always so zoom/pan state is preserved across toggles */}
-      {isQuickCompare && (
+      {canShowReference && (
         <div className={showingReference ? undefined : 'hidden'}>
           <ReferenceImageViewer
             imageUrl={referenceImageUrl}
@@ -128,7 +121,7 @@ export function StepRenderer({
         </div>
       )}
 
-      <div className={isQuickCompare && showingReference ? 'hidden' : undefined}>
+      <div className={canShowReference && showingReference ? 'hidden' : undefined}>
         {showFinalizedBanner && (
           <div
             role="status"
@@ -200,13 +193,6 @@ export function StepRenderer({
       </div>
     </ModalErrorBoundary>
   )
-
-  // Split-view mode: show image on top and form on bottom
-  if (canShowReference && referenceMode === 'split-view') {
-    return (
-      <SplitViewContainer referenceImageUrl={referenceImageUrl}>{stepContent}</SplitViewContainer>
-    )
-  }
 
   return stepContent
 }

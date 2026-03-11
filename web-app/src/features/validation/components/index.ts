@@ -15,7 +15,6 @@ export { SafeValidationCompleteModal } from './SafeValidationCompleteModal'
 export { ValidationSuccessToast } from './ValidationSuccessToast'
 export { StepRenderer } from './StepRenderer'
 export { ReferenceImageViewer } from './ReferenceImageViewer'
-export { SplitViewContainer } from './SplitViewContainer'
 export { ValidatedModeButtons, ReadOnlyStepButtons, EditModeButtons } from './WizardButtons'
 // features.ocr — OCR components (delete these exports when removing OCR feature)
 export { OCRCaptureModal } from './OCRCaptureModal'

@@ -509,11 +509,8 @@ const de: Translations = {
       description:
         'Wählen Sie, wie das Spielberichtsfoto während der Spielvalidierung angezeigt wird.',
       quickCompare: 'Schnellvergleich',
-      splitView: 'Geteilte Ansicht',
       quickCompareDescription:
         'Tippen Sie auf eine Schaltfläche, um zwischen dem Formular und einem zoombaren Spielberichtsfoto zu wechseln.',
-      splitViewDescription:
-        'Zeigt das Spielberichtsfoto über dem Formular mit einem verstellbaren Teiler an.',
     },
     accessibility: {
       title: 'Barrierefreiheit',
@@ -733,6 +730,7 @@ const de: Translations = {
       noScoresheet: 'Kein Spielbericht hochgeladen',
       notRequired: 'Spielbericht nicht erforderlich',
       notRequiredDescription: 'Für diesen Wettbewerb ist kein Spielbericht erforderlich.',
+      notRequiredOptional: 'Sie können trotzdem ein Foto als Referenz hinzufügen, es wird jedoch nicht hochgeladen.',
     },
     referenceImage: {
       showScoresheet: 'Spielbericht anzeigen',

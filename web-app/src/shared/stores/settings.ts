@@ -43,9 +43,8 @@ export type SbbDestinationType = 'address' | 'station'
 /**
  * Validation reference mode for viewing the scoresheet photo during validation.
  * - 'quick-compare': Toggle button flips between form and full-screen zoomable photo
- * - 'split-view': Top/bottom split with adjustable divider
  */
-export type ValidationReferenceMode = 'quick-compare' | 'split-view'
+export type ValidationReferenceMode = 'quick-compare'
 
 /**
  * Travel time filter configuration for exchanges.

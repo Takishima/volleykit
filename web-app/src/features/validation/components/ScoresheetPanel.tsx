@@ -200,23 +200,6 @@ export function ScoresheetPanel({
 
   const tKey = (key: string) => t(`validation.scoresheetUpload.${key}` as Parameters<typeof t>[0])
 
-  // When scoresheet is not required for this group, show informational message
-  if (scoresheetNotRequired) {
-    return (
-      <div className="py-4">
-        <div className="border border-info-200 dark:border-info-800 bg-info-50 dark:bg-info-900/20 rounded-lg p-4 text-center">
-          <Info className="w-12 h-12 mx-auto text-info-500 mb-3" aria-hidden="true" />
-          <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-1">
-            {t('validation.scoresheetUpload.notRequired')}
-          </h3>
-          <p className="text-sm text-text-muted dark:text-text-muted-dark">
-            {t('validation.scoresheetUpload.notRequiredDescription')}
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   // In read-only mode, show a simple status display
   if (readOnly) {
     return (
@@ -247,6 +230,20 @@ export function ScoresheetPanel({
 
   return (
     <div className="py-4">
+      {scoresheetNotRequired && (
+        <div className="mb-4 border border-info-200 dark:border-info-800 bg-info-50 dark:bg-info-900/20 rounded-lg p-3 flex items-start gap-2">
+          <Info className="w-5 h-5 flex-shrink-0 text-info-500 mt-0.5" aria-hidden="true" />
+          <div>
+            <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+              {t('validation.scoresheetUpload.notRequired')}
+            </p>
+            <p className="text-sm text-text-muted dark:text-text-muted-dark mt-0.5">
+              {t('validation.scoresheetUpload.notRequiredOptional')}
+            </p>
+          </div>
+        </div>
+      )}
+
       <input
         ref={fileInputRef}
         type="file"
