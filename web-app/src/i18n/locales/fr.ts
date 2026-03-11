@@ -503,6 +503,16 @@ const fr: Translations = {
       transportApiNote:
         "Lorsque le calcul des temps de trajet est activé, les coordonnées de votre domicile sont envoyées à l'API des transports publics suisses (opentransportdata.swiss).",
     },
+    validation: {
+      title: 'Validation',
+      description: "Choisissez comment la photo de référence de la feuille de match est affichée lors de la validation.",
+      quickCompare: 'Comparaison rapide',
+      splitView: 'Vue partagée',
+      quickCompareDescription:
+        "Appuyez sur un bouton pour basculer entre le formulaire et une photo zoomable de la feuille de match.",
+      splitViewDescription:
+        "Affiche la photo de la feuille de match au-dessus du formulaire avec un séparateur ajustable.",
+    },
     accessibility: {
       title: 'Accessibilité',
       description: "Ajustez les paramètres d'accessibilité pour personnaliser votre expérience.",
@@ -717,6 +727,12 @@ const fr: Translations = {
       notRequired: 'Feuille de match non requise',
       notRequiredDescription:
         'Cette compétition ne nécessite pas de téléchargement de feuille de match.',
+    },
+    referenceImage: {
+      showScoresheet: 'Afficher la feuille de match',
+      hideScoresheet: 'Masquer la feuille de match',
+      backToForm: 'Retour au formulaire',
+      alt: 'Photo de référence de la feuille de match',
     },
     state: {
       unsavedChangesTitle: 'Modifications non enregistrées',

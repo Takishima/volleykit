@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -197,11 +197,36 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   }, [])
 
   const setScoresheet = useCallback((file: File | null, uploaded: boolean) => {
-    setState((prev) => ({ ...prev, scoresheet: { file, uploaded } }))
+    setState((prev) => {
+      // Revoke previous reference image URL
+      if (prev.referenceImageUrl) {
+        URL.revokeObjectURL(prev.referenceImageUrl)
+      }
+      // Create new reference image URL for image files
+      const referenceImageUrl =
+        file && file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+      return { ...prev, scoresheet: { file, uploaded }, referenceImageUrl }
+    })
   }, [])
 
   const reset = useCallback(() => {
-    setState(createInitialState())
+    setState((prev) => {
+      if (prev.referenceImageUrl) {
+        URL.revokeObjectURL(prev.referenceImageUrl)
+      }
+      return createInitialState()
+    })
+  }, [])
+
+  // Cleanup reference image URL on unmount
+  useEffect(() => {
+    return () => {
+      const currentState = state
+      if (currentState.referenceImageUrl) {
+        URL.revokeObjectURL(currentState.referenceImageUrl)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on unmount
   }, [])
 
   const saveProgress = useCallback(async (): Promise<void> => {
@@ -344,6 +369,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     setAwayRosterModifications,
     setScorer,
     setScoresheet,
+    referenceImageUrl: state.referenceImageUrl,
     reset,
     saveProgress,
     finalizeValidation,

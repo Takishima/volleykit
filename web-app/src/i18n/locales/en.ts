@@ -489,6 +489,16 @@ const en: Translations = {
       transportApiNote:
         'When travel time calculations are enabled, your home location coordinates are sent to the Swiss public transport API (opentransportdata.swiss).',
     },
+    validation: {
+      title: 'Validation',
+      description: 'Choose how the scoresheet reference photo is shown during game validation.',
+      quickCompare: 'Quick Compare',
+      splitView: 'Split View',
+      quickCompareDescription:
+        'Tap a button to flip between the form and a full-screen zoomable scoresheet photo.',
+      splitViewDescription:
+        'Show the scoresheet photo above the form with an adjustable divider.',
+    },
     accessibility: {
       title: 'Accessibility',
       description: 'Adjust accessibility settings to customize your experience.',
@@ -696,6 +706,12 @@ const en: Translations = {
       noScoresheet: 'No scoresheet uploaded',
       notRequired: 'Scoresheet not required',
       notRequiredDescription: 'This competition does not require a scoresheet upload.',
+    },
+    referenceImage: {
+      showScoresheet: 'Show Scoresheet',
+      hideScoresheet: 'Hide Scoresheet',
+      backToForm: 'Back to form',
+      alt: 'Scoresheet reference photo',
     },
     state: {
       unsavedChangesTitle: 'Unsaved Changes',

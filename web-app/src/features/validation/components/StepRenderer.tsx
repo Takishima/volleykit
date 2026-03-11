@@ -1,11 +1,16 @@
+import { useState, useCallback } from 'react'
+
 import type { Assignment, NominationList } from '@/api/client'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
-import { Lock } from '@/shared/components/icons'
+import { Lock, Eye } from '@/shared/components/icons'
 import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
 import { useTranslation } from '@/shared/hooks/useTranslation'
+import type { ValidationReferenceMode } from '@/shared/stores/settings'
 
 import { HomeRosterPanel, AwayRosterPanel, ScorerPanel, ScoresheetPanel } from '.'
+import { ReferenceImageViewer } from './ReferenceImageViewer'
+import { SplitViewContainer } from './SplitViewContainer'
 
 interface LoadingState {
   isLoading: boolean
@@ -39,6 +44,10 @@ interface StepRendererProps {
   loading: LoadingState
   validation: ValidationInfo
   handlers: StepHandlers
+  /** Object URL for the scoresheet reference image */
+  referenceImageUrl: string | null
+  /** How the reference image should be displayed */
+  referenceMode: ValidationReferenceMode
 }
 
 /**
@@ -48,6 +57,7 @@ interface StepRendererProps {
  * - Loading state while fetching game details
  * - Error state if game details fetch fails
  * - Step-specific panels (HomeRoster, AwayRoster, Scorer, Scoresheet)
+ * - Reference image overlay (quick-compare toggle or split-view)
  */
 export function StepRenderer({
   currentStepId,
@@ -55,8 +65,15 @@ export function StepRenderer({
   loading,
   validation,
   handlers,
+  referenceImageUrl,
+  referenceMode,
 }: StepRendererProps) {
   const { t } = useTranslation()
+  const [showingReference, setShowingReference] = useState(false)
+
+  const handleToggleReference = useCallback(() => {
+    setShowingReference((prev) => !prev)
+  }, [])
 
   if (loading.isLoading) {
     return (
@@ -81,12 +98,28 @@ export function StepRenderer({
 
   const isStepReadOnly = validation.isValidated || validation.isCurrentStepReadOnly
   const isRosterStep = currentStepId === 'home-roster' || currentStepId === 'away-roster'
+  const isNonScoresheetStep = currentStepId !== 'scoresheet'
+
+  // Reference image is only shown on non-scoresheet steps when an image exists
+  const canShowReference = !!referenceImageUrl && isNonScoresheetStep
 
   // Show finalized banner when the step is read-only due to partial finalization
   // (not when the entire game is validated — that has its own banner in the modal)
   const showFinalizedBanner = !validation.isValidated && validation.isCurrentStepReadOnly
 
-  return (
+  // Quick-compare mode: show full-screen reference image instead of form
+  if (canShowReference && referenceMode === 'quick-compare' && showingReference) {
+    return (
+      <ReferenceImageViewer
+        imageUrl={referenceImageUrl}
+        onClose={handleToggleReference}
+        showCloseButton
+        className="h-80 rounded-lg"
+      />
+    )
+  }
+
+  const stepContent = (
     <ModalErrorBoundary modalName="ValidateGameModal" onClose={handlers.onClose}>
       {showFinalizedBanner && (
         <div
@@ -103,6 +136,18 @@ export function StepRenderer({
               : t('validation.wizard.scoresheetFinalized')}
           </p>
         </div>
+      )}
+
+      {/* Quick-compare toggle button */}
+      {canShowReference && referenceMode === 'quick-compare' && (
+        <button
+          type="button"
+          onClick={handleToggleReference}
+          className="mb-3 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
+        >
+          <Eye className="w-4 h-4" aria-hidden="true" />
+          {t('validation.referenceImage.showScoresheet')}
+        </button>
       )}
 
       {currentStepId === 'home-roster' && (
@@ -158,4 +203,15 @@ export function StepRenderer({
       )}
     </ModalErrorBoundary>
   )
+
+  // Split-view mode: show image on top and form on bottom
+  if (canShowReference && referenceMode === 'split-view') {
+    return (
+      <SplitViewContainer referenceImageUrl={referenceImageUrl}>
+        {stepContent}
+      </SplitViewContainer>
+    )
+  }
+
+  return stepContent
 }

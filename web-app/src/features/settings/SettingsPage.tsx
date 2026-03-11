@@ -36,12 +36,21 @@ export function SettingsPage() {
       refreshData: state.refreshData,
     }))
   )
-  const { isSafeModeEnabled, setSafeMode, preventZoom, setPreventZoom } = useSettingsStore(
+  const {
+    isSafeModeEnabled,
+    setSafeMode,
+    preventZoom,
+    setPreventZoom,
+    validationReferenceMode,
+    setValidationReferenceMode,
+  } = useSettingsStore(
     useShallow((state) => ({
       isSafeModeEnabled: state.isSafeModeEnabled,
       setSafeMode: state.setSafeMode,
       preventZoom: state.preventZoom,
       setPreventZoom: state.setPreventZoom,
+      validationReferenceMode: state.validationReferenceMode,
+      setValidationReferenceMode: state.setValidationReferenceMode,
     }))
   )
   const { t } = useTranslation()
@@ -57,7 +66,12 @@ export function SettingsPage() {
 
       {user && <ProfileSection user={user} />}
 
-      <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
+      <PreferencesSection
+        preventZoom={preventZoom}
+        onSetPreventZoom={setPreventZoom}
+        validationReferenceMode={validationReferenceMode}
+        onSetValidationReferenceMode={setValidationReferenceMode}
+      />
 
       {features.homeLocation && <HomeLocationSection />}
 

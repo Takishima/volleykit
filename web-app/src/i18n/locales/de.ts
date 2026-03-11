@@ -504,6 +504,16 @@ const de: Translations = {
       transportApiNote:
         'Bei aktivierter Reisezeitberechnung werden Ihre Heimatstandort-Koordinaten an die Schweizer ÖV-API (opentransportdata.swiss) gesendet.',
     },
+    validation: {
+      title: 'Validierung',
+      description: 'Wählen Sie, wie das Spielberichtsfoto während der Spielvalidierung angezeigt wird.',
+      quickCompare: 'Schnellvergleich',
+      splitView: 'Geteilte Ansicht',
+      quickCompareDescription:
+        'Tippen Sie auf eine Schaltfläche, um zwischen dem Formular und einem zoombaren Spielberichtsfoto zu wechseln.',
+      splitViewDescription:
+        'Zeigt das Spielberichtsfoto über dem Formular mit einem verstellbaren Teiler an.',
+    },
     accessibility: {
       title: 'Barrierefreiheit',
       description:
@@ -722,6 +732,12 @@ const de: Translations = {
       noScoresheet: 'Kein Spielbericht hochgeladen',
       notRequired: 'Spielbericht nicht erforderlich',
       notRequiredDescription: 'Für diesen Wettbewerb ist kein Spielbericht erforderlich.',
+    },
+    referenceImage: {
+      showScoresheet: 'Spielbericht anzeigen',
+      hideScoresheet: 'Spielbericht ausblenden',
+      backToForm: 'Zurück zum Formular',
+      alt: 'Spielbericht Referenzfoto',
     },
     state: {
       unsavedChangesTitle: 'Ungespeicherte Änderungen',

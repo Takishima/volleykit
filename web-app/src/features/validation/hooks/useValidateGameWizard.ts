@@ -59,6 +59,7 @@ export interface UseValidateGameWizardResult {
   validatedInfo: ReturnType<typeof useValidationState>['validatedInfo']
   pendingScorer: ReturnType<typeof useValidationState>['pendingScorer']
   scoresheetNotRequired: boolean
+  referenceImageUrl: string | null
   setHomeRosterModifications: ReturnType<typeof useValidationState>['setHomeRosterModifications']
   setAwayRosterModifications: ReturnType<typeof useValidationState>['setAwayRosterModifications']
   setScorer: ReturnType<typeof useValidationState>['setScorer']
@@ -147,6 +148,7 @@ export function useValidateGameWizard({
     setAwayRosterModifications,
     setScorer,
     setScoresheet,
+    referenceImageUrl,
     reset,
     saveProgress,
     finalizeValidation,
@@ -210,6 +212,12 @@ export function useValidateGameWizard({
   const wizardSteps = useMemo<ValidationStep[]>(
     () => [
       {
+        id: 'scoresheet',
+        label: t('validation.scoresheet'),
+        isOptional: true,
+        isReadOnly: isScoresheetClosed,
+      },
+      {
         id: 'home-roster',
         label: t('validation.homeRoster'),
         isInvalid: !isHomeRosterClosed && !rosterValidation.home.isValid,
@@ -222,12 +230,6 @@ export function useValidateGameWizard({
         isReadOnly: isAwayRosterClosed,
       },
       { id: 'scorer', label: t('validation.scorer'), isReadOnly: isScoresheetClosed },
-      {
-        id: 'scoresheet',
-        label: t('validation.scoresheet'),
-        isOptional: true,
-        isReadOnly: isScoresheetClosed,
-      },
     ],
     [
       t,
@@ -425,10 +427,11 @@ export function useValidateGameWizard({
   const handleRosterWarningGoBack = useCallback(() => {
     setShowRosterWarningDialog(false)
     // Navigate to the first invalid roster step
+    // Step order: scoresheet(0), home-roster(1), away-roster(2), scorer(3)
     if (!rosterValidation.home.isValid) {
-      goToStep(0) // Home roster
+      goToStep(1) // Home roster
     } else if (!rosterValidation.away.isValid) {
-      goToStep(1) // Away roster
+      goToStep(2) // Away roster
     }
   }, [rosterValidation.home.isValid, rosterValidation.away.isValid, goToStep])
 
@@ -470,6 +473,7 @@ export function useValidateGameWizard({
     validatedInfo,
     pendingScorer,
     scoresheetNotRequired,
+    referenceImageUrl,
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,

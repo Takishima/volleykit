@@ -155,9 +155,19 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     setOCRDismissedForAssignment(assignmentId)
   }, [assignmentId])
 
-  const handleOCRComplete = useCallback(() => {
-    setOCRDismissedForAssignment(assignmentId)
-  }, [assignmentId])
+  const handleOCRComplete = useCallback(
+    (capturedImageBlob?: Blob) => {
+      setOCRDismissedForAssignment(assignmentId)
+      // If OCR captured an image, feed it into the validation state as the scoresheet reference
+      if (capturedImageBlob) {
+        const file = new File([capturedImageBlob], 'scoresheet-ocr.jpg', {
+          type: capturedImageBlob.type || 'image/jpeg',
+        })
+        wizard.setScoresheet(file, false)
+      }
+    },
+    [assignmentId, wizard]
+  )
 
   const handleOCRClose = useCallback(() => {
     setOCRDismissedForAssignment(assignmentId)
@@ -181,6 +191,8 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     allPreviousRequiredStepsDone: wizard.allPreviousRequiredStepsDone,
     currentStepIsOptional: wizard.currentStep.isOptional ?? false,
   }
+
+  const validationReferenceMode = useSettingsStore((s) => s.validationReferenceMode)
 
   const loadingState = {
     isLoading: wizard.isLoadingGameDetails,
@@ -271,6 +283,8 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               loading={loadingState}
               validation={validationInfo}
               handlers={stepHandlers}
+              referenceImageUrl={wizard.referenceImageUrl}
+              referenceMode={validationReferenceMode}
             />
           </div>
         </WizardStepContainer>

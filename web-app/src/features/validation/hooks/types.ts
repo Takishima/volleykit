@@ -48,6 +48,8 @@ export interface ValidationState {
   awayRoster: RosterPanelState
   scorer: ScorerPanelState
   scoresheet: ScoresheetPanelState
+  /** Object URL for the scoresheet image, used as a reference photo during validation */
+  referenceImageUrl: string | null
 }
 
 /**
@@ -109,6 +111,8 @@ export interface UseValidationStateResult {
   setScorer: (scorer: ValidatedPersonSearchResult | null) => void
   /** Set the scoresheet file and upload status */
   setScoresheet: (file: File | null, uploaded: boolean) => void
+  /** The reference image URL for the scoresheet (Object URL) */
+  referenceImageUrl: string | null
   /** Reset all state to initial values */
   reset: () => void
   /** Save current state to API (returns promise for async handling) */
@@ -146,5 +150,6 @@ export function createInitialState(): ValidationState {
     },
     scorer: { selected: null },
     scoresheet: { file: null, uploaded: false },
+    referenceImageUrl: null,
   }
 }

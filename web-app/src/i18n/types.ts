@@ -370,6 +370,14 @@ export interface Translations {
       externalServices: string
       transportApiNote: string
     }
+    validation: {
+      title: string
+      description: string
+      quickCompare: string
+      splitView: string
+      quickCompareDescription: string
+      splitViewDescription: string
+    }
     accessibility: {
       title: string
       description: string
@@ -566,6 +574,12 @@ export interface Translations {
       noScoresheet: string
       notRequired: string
       notRequiredDescription: string
+    }
+    referenceImage: {
+      showScoresheet: string
+      hideScoresheet: string
+      backToForm: string
+      alt: string
     }
     state: {
       unsavedChangesTitle: string
