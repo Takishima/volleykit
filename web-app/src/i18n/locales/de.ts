@@ -506,7 +506,8 @@ const de: Translations = {
     },
     validation: {
       title: 'Validierung',
-      description: 'Wählen Sie, wie das Spielberichtsfoto während der Spielvalidierung angezeigt wird.',
+      description:
+        'Wählen Sie, wie das Spielberichtsfoto während der Spielvalidierung angezeigt wird.',
       quickCompare: 'Schnellvergleich',
       splitView: 'Geteilte Ansicht',
       quickCompareDescription:

@@ -54,33 +54,27 @@ export function ReferenceImageViewer({
     setPan({ x: 0, y: 0 })
   }
 
-  const clampPan = useCallback(
-    (x: number, y: number, currentZoom: number) => {
-      if (currentZoom <= MIN_ZOOM) return { x: 0, y: 0 }
-      const container = containerRef.current
-      if (!container) return { x, y }
-      const maxPanX = (container.clientWidth * (currentZoom - 1)) / 2
-      const maxPanY = (container.clientHeight * (currentZoom - 1)) / 2
-      return {
-        x: Math.max(-maxPanX, Math.min(maxPanX, x)),
-        y: Math.max(-maxPanY, Math.min(maxPanY, y)),
-      }
-    },
-    []
-  )
+  const clampPan = useCallback((x: number, y: number, currentZoom: number) => {
+    if (currentZoom <= MIN_ZOOM) return { x: 0, y: 0 }
+    const container = containerRef.current
+    if (!container) return { x, y }
+    const maxPanX = (container.clientWidth * (currentZoom - 1)) / 2
+    const maxPanY = (container.clientHeight * (currentZoom - 1)) / 2
+    return {
+      x: Math.max(-maxPanX, Math.min(maxPanX, x)),
+      y: Math.max(-maxPanY, Math.min(maxPanY, y)),
+    }
+  }, [])
 
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      e.preventDefault()
-      const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
-      setZoom((prev) => {
-        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta))
-        if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
-        return newZoom
-      })
-    },
-    []
-  )
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
+    setZoom((prev) => {
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta))
+      if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
+      return newZoom
+    })
+  }, [])
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
@@ -138,26 +132,20 @@ export function ReferenceImageViewer({
     [zoom]
   )
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (e.touches.length === 2 && initialPinchDistanceRef.current !== null) {
-        e.preventDefault()
-        const t0 = e.touches[0]!
-        const t1 = e.touches[1]!
-        const dx = t0.clientX - t1.clientX
-        const dy = t0.clientY - t1.clientY
-        const distance = Math.hypot(dx, dy)
-        const scale = distance / initialPinchDistanceRef.current
-        const newZoom = Math.max(
-          MIN_ZOOM,
-          Math.min(MAX_ZOOM, initialPinchZoomRef.current * scale)
-        )
-        setZoom(newZoom)
-        if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
-      }
-    },
-    []
-  )
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDistanceRef.current !== null) {
+      e.preventDefault()
+      const t0 = e.touches[0]!
+      const t1 = e.touches[1]!
+      const dx = t0.clientX - t1.clientX
+      const dy = t0.clientY - t1.clientY
+      const distance = Math.hypot(dx, dy)
+      const scale = distance / initialPinchDistanceRef.current
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, initialPinchZoomRef.current * scale))
+      setZoom(newZoom)
+      if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
+    }
+  }, [])
 
   const handleTouchEnd = useCallback(() => {
     initialPinchDistanceRef.current = null

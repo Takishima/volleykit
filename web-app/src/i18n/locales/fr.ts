@@ -505,13 +505,14 @@ const fr: Translations = {
     },
     validation: {
       title: 'Validation',
-      description: "Choisissez comment la photo de référence de la feuille de match est affichée lors de la validation.",
+      description:
+        'Choisissez comment la photo de référence de la feuille de match est affichée lors de la validation.',
       quickCompare: 'Comparaison rapide',
       splitView: 'Vue partagée',
       quickCompareDescription:
-        "Appuyez sur un bouton pour basculer entre le formulaire et une photo zoomable de la feuille de match.",
+        'Appuyez sur un bouton pour basculer entre le formulaire et une photo zoomable de la feuille de match.',
       splitViewDescription:
-        "Affiche la photo de la feuille de match au-dessus du formulaire avec un séparateur ajustable.",
+        'Affiche la photo de la feuille de match au-dessus du formulaire avec un séparateur ajustable.',
     },
     accessibility: {
       title: 'Accessibilité',

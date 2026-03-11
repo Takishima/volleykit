@@ -501,7 +501,8 @@ const it: Translations = {
     },
     validation: {
       title: 'Validazione',
-      description: 'Scegli come viene visualizzata la foto di riferimento del referto durante la validazione della partita.',
+      description:
+        'Scegli come viene visualizzata la foto di riferimento del referto durante la validazione della partita.',
       quickCompare: 'Confronto rapido',
       splitView: 'Vista divisa',
       quickCompareDescription:

@@ -207,9 +207,7 @@ export function StepRenderer({
   // Split-view mode: show image on top and form on bottom
   if (canShowReference && referenceMode === 'split-view') {
     return (
-      <SplitViewContainer referenceImageUrl={referenceImageUrl}>
-        {stepContent}
-      </SplitViewContainer>
+      <SplitViewContainer referenceImageUrl={referenceImageUrl}>{stepContent}</SplitViewContainer>
     )
   }
 

@@ -496,8 +496,7 @@ const en: Translations = {
       splitView: 'Split View',
       quickCompareDescription:
         'Tap a button to flip between the form and a full-screen zoomable scoresheet photo.',
-      splitViewDescription:
-        'Show the scoresheet photo above the form with an adjustable divider.',
+      splitViewDescription: 'Show the scoresheet photo above the form with an adjustable divider.',
     },
     accessibility: {
       title: 'Accessibility',
