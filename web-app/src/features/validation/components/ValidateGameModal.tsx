@@ -5,7 +5,7 @@ import { getTeamNames } from '@volleykit/shared/utils'
 import type { Assignment, IndoorPlayerNomination, NominationList } from '@/api/client'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
 import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
-import { Eye, EyeOff } from '@/shared/components/icons'
+import { Eye, EyeOff, FileText } from '@/shared/components/icons'
 import { Modal } from '@/shared/components/Modal'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { WizardStepContainer } from '@/shared/components/WizardStepContainer'
@@ -385,17 +385,27 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               <button
                 type="button"
                 onClick={handleToggleReference}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
+                className="flex items-center gap-1 p-2 text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg border border-border-default dark:border-border-default-dark transition-colors"
                 aria-pressed={showingReference}
+                aria-label={
+                  showingReference
+                    ? t('validation.referenceImage.hideScoresheet')
+                    : t('validation.referenceImage.showScoresheet')
+                }
+                title={
+                  showingReference
+                    ? t('validation.referenceImage.hideScoresheet')
+                    : t('validation.referenceImage.showScoresheet')
+                }
               >
                 {showingReference ? (
-                  <EyeOff className="w-4 h-4" aria-hidden="true" />
+                  <EyeOff className="w-5 h-5" aria-hidden="true" />
                 ) : (
-                  <Eye className="w-4 h-4" aria-hidden="true" />
+                  <>
+                    <FileText className="w-5 h-5" aria-hidden="true" />
+                    <Eye className="w-4 h-4" aria-hidden="true" />
+                  </>
                 )}
-                {showingReference
-                  ? t('validation.referenceImage.hideScoresheet')
-                  : t('validation.referenceImage.showScoresheet')}
               </button>
             </div>
           )}
