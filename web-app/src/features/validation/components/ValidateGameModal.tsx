@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useMemo } from 'react'
+import { memo, useState, useCallback, useMemo, useRef } from 'react'
 
 import { getTeamNames } from '@volleykit/shared/utils'
 
@@ -195,6 +195,8 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
 
   const [showingReference, setShowingReference] = useState(false)
   const [prevStepId, setPrevStepId] = useState(wizard.currentStepId)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const savedScrollTopRef = useRef(0)
 
   // Reset reference view when navigating between steps
   if (prevStepId !== wizard.currentStepId) {
@@ -206,7 +208,20 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
   const canShowReference = !!wizard.referenceImageUrl && isNonScoresheetStep
 
   const handleToggleReference = useCallback(() => {
-    setShowingReference((prev) => !prev)
+    setShowingReference((prev) => {
+      if (!prev) {
+        // About to show reference — save current scroll position
+        savedScrollTopRef.current = scrollContainerRef.current?.scrollTop ?? 0
+      } else {
+        // About to hide reference — restore scroll position after render
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = savedScrollTopRef.current
+          }
+        })
+      }
+      return !prev
+    })
   }, [])
 
   const loadingState = {
@@ -289,9 +304,13 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
           totalSteps={wizard.totalSteps}
           onSwipeNext={wizard.goNext}
           onSwipePrevious={wizard.goBack}
-          swipeEnabled={wizard.isSwipeEnabled && !showingReference}
+          swipeEnabled={false}
         >
-          <div className="max-h-80 overflow-y-auto">
+          <div
+            ref={scrollContainerRef}
+            className={`max-h-80 ${showingReference ? 'overflow-hidden' : 'overflow-y-auto'}`}
+            style={{ overscrollBehavior: 'none' }}
+          >
             <StepRenderer
               currentStepId={wizard.currentStepId}
               assignment={assignment}

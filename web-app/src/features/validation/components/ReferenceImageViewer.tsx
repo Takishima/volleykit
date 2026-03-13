@@ -39,12 +39,19 @@ export function ReferenceImageViewer({
   const containerRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(MIN_ZOOM)
   const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isPanning, setIsPanning] = useState(false)
+  /** Whether any gesture (pan or pinch) is actively in progress — disables CSS transitions */
+  const [isInteracting, setIsInteracting] = useState(false)
   const lastTapRef = useRef(0)
   const isPanningRef = useRef(false)
+  const panPointerIdRef = useRef<number | null>(null)
   const lastPanPointRef = useRef({ x: 0, y: 0 })
   const initialPinchDistanceRef = useRef<number | null>(null)
   const initialPinchZoomRef = useRef(MIN_ZOOM)
+  const initialPinchPanRef = useRef({ x: 0, y: 0 })
+  const panRef = useRef(pan)
+  useEffect(() => {
+    panRef.current = pan
+  }, [pan])
   const [prevImageUrl, setPrevImageUrl] = useState(imageUrl)
 
   // Reset zoom/pan when image changes (computed during render, per React docs)
@@ -85,6 +92,9 @@ export function ReferenceImageViewer({
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      // Only track a single pointer for panning (ignore additional fingers)
+      if (panPointerIdRef.current !== null) return
+
       // Double-tap detection
       const now = Date.now()
       if (now - lastTapRef.current < DOUBLE_TAP_THRESHOLD_MS) {
@@ -101,8 +111,11 @@ export function ReferenceImageViewer({
       lastTapRef.current = now
 
       if (zoom > MIN_ZOOM) {
+        // Capture this pointer so moves/ups are tracked even outside the element
+        ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+        panPointerIdRef.current = e.pointerId
         isPanningRef.current = true
-        setIsPanning(true)
+        setIsInteracting(true)
         lastPanPointRef.current = { x: e.clientX, y: e.clientY }
       }
     },
@@ -111,7 +124,8 @@ export function ReferenceImageViewer({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!isPanningRef.current) return
+      // Only respond to the pointer we're tracking
+      if (!isPanningRef.current || e.pointerId !== panPointerIdRef.current) return
       const dx = e.clientX - lastPanPointRef.current.x
       const dy = e.clientY - lastPanPointRef.current.y
       lastPanPointRef.current = { x: e.clientX, y: e.clientY }
@@ -120,49 +134,76 @@ export function ReferenceImageViewer({
     [zoom, clampPan]
   )
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerId !== panPointerIdRef.current) return
     isPanningRef.current = false
-    setIsPanning(false)
+    panPointerIdRef.current = null
+    setIsInteracting(false)
   }, [])
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (e.touches.length === 2) {
+        // Cancel any in-progress single-finger pan so it doesn't interfere
+        isPanningRef.current = false
+        panPointerIdRef.current = null
+
         const t0 = e.touches[0]!
         const t1 = e.touches[1]!
         const dx = t0.clientX - t1.clientX
         const dy = t0.clientY - t1.clientY
         initialPinchDistanceRef.current = Math.hypot(dx, dy)
         initialPinchZoomRef.current = zoom
+        initialPinchPanRef.current = { x: panRef.current.x, y: panRef.current.y }
+        setIsInteracting(true)
       }
     },
     [zoom]
   )
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 2 && initialPinchDistanceRef.current !== null) {
-      e.preventDefault()
-      const t0 = e.touches[0]!
-      const t1 = e.touches[1]!
-      const dx = t0.clientX - t1.clientX
-      const dy = t0.clientY - t1.clientY
-      const distance = Math.hypot(dx, dy)
-      const scale = distance / initialPinchDistanceRef.current
-      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, initialPinchZoomRef.current * scale))
-      setZoom(newZoom)
-      if (newZoom <= MIN_ZOOM) setPan({ x: 0, y: 0 })
-    }
-  }, [])
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (e.touches.length === 2 && initialPinchDistanceRef.current !== null) {
+        e.preventDefault()
+        const t0 = e.touches[0]!
+        const t1 = e.touches[1]!
+        const dx = t0.clientX - t1.clientX
+        const dy = t0.clientY - t1.clientY
+        const distance = Math.hypot(dx, dy)
+        const scale = distance / initialPinchDistanceRef.current
+        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, initialPinchZoomRef.current * scale))
+        setZoom(newZoom)
+        if (newZoom <= MIN_ZOOM) {
+          setPan({ x: 0, y: 0 })
+        } else {
+          // Scale pan proportionally so the image stays centered during pinch
+          const panScale = newZoom / initialPinchZoomRef.current
+          setPan(
+            clampPan(
+              initialPinchPanRef.current.x * panScale,
+              initialPinchPanRef.current.y * panScale,
+              newZoom
+            )
+          )
+        }
+      }
+    },
+    [clampPan]
+  )
 
   const handleTouchEnd = useCallback(() => {
     initialPinchDistanceRef.current = null
+    // Only clear isInteracting if no single-finger pan is still active
+    if (!isPanningRef.current) {
+      setIsInteracting(false)
+    }
   }, [])
 
   return (
     <div
       ref={containerRef}
       className={`relative overflow-hidden bg-surface-subtle dark:bg-surface-card-dark select-none ${className}`}
-      style={{ touchAction: 'none' }}
+      style={{ touchAction: 'none', overscrollBehavior: 'none' }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -178,7 +219,7 @@ export function ReferenceImageViewer({
         style={{
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
           transformOrigin: 'center center',
-          transition: isPanning ? 'none' : 'transform 0.15s ease-out',
+          transition: isInteracting ? 'none' : 'transform 0.15s ease-out',
         }}
         draggable={false}
       />
