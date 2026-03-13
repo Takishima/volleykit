@@ -70,6 +70,7 @@ export interface UseValidateGameWizardResult {
   gameDetailsError: Error | null
   homeNominationList: NominationList | null
   awayNominationList: NominationList | null
+  existingScoresheetUrl: string | null
 
   // UI state
   showUnsavedDialog: boolean
@@ -148,6 +149,7 @@ export function useValidateGameWizard({
     setAwayRosterModifications,
     setScorer,
     setScoresheet,
+    setReferenceImageUrl,
     referenceImageUrl,
     reset,
     saveProgress,
@@ -158,6 +160,7 @@ export function useValidateGameWizard({
     gameDetailsError,
     homeNominationList,
     awayNominationList,
+    existingScoresheetUrl,
   } = useValidationState(gameId)
 
   // The assignment list data may be fresher than the cached game details query.
@@ -305,6 +308,22 @@ export function useValidateGameWizard({
       resetToStart()
     }
   }, [isOpen, reset, resetToStart, gameId, queryClient])
+
+  // Set reference image from existing scoresheet when game details load
+  // This allows the quick-compare toggle to work with previously uploaded scoresheets
+  useEffect(() => {
+    if (isOpen && existingScoresheetUrl && !referenceImageUrl) {
+      // Only use as reference if it's an image (not PDF)
+      try {
+        const pathname = new URL(existingScoresheetUrl).pathname.toLowerCase()
+        if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg') || pathname.endsWith('.png')) {
+          setReferenceImageUrl(existingScoresheetUrl)
+        }
+      } catch {
+        // Invalid URL, skip
+      }
+    }
+  }, [isOpen, existingScoresheetUrl, referenceImageUrl, setReferenceImageUrl])
 
   // Computed values
   const canMarkCurrentStepDone = useMemo(() => {
@@ -484,6 +503,7 @@ export function useValidateGameWizard({
     gameDetailsError,
     homeNominationList,
     awayNominationList,
+    existingScoresheetUrl,
 
     // UI state
     showUnsavedDialog,

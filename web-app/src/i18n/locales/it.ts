@@ -715,6 +715,7 @@ const it: Translations = {
       demoModeNote: 'Modalità demo: i caricamenti sono simulati',
       previewAlt: 'Anteprima referto',
       scoresheetUploaded: 'Referto caricato',
+      existingScoresheet: 'Referto caricato in precedenza',
       noScoresheet: 'Nessun referto caricato',
       notRequired: 'Referto non richiesto',
       notRequiredDescription: 'Questa competizione non richiede il caricamento del referto.',

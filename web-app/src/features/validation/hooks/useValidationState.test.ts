@@ -552,6 +552,156 @@ describe('useValidationState', () => {
     })
   })
 
+  describe('existing scoresheet', () => {
+    it('exposes existing scoresheet URL when game has a file', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        scoresheet: {
+          ...mockGameDetails.scoresheet,
+          file: {
+            __identity: 'file-resource-1',
+            publicResourceUri:
+              'https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg',
+          },
+          hasFile: true,
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      expect(result.current.existingScoresheetUrl).toBe(
+        'https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg'
+      )
+      expect(result.current.existingFileResourceId).toBe('file-resource-1')
+    })
+
+    it('returns null for existing scoresheet when no file', async () => {
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      expect(result.current.existingScoresheetUrl).toBeNull()
+      expect(result.current.existingFileResourceId).toBeNull()
+    })
+
+    it('reuses existing file resource ID during save (skips re-upload)', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        scoresheet: {
+          ...mockGameDetails.scoresheet,
+          file: {
+            __identity: 'existing-file-resource',
+            publicResourceUri:
+              'https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.pdf',
+          },
+          hasFile: true,
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      // Select a scorer but don't select a new file
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      await act(async () => {
+        await result.current.saveProgress()
+      })
+
+      // Should NOT have uploaded a new file
+      expect(mockUploadResource).not.toHaveBeenCalled()
+
+      // Should have saved with the existing file resource ID
+      expect(mockUpdateScoresheet).toHaveBeenCalledWith(
+        'scoresheet-1',
+        'game-123',
+        'scorer-1',
+        false,
+        'existing-file-resource'
+      )
+    })
+
+    it('sets reference image URL directly via setReferenceImageUrl', () => {
+      const { result } = renderHook(() => useValidationState(), {
+        wrapper: createWrapper(),
+      })
+
+      act(() => {
+        result.current.setReferenceImageUrl(
+          'https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg'
+        )
+      })
+
+      expect(result.current.referenceImageUrl).toBe(
+        'https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg'
+      )
+    })
+
+    it('does not revoke non-blob reference image URLs on reset', () => {
+      const mockRevokeObjectURL = vi.fn()
+      globalThis.URL.revokeObjectURL = mockRevokeObjectURL
+
+      const { result } = renderHook(() => useValidationState(), {
+        wrapper: createWrapper(),
+      })
+
+      act(() => {
+        result.current.setReferenceImageUrl('https://example.com/scoresheet.jpg')
+      })
+
+      mockRevokeObjectURL.mockClear()
+
+      act(() => {
+        result.current.reset()
+      })
+
+      // Should NOT revoke a non-blob URL
+      expect(mockRevokeObjectURL).not.toHaveBeenCalled()
+    })
+
+    it('revokes blob reference image URLs on reset', () => {
+      const mockRevokeObjectURL = vi.fn()
+      globalThis.URL.createObjectURL = vi.fn(() => 'blob:http://localhost/mock')
+      globalThis.URL.revokeObjectURL = mockRevokeObjectURL
+
+      const { result } = renderHook(() => useValidationState(), {
+        wrapper: createWrapper(),
+      })
+
+      const file = new File(['content'], 'scoresheet.jpg', { type: 'image/jpeg' })
+
+      act(() => {
+        result.current.setScoresheet(file, false)
+      })
+
+      mockRevokeObjectURL.mockClear()
+
+      act(() => {
+        result.current.reset()
+      })
+
+      // Should revoke blob URL
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:http://localhost/mock')
+    })
+  })
+
   describe('finalizeValidation', () => {
     it('uploads scoresheet file if provided', async () => {
       mockUploadResource.mockResolvedValue([{ __identity: 'resource-1' }])

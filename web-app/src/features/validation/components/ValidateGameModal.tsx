@@ -238,6 +238,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     state: wizard.validationState,
     homeNominationList: wizard.homeNominationList,
     awayNominationList: wizard.awayNominationList,
+    existingScoresheetUrl: wizard.existingScoresheetUrl,
   }
 
   const stepHandlers = {

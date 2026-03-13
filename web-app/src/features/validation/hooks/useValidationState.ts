@@ -155,6 +155,26 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     [gameDetailsQuery.data?.nominationListOfTeamAway]
   )
 
+  // Existing scoresheet file info (from a previous save/upload)
+  const existingScoresheetUrl = useMemo(
+    () => gameDetailsQuery.data?.scoresheet?.file?.publicResourceUri ?? null,
+    [gameDetailsQuery.data]
+  )
+
+  const existingFileResourceId = useMemo(
+    () => gameDetailsQuery.data?.scoresheet?.file?.__identity ?? null,
+    [gameDetailsQuery.data]
+  )
+
+  // Pre-fill the uploaded file resource ID ref when an existing scoresheet file exists.
+  // This ensures that save/finalize operations reuse the existing file reference
+  // instead of requiring a new upload when the user hasn't changed the scoresheet.
+  useEffect(() => {
+    if (existingFileResourceId && !uploadedFileResourceIdRef.current) {
+      uploadedFileResourceIdRef.current = existingFileResourceId
+    }
+  }, [existingFileResourceId])
+
   const isDirty = useMemo(() => {
     return (
       hasRosterModifications(state.homeRoster.playerModifications) ||
@@ -198,8 +218,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
   const setScoresheet = useCallback((file: File | null, uploaded: boolean) => {
     setState((prev) => {
-      // Revoke previous reference image URL
-      if (prev.referenceImageUrl) {
+      // Revoke previous reference image URL only if it's an object URL (blob:)
+      if (prev.referenceImageUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(prev.referenceImageUrl)
       }
       // Create new reference image URL for image files
@@ -209,9 +229,19 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     })
   }, [])
 
+  const setReferenceImageUrl = useCallback((url: string | null) => {
+    setState((prev) => {
+      // Revoke previous reference image URL only if it's an object URL (blob:)
+      if (prev.referenceImageUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(prev.referenceImageUrl)
+      }
+      return { ...prev, referenceImageUrl: url }
+    })
+  }, [])
+
   const reset = useCallback(() => {
     setState((prev) => {
-      if (prev.referenceImageUrl) {
+      if (prev.referenceImageUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(prev.referenceImageUrl)
       }
       return createInitialState()
@@ -225,10 +255,10 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     referenceImageUrlRef.current = state.referenceImageUrl
   }, [state.referenceImageUrl])
 
-  // Cleanup reference image URL on unmount
+  // Cleanup reference image URL on unmount (only revoke blob URLs)
   useEffect(() => {
     return () => {
-      if (referenceImageUrlRef.current) {
+      if (referenceImageUrlRef.current?.startsWith('blob:')) {
         URL.revokeObjectURL(referenceImageUrlRef.current)
       }
     }
@@ -395,6 +425,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     setAwayRosterModifications,
     setScorer,
     setScoresheet,
+    setReferenceImageUrl,
     referenceImageUrl: state.referenceImageUrl,
     reset,
     saveProgress,
@@ -405,5 +436,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     gameDetailsError: gameDetailsQuery.error,
     homeNominationList,
     awayNominationList,
+    existingScoresheetUrl,
+    existingFileResourceId,
   }
 }

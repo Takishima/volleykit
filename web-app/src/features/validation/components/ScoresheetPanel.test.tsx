@@ -781,6 +781,107 @@ describe('ScoresheetPanel - camera input', () => {
   })
 })
 
+describe('ScoresheetPanel - existing scoresheet display', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+    globalThis.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+    globalThis.URL.revokeObjectURL = vi.fn()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('shows existing image scoresheet with preview', () => {
+    render(
+      <ScoresheetPanel existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg" />
+    )
+
+    const img = screen.getByRole('img', { name: /preview/i })
+    expect(img).toHaveAttribute(
+      'src',
+      'https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg'
+    )
+    expect(screen.getByText('Previously uploaded scoresheet')).toBeInTheDocument()
+  })
+
+  it('shows existing PDF scoresheet with PDF indicator', () => {
+    render(
+      <ScoresheetPanel existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.pdf" />
+    )
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    expect(screen.getByText('PDF')).toBeInTheDocument()
+    expect(screen.getByText('Previously uploaded scoresheet')).toBeInTheDocument()
+  })
+
+  it('shows replace button for existing scoresheet', () => {
+    render(
+      <ScoresheetPanel existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg" />
+    )
+
+    expect(screen.getByRole('button', { name: /replace/i })).toBeInTheDocument()
+  })
+
+  it('shows file upload UI when replace is clicked on existing scoresheet', () => {
+    render(
+      <ScoresheetPanel existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg" />
+    )
+
+    // Existing scoresheet is shown
+    expect(screen.getByText('Previously uploaded scoresheet')).toBeInTheDocument()
+
+    // Select a new file via the file input (simulating what happens after replace click)
+    const fileInput = getFileInput()
+    const newFile = createValidFile('new-scoresheet.jpg')
+    fireEvent.change(fileInput, { target: { files: [newFile] } })
+
+    // Now the local file should be shown instead of the existing one
+    expect(screen.queryByText('Previously uploaded scoresheet')).not.toBeInTheDocument()
+    expect(screen.getByText('new-scoresheet.jpg')).toBeInTheDocument()
+  })
+
+  it('does not show existing scoresheet when null', () => {
+    render(<ScoresheetPanel existingFileUrl={null} />)
+
+    expect(screen.queryByText('Previously uploaded scoresheet')).not.toBeInTheDocument()
+    // Should show the upload UI instead
+    expect(screen.getByText('Upload Scoresheet')).toBeInTheDocument()
+  })
+
+  it('does not show existing scoresheet in read-only mode', () => {
+    render(
+      <ScoresheetPanel
+        readOnly
+        hasScoresheet
+        existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg"
+      />
+    )
+
+    // Read-only mode should show the simple status display, not the existing file preview
+    expect(screen.queryByText('Previously uploaded scoresheet')).not.toBeInTheDocument()
+    expect(screen.getByText('Scoresheet uploaded')).toBeInTheDocument()
+  })
+
+  it('handles existing PNG scoresheet', () => {
+    render(
+      <ScoresheetPanel existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.png" />
+    )
+
+    const img = screen.getByRole('img', { name: /preview/i })
+    expect(img).toBeInTheDocument()
+  })
+
+  it('shows existing scoresheet status as a status element', () => {
+    render(
+      <ScoresheetPanel existingFileUrl="https://volleymanager.volleyball.ch/_Resources/Persistent/abc123/scoresheet.jpg" />
+    )
+
+    expect(screen.getByRole('status')).toBeInTheDocument()
+  })
+})
+
 describe('ScoresheetPanel - same file re-selection', () => {
   beforeEach(() => {
     vi.clearAllMocks()
