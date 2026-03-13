@@ -289,13 +289,16 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       })
 
       // Upload scoresheet file if present (cache the resource ID to avoid re-upload on finalize)
-      // Skip upload when scoresheet is not required for this group
-      let fileResourceId = uploadedFileResourceIdRef.current
-      if (!fileResourceId && state.scoresheet.file && !scoresheetNotRequired) {
-        const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
-        fileResourceId = uploadResult[0]?.__identity
-        uploadedFileResourceIdRef.current = fileResourceId
-        logger.debug('[VS] PDF uploaded:', fileResourceId)
+      // Skip upload and file reference entirely when scoresheet is not required for this group
+      let fileResourceId: string | undefined
+      if (!scoresheetNotRequired) {
+        fileResourceId = uploadedFileResourceIdRef.current
+        if (!fileResourceId && state.scoresheet.file) {
+          const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
+          fileResourceId = uploadResult[0]?.__identity
+          uploadedFileResourceIdRef.current = fileResourceId
+          logger.debug('[VS] PDF uploaded:', fileResourceId)
+        }
       }
 
       await saveRosterModifications(
@@ -349,13 +352,16 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
       }
 
       // Reuse cached file resource ID from saveProgress if available
-      // Skip upload when scoresheet is not required for this group
-      let fileResourceId = uploadedFileResourceIdRef.current
-      if (!fileResourceId && state.scoresheet.file && !scoresheetNotRequired) {
-        const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
-        fileResourceId = uploadResult[0]?.__identity
-        uploadedFileResourceIdRef.current = fileResourceId
-        logger.debug('[VS] PDF uploaded:', fileResourceId)
+      // Skip upload and file reference entirely when scoresheet is not required for this group
+      let fileResourceId: string | undefined
+      if (!scoresheetNotRequired) {
+        fileResourceId = uploadedFileResourceIdRef.current
+        if (!fileResourceId && state.scoresheet.file) {
+          const uploadResult = await apiClient.uploadResource(state.scoresheet.file)
+          fileResourceId = uploadResult[0]?.__identity
+          uploadedFileResourceIdRef.current = fileResourceId
+          logger.debug('[VS] PDF uploaded:', fileResourceId)
+        }
       }
 
       await finalizeRoster(

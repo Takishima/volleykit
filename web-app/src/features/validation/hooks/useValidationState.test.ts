@@ -702,6 +702,113 @@ describe('useValidationState', () => {
     })
   })
 
+  describe('scoresheetNotRequired', () => {
+    it('does not upload file during save when scoresheet is not required', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        group: { __identity: 'group-1', hasNoScoresheet: true },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      const file = new File(['content'], 'scoresheet.pdf', { type: 'application/pdf' })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+        result.current.setScoresheet(file, true)
+      })
+
+      await act(async () => {
+        await result.current.saveProgress()
+      })
+
+      expect(mockUploadResource).not.toHaveBeenCalled()
+      // Scorer should still be saved, but without a file resource ID
+      expect(mockUpdateScoresheet).toHaveBeenCalledWith(
+        'scoresheet-1',
+        'game-123',
+        'scorer-1',
+        false,
+        undefined
+      )
+    })
+
+    it('does not pass existing file resource ID during save when scoresheet is not required', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        group: { __identity: 'group-1', hasNoScoresheet: true },
+        scoresheet: {
+          ...mockGameDetails.scoresheet,
+          file: {
+            __identity: 'existing-file-resource',
+            publicResourceUri: 'https://example.com/scoresheet.pdf',
+          },
+          hasFile: true,
+        },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      await act(async () => {
+        await result.current.saveProgress()
+      })
+
+      // Even though an existing file resource ID exists, it should not be passed
+      expect(mockUploadResource).not.toHaveBeenCalled()
+      expect(mockUpdateScoresheet).toHaveBeenCalledWith(
+        'scoresheet-1',
+        'game-123',
+        'scorer-1',
+        false,
+        undefined
+      )
+    })
+
+    it('does not upload file during finalize when scoresheet is not required', async () => {
+      mockGetGameWithScoresheet.mockResolvedValue({
+        ...mockGameDetails,
+        group: { __identity: 'group-1', hasNoScoresheet: true },
+      })
+
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      const file = new File(['content'], 'scoresheet.pdf', { type: 'application/pdf' })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+        result.current.setScoresheet(file, true)
+      })
+
+      await act(async () => {
+        await result.current.finalizeValidation()
+      })
+
+      expect(mockUploadResource).not.toHaveBeenCalled()
+    })
+  })
+
   describe('finalizeValidation', () => {
     it('uploads scoresheet file if provided', async () => {
       mockUploadResource.mockResolvedValue([{ __identity: 'resource-1' }])
