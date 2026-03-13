@@ -169,11 +169,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   // Pre-fill the uploaded file resource ID ref when an existing scoresheet file exists.
   // This ensures that save/finalize operations reuse the existing file reference
   // instead of requiring a new upload when the user hasn't changed the scoresheet.
+  // Skip when scoresheet is not required — file references should never be sent for those games.
   useEffect(() => {
-    if (existingFileResourceId && !uploadedFileResourceIdRef.current) {
+    if (existingFileResourceId && !uploadedFileResourceIdRef.current && !scoresheetNotRequired) {
       uploadedFileResourceIdRef.current = existingFileResourceId
     }
-  }, [existingFileResourceId])
+  }, [existingFileResourceId, scoresheetNotRequired])
 
   const isDirty = useMemo(() => {
     return (
