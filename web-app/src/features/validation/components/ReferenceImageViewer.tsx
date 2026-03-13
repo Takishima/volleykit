@@ -48,6 +48,10 @@ export function ReferenceImageViewer({
   const initialPinchDistanceRef = useRef<number | null>(null)
   const initialPinchZoomRef = useRef(MIN_ZOOM)
   const initialPinchPanRef = useRef({ x: 0, y: 0 })
+  const panRef = useRef(pan)
+  useEffect(() => {
+    panRef.current = pan
+  }, [pan])
   const [prevImageUrl, setPrevImageUrl] = useState(imageUrl)
 
   // Reset zoom/pan when image changes (computed during render, per React docs)
@@ -150,11 +154,11 @@ export function ReferenceImageViewer({
         const dy = t0.clientY - t1.clientY
         initialPinchDistanceRef.current = Math.hypot(dx, dy)
         initialPinchZoomRef.current = zoom
-        initialPinchPanRef.current = { x: pan.x, y: pan.y }
+        initialPinchPanRef.current = { x: panRef.current.x, y: panRef.current.y }
         setIsInteracting(true)
       }
     },
-    [zoom, pan]
+    [zoom]
   )
 
   const handleTouchMove = useCallback(
@@ -189,7 +193,10 @@ export function ReferenceImageViewer({
 
   const handleTouchEnd = useCallback(() => {
     initialPinchDistanceRef.current = null
-    setIsInteracting(false)
+    // Only clear isInteracting if no single-finger pan is still active
+    if (!isPanningRef.current) {
+      setIsInteracting(false)
+    }
   }, [])
 
   return (
