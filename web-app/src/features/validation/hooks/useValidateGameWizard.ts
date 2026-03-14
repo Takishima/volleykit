@@ -64,6 +64,7 @@ export interface UseValidateGameWizardResult {
   setHomeRosterModifications: ReturnType<typeof useValidationState>['setHomeRosterModifications']
   setAwayRosterModifications: ReturnType<typeof useValidationState>['setAwayRosterModifications']
   setScorer: ReturnType<typeof useValidationState>['setScorer']
+  setScorerNotFound: ReturnType<typeof useValidationState>['setScorerNotFound']
   setScoresheet: ReturnType<typeof useValidationState>['setScoresheet']
   isSaving: boolean
   isFinalizing: boolean
@@ -150,6 +151,7 @@ export function useValidateGameWizard({
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
+    setScorerNotFound,
     setScoresheet,
     setReferenceImageUrl,
     referenceImageUrl,
@@ -353,13 +355,16 @@ export function useValidateGameWizard({
   }, [onClose, isValidated])
 
   // Shared finalization logic used by both handleFinish and handleRosterWarningProceed
+  // When scorer is marked as "not found", we force save-only mode (like safe validation)
+  // to prevent finalizing without a scorer on volleymanager.
+  const scorerNotFound = validationState.scorer.notFound
   const performFinalization = useCallback(async () => {
     isFinalizingRef.current = true
     setSaveError(null)
 
     try {
-      if (useSafeValidation) {
-        // Safe validation mode: save only, don't finalize
+      if (useSafeValidation || scorerNotFound) {
+        // Safe validation mode (or scorer not found): save only, don't finalize
         await saveProgress()
         setShowSafeValidationComplete(true)
       } else {
@@ -377,7 +382,7 @@ export function useValidateGameWizard({
     } finally {
       isFinalizingRef.current = false
     }
-  }, [useSafeValidation, saveProgress, finalizeValidation, t, onClose])
+  }, [useSafeValidation, scorerNotFound, saveProgress, finalizeValidation, t, onClose])
 
   const handleFinish = useCallback(async () => {
     if (isFinalizingRef.current) return
@@ -493,6 +498,7 @@ export function useValidateGameWizard({
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
+    setScorerNotFound,
     setScoresheet,
     isSaving,
     isFinalizing,

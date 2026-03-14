@@ -240,6 +240,75 @@ describe('useValidationState', () => {
 
       expect(result.current.isDirty).toBe(true)
     })
+
+    it('marks scorer as not found and completes the step', () => {
+      const { result } = renderHook(() => useValidationState(), {
+        wrapper: createWrapper(),
+      })
+
+      act(() => {
+        result.current.setScorerNotFound(true)
+      })
+
+      expect(result.current.state.scorer.notFound).toBe(true)
+      expect(result.current.state.scorer.selected).toBeNull()
+      expect(result.current.completionStatus.scorer).toBe(true)
+    })
+
+    it('clears selected scorer when marking as not found', () => {
+      const { result } = renderHook(() => useValidationState(), {
+        wrapper: createWrapper(),
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      act(() => {
+        result.current.setScorerNotFound(true)
+      })
+
+      expect(result.current.state.scorer.selected).toBeNull()
+      expect(result.current.state.scorer.notFound).toBe(true)
+    })
+
+    it('clears notFound when selecting a scorer', () => {
+      const { result } = renderHook(() => useValidationState(), {
+        wrapper: createWrapper(),
+      })
+
+      act(() => {
+        result.current.setScorerNotFound(true)
+      })
+
+      act(() => {
+        result.current.setScorer(mockScorer)
+      })
+
+      expect(result.current.state.scorer.notFound).toBe(false)
+      expect(result.current.state.scorer.selected).toEqual(mockScorer)
+    })
+
+    it('does not save scorer to API when scorer is not found', async () => {
+      const { result } = renderHook(() => useValidationState('game-123'), {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoadingGameDetails).toBe(false)
+      })
+
+      act(() => {
+        result.current.setScorerNotFound(true)
+      })
+
+      await act(async () => {
+        await result.current.saveProgress()
+      })
+
+      // updateScoresheet should not be called since no scorer is selected
+      expect(mockUpdateScoresheet).not.toHaveBeenCalled()
+    })
   })
 
   describe('scoresheet handling', () => {

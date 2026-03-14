@@ -698,6 +698,9 @@ const it: Translations = {
       searchResults: 'Risultati della ricerca',
       resultsCount: '{count} risultati trovati',
       resultsCountOne: '1 risultato trovato',
+      cannotFindScorer: 'Segnapunti non trovato',
+      cannotFindScorerHint:
+        'La validazione verrà salvata ma non finalizzata. Completa la selezione del segnapunti su VolleyManager.',
     },
     scoresheetUpload: {
       title: 'Carica referto',

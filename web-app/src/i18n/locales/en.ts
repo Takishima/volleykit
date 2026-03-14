@@ -683,6 +683,9 @@ const en: Translations = {
       searchResults: 'Search results',
       resultsCount: '{count} results found',
       resultsCountOne: '1 result found',
+      cannotFindScorer: 'Cannot find scorer',
+      cannotFindScorerHint:
+        'The validation will be saved but not finalized. Complete the scorer selection on VolleyManager.',
     },
     scoresheetUpload: {
       title: 'Upload Scoresheet',

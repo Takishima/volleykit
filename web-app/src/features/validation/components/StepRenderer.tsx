@@ -32,6 +32,7 @@ interface StepHandlers {
   setHomeRosterModifications: UseValidationStateResult['setHomeRosterModifications']
   setAwayRosterModifications: UseValidationStateResult['setAwayRosterModifications']
   setScorer: UseValidationStateResult['setScorer']
+  setScorerNotFound: UseValidationStateResult['setScorerNotFound']
   setScoresheet: UseValidationStateResult['setScoresheet']
   onAddPlayerSheetOpenChange: (open: boolean) => void
   onClose: () => void
@@ -168,6 +169,8 @@ export function StepRenderer({
           <ScorerPanel
             key={validation.pendingScorer?.__identity ?? 'no-pending-scorer'}
             onScorerChange={handlers.setScorer}
+            scorerNotFound={validation.state.scorer.notFound}
+            onScorerNotFoundChange={handlers.setScorerNotFound}
             readOnly={isStepReadOnly}
             readOnlyScorerName={validation.validatedInfo?.scorerName}
             readOnlyScorerBirthday={validation.validatedInfo?.scorerBirthday}

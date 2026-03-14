@@ -710,6 +710,9 @@ const de: Translations = {
       searchResults: 'Suchergebnisse',
       resultsCount: '{count} Ergebnisse gefunden',
       resultsCountOne: '1 Ergebnis gefunden',
+      cannotFindScorer: 'Schreiber nicht gefunden',
+      cannotFindScorerHint:
+        'Die Validierung wird gespeichert, aber nicht abgeschlossen. Vervollständigen Sie die Schreiberauswahl auf VolleyManager.',
     },
     scoresheetUpload: {
       title: 'Spielbericht hochladen',

@@ -33,6 +33,10 @@ const SCORER_SEARCH_HINT_ID = 'scorer-search-hint'
 interface ScorerSearchPanelProps {
   selectedScorer?: ValidatedPersonSearchResult | null
   onScorerSelect: (scorer: ValidatedPersonSearchResult | null) => void
+  /** Whether the scorer has been marked as not found */
+  scorerNotFound?: boolean
+  /** Called when the "cannot find scorer" checkbox changes */
+  onScorerNotFoundChange?: (notFound: boolean) => void
   /** When true, shows scorer in view-only mode without edit controls */
   readOnly?: boolean
   /** Scorer name to display in read-only mode when no scorer data is available */
@@ -48,6 +52,8 @@ interface ScorerSearchPanelProps {
 export function ScorerSearchPanel({
   selectedScorer,
   onScorerSelect,
+  scorerNotFound = false,
+  onScorerNotFoundChange,
   readOnly = false,
   readOnlyScorerName,
   readOnlyScorerBirthday,
@@ -165,7 +171,7 @@ export function ScorerSearchPanel({
     <div className="py-4">
       {selectedScorer && <SelectedScorerCard scorer={selectedScorer} onClear={handleClear} />}
 
-      {!selectedScorer && (
+      {!selectedScorer && !scorerNotFound && (
         <>
           <div className="mb-4">
             <input
@@ -236,10 +242,37 @@ export function ScorerSearchPanel({
         </>
       )}
 
-      {!selectedScorer && !showResults && (
+      {!selectedScorer && !showResults && !scorerNotFound && (
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t('validation.scorerSearch.noScorerSelected')}
         </p>
+      )}
+
+      {/* "Cannot find scorer" checkbox */}
+      {!selectedScorer && onScorerNotFoundChange && (
+        <label className="mt-4 flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={scorerNotFound}
+            onChange={(e) => onScorerNotFoundChange(e.target.checked)}
+            className="
+              mt-0.5 h-4 w-4 rounded
+              border-border-strong dark:border-border-strong-dark
+              text-primary-600 focus:ring-primary-500/20
+              cursor-pointer
+            "
+          />
+          <div>
+            <span className="text-sm text-text-primary dark:text-text-primary-dark">
+              {t('validation.scorerSearch.cannotFindScorer')}
+            </span>
+            {scorerNotFound && (
+              <p className="mt-1 text-xs text-warning-600 dark:text-warning-400">
+                {t('validation.scorerSearch.cannotFindScorerHint')}
+              </p>
+            )}
+          </div>
+        </label>
       )}
     </div>
   )

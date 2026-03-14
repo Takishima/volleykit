@@ -28,6 +28,8 @@ export interface RosterPanelState {
 export interface ScorerPanelState {
   /** The selected scorer, or null if none */
   selected: ValidatedPersonSearchResult | null
+  /** Whether the user indicated the scorer cannot be found in the system */
+  notFound: boolean
 }
 
 /**
@@ -109,6 +111,8 @@ export interface UseValidationStateResult {
   setAwayRosterModifications: (modifications: RosterPanelModifications) => void
   /** Set the selected scorer */
   setScorer: (scorer: ValidatedPersonSearchResult | null) => void
+  /** Set whether the scorer cannot be found */
+  setScorerNotFound: (notFound: boolean) => void
   /** Set the scoresheet file and upload status */
   setScoresheet: (file: File | null, uploaded: boolean) => void
   /** Set the reference image URL directly (e.g., from an existing scoresheet) */
@@ -154,7 +158,7 @@ export function createInitialState(): ValidationState {
       playerModifications: { added: [], removed: [] },
       coachModifications: { added: new Map(), removed: new Set() },
     },
-    scorer: { selected: null },
+    scorer: { selected: null, notFound: false },
     scoresheet: { file: null, uploaded: false },
     referenceImageUrl: null,
   }
