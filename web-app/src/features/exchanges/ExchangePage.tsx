@@ -119,14 +119,18 @@ export function ExchangePage() {
     }
   }, [associationCode, hideOwnExchanges, setHideOwnExchangesForAssociation])
 
-  const { data: queryData, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter)
+  const {
+    data: queryData,
+    isLoading: queryLoading,
+    error,
+    refetch,
+  } = useGameExchanges(statusFilter)
 
   // Optimistic UI: instantly remove exchanges from the list when the user
   // confirms a take-over or removal, before the API responds. The optimistic
   // state reverts automatically when queryData updates with fresh server data.
-  const [data, applyOptimisticRemoval] = useOptimistic(
-    queryData,
-    (current, removedId: string) => current?.filter((e) => e.__identity !== removedId)
+  const [data, applyOptimisticRemoval] = useOptimistic(queryData, (current, removedId: string) =>
+    current?.filter((e) => e.__identity !== removedId)
   )
 
   // Show loading when switching associations or when query is loading

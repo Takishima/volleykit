@@ -12,10 +12,7 @@ import {
 import { queryKeys } from '@/api/queryKeys'
 import { compensationListOptions } from '@/api/queryOptions'
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
-import {
-  DEFAULT_PAGE_SIZE,
-  COMPENSATION_LOOKUP_LIMIT,
-} from '@/shared/hooks/usePaginatedQuery'
+import { DEFAULT_PAGE_SIZE, COMPENSATION_LOOKUP_LIMIT } from '@/shared/hooks/usePaginatedQuery'
 import { createAction } from '@/shared/services/offline/action-store'
 import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
