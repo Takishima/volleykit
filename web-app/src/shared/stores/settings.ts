@@ -349,6 +349,9 @@ const HIDE_OWN_EXCHANGES_VERSION = 8
 /** Version that added validation reference mode */
 const VALIDATION_REFERENCE_MODE_VERSION = 9
 
+/** Version that added settings group expansion state */
+const SETTINGS_GROUP_EXPANDED_VERSION = 10
+
 /** V1 state shape (flat settings) */
 interface V1State {
   isSafeModeEnabled?: boolean
@@ -795,7 +798,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 9,
+        version: 10,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -845,6 +848,13 @@ export const useSettingsStore = create<SettingsState>()(
           if (version < VALIDATION_REFERENCE_MODE_VERSION) {
             if (!(state as Record<string, unknown>).validationReferenceMode) {
               ;(state as Record<string, unknown>).validationReferenceMode = 'quick-compare'
+            }
+          }
+
+          // v9 → v10: Add settings group expansion state
+          if (version < SETTINGS_GROUP_EXPANDED_VERSION) {
+            if (!(state as Record<string, unknown>).settingsGroupExpanded) {
+              ;(state as Record<string, unknown>).settingsGroupExpanded = {}
             }
           }
 

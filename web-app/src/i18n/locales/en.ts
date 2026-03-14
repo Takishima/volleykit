@@ -515,6 +515,7 @@ const en: Translations = {
       'Safe mode restricts dangerous operations like adding/taking games from exchange. Validation saves your changes but does not finalize the game — you complete the validation on VolleyManager.',
     safeModeEnabled: 'Safe mode is enabled',
     safeModeDisabled: 'Safe mode is disabled',
+    safeModeWarning: 'Safe mode is disabled — action required',
     safeModeWarningTitle: 'Disable Safe Mode?',
     safeModeWarningMessage:
       'Disabling safe mode will enable operations that may modify your assignments and games.',

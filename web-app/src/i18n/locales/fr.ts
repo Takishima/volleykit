@@ -530,6 +530,7 @@ const fr: Translations = {
       "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges. La validation enregistre vos modifications mais ne finalise pas le match — vous complétez la validation sur VolleyManager.",
     safeModeEnabled: 'Le mode sécurisé est activé',
     safeModeDisabled: 'Le mode sécurisé est désactivé',
+    safeModeWarning: 'Mode sécurisé désactivé — action requise',
     safeModeWarningTitle: 'Désactiver le mode sécurisé?',
     safeModeWarningMessage:
       'La désactivation du mode sécurisé activera des opérations pouvant modifier vos désignations et matchs.',

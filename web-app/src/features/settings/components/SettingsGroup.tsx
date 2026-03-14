@@ -62,7 +62,7 @@ export function SettingsGroup({
 
       <div
         id={detailsId}
-        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+        className={`grid motion-safe:transition-[grid-template-rows] motion-safe:duration-200 motion-safe:ease-in-out ${
           isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         }`}
       >
