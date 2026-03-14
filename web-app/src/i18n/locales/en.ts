@@ -426,8 +426,8 @@ const en: Translations = {
     locationTravel: {
       title: 'Location & Travel',
     },
-    dataProtection: {
-      title: 'Data Protection',
+    safeModeSection: {
+      title: 'Safe Mode',
     },
     helpTours: {
       title: 'Help & Tours',

@@ -12,7 +12,7 @@ import {
   ProfileSection,
   PreferencesSection,
   HomeLocationSection,
-  DataProtectionSection,
+  SafeModeSection,
   HelpToursSection,
   DataRetentionSection,
   DemoSection,
@@ -72,7 +72,7 @@ export function SettingsPage() {
       )}
 
       {!isDemoMode && !isCalendarMode && (
-        <DataProtectionSection isSafeModeEnabled={isSafeModeEnabled} onSetSafeMode={setSafeMode} />
+        <SafeModeSection isSafeModeEnabled={isSafeModeEnabled} onSetSafeMode={setSafeMode} />
       )}
 
       <AppInfoSection showUpdates={__PWA_ENABLED__} />

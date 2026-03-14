@@ -437,8 +437,8 @@ const fr: Translations = {
     locationTravel: {
       title: 'Localisation & Déplacement',
     },
-    dataProtection: {
-      title: 'Protection des données',
+    safeModeSection: {
+      title: 'Mode sécurisé',
     },
     helpTours: {
       title: 'Aide & Visites guidées',

@@ -10,15 +10,12 @@ const SafeModeWarningModal = lazy(() =>
   }))
 )
 
-interface DataProtectionSectionProps {
+interface SafeModeSectionProps {
   isSafeModeEnabled: boolean
   onSetSafeMode: (enabled: boolean) => void
 }
 
-function DataProtectionSectionComponent({
-  isSafeModeEnabled,
-  onSetSafeMode,
-}: DataProtectionSectionProps) {
+function SafeModeSectionComponent({ isSafeModeEnabled, onSetSafeMode }: SafeModeSectionProps) {
   const { t } = useTranslation()
   const [showSafeModeWarning, setShowSafeModeWarning] = useState(false)
 
@@ -58,7 +55,7 @@ function DataProtectionSectionComponent({
               />
             </svg>
             <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-              {t('settings.dataProtection.title')}
+              {t('settings.safeModeSection.title')}
             </h2>
             {!isSafeModeEnabled && (
               <svg
@@ -127,4 +124,4 @@ function DataProtectionSectionComponent({
   )
 }
 
-export const DataProtectionSection = memo(DataProtectionSectionComponent)
+export const SafeModeSection = memo(SafeModeSectionComponent)
