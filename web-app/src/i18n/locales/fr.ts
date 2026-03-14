@@ -721,6 +721,7 @@ const fr: Translations = {
       demoModeNote: 'Mode démo: les téléchargements sont simulés',
       previewAlt: 'Aperçu de la feuille de match',
       scoresheetUploaded: 'Feuille de match téléchargée',
+      existingScoresheet: 'Feuille de match précédemment téléchargée',
       noScoresheet: 'Aucune feuille de match téléchargée',
       notRequired: 'Feuille de match non requise',
       notRequiredDescription:

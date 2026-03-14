@@ -727,6 +727,7 @@ const de: Translations = {
       demoModeNote: 'Demo-Modus: Uploads werden simuliert',
       previewAlt: 'Spielbericht-Vorschau',
       scoresheetUploaded: 'Spielbericht hochgeladen',
+      existingScoresheet: 'Zuvor hochgeladener Spielbericht',
       noScoresheet: 'Kein Spielbericht hochgeladen',
       notRequired: 'Spielbericht nicht erforderlich',
       notRequiredDescription: 'Für diesen Wettbewerb ist kein Spielbericht erforderlich.',

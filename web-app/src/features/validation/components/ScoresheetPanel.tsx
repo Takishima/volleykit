@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from '@/api/constants'
+import { isImageUrl } from '@/features/validation/utils/scoresheet'
 import { Upload, Camera, CheckCircle, FileText, AlertCircle, Info } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -15,6 +16,8 @@ interface ScoresheetPanelProps {
   hasScoresheet?: boolean
   /** Whether scoresheet upload is not required for this game's group */
   scoresheetNotRequired?: boolean
+  /** Public URL of an existing scoresheet file (from a previous upload) */
+  existingFileUrl?: string | null
 }
 
 const ACCEPTED_EXTENSIONS = '.jpg,.jpeg,.png,.pdf'
@@ -42,6 +45,7 @@ export function ScoresheetPanel({
   readOnly = false,
   hasScoresheet = false,
   scoresheetNotRequired = false,
+  existingFileUrl,
 }: ScoresheetPanelProps) {
   const { t } = useTranslation()
   const dataSource = useAuthStore((state) => state.dataSource)
@@ -262,7 +266,50 @@ export function ScoresheetPanel({
         aria-label={tKey('takePhoto')}
       />
 
-      {!selectedFile ? (
+      {!selectedFile && existingFileUrl ? (
+        <div className="border border-border-default dark:border-border-default-dark rounded-lg overflow-hidden">
+          {isImageUrl(existingFileUrl) ? (
+            <div className="relative bg-surface-subtle dark:bg-surface-card-dark">
+              <img
+                src={existingFileUrl}
+                alt={tKey('previewAlt')}
+                className="w-full max-h-64 object-contain"
+              />
+            </div>
+          ) : (
+            <div className="bg-surface-subtle dark:bg-surface-card-dark p-8 flex flex-col items-center justify-center">
+              <FileText
+                className="w-16 h-16 text-text-subtle dark:text-text-subtle-dark mb-2"
+                aria-hidden="true"
+              />
+              <span className="text-sm text-text-muted dark:text-text-muted-dark">PDF</span>
+            </div>
+          )}
+
+          <div className="p-4 bg-surface-card dark:bg-surface-card-dark">
+            <div
+              className="mb-3 flex items-center gap-2 text-success-600 dark:text-success-400"
+              role="status"
+              aria-live="polite"
+            >
+              <CheckCircle className="w-5 h-5" aria-hidden="true" />
+              <span className="text-sm font-medium">
+                {t('validation.scoresheetUpload.existingScoresheet')}
+              </span>
+            </div>
+
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full px-4 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg transition-colors"
+              >
+                {tKey('replace')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : !selectedFile ? (
         <div className="border-2 border-dashed border-border-strong dark:border-border-strong-dark rounded-lg p-6 text-center">
           <Upload
             className="w-12 h-12 mx-auto text-text-subtle dark:text-text-subtle-dark mb-4"

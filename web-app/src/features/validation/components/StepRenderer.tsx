@@ -25,6 +25,7 @@ interface ValidationInfo {
   state: UseValidationStateResult['state']
   homeNominationList: NominationList | null
   awayNominationList: NominationList | null
+  existingScoresheetUrl: string | null
 }
 
 interface StepHandlers {
@@ -188,6 +189,7 @@ export function StepRenderer({
             readOnly={isStepReadOnly}
             hasScoresheet={validation.validatedInfo?.hasScoresheet}
             scoresheetNotRequired={validation.scoresheetNotRequired}
+            existingFileUrl={validation.existingScoresheetUrl}
           />
         )}
       </div>

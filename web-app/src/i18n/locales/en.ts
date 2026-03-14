@@ -700,6 +700,7 @@ const en: Translations = {
       demoModeNote: 'Demo mode: uploads are simulated',
       previewAlt: 'Scoresheet preview',
       scoresheetUploaded: 'Scoresheet uploaded',
+      existingScoresheet: 'Previously uploaded scoresheet',
       noScoresheet: 'No scoresheet uploaded',
       notRequired: 'Scoresheet not required',
       notRequiredDescription: 'This competition does not require a scoresheet upload.',

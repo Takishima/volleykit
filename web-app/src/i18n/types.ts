@@ -569,6 +569,7 @@ export interface Translations {
       demoModeNote: string
       previewAlt: string
       scoresheetUploaded: string
+      existingScoresheet: string
       noScoresheet: string
       notRequired: string
       notRequiredDescription: string

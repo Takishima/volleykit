@@ -111,7 +111,9 @@ export interface UseValidationStateResult {
   setScorer: (scorer: ValidatedPersonSearchResult | null) => void
   /** Set the scoresheet file and upload status */
   setScoresheet: (file: File | null, uploaded: boolean) => void
-  /** The reference image URL for the scoresheet (Object URL) */
+  /** Set the reference image URL directly (e.g., from an existing scoresheet) */
+  setReferenceImageUrl: (url: string | null) => void
+  /** The reference image URL for the scoresheet (Object URL or public URL) */
   referenceImageUrl: string | null
   /** Reset all state to initial values */
   reset: () => void
@@ -131,6 +133,10 @@ export interface UseValidationStateResult {
   homeNominationList: NominationList | null
   /** Pre-fetched away team nomination list from game details */
   awayNominationList: NominationList | null
+  /** Public URL of an existing scoresheet file (from a previous save) */
+  existingScoresheetUrl: string | null
+  /** Resource ID of the existing scoresheet file (to avoid re-uploading) */
+  existingFileResourceId: string | null
 }
 
 /**
