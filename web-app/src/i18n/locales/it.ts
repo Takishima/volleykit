@@ -434,8 +434,8 @@ const it: Translations = {
     locationTravel: {
       title: 'Posizione & Viaggio',
     },
-    dataProtection: {
-      title: 'Protezione dati',
+    safeModeSection: {
+      title: 'Modalità sicura',
     },
     helpTours: {
       title: 'Aiuto & Tour guidati',
@@ -753,7 +753,8 @@ const it: Translations = {
       previous: 'Precedente',
       next: 'Avanti',
       validate: 'Valida',
-      finish: 'Termina',
+      save: 'Salva',
+      finalize: 'Finalizza',
       stepOf: 'Passo {current} di {total}',
       saving: 'Salvataggio...',
       markAsReviewed: 'Segna come verificato',

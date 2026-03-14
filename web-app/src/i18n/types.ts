@@ -312,7 +312,7 @@ export interface Translations {
     locationTravel: {
       title: string
     }
-    dataProtection: {
+    safeModeSection: {
       title: string
     }
     helpTours: {
@@ -605,7 +605,8 @@ export interface Translations {
       previous: string
       next: string
       validate: string
-      finish: string
+      save: string
+      finalize: string
       stepOf: string
       saving: string
       markAsReviewed: string

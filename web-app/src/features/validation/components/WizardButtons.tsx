@@ -78,6 +78,7 @@ interface ReadOnlyStepButtonsProps {
   onFinish: () => Promise<void>
   finishDisabled: boolean
   isFinalizing: boolean
+  useSafeValidation: boolean
 }
 
 /**
@@ -92,15 +93,19 @@ export function ReadOnlyStepButtons({
   onFinish,
   finishDisabled,
   isFinalizing,
+  useSafeValidation,
 }: ReadOnlyStepButtonsProps) {
   const { t } = useTranslation()
+  const finishLabel = useSafeValidation
+    ? t('validation.wizard.save')
+    : t('validation.wizard.finalize')
   return (
     <ReadOnlyModeButtons
       navigation={navigation}
       onBack={onBack}
       onNext={onNext}
       onClose={() => onFinish()}
-      closeLabel={isFinalizing ? t('common.loading') : t('validation.wizard.finish')}
+      closeLabel={isFinalizing ? t('common.loading') : finishLabel}
       closeVariant="success"
       closeDisabled={finishDisabled}
     />
@@ -123,6 +128,7 @@ interface EditModeButtonsProps {
   onBack: () => void
   onValidateAndNext: () => void
   onFinish: () => Promise<void>
+  useSafeValidation: boolean
 }
 
 /**
@@ -136,6 +142,7 @@ export function EditModeButtons({
   onBack,
   onValidateAndNext,
   onFinish,
+  useSafeValidation,
 }: EditModeButtonsProps) {
   const { t } = useTranslation()
 
@@ -171,7 +178,11 @@ export function EditModeButtons({
                 : undefined
             }
           >
-            {state.isFinalizing ? t('common.loading') : t('validation.wizard.finish')}
+            {state.isFinalizing
+              ? t('common.loading')
+              : useSafeValidation
+                ? t('validation.wizard.save')
+                : t('validation.wizard.finalize')}
           </Button>
         ) : (
           <Button

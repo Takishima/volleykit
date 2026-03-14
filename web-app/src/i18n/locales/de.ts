@@ -437,8 +437,8 @@ const de: Translations = {
     locationTravel: {
       title: 'Standort & Anreise',
     },
-    dataProtection: {
-      title: 'Datenschutz',
+    safeModeSection: {
+      title: 'Sicherheitsmodus',
     },
     helpTours: {
       title: 'Hilfe & Rundgänge',
@@ -767,7 +767,8 @@ const de: Translations = {
       previous: 'Zurück',
       next: 'Weiter',
       validate: 'Validieren',
-      finish: 'Abschliessen',
+      save: 'Speichern',
+      finalize: 'Abschliessen',
       stepOf: 'Schritt {current} von {total}',
       saving: 'Speichern...',
       markAsReviewed: 'Als geprüft markieren',
