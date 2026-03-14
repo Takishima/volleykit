@@ -9,7 +9,7 @@ Detailed code examples for common patterns in this codebase. Reference this when
 **Zustand for Client State**
 
 ```typescript
-// src/stores/auth.ts pattern
+// packages/shared/src/stores/auth.ts pattern
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
@@ -34,59 +34,98 @@ export const useAuthStore = create<AuthState>()(
 )
 ```
 
+**Zustand Selector Optimization with `useShallow`**
+
+Always select only the state slices your component needs. Use `useShallow` when selecting multiple fields to avoid re-renders when unrelated state changes.
+
+```typescript
+import { useShallow } from 'zustand/react/shallow'
+
+// Bad: subscribes to entire store — re-renders on any change
+const state = useAuthStore()
+
+// Bad: new object reference every render — defeats shallow comparison
+const { user, isAuthenticated } = useAuthStore((s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }))
+
+// Good: useShallow compares each field individually
+const { user, isAuthenticated } = useAuthStore(
+  useShallow((s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }))
+)
+
+// Good: single primitive — no useShallow needed
+const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+```
+
+> Export custom hooks wrapping store selectors, not the raw store, so components subscribe to specific slices.
+
 **TanStack Query for Server State**
 
 ```typescript
-// src/hooks/useAssignments.ts pattern
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query'
 
-export function useAssignments() {
-  return useQuery({
-    queryKey: ['assignments'],
-    queryFn: () => api.getAssignments(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+// queryOptions() — type-safe, reusable query config (v5+)
+// Share queryKey + queryFn between useQuery, prefetch, and cache operations
+function assignmentListOptions(config: SearchConfiguration, associationKey: string) {
+  return queryOptions({
+    queryKey: queryKeys.assignments.list(config, associationKey),
+    queryFn: () => api.getAssignments(config),
+    staleTime: 5 * 60 * 1000,
   })
 }
 
-export function useConfirmAssignment() {
-  const queryClient = useQueryClient()
+// Usage across different call sites
+useQuery(assignmentListOptions(config, key))
+queryClient.prefetchQuery(assignmentListOptions(config, key))
+queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all })
+```
 
-  return useMutation({
-    mutationFn: (id: string) => api.confirmAssignment(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assignments'] })
-    },
-  })
+**`useSuspenseQuery` — guaranteed data**
+
+When using Suspense boundaries, `useSuspenseQuery` guarantees `data` is `T` (not `T | undefined`). Loading/error states are handled by `<Suspense>` and `<ErrorBoundary>`.
+
+```typescript
+import { useSuspenseQuery } from '@tanstack/react-query'
+
+function AssignmentDetail({ id }: { id: string }) {
+  // data is guaranteed to be defined — no undefined checks needed
+  const { data } = useSuspenseQuery(assignmentDetailOptions(id))
+  return <div>{data.title}</div>
 }
+```
+
+### Query Keys Factory
+
+Use the hierarchical key factory in `packages/shared/src/api/queryKeys.ts`. This enables type-safe keys and bulk invalidation.
+
+```typescript
+export const queryKeys = {
+  assignments: {
+    all: ['assignments'] as const,
+    lists: () => [...queryKeys.assignments.all, 'list'] as const,
+    list: (config, key) => [...queryKeys.assignments.lists(), config, key] as const,
+    details: () => [...queryKeys.assignments.all, 'detail'] as const,
+    detail: (id) => [...queryKeys.assignments.details(), id] as const,
+  },
+}
+
+// Invalidate all assignments (lists + details)
+queryClient.invalidateQueries({ queryKey: queryKeys.assignments.all })
+
+// Invalidate only lists (not details)
+queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
 ```
 
 ### Component Patterns
 
 **Custom Hook Extraction**
 
+Extract complex logic (gestures, animations, data processing) into hooks. Components stay focused on rendering.
+
 ```typescript
-// Bad: Logic mixed in component
-function AssignmentCard({ assignment }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [translateX, setTranslateX] = useState(0)
-
-  const handleSwipeStart = (e: TouchEvent) => {
-    /* 20 lines */
-  }
-  const handleSwipeMove = (e: TouchEvent) => {
-    /* 20 lines */
-  }
-  const handleSwipeEnd = (e: TouchEvent) => {
-    /* 20 lines */
-  }
-
-  // Component is now 100+ lines
-}
-
-// Good: Extract to custom hook
+// Extract reusable logic into a hook
 function useSwipeGesture(onSwipeLeft: () => void, onSwipeRight: () => void) {
   const [translateX, setTranslateX] = useState(0)
-  // ... gesture logic
+  // ... gesture logic (touch start/move/end handlers)
   return { translateX, handlers }
 }
 
@@ -99,7 +138,6 @@ function AssignmentCard({ assignment }: Props) {
 **Compound Components**
 
 ```typescript
-// For complex UI with multiple related parts
 function Tabs({ children, defaultTab }: TabsProps) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   return (
@@ -112,16 +150,39 @@ function Tabs({ children, defaultTab }: TabsProps) {
 Tabs.List = function TabList({ children }) { /* ... */ };
 Tabs.Tab = function Tab({ id, children }) { /* ... */ };
 Tabs.Panel = function TabPanel({ id, children }) { /* ... */ };
+```
 
-// Usage
-<Tabs defaultTab="home">
-  <Tabs.List>
-    <Tabs.Tab id="home">Home</Tabs.Tab>
-    <Tabs.Tab id="away">Away</Tabs.Tab>
-  </Tabs.List>
-  <Tabs.Panel id="home">Home roster...</Tabs.Panel>
-  <Tabs.Panel id="away">Away roster...</Tabs.Panel>
-</Tabs>
+**Discriminated Unions for Mixed Lists**
+
+Use discriminated unions when rendering lists with different item types. The `type` field enables exhaustive switch/if handling.
+
+```typescript
+type DisplayItem =
+  | { type: 'assignment'; item: Assignment }
+  | { type: 'onCall'; item: OnCallAssignment }
+
+function renderItem(displayItem: DisplayItem) {
+  switch (displayItem.type) {
+    case 'assignment': return <AssignmentCard assignment={displayItem.item} />
+    case 'onCall': return <OnCallCard onCall={displayItem.item} />
+  }
+}
+```
+
+**Lazy Loading / Code Splitting**
+
+Use `lazy()` + `Suspense` for route-level and heavy component splitting. See `web-app/src/App.tsx`.
+
+```typescript
+import { lazy, Suspense } from 'react'
+
+const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'))
+const EditCompensationModal = lazy(() => import('./EditCompensationModal'))
+
+// In routes or render:
+<Suspense fallback={<LoadingSpinner />}>
+  <SettingsPage />
+</Suspense>
 ```
 
 ## Anti-Pattern Examples
@@ -214,6 +275,16 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 <button disabled={isSubmitting} onClick={handleSubmit}>
   {isSubmitting ? 'Submitting...' : 'Submit'}
 </button>
+
+// Best: useSafeMutation wraps all of this (see web-app/src/shared/hooks/useSafeMutation.ts)
+const { execute, isExecuting } = useSafeMutation(
+  (id: string) => api.deleteItem(id),
+  {
+    logContext: 'useItemActions',
+    successMessage: 'items.deleteSuccess',
+    errorMessage: 'items.deleteError',
+  }
+)
 ```
 
 ### Async Cleanup (Modern React 18+)
@@ -253,6 +324,57 @@ const { data, error, isLoading } = useQuery({
   queryFn: ({ signal }) => fetchData(id, { signal }),
 })
 ```
+
+## React 19 Patterns
+
+The project runs React 19. These hooks are available for adoption alongside existing patterns.
+
+**`useOptimistic` — instant UI feedback**
+
+```typescript
+import { useOptimistic } from 'react'
+
+function AssignmentList({ assignments }: Props) {
+  const [optimisticItems, addOptimistic] = useOptimistic(
+    assignments,
+    (current, confirmedId: string) =>
+      current.map((a) => (a.id === confirmedId ? { ...a, status: 'confirmed' } : a))
+  )
+
+  async function handleConfirm(id: string) {
+    addOptimistic(id) // Instant UI update
+    await api.confirmAssignment(id) // Reverts when assignments prop updates with fresh data
+  }
+}
+```
+
+**`useActionState` — form action state**
+
+```typescript
+import { useActionState } from 'react'
+
+function LoginForm() {
+  const [error, submitAction, isPending] = useActionState(
+    async (_prev: string | null, formData: FormData) => {
+      const result = await api.login(formData)
+      if (!result.ok) return result.error
+      // In SPA context, use navigate() from react-router instead of redirect()
+      navigate('/dashboard')
+      return null
+    },
+    null
+  )
+
+  return (
+    <form action={submitAction}>
+      {error && <p role="alert">{error}</p>}
+      <button type="submit" disabled={isPending}>Log in</button>
+    </form>
+  )
+}
+```
+
+> Adopt incrementally — existing TanStack Query mutation patterns remain valid and preferred for server-state operations.
 
 ## Accessibility Patterns
 
@@ -337,6 +459,46 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
 </div>
 ```
 
+## Error Boundaries
+
+Use the class-based `ErrorBoundary` in `web-app/src/shared/components/ErrorBoundary.tsx`. Wrap route-level or feature-level components.
+
+```typescript
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
+
+// In routes or feature containers
+<ErrorBoundary>
+  <Suspense fallback={<LoadingSpinner />}>
+    <AssignmentsPage />
+  </Suspense>
+</ErrorBoundary>
+```
+
+The boundary catches render errors, classifies them via `classifyError()`, and displays appropriate recovery UI.
+
+## Platform Adapter Pattern
+
+The shared package (`packages/shared/`) defines interfaces; web and mobile provide implementations. This enables ~70% code sharing.
+
+```typescript
+// packages/shared/src/api/client.ts — defines the contract
+interface AssignmentsApiClient {
+  searchAssignments(config: SearchConfiguration): Promise<AssignmentsResponse>
+}
+
+// packages/shared/src/hooks/useAssignments.ts — accepts adapter as parameter
+export function useAssignments({ apiClient, period }: Options) {
+  const config = useMemo(() => buildConfig(period), [period])
+  return useQuery({
+    queryKey: queryKeys.assignments.list(config),
+    queryFn: () => apiClient.searchAssignments(config),
+  })
+}
+
+// web-app provides its implementation; mobile provides a different one
+// Both call the same shared hook with their platform-specific client
+```
+
 ## E2E Testing Patterns
 
 ### Page Object Model
@@ -383,6 +545,53 @@ test('user can confirm an assignment', async ({ page }) => {
 
   const card = await assignmentsPage.getAssignmentCard('123')
   await expect(card).toContainText('Confirmed')
+})
+```
+
+## Unit Testing Patterns (Vitest)
+
+### Testing Hooks with TanStack Query
+
+```typescript
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+  return ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children)
+}
+
+const { result } = renderHook(() => useAssignments({ apiClient, period: 'upcoming' }), {
+  wrapper: createWrapper(),
+})
+```
+
+### `vi.hoisted()` for Mock Initialization
+
+Use `vi.hoisted()` to create mocks before module imports resolve. Required when mocking stores or modules.
+
+```typescript
+const { mockAuthStore } = vi.hoisted(() => {
+  const mockAuthStore = Object.assign(vi.fn(), {
+    getState: vi.fn(() => ({ dataSource: 'api' })),
+    subscribe: vi.fn(() => () => {}),
+  })
+  return { mockAuthStore }
+})
+
+vi.mock('@volleykit/shared/stores', () => ({ useAuthStore: mockAuthStore }))
+```
+
+### Fake Timers for Date-Dependent Tests
+
+```typescript
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 ```
 
@@ -523,7 +732,7 @@ it('handles 401 unauthorized', async () => {
 })
 ```
 
-### Inspecting Request Data
+### Inspecting Requests & File Uploads
 
 ```typescript
 it('sends correct request body', async () => {
@@ -531,23 +740,15 @@ it('sends correct request body', async () => {
 
   server.use(
     http.post('*/api%5crefereeconvocation/*', async ({ request }) => {
-      // Capture request body for assertions
-      const text = await request.text()
-      capturedBody = new URLSearchParams(text)
+      capturedBody = new URLSearchParams(await request.text())
       return HttpResponse.json({ items: [], totalItemsCount: 0 })
     })
   )
 
   await api.searchAssignments({ offset: 10, limit: 20 })
-
   expect(capturedBody?.get('searchConfiguration[offset]')).toBe('10')
-  expect(capturedBody?.get('searchConfiguration[limit]')).toBe('20')
 })
-```
 
-### Testing File Uploads
-
-```typescript
 it('uploads file with FormData', async () => {
   let capturedFormData: FormData | null = null
 
@@ -560,7 +761,6 @@ it('uploads file with FormData', async () => {
 
   const file = new File(['content'], 'test.pdf', { type: 'application/pdf' })
   await api.uploadResource(file)
-
   expect(capturedFormData?.get('resource')).toBeInstanceOf(File)
 })
 ```
