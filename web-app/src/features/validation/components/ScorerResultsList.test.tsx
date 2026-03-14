@@ -91,4 +91,29 @@ describe('ScorerResultsList', () => {
     const options = screen.getAllByRole('option')
     expect(options).toHaveLength(2)
   })
+
+  it('displays gender icons for scorers', () => {
+    render(<ScorerResultsList {...defaultProps} />)
+
+    expect(screen.getByLabelText('M')).toBeInTheDocument()
+    expect(screen.getByLabelText('F')).toBeInTheDocument()
+  })
+
+  it('does not display gender icons when not provided', () => {
+    const scorersWithoutGender: ValidatedPersonSearchResult[] = [
+      {
+        __identity: 'a3333333-3333-4333-a333-333333333333',
+        firstName: 'Test',
+        lastName: 'Person',
+        displayName: 'Test Person',
+        associationId: 99999,
+        birthday: '1995-01-01T00:00:00+00:00',
+      },
+    ]
+    render(<ScorerResultsList {...defaultProps} results={scorersWithoutGender} />)
+
+    expect(screen.getByText('Test Person')).toBeInTheDocument()
+    expect(screen.queryByLabelText('M')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('F')).not.toBeInTheDocument()
+  })
 })

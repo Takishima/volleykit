@@ -338,7 +338,7 @@ describe('ValidateGameModal', () => {
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
       // ScorerPanel shows search input and no-selection message
-      expect(screen.getByPlaceholderText('Search scorer by name...')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Search scorer by name or ID...')).toBeInTheDocument()
       expect(screen.getByText(/No scorer selected/)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Finalize/i, hidden: true })).toBeInTheDocument()
     })

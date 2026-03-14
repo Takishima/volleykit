@@ -153,6 +153,8 @@ const de: Translations = {
     stepIndicatorInvalid: '(unvollständig)',
     stepIndicatorFinalized: '(abgeschlossen)',
     dob: 'Geb.',
+    genderMale: 'M',
+    genderFemale: 'W',
   },
   auth: {
     login: 'Anmelden',
@@ -700,9 +702,9 @@ const de: Translations = {
       loadCoachesError: 'Trainer konnten nicht geladen werden',
     },
     scorerSearch: {
-      searchPlaceholder: 'Schreiber nach Name suchen...',
+      searchPlaceholder: 'Schreiber nach Name oder ID suchen...',
       searchHint:
-        "Namen eingeben (z.B. 'Müller' oder 'Hans Müller') oder Geburtsjahr hinzufügen (z.B. 'Müller 1985')",
+        "Namen eingeben (z.B. 'Müller' oder 'Hans Müller'), Geburtsjahr (z.B. 'Müller 1985') oder SV-ID (z.B. '12345')",
       searchError: 'Schreibersuche fehlgeschlagen',
       noScorerSelected:
         'Kein Schreiber ausgewählt. Verwenden Sie die Suche oben, um einen Schreiber zu finden und auszuwählen.',

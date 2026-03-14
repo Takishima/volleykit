@@ -52,6 +52,8 @@ export interface Translations {
     stepIndicatorInvalid: string
     stepIndicatorFinalized: string
     dob: string
+    genderMale: string
+    genderFemale: string
   }
   auth: {
     login: string

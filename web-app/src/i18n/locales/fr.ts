@@ -154,6 +154,8 @@ const fr: Translations = {
     stepIndicatorInvalid: '(incomplet)',
     stepIndicatorFinalized: '(finalisé)',
     dob: 'DDN',
+    genderMale: 'H',
+    genderFemale: 'F',
   },
   auth: {
     login: 'Connexion',
@@ -694,9 +696,9 @@ const fr: Translations = {
       loadCoachesError: 'Échec du chargement des entraîneurs',
     },
     scorerSearch: {
-      searchPlaceholder: 'Rechercher un marqueur par nom...',
+      searchPlaceholder: 'Rechercher un marqueur par nom ou ID...',
       searchHint:
-        "Entrez le nom (ex. 'Müller' ou 'Hans Müller') ou ajoutez l'année de naissance (ex. 'Müller 1985')",
+        "Entrez le nom (ex. 'Müller' ou 'Hans Müller'), l'année de naissance (ex. 'Müller 1985') ou l'ID SV (ex. '12345')",
       searchError: 'Échec de la recherche de marqueurs',
       noScorerSelected:
         'Aucun marqueur sélectionné. Utilisez la recherche ci-dessus pour trouver et sélectionner un marqueur.',
