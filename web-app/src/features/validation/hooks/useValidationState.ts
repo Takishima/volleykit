@@ -82,10 +82,15 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     () => ({
       homeRoster: state.homeRoster.reviewed,
       awayRoster: state.awayRoster.reviewed,
-      scorer: state.scorer.selected !== null,
+      scorer: state.scorer.selected !== null || state.scorer.notFound,
       scoresheet: true,
     }),
-    [state.homeRoster.reviewed, state.awayRoster.reviewed, state.scorer.selected]
+    [
+      state.homeRoster.reviewed,
+      state.awayRoster.reviewed,
+      state.scorer.selected,
+      state.scorer.notFound,
+    ]
   )
 
   const isAllRequiredComplete = useMemo(
@@ -214,7 +219,14 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   }, [])
 
   const setScorer = useCallback((scorer: ValidatedPersonSearchResult | null) => {
-    setState((prev) => ({ ...prev, scorer: { selected: scorer } }))
+    setState((prev) => ({ ...prev, scorer: { ...prev.scorer, selected: scorer, notFound: false } }))
+  }, [])
+
+  const setScorerNotFound = useCallback((notFound: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      scorer: { selected: notFound ? null : prev.scorer.selected, notFound },
+    }))
   }, [])
 
   const setScoresheet = useCallback((file: File | null, uploaded: boolean) => {
@@ -431,6 +443,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     setHomeRosterModifications,
     setAwayRosterModifications,
     setScorer,
+    setScorerNotFound,
     setScoresheet,
     setReferenceImageUrl,
     referenceImageUrl: state.referenceImageUrl,

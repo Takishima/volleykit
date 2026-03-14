@@ -552,6 +552,8 @@ export interface Translations {
       searchResults: string
       resultsCount: string
       resultsCountOne: string
+      cannotFindScorer: string
+      cannotFindScorerHint: string
     }
     scoresheetUpload: {
       title: string

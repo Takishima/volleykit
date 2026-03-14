@@ -245,6 +245,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
     setHomeRosterModifications: wizard.setHomeRosterModifications,
     setAwayRosterModifications: wizard.setAwayRosterModifications,
     setScorer: wizard.setScorer,
+    setScorerNotFound: wizard.setScorerNotFound,
     setScoresheet: wizard.setScoresheet,
     onAddPlayerSheetOpenChange: wizard.handleAddPlayerSheetOpenChange,
     onClose,

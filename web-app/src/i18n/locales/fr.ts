@@ -704,6 +704,9 @@ const fr: Translations = {
       searchResults: 'Résultats de recherche',
       resultsCount: '{count} résultats trouvés',
       resultsCountOne: '1 résultat trouvé',
+      cannotFindScorer: 'Marqueur introuvable',
+      cannotFindScorerHint:
+        'La validation sera enregistrée mais pas finalisée. Complétez la sélection du marqueur sur VolleyManager.',
     },
     scoresheetUpload: {
       title: 'Télécharger la feuille de match',

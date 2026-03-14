@@ -7,6 +7,10 @@ import { ScorerSearchPanel } from './ScorerSearchPanel'
 interface ScorerPanelProps {
   onScorerChange?: (scorer: ValidatedPersonSearchResult | null) => void
   initialScorer?: ValidatedPersonSearchResult | null
+  /** Whether the scorer has been marked as not found */
+  scorerNotFound?: boolean
+  /** Called when the "cannot find scorer" checkbox changes */
+  onScorerNotFoundChange?: (notFound: boolean) => void
   /** When true, shows scorer in view-only mode without edit controls */
   readOnly?: boolean
   /** Scorer name to display in read-only mode when no scorer data is available */
@@ -23,6 +27,8 @@ interface ScorerPanelProps {
 export function ScorerPanel({
   onScorerChange,
   initialScorer = null,
+  scorerNotFound = false,
+  onScorerNotFoundChange,
   readOnly = false,
   readOnlyScorerName,
   readOnlyScorerBirthday,
@@ -48,6 +54,8 @@ export function ScorerPanel({
     <ScorerSearchPanel
       selectedScorer={selectedScorer}
       onScorerSelect={handleScorerSelect}
+      scorerNotFound={scorerNotFound}
+      onScorerNotFoundChange={onScorerNotFoundChange}
       readOnly={readOnly}
       readOnlyScorerName={readOnlyScorerName}
       readOnlyScorerBirthday={readOnlyScorerBirthday}

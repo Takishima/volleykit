@@ -207,6 +207,96 @@ describe('ScorerSearchPanel', () => {
   })
 })
 
+describe('ScorerSearchPanel - Cannot Find Scorer', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('shows checkbox when onScorerNotFoundChange is provided', () => {
+    render(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={vi.fn()}
+        onScorerNotFoundChange={vi.fn()}
+      />,
+      { wrapper: createWrapper() }
+    )
+
+    expect(screen.getByText('Cannot find scorer')).toBeInTheDocument()
+  })
+
+  it('does not show checkbox when onScorerNotFoundChange is not provided', () => {
+    render(<ScorerSearchPanel selectedScorer={null} onScorerSelect={vi.fn()} />, {
+      wrapper: createWrapper(),
+    })
+
+    expect(screen.queryByText('Cannot find scorer')).not.toBeInTheDocument()
+  })
+
+  it('does not show checkbox when a scorer is selected', () => {
+    render(
+      <ScorerSearchPanel
+        selectedScorer={mockScorers[0]}
+        onScorerSelect={vi.fn()}
+        onScorerNotFoundChange={vi.fn()}
+      />,
+      { wrapper: createWrapper() }
+    )
+
+    expect(screen.queryByText('Cannot find scorer')).not.toBeInTheDocument()
+  })
+
+  it('calls onScorerNotFoundChange when checkbox is clicked', () => {
+    const onScorerNotFoundChange = vi.fn()
+    render(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={vi.fn()}
+        onScorerNotFoundChange={onScorerNotFoundChange}
+      />,
+      { wrapper: createWrapper() }
+    )
+
+    const checkbox = screen.getByRole('checkbox')
+    fireEvent.click(checkbox)
+
+    expect(onScorerNotFoundChange).toHaveBeenCalledWith(true)
+  })
+
+  it('hides search input when scorerNotFound is true', () => {
+    render(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={vi.fn()}
+        scorerNotFound={true}
+        onScorerNotFoundChange={vi.fn()}
+      />,
+      { wrapper: createWrapper() }
+    )
+
+    expect(screen.queryByPlaceholderText('Search scorer by name...')).not.toBeInTheDocument()
+  })
+
+  it('shows hint text when scorerNotFound is checked', () => {
+    render(
+      <ScorerSearchPanel
+        selectedScorer={null}
+        onScorerSelect={vi.fn()}
+        scorerNotFound={true}
+        onScorerNotFoundChange={vi.fn()}
+      />,
+      { wrapper: createWrapper() }
+    )
+
+    expect(screen.getByText(/validation will be saved but not finalized/i)).toBeInTheDocument()
+  })
+})
+
 describe('ScorerSearchPanel - Loading State', () => {
   beforeEach(() => {
     vi.clearAllMocks()
