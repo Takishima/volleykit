@@ -10,6 +10,7 @@ import {
   validateBothRosters,
   type RosterValidationStatus,
 } from '@/features/validation/utils/roster-validation'
+import { isImageUrl } from '@/features/validation/utils/scoresheet'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useWizardNavigation } from '@/shared/hooks/useWizardNavigation'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -314,13 +315,8 @@ export function useValidateGameWizard({
   useEffect(() => {
     if (isOpen && existingScoresheetUrl && !referenceImageUrl) {
       // Only use as reference if it's an image (not PDF)
-      try {
-        const pathname = new URL(existingScoresheetUrl).pathname.toLowerCase()
-        if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg') || pathname.endsWith('.png')) {
-          setReferenceImageUrl(existingScoresheetUrl)
-        }
-      } catch {
-        // Invalid URL, skip
+      if (isImageUrl(existingScoresheetUrl)) {
+        setReferenceImageUrl(existingScoresheetUrl)
       }
     }
   }, [isOpen, existingScoresheetUrl, referenceImageUrl, setReferenceImageUrl])

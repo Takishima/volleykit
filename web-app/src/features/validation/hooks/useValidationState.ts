@@ -158,12 +158,12 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
   // Existing scoresheet file info (from a previous save/upload)
   const existingScoresheetUrl = useMemo(
     () => gameDetailsQuery.data?.scoresheet?.file?.publicResourceUri ?? null,
-    [gameDetailsQuery.data]
+    [gameDetailsQuery.data?.scoresheet?.file]
   )
 
   const existingFileResourceId = useMemo(
     () => gameDetailsQuery.data?.scoresheet?.file?.__identity ?? null,
-    [gameDetailsQuery.data]
+    [gameDetailsQuery.data?.scoresheet?.file]
   )
 
   // Pre-fill the uploaded file resource ID ref when an existing scoresheet file exists.

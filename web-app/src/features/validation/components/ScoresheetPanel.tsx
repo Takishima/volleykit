@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from '@/api/constants'
+import { isImageUrl } from '@/features/validation/utils/scoresheet'
 import { Upload, Camera, CheckCircle, FileText, AlertCircle, Info } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -31,16 +32,6 @@ type UploadState = 'idle' | 'uploading' | 'complete'
 interface SelectedFile {
   file: File
   previewUrl: string | null
-}
-
-/** Check if a URL points to an image based on its path extension */
-function isExistingImage(url: string): boolean {
-  try {
-    const pathname = new URL(url).pathname.toLowerCase()
-    return pathname.endsWith('.jpg') || pathname.endsWith('.jpeg') || pathname.endsWith('.png')
-  } catch {
-    return false
-  }
 }
 
 function formatFileSize(bytes: number): string {
@@ -277,7 +268,7 @@ export function ScoresheetPanel({
 
       {!selectedFile && existingFileUrl ? (
         <div className="border border-border-default dark:border-border-default-dark rounded-lg overflow-hidden">
-          {isExistingImage(existingFileUrl) ? (
+          {isImageUrl(existingFileUrl) ? (
             <div className="relative bg-surface-subtle dark:bg-surface-card-dark">
               <img
                 src={existingFileUrl}
