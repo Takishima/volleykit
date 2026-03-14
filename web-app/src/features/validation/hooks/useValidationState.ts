@@ -4,9 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { gameDetailOptions } from '@/api/queryOptions'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
 import type { RosterPanelModifications } from '@/features/validation/components/RosterVerificationPanel'
-import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
 import type { PendingScorerData } from '@/shared/stores/demo'
 import { logger } from '@/shared/utils/logger'
@@ -69,13 +69,8 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
 
   // Fetch game details (scoresheet and nomination list IDs)
   const gameDetailsQuery = useQuery({
-    queryKey: queryKeys.validation.gameDetail(gameId ?? ''),
-    queryFn: async () => {
-      if (!gameId) return null
-      return apiClient.getGameWithScoresheet(gameId)
-    },
+    ...gameDetailOptions(apiClient, gameId ?? ''),
     enabled: !!gameId,
-    staleTime: ASSIGNMENTS_STALE_TIME_MS,
   })
 
   const completionStatus = useMemo<PanelCompletionStatus>(

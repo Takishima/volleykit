@@ -1,12 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import {
-  getApiClient,
-  type PossibleNomination,
-  type PossibleNominationsResponse,
-} from '@/api/client'
-import { queryKeys } from '@/api/queryKeys'
-import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { getApiClient, type PossibleNomination } from '@/api/client'
+import { possibleNominationsOptions } from '@/api/queryOptions'
 import { useAuthStore } from '@/shared/stores/auth'
 
 interface UsePossiblePlayerNominationsOptions {
@@ -29,13 +24,7 @@ export function usePossiblePlayerNominations({
   const apiClient = getApiClient(dataSource)
 
   return useQuery({
-    queryKey: queryKeys.nominations.possible(nominationListId),
-    queryFn: async () => {
-      const response: PossibleNominationsResponse =
-        await apiClient.getPossiblePlayerNominations(nominationListId)
-      return response.items ?? []
-    },
+    ...possibleNominationsOptions(apiClient, nominationListId),
     enabled: enabled && !!nominationListId,
-    staleTime: ASSIGNMENTS_STALE_TIME_MS,
   })
 }

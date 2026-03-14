@@ -2,7 +2,12 @@
 export { SettingsPage } from './SettingsPage'
 
 // Hooks
-export { useAssociationSettings, useActiveSeason } from './hooks/useSettings'
+export {
+  useAssociationSettings,
+  useActiveSeason,
+  useSuspenseAssociationSettings,
+  useSuspenseActiveSeason,
+} from './hooks/useSettings'
 
 // Components
 export * from './components'

@@ -4,11 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { startOfDay, endOfDay, addWeeks, format } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type RefereeBackupEntry } from '@/api/client'
-import { queryKeys } from '@/api/queryKeys'
+import { refereeBackupListOptions } from '@/api/queryOptions'
 import { DEFAULT_PAGE_SIZE } from '@/shared/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore } from '@/shared/stores/demo'
-import { MS_PER_MINUTE } from '@/shared/utils/constants'
 
 /** Default number of weeks ahead to fetch referee backups */
 const DEFAULT_WEEKS_AHEAD = 2
@@ -87,10 +86,8 @@ export function useRefereeBackups(weeksAhead: number = DEFAULT_WEEKS_AHEAD) {
   }, [])
 
   return useQuery({
-    queryKey: queryKeys.refereeBackup.list(config, associationKey),
-    queryFn: () => apiClient.searchRefereeBackups(config),
+    ...refereeBackupListOptions(apiClient, config, associationKey),
     select: selectBackups,
-    staleTime: 2 * MS_PER_MINUTE,
     // Keep previous data while refetching
     placeholderData: (prev) => prev,
   })

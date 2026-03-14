@@ -5,6 +5,7 @@ import { addDays, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-f
 
 import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { assignmentListOptions, assignmentDetailOptions } from '@/api/queryOptions'
 import { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
 import {
   DEFAULT_PAGE_SIZE,
@@ -12,7 +13,6 @@ import {
   THIS_WEEK_DAYS,
   NEXT_MONTH_DAYS,
   VALIDATION_CLOSED_STALE_TIME_MS,
-  ASSIGNMENTS_STALE_TIME_MS,
   fetchAllAssignmentPages,
   parseDateOrFallback,
   sortByGameDate,
@@ -24,9 +24,6 @@ import { useDemoStore } from '@/shared/stores/demo'
 import type { ValidatedGameData } from '@/shared/stores/demo/types'
 
 import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
-
-/** Stale time for assignment details - longer since details rarely change */
-const ASSIGNMENT_DETAILS_STALE_TIME_MS = ASSIGNMENTS_STALE_TIME_MS * 2
 
 // Re-export calendar assignments hook for calendar mode
 export { useCalendarAssignments } from './useCalendarAssignments'
@@ -201,10 +198,8 @@ export function useAssignments(
   }, [isDemoMode, demoAssignments, fromDate, toDate, period, validatedGames])
 
   const query = useQuery({
-    queryKey: queryKeys.assignments.list(config, associationKey),
-    queryFn: () => apiClient.searchAssignments(config),
+    ...assignmentListOptions(apiClient, config, associationKey),
     select: (data) => data.items ?? EMPTY_ASSIGNMENTS,
-    staleTime: ASSIGNMENTS_STALE_TIME_MS,
     // Disable query in demo mode - we read directly from the store
     enabled: !isDemoMode,
   })
@@ -384,15 +379,7 @@ export function useAssignmentDetails(assignmentId: string | null) {
   const apiClient = getApiClient(dataSource)
 
   return useQuery({
-    queryKey: queryKeys.assignments.detail(assignmentId || ''),
-    queryFn: () =>
-      apiClient.getAssignmentDetails(assignmentId!, [
-        'refereeGame.game.encounter.teamHome',
-        'refereeGame.game.encounter.teamAway',
-        'refereeGame.game.hall',
-        'refereeGame.game.hall.primaryPostalAddress',
-      ]),
+    ...assignmentDetailOptions(apiClient, assignmentId || ''),
     enabled: !!assignmentId,
-    staleTime: ASSIGNMENT_DETAILS_STALE_TIME_MS,
   })
 }

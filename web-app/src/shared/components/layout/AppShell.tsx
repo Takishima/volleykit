@@ -95,7 +95,13 @@ export function AppShell() {
     selectedAssociation,
     associations: calendarAssociations,
     setSelectedAssociation,
-  } = useCalendarFilterStore()
+  } = useCalendarFilterStore(
+    useShallow((s) => ({
+      selectedAssociation: s.selectedAssociation,
+      associations: s.associations,
+      setSelectedAssociation: s.setSelectedAssociation,
+    }))
+  )
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Track the latest switch request to handle race conditions

@@ -1,5 +1,7 @@
 import { useCallback, memo } from 'react'
 
+import { useShallow } from 'zustand/react/shallow'
+
 import { usePWA } from '@/contexts/PWAContext'
 import { Button } from '@/shared/components/Button'
 import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
@@ -20,7 +22,9 @@ interface AppInfoSectionProps {
 function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const { t, locale } = useTranslation()
   const { needRefresh, isChecking, lastChecked, checkError, checkForUpdate, updateApp } = usePWA()
-  const { isOCREnabled, setOCREnabled } = useSettingsStore()
+  const { isOCREnabled, setOCREnabled } = useSettingsStore(
+    useShallow((s) => ({ isOCREnabled: s.isOCREnabled, setOCREnabled: s.setOCREnabled }))
+  )
   const isStandalone = usePwaStandalone()
 
   const platform = isStandalone ? 'PWA' : 'Web'

@@ -10,11 +10,11 @@ import {
   type Assignment,
 } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { compensationListOptions } from '@/api/queryOptions'
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
 import {
   DEFAULT_PAGE_SIZE,
   COMPENSATION_LOOKUP_LIMIT,
-  COMPENSATIONS_STALE_TIME_MS,
 } from '@/shared/hooks/usePaginatedQuery'
 import { createAction } from '@/shared/services/offline/action-store'
 import { useActionQueueStore } from '@/shared/stores/action-queue'
@@ -84,8 +84,7 @@ export function useCompensations(paidFilter?: boolean) {
 
   return useQuery({
     // All tabs share the same base query - filtering is done client-side via select
-    queryKey: queryKeys.compensations.list(config, associationKey),
-    queryFn: () => apiClient.searchCompensations(config),
+    ...compensationListOptions(apiClient, config, associationKey),
     select: (data) => {
       const items = data.items ?? EMPTY_COMPENSATIONS
       // Apply client-side filtering for paid/unpaid status
@@ -100,7 +99,6 @@ export function useCompensations(paidFilter?: boolean) {
       }
       return items.filter((record) => record.convocationCompensation?.paymentDone !== true)
     },
-    staleTime: COMPENSATIONS_STALE_TIME_MS,
   })
 }
 
@@ -134,7 +132,7 @@ export function useUpdateCompensation(): OfflineMutationResult<
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
+  const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
 
   const [isPending, setIsPending] = useState(false)
@@ -245,7 +243,7 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
+  const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
 
   const [isPending, setIsPending] = useState(false)
@@ -444,7 +442,7 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
   const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
+  const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const updateAssignmentCompensation = useDemoStore((state) => state.updateAssignmentCompensation)
   const apiClient = getApiClient(dataSource)
 

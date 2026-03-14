@@ -10,6 +10,7 @@ import {
   type PickExchangeResponse,
 } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { exchangeListOptions } from '@/api/queryOptions'
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
 import { DEFAULT_PAGE_SIZE } from '@/shared/hooks/usePaginatedQuery'
 import { createAction } from '@/shared/services/offline/action-store'
@@ -17,7 +18,6 @@ import { useActionQueueStore } from '@/shared/stores/action-queue'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
 import type { MutationCallbacks, OfflineMutationResult } from '@/shared/types/mutation'
-import { MS_PER_MINUTE } from '@/shared/utils/constants'
 import { getSeasonDateRange } from '@/shared/utils/date-helpers'
 import { createLogger } from '@/shared/utils/logger'
 
@@ -119,10 +119,8 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
   }, [status, isDemoMode, userId])
 
   return useQuery({
-    queryKey: queryKeys.exchanges.list(config, associationKey),
-    queryFn: () => apiClient.searchExchanges(config),
+    ...exchangeListOptions(apiClient, config, associationKey),
     select: selectExchanges,
-    staleTime: 2 * MS_PER_MINUTE,
     // Keep previous data while selector recalculates during tab switches.
     // This prevents loading flash since both tabs share the same cached query.
     placeholderData: (prev) => prev,
@@ -137,7 +135,7 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
+  const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
 
   const [isPending, setIsPending] = useState(false)
@@ -234,7 +232,7 @@ export function useRemoveOwnExchange(): OfflineMutationResult<void, string> {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
+  const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
 
   const [isPending, setIsPending] = useState(false)
@@ -330,7 +328,7 @@ export function useAddToExchange(): OfflineMutationResult<void, string> {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isOnline = useNetworkStatus()
-  const { refresh: refreshActionQueue } = useActionQueueStore()
+  const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
 
   const [isPending, setIsPending] = useState(false)
