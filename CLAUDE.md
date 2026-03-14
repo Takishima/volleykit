@@ -4,13 +4,13 @@
 
 VolleyKit is a multi-platform app suite for Swiss volleyball referee management (volleymanager.volleyball.ch).
 
-| Application    | Location           | Description                                         |
-| -------------- | ------------------ | --------------------------------------------------- |
-| Web App (PWA)  | `web-app/`         | React 19 + Vite 7 + Tailwind 4                      |
-| Mobile App     | `packages/mobile/` | React Native 0.81 + Expo 54                         |
-| Shared Package | `packages/shared/` | API client, hooks, stores, i18n (~70% code sharing) |
-| Help Site      | `help-site/`       | Astro 6 documentation                               |
-| CORS Proxy     | `worker/`          | Cloudflare Worker                                   |
+| Application    | Location           | Description                                             |
+| -------------- | ------------------ | ------------------------------------------------------- |
+| Web App (PWA)  | `web-app/`         | React 19 + Vite 7 + Tailwind 4                         |
+| Mobile App     | `packages/mobile/` | React Native 0.83 + Expo 55 + NativeWind               |
+| Shared Package | `packages/shared/` | API client, hooks, stores, i18n, offline (~70% sharing) |
+| Help Site      | `help-site/`       | Astro 6 + Pagefind search                              |
+| CORS Proxy     | `worker/`          | Cloudflare Worker (auth lockout, OCR proxy, OJP proxy)  |
 
 **Always check official docs**: [react.dev](https://react.dev), [reactnative.dev](https://reactnative.dev), [docs.expo.dev](https://docs.expo.dev), [vite.dev](https://vite.dev)
 
@@ -22,9 +22,11 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 | ----------------------------- | ----------------------------------------------------------------------------- |
 | Before committing             | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits |
 | Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)                      |
-| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                                |
+| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                               |
 | Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                          |
-| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures                |
+| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures               |
+| Reviewing PRs                 | [docs/REVIEW_CHECKLIST.md](docs/REVIEW_CHECKLIST.md)                         |
+| Data storage questions        | [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md)                             |
 
 ## Development Workflow
 
@@ -40,22 +42,24 @@ Use `/pr-review` to create PR and auto-fix Claude Code Review issues.
 ```
 volleykit/
 ├── packages/
-│   ├── shared/src/           # @volleykit/shared - API, hooks, stores, i18n, utils
-│   └── mobile/src/           # React Native - screens, navigation, components
+│   ├── shared/src/           # @volleykit/shared - API, hooks, stores, i18n, utils, adapters, offline
+│   └── mobile/src/           # @volleykit/mobile - screens, navigation, components, services
 ├── web-app/
-│   ├── src/features/         # assignments, auth, compensations, exchanges, ocr, settings, validation
-│   ├── src/shared/           # components, hooks, utils, stores, services
+│   ├── src/features/         # assignments, auth, compensations, exchanges, ocr, referee-backup, settings, validation
+│   ├── src/shared/           # components, hooks, utils, stores, services, config
 │   └── e2e/                  # Playwright tests with Page Object Models
 ├── help-site/src/            # Astro pages, components, i18n
-├── worker/src/               # CORS proxy
+├── worker/src/               # CORS proxy (auth lockout, OCR, OJP)
 ├── docs/                     # Guides and API docs
 ├── .changeset/               # Changelog staging
 └── .github/workflows/        # CI, deploy, release
 ```
 
-**Package manager**: pnpm (workspaces defined in `pnpm-workspace.yaml`)
+**Package manager**: pnpm 10 (workspaces defined in `pnpm-workspace.yaml`)
 
 **Shared imports**: `import { useAssignments } from '@volleykit/shared/hooks'`
+
+Subpath exports: `/api`, `/stores`, `/hooks`, `/utils`, `/i18n`, `/types`, `/adapters`, `/offline`
 
 ## Code Standards
 
@@ -63,7 +67,9 @@ volleykit/
 
 **React**: Zustand for client state, TanStack Query for server state. Query keys in `packages/shared/src/api/queryKeys.ts`. Use `useTranslation()` hook in .tsx.
 
-**Avoid**: Magic numbers, array index as key, uncleared intervals, `isMountedRef` pattern.
+**Styling**: Tailwind CSS 4 (web-app + help-site), NativeWind/Tailwind 3 (mobile).
+
+**Avoid**: Magic numbers, array index as key, uncleared intervals, `isMountedRef` pattern, functions > 30 lines, > 4 parameters.
 
 ## Changesets
 
@@ -85,6 +91,8 @@ Added dark mode toggle
 
 **Bump types**: `patch` (fixes), `minor` (features), `major` (breaking)
 
+**Package names**: `volleykit-web`, `@volleykit/shared`, `@volleykit/mobile`, `volleykit-help`
+
 ## Git Conventions
 
 **Commits**: `feat|fix|refactor|test|docs|chore(scope): description`
@@ -99,8 +107,11 @@ pnpm run generate:api           # Generate API types (required before build)
 
 cd web-app && pnpm run dev      # Start dev server
 cd web-app && pnpm run build    # Production build
+cd web-app && pnpm run knip     # Dead code detection
+cd web-app && pnpm run size     # Bundle size check
 
 cd packages/mobile && pnpm start  # Expo dev server
+cd packages/mobile && pnpm run typecheck  # TypeScript check
 ```
 
 ## Definition of Done
@@ -109,5 +120,5 @@ cd packages/mobile && pnpm start  # Expo dev server
 2. Changeset added for feat/fix commits
 3. Tests cover business logic
 4. Translations in all 4 languages (de/en/fr/it)
-5. All validation passes
+5. All validation passes (lint, knip, test, build)
 6. Accessible (keyboard, screen reader)
