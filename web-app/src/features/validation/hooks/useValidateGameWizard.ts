@@ -85,6 +85,7 @@ export interface UseValidateGameWizardResult {
   rosterValidation: RosterValidationStatus
 
   // Computed values
+  useSafeValidation: boolean
   canMarkCurrentStepDone: boolean
   allPreviousRequiredStepsDone: boolean
   isSwipeEnabled: boolean
