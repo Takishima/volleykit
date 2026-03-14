@@ -343,7 +343,7 @@ function AssignmentList({ assignments }: Props) {
 
   async function handleConfirm(id: string) {
     addOptimistic(id) // Instant UI update
-    await api.confirmAssignment(id) // Server call; auto-reverts on failure
+    await api.confirmAssignment(id) // Reverts when assignments prop updates with fresh data
   }
 }
 ```
@@ -358,7 +358,8 @@ function LoginForm() {
     async (_prev: string | null, formData: FormData) => {
       const result = await api.login(formData)
       if (!result.ok) return result.error
-      redirect('/dashboard')
+      // In SPA context, use navigate() from react-router instead of redirect()
+      navigate('/dashboard')
       return null
     },
     null
