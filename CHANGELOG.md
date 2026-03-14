@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.23.0
+
+### Minor Changes
+
+- [#990](https://github.com/Takishima/volleykit/pull/990) [`3d35f78`](https://github.com/Takishima/volleykit/commit/3d35f784866353c7b9907ebabe6a304a61da82de) Thanks [@Takishima](https://github.com/Takishima)! - Add "Cannot find scorer" checkbox to validation wizard for scorers not found in the system
+
+- [#989](https://github.com/Takishima/volleykit/pull/989) [`c94701b`](https://github.com/Takishima/volleykit/commit/c94701b8114f5001a77cb092d20e5b94c270520a) Thanks [@Takishima](https://github.com/Takishima)! - Load existing scoresheet in validation wizard when reopening a game that already has one uploaded
+
+- [#991](https://github.com/Takishima/volleykit/pull/991) [`3d75f02`](https://github.com/Takishima/volleykit/commit/3d75f024c15d9fcc37d2b0c9351d1b2b134278b6) Thanks [@Takishima](https://github.com/Takishima)! - Changed validation wizard finish button label based on safe mode: shows "Save" when safe mode is on, "Finalize" when off
+
+### Patch Changes
+
+- [#988](https://github.com/Takishima/volleykit/pull/988) [`17bc1bf`](https://github.com/Takishima/volleykit/commit/17bc1bfa4520ac16f8da1cccd45cd831a82ba257) Thanks [@Takishima](https://github.com/Takishima)! - Fix validation wizard scroll and gesture issues: preserve roster scroll position when toggling scoresheet reference image, disable swipe navigation on wizard steps (buttons/indicators only), lock down picture overlay to prevent pull-to-refresh and horizontal scroll, and fix jumpy pan/zoom behavior in the reference image viewer
+
+- [#991](https://github.com/Takishima/volleykit/pull/991) [`3d75f02`](https://github.com/Takishima/volleykit/commit/3d75f024c15d9fcc37d2b0c9351d1b2b134278b6) Thanks [@Takishima](https://github.com/Takishima)! - Renamed "Data Protection" settings section to "Safe Mode" in all languages (de/en/fr/it)
+
 ## 1.22.0
 
 ### Minor Changes
