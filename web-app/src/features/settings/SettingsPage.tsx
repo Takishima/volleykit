@@ -59,23 +59,23 @@ export function SettingsPage() {
 
       <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
 
+      {!isDemoMode && !isCalendarMode && (
+        <SafeModeSection isSafeModeEnabled={isSafeModeEnabled} onSetSafeMode={setSafeMode} />
+      )}
+
       {features.homeLocation && <HomeLocationSection />}
 
       {features.transport && <TravelSettingsSection />}
 
-      <DataRetentionSection />
+      <AppInfoSection showUpdates={__PWA_ENABLED__} />
 
-      {features.helpTours && <HelpToursSection isDemoMode={isDemoMode} />}
+      <DataRetentionSection />
 
       {isDemoMode && (
         <DemoSection activeAssociationCode={activeAssociationCode} onRefreshData={refreshData} />
       )}
 
-      {!isDemoMode && !isCalendarMode && (
-        <SafeModeSection isSafeModeEnabled={isSafeModeEnabled} onSetSafeMode={setSafeMode} />
-      )}
-
-      <AppInfoSection showUpdates={__PWA_ENABLED__} />
+      {features.helpTours && <HelpToursSection isDemoMode={isDemoMode} />}
 
       {/* Logout */}
       <div className="pt-4 border-t border-border-default dark:border-border-default-dark">
