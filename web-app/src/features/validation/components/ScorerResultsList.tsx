@@ -1,5 +1,5 @@
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import { ChevronRight } from '@/shared/components/icons'
+import { ChevronRight, MaleIcon, FemaleIcon } from '@/shared/components/icons'
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { formatDOB } from '@/shared/utils/date-helpers'
@@ -100,6 +100,12 @@ export function ScorerResultsList({
                     <span>
                       {t('common.dob')}: {formatDOB(scorer.birthday)}
                     </span>
+                  )}
+                  {scorer.gender === 'm' && (
+                    <MaleIcon className="w-4 h-4" aria-label={t('common.genderMale')} />
+                  )}
+                  {scorer.gender === 'f' && (
+                    <FemaleIcon className="w-4 h-4" aria-label={t('common.genderFemale')} />
                   )}
                 </div>
               </div>

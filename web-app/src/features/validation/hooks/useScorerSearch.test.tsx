@@ -181,6 +181,19 @@ describe('parseSearchInput', () => {
       lastName: 'von Berg',
     })
   })
+
+  it('parses non-4-digit numeric input as associationId', () => {
+    expect(parseSearchInput('12345')).toEqual({ associationId: '12345' })
+    expect(parseSearchInput('123456')).toEqual({ associationId: '123456' })
+    expect(parseSearchInput('12')).toEqual({ associationId: '12' })
+    expect(parseSearchInput('1')).toEqual({ associationId: '1' })
+    expect(parseSearchInput('99999')).toEqual({ associationId: '99999' })
+  })
+
+  it('preserves 4-digit numeric input as yearOfBirth (not associationId)', () => {
+    expect(parseSearchInput('1985')).toEqual({ yearOfBirth: '1985' })
+    expect(parseSearchInput('2000')).toEqual({ yearOfBirth: '2000' })
+  })
 })
 
 describe('useScorerSearch', () => {

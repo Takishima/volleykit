@@ -152,6 +152,8 @@ const en: Translations = {
     stepIndicatorInvalid: '(incomplete)',
     stepIndicatorFinalized: '(finalized)',
     dob: 'DOB',
+    genderMale: 'M',
+    genderFemale: 'F',
   },
   auth: {
     login: 'Login',
@@ -674,9 +676,9 @@ const en: Translations = {
       loadCoachesError: 'Failed to load coaches',
     },
     scorerSearch: {
-      searchPlaceholder: 'Search scorer by name...',
+      searchPlaceholder: 'Search scorer by name or ID...',
       searchHint:
-        "Enter name (e.g., 'Müller' or 'Hans Müller') or add birth year (e.g., 'Müller 1985')",
+        "Enter name (e.g., 'Müller' or 'Hans Müller'), birth year (e.g., 'Müller 1985'), or SV-ID (e.g., '12345')",
       searchError: 'Failed to search scorers',
       noScorerSelected: 'No scorer selected. Use the search above to find and select a scorer.',
       noScorersFound: 'No scorers found',

@@ -450,7 +450,7 @@ describe('API Client', () => {
 
       await api.searchPersons({ lastName: 'müller' })
 
-      expect(capturedUrl).toContain('searchConfiguration%5Blimit%5D=50')
+      expect(capturedUrl).toContain('searchConfiguration%5Blimit%5D=100')
     })
 
     it('respects custom limit when provided', async () => {

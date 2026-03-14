@@ -319,7 +319,7 @@ describe('PersonSearchFilter', () => {
       searchTerm: 'test',
       firstName: 'John',
       lastName: 'Doe',
-      associationId: 1,
+      associationId: '1',
     }
 
     expect(filter).toBeDefined()

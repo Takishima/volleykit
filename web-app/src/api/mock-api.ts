@@ -471,7 +471,7 @@ export const mockApi = {
     await delay(MOCK_NETWORK_DELAY_MS)
 
     const store = useDemoStore.getState()
-    const { firstName, lastName, yearOfBirth } = filters
+    const { firstName, lastName, yearOfBirth, associationId } = filters
 
     // When only lastName is provided (single search term), search both
     // firstName and lastName fields to mimic Elasticsearch fuzzy matching.
@@ -479,6 +479,11 @@ export const mockApi = {
     const isSingleTermSearch = lastName && !firstName
 
     const filtered = store.scorers.filter((scorer: PersonSearchResult) => {
+      // Association ID search: match by member number
+      if (associationId) {
+        return scorer.associationId?.toString().includes(associationId)
+      }
+
       // Use accent-insensitive matching (e.g., "muller" matches "Müller")
       const scorerFirstName = normalizeForSearch(scorer.firstName ?? '')
       const scorerLastName = normalizeForSearch(scorer.lastName ?? '')

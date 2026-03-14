@@ -269,7 +269,28 @@ export const api = {
     filters: PersonSearchFilter,
     options?: { offset?: number; limit?: number }
   ): Promise<PersonSearchResponse> {
-    const { firstName, lastName, yearOfBirth } = filters
+    const { firstName, lastName, yearOfBirth, associationId } = filters
+
+    // Association ID search: direct lookup by member number
+    if (associationId) {
+      const data = await apiRequest<unknown>(
+        '/sportmanager.core/api%5celasticsearchperson/search',
+        'GET',
+        {
+          searchConfiguration: {
+            propertyFilters: [{ propertyName: 'associationId', text: associationId }],
+            offset: options?.offset ?? 0,
+            limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
+          },
+          propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
+        }
+      )
+      return validateResponse(
+        data,
+        personSearchResponseSchema,
+        'searchPersons'
+      ) as PersonSearchResponse
+    }
 
     // When both firstName and lastName are provided, search both orderings
     // in parallel so "Bühler Renee" finds the same results as "Renee Bühler".

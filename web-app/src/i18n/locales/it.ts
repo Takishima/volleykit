@@ -153,6 +153,8 @@ const it: Translations = {
     stepIndicatorInvalid: '(incompleto)',
     stepIndicatorFinalized: '(finalizzato)',
     dob: 'DDN',
+    genderMale: 'M',
+    genderFemale: 'F',
   },
   auth: {
     login: 'Accesso',
@@ -688,9 +690,9 @@ const it: Translations = {
       loadCoachesError: 'Caricamento allenatori fallito',
     },
     scorerSearch: {
-      searchPlaceholder: 'Cerca segnapunti per nome...',
+      searchPlaceholder: 'Cerca segnapunti per nome o ID...',
       searchHint:
-        "Inserisci il nome (es. 'Müller' o 'Hans Müller') o aggiungi l'anno di nascita (es. 'Müller 1985')",
+        "Inserisci il nome (es. 'Müller' o 'Hans Müller'), l'anno di nascita (es. 'Müller 1985') o l'ID SV (es. '12345')",
       searchError: 'Ricerca segnapunti fallita',
       noScorerSelected:
         'Nessun segnapunti selezionato. Usa la ricerca sopra per trovare e selezionare un segnapunti.',

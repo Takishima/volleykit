@@ -84,7 +84,7 @@ export interface PersonSearchFilter {
   searchTerm?: string
   firstName?: string
   lastName?: string
-  associationId?: number
+  associationId?: string
 }
 
 export const queryKeys = {

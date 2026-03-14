@@ -162,7 +162,7 @@ vi.mock('@/shared/stores/auth', () => ({
 describe('ScorerPanel', () => {
   it('renders without crashing', () => {
     render(<ScorerPanel />, { wrapper: createWrapper() })
-    expect(screen.getByPlaceholderText('Search scorer by name...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search scorer by name or ID...')).toBeInTheDocument()
     expect(screen.getByText(/No scorer selected/)).toBeInTheDocument()
   })
 })

@@ -31,4 +31,4 @@ export const ALLOWED_FILE_TYPES: readonly string[] = ['application/pdf', 'image/
  * Default limit for search results pagination.
  * Used for person search and similar paginated endpoints.
  */
-export const DEFAULT_SEARCH_RESULTS_LIMIT = 50
+export const DEFAULT_SEARCH_RESULTS_LIMIT = 100

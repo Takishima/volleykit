@@ -91,14 +91,14 @@ describe('ScorerSearchPanel', () => {
     render(<ScorerSearchPanel {...defaultProps} />, {
       wrapper: createWrapper(),
     })
-    expect(screen.getByPlaceholderText('Search scorer by name...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Search scorer by name or ID...')).toBeInTheDocument()
   })
 
   it('displays search hint text', () => {
     render(<ScorerSearchPanel {...defaultProps} />, {
       wrapper: createWrapper(),
     })
-    expect(screen.getByText(/Enter name.*or add birth year/i)).toBeInTheDocument()
+    expect(screen.getByText(/Enter name.*birth year/i)).toBeInTheDocument()
   })
 
   it("shows 'no scorer selected' message when empty and not searching", () => {
@@ -113,7 +113,7 @@ describe('ScorerSearchPanel', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -129,7 +129,7 @@ describe('ScorerSearchPanel', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -145,7 +145,7 @@ describe('ScorerSearchPanel', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -166,7 +166,7 @@ describe('ScorerSearchPanel', () => {
 
     expect(screen.getByText('Hans Müller')).toBeInTheDocument()
     expect(screen.getByText('ID: 12345')).toBeInTheDocument()
-    expect(screen.queryByPlaceholderText('Search scorer by name...')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Search scorer by name or ID...')).not.toBeInTheDocument()
   })
 
   it('calls onScorerSelect with null when clear button is clicked', () => {
@@ -192,7 +192,9 @@ describe('ScorerSearchPanel', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...') as HTMLInputElement
+    const searchInput = screen.getByPlaceholderText(
+      'Search scorer by name or ID...'
+    ) as HTMLInputElement
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -279,7 +281,7 @@ describe('ScorerSearchPanel - Cannot Find Scorer', () => {
       { wrapper: createWrapper() }
     )
 
-    expect(screen.queryByPlaceholderText('Search scorer by name...')).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Search scorer by name or ID...')).not.toBeInTheDocument()
   })
 
   it('shows hint text when scorerNotFound is checked', () => {
@@ -320,7 +322,7 @@ describe('ScorerSearchPanel - Loading State', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -354,7 +356,7 @@ describe('ScorerSearchPanel - Error State', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -390,7 +392,7 @@ describe('ScorerSearchPanel - Empty Results', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'XYZ' } })
 
     act(() => {
@@ -423,7 +425,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -441,7 +443,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -462,7 +464,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -481,7 +483,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -499,7 +501,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -520,7 +522,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -540,7 +542,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -558,7 +560,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -591,7 +593,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
 
     rerender(<ScorerSearchPanel selectedScorer={null} onScorerSelect={onScorerSelect} />)
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -638,7 +640,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -662,7 +664,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Hans' } })
 
     act(() => {
@@ -686,7 +688,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -710,7 +712,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -734,7 +736,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'XYZ' } })
 
     act(() => {
@@ -778,7 +780,7 @@ describe('ScorerSearchPanel - ARIA Attributes', () => {
     })
 
     const searchInput = screen.getByRole('combobox')
-    const hintText = screen.getByText(/Enter name.*or add birth year/i)
+    const hintText = screen.getByText(/Enter name.*birth year/i)
 
     expect(hintText).toHaveAttribute('id')
     expect(searchInput).toHaveAttribute('aria-describedby', hintText.getAttribute('id'))
@@ -789,7 +791,7 @@ describe('ScorerSearchPanel - ARIA Attributes', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -805,7 +807,7 @@ describe('ScorerSearchPanel - ARIA Attributes', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {
@@ -858,7 +860,7 @@ describe('ScorerSearchPanel - ARIA Attributes', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText('Search scorer by name...')
+    const searchInput = screen.getByPlaceholderText('Search scorer by name or ID...')
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {

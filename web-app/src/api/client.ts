@@ -44,6 +44,7 @@ export interface PersonSearchFilter {
   firstName?: string
   lastName?: string
   yearOfBirth?: string
+  associationId?: string
 }
 
 // Re-export search types from shared package (single source of truth)

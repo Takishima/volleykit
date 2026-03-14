@@ -61,6 +61,12 @@ export function parseSearchInput(input: string): PersonSearchFilter {
     return {}
   }
 
+  // Purely numeric input (not exactly 4 digits, which is year-of-birth) → association ID search
+  const YEAR_LENGTH = 4
+  if (/^\d+$/.test(trimmed) && trimmed.length !== YEAR_LENGTH) {
+    return { associationId: trimmed }
+  }
+
   const tokens = trimmed.split(/\s+/)
   const result: PersonSearchFilter = {}
 
@@ -118,7 +124,9 @@ export function useScorerSearch(
   const dataSource = useAuthStore((state) => state.dataSource)
   const apiClient = getApiClient(dataSource)
 
-  const hasFilters = Boolean(filters.firstName || filters.lastName || filters.yearOfBirth)
+  const hasFilters = Boolean(
+    filters.firstName || filters.lastName || filters.yearOfBirth || filters.associationId
+  )
 
   const query = useQuery({
     queryKey: queryKeys.scorerSearch.search(filters),
