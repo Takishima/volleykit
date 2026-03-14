@@ -70,6 +70,8 @@ function mockSettingsStore(overrides = {}) {
   const state = {
     isSafeModeEnabled: true,
     setSafeMode: mockSetSafeMode,
+    settingsGroupExpanded: {},
+    setSettingsGroupExpanded: vi.fn(),
     ...overrides,
   }
   vi.mocked(settingsStore.useSettingsStore).mockReturnValue(
@@ -132,18 +134,18 @@ describe('SettingsPage', () => {
     it('hides safe mode section in demo mode', () => {
       mockAuthStore({ dataSource: 'demo' })
       render(<SettingsPage />, { wrapper: createWrapper() })
-      expect(screen.queryByText('settings.safeMode')).not.toBeInTheDocument()
+      expect(screen.queryByText('settings.safeModeDescription')).not.toBeInTheDocument()
     })
 
     it('hides safe mode section in calendar mode', () => {
       mockAuthStore({ dataSource: 'calendar' })
       render(<SettingsPage />, { wrapper: createWrapper() })
-      expect(screen.queryByText('settings.safeMode')).not.toBeInTheDocument()
+      expect(screen.queryByText('settings.safeModeDescription')).not.toBeInTheDocument()
     })
 
     it('shows safe mode section when not in demo or calendar mode', () => {
       render(<SettingsPage />, { wrapper: createWrapper() })
-      expect(screen.getByText('settings.safeMode')).toBeInTheDocument()
+      expect(screen.getByText('settings.safeModeDescription')).toBeInTheDocument()
     })
   })
 

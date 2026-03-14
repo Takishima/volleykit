@@ -85,6 +85,7 @@ describe('Settings Integration', () => {
         sbbDestinationType: 'address',
       },
       levelFilterEnabled: false,
+      settingsGroupExpanded: {},
     })
   })
 
@@ -113,9 +114,8 @@ describe('Settings Integration', () => {
     it('shows demo section when in demo mode', async () => {
       renderSettingsPage()
 
-      // Demo section should be visible - look for the heading specifically
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /Demo Data/i })).toBeInTheDocument()
+        expect(screen.getByText('Demo Data')).toBeInTheDocument()
       })
     })
 
@@ -228,7 +228,7 @@ describe('Settings Integration', () => {
 
       await waitFor(
         () => {
-          expect(screen.getByRole('heading', { name: /Home Location/i })).toBeInTheDocument()
+          expect(screen.getByText('Home Location')).toBeInTheDocument()
         },
         { timeout: 3000 }
       )

@@ -395,6 +395,7 @@ export interface Translations {
     safeModeDescription: string
     safeModeEnabled: string
     safeModeDisabled: string
+    safeModeWarning: string
     safeModeWarningTitle: string
     safeModeWarningMessage: string
     safeModeWarningPoint1: string

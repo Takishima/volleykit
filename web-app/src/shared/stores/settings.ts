@@ -205,6 +205,10 @@ interface SettingsState {
   preventZoom: boolean
   setPreventZoom: (enabled: boolean) => void
 
+  // Settings page group expansion state
+  settingsGroupExpanded: Record<string, boolean>
+  setSettingsGroupExpanded: (key: string, expanded: boolean) => void
+
   // === Mode-specific settings ===
 
   /** Current data source mode - synced from auth store */
@@ -345,6 +349,9 @@ const HIDE_OWN_EXCHANGES_VERSION = 8
 /** Version that added validation reference mode */
 const VALIDATION_REFERENCE_MODE_VERSION = 9
 
+/** Version that added settings group expansion state */
+const SETTINGS_GROUP_EXPANDED_VERSION = 10
+
 /** V1 state shape (flat settings) */
 interface V1State {
   isSafeModeEnabled?: boolean
@@ -483,6 +490,7 @@ export const useSettingsStore = create<SettingsState>()(
         isOCREnabled: false,
         validationReferenceMode: 'quick-compare' as ValidationReferenceMode,
         preventZoom: false,
+        settingsGroupExpanded: {},
 
         // Mode tracking
         currentMode: 'api' as DataSource,
@@ -527,6 +535,15 @@ export const useSettingsStore = create<SettingsState>()(
 
         setPreventZoom: (enabled: boolean) => {
           set({ preventZoom: enabled })
+        },
+
+        setSettingsGroupExpanded: (key: string, expanded: boolean) => {
+          set((state) => ({
+            settingsGroupExpanded: {
+              ...state.settingsGroupExpanded,
+              [key]: expanded,
+            },
+          }))
         },
 
         setHomeLocation: (location: UserLocation | null) => {
@@ -781,13 +798,14 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 9,
+        version: 10,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
           isOCREnabled: state.isOCREnabled,
           validationReferenceMode: state.validationReferenceMode,
           preventZoom: state.preventZoom,
+          settingsGroupExpanded: state.settingsGroupExpanded,
           // Mode-specific settings stored per mode
           settingsByMode: state.settingsByMode,
           // Don't persist currentMode - it's synced from auth store on load
@@ -833,6 +851,13 @@ export const useSettingsStore = create<SettingsState>()(
             }
           }
 
+          // v9 → v10: Add settings group expansion state
+          if (version < SETTINGS_GROUP_EXPANDED_VERSION) {
+            if (!(state as Record<string, unknown>).settingsGroupExpanded) {
+              ;(state as Record<string, unknown>).settingsGroupExpanded = {}
+            }
+          }
+
           return state
         },
         merge: (persisted, current) => {
@@ -844,6 +869,7 @@ export const useSettingsStore = create<SettingsState>()(
                 isOCREnabled?: boolean
                 validationReferenceMode?: ValidationReferenceMode
                 preventZoom?: boolean
+                settingsGroupExpanded?: Record<string, boolean>
                 settingsByMode?: Record<DataSource, Partial<ModeSettings>>
               }
             | undefined
@@ -913,6 +939,8 @@ export const useSettingsStore = create<SettingsState>()(
             validationReferenceMode:
               persistedState?.validationReferenceMode ?? current.validationReferenceMode,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,
+            settingsGroupExpanded:
+              persistedState?.settingsGroupExpanded ?? current.settingsGroupExpanded,
             // Preserve mode-specific settings
             settingsByMode: mergedSettingsByMode,
           }

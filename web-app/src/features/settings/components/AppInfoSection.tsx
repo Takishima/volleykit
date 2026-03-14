@@ -2,12 +2,13 @@ import { useCallback, memo } from 'react'
 
 import { usePWA } from '@/contexts/PWAContext'
 import { Button } from '@/shared/components/Button'
-import { Card, CardContent, CardHeader } from '@/shared/components/Card'
 import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
 import { features } from '@/shared/config/features'
 import { usePwaStandalone } from '@/shared/hooks/usePwaStandalone'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useSettingsStore } from '@/shared/stores/settings'
+
+import { SettingsItem } from './SettingsItem'
 
 // Build OCR POC URL relative to the app's base path (features.ocrPoc)
 const OCR_POC_URL = features.ocrPoc ? `${import.meta.env.BASE_URL}ocr-poc/` : ''
@@ -51,167 +52,147 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   )
 
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="font-semibold text-text-primary dark:text-text-primary-dark">
-          {t('settings.about')}
-        </h2>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Version info */}
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-text-muted dark:text-text-muted-dark">
-              {t('settings.version')}
+    <>
+      {/* Version info */}
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-text-muted dark:text-text-muted-dark">{t('settings.version')}</span>
+          <span className="text-text-primary dark:text-text-primary-dark">
+            {__APP_VERSION__}{' '}
+            <span className="text-text-muted dark:text-text-muted-dark font-mono text-xs">
+              ({__GIT_HASH__})
             </span>
-            <span className="text-text-primary dark:text-text-primary-dark">
-              {__APP_VERSION__}{' '}
-              <span className="text-text-muted dark:text-text-muted-dark font-mono text-xs">
-                ({__GIT_HASH__})
-              </span>
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-muted dark:text-text-muted-dark">
-              {t('settings.platform')}
-            </span>
-            <span className="text-text-primary dark:text-text-primary-dark">{platform}</span>
-          </div>
+          </span>
         </div>
+        <div className="flex justify-between">
+          <span className="text-text-muted dark:text-text-muted-dark">
+            {t('settings.platform')}
+          </span>
+          <span className="text-text-primary dark:text-text-primary-dark">{platform}</span>
+        </div>
+      </div>
 
-        {/* Updates section - only shown when PWA is enabled */}
-        {showUpdates && (
-          <>
-            <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
-            <div className="space-y-4">
-              <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                {t('settings.updates')}
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div
-                    className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
-                    aria-live="polite"
-                  >
-                    {needRefresh ? t('settings.updateAvailable') : t('settings.upToDate')}
-                  </div>
-                  {lastChecked && (
-                    <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
-                      {t('settings.lastChecked')}: {formatLastChecked(lastChecked)}
-                    </div>
-                  )}
-                  {checkError && (
-                    <div className="text-xs text-danger-600 dark:text-danger-400 mt-1" role="alert">
-                      {t('settings.updateCheckFailed')}
-                    </div>
-                  )}
+      {/* Updates section - only shown when PWA is enabled */}
+      {showUpdates && (
+        <>
+          <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
+          <div className="space-y-4">
+            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+              {t('settings.updates')}
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div
+                  className="text-sm font-medium text-text-primary dark:text-text-primary-dark"
+                  aria-live="polite"
+                >
+                  {needRefresh ? t('settings.updateAvailable') : t('settings.upToDate')}
                 </div>
-                {needRefresh ? (
-                  <Button
-                    variant="primary"
-                    onClick={updateApp}
-                    aria-label={t('settings.updateNow')}
-                  >
-                    {t('settings.updateNow')}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    onClick={checkForUpdate}
-                    loading={isChecking}
-                    aria-label={t('settings.checkForUpdates')}
-                  >
-                    {isChecking ? t('settings.checking') : t('settings.checkForUpdates')}
-                  </Button>
+                {lastChecked && (
+                  <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
+                    {t('settings.lastChecked')}: {formatLastChecked(lastChecked)}
+                  </div>
+                )}
+                {checkError && (
+                  <div className="text-xs text-danger-600 dark:text-danger-400 mt-1" role="alert">
+                    {t('settings.updateCheckFailed')}
+                  </div>
                 )}
               </div>
+              {needRefresh ? (
+                <Button variant="primary" onClick={updateApp} aria-label={t('settings.updateNow')}>
+                  {t('settings.updateNow')}
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  onClick={checkForUpdate}
+                  loading={isChecking}
+                  aria-label={t('settings.checkForUpdates')}
+                >
+                  {isChecking ? t('settings.checking') : t('settings.checkForUpdates')}
+                </Button>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </>
+      )}
 
-        {/* Experimental features (features.ocr / features.ocrPoc) */}
-        {(features.ocr || features.ocrPoc) && (
-          <>
-            <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
-            <div className="space-y-4">
-              <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                {t('settings.experimental.title')}
-              </div>
-              <p className="text-sm text-text-muted dark:text-text-muted-dark">
-                {t('settings.experimental.description')}
-              </p>
+      {/* Experimental features (features.ocr / features.ocrPoc) */}
+      {(features.ocr || features.ocrPoc) && (
+        <>
+          <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
+          <div className="space-y-4">
+            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+              {t('settings.experimental.title')}
+            </div>
+            <p className="text-sm text-text-muted dark:text-text-muted-dark">
+              {t('settings.experimental.description')}
+            </p>
 
-              {/* OCR POC standalone app link (features.ocrPoc) */}
-              {features.ocrPoc && (
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium text-text-primary dark:text-text-primary-dark text-sm">
-                      {t('settings.experimental.ocrPoc')}
-                    </p>
-                    <p className="text-xs text-text-muted dark:text-text-muted-dark">
-                      {t('settings.experimental.ocrPocDescription')}
-                    </p>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    onClick={() => window.open(OCR_POC_URL, '_blank', 'noopener,noreferrer')}
-                    aria-label={t('settings.experimental.openOcrPoc')}
-                  >
-                    {t('settings.experimental.openOcrPoc')}
-                  </Button>
+            {/* OCR POC standalone app link (features.ocrPoc) */}
+            {features.ocrPoc && (
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="font-medium text-text-primary dark:text-text-primary-dark text-sm">
+                    {t('settings.experimental.ocrPoc')}
+                  </p>
+                  <p className="text-xs text-text-muted dark:text-text-muted-dark">
+                    {t('settings.experimental.ocrPocDescription')}
+                  </p>
                 </div>
-              )}
+                <Button
+                  variant="secondary"
+                  onClick={() => window.open(OCR_POC_URL, '_blank', 'noopener,noreferrer')}
+                  aria-label={t('settings.experimental.openOcrPoc')}
+                >
+                  {t('settings.experimental.openOcrPoc')}
+                </Button>
+              </div>
+            )}
 
-              {/* OCR Validation Toggle (features.ocr) */}
-              {features.ocr && (
-                <>
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                        {t('settings.experimental.ocrValidation')}
-                      </div>
-                      <div className="text-xs text-text-muted dark:text-text-muted-dark mt-1">
-                        {t('settings.experimental.ocrValidationDescription')}
-                      </div>
-                    </div>
-                    <ToggleSwitch
-                      checked={isOCREnabled}
-                      onChange={handleToggleOCR}
-                      label={t('settings.experimental.ocrValidation')}
-                    />
-                  </div>
-                  <div className="text-xs text-text-muted dark:text-text-muted-dark">
-                    {isOCREnabled
-                      ? t('settings.experimental.ocrValidationEnabled')
-                      : t('settings.experimental.ocrValidationDisabled')}
-                  </div>
-                </>
-              )}
-            </div>
-          </>
-        )}
+            {/* OCR Validation Toggle (features.ocr) */}
+            {features.ocr && (
+              <SettingsItem
+                label={t('settings.experimental.ocrValidation')}
+                description={t('settings.experimental.ocrValidationDescription')}
+                status={
+                  isOCREnabled
+                    ? t('settings.experimental.ocrValidationEnabled')
+                    : t('settings.experimental.ocrValidationDisabled')
+                }
+              >
+                <ToggleSwitch
+                  checked={isOCREnabled}
+                  onChange={handleToggleOCR}
+                  label={t('settings.experimental.ocrValidation')}
+                />
+              </SettingsItem>
+            )}
+          </div>
+        </>
+      )}
 
-        {/* Official website and disclaimer */}
-        <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3">
-          <a
-            href="https://volleymanager.volleyball.ch"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary-600 dark:text-primary-400 hover:underline text-sm"
-          >
-            {t('settings.openWebsite')} →
-          </a>
-        </div>
-        <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3 space-y-2">
-          <p className="text-sm text-text-muted dark:text-text-muted-dark">
-            {t('settings.dataSource')}
-          </p>
-          <p className="text-xs text-text-subtle dark:text-text-subtle-dark">
-            {t('settings.disclaimer')}
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+      {/* Official website and disclaimer */}
+      <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3">
+        <a
+          href="https://volleymanager.volleyball.ch"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-600 dark:text-primary-400 hover:underline text-sm"
+        >
+          {t('settings.openWebsite')} →
+        </a>
+      </div>
+      <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3 space-y-2">
+        <p className="text-sm text-text-muted dark:text-text-muted-dark">
+          {t('settings.dataSource')}
+        </p>
+        <p className="text-xs text-text-subtle dark:text-text-subtle-dark">
+          {t('settings.disclaimer')}
+        </p>
+      </div>
+    </>
   )
 }
 

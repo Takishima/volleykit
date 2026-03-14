@@ -535,6 +535,7 @@ const de: Translations = {
       'Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse. Die Validierung speichert Ihre Änderungen, schliesst das Spiel aber nicht ab — Sie schliessen die Validierung im VolleyManager ab.',
     safeModeEnabled: 'Sicherheitsmodus ist aktiviert',
     safeModeDisabled: 'Sicherheitsmodus ist deaktiviert',
+    safeModeWarning: 'Sicherheitsmodus ist deaktiviert — Aktion erforderlich',
     safeModeWarningTitle: 'Sicherheitsmodus deaktivieren?',
     safeModeWarningMessage:
       'Das Deaktivieren des Sicherheitsmodus ermöglicht Operationen, die Ihre Einsätze und Spiele ändern können.',

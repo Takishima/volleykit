@@ -528,6 +528,7 @@ const it: Translations = {
       "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi. La convalida salva le modifiche ma non finalizza la partita — completi la convalida su VolleyManager.",
     safeModeEnabled: 'La modalità sicura è attivata',
     safeModeDisabled: 'La modalità sicura è disattivata',
+    safeModeWarning: 'Modalità sicura disattivata — azione richiesta',
     safeModeWarningTitle: 'Disattivare la modalità sicura?',
     safeModeWarningMessage:
       'La disattivazione della modalità sicura abiliterà operazioni che potrebbero modificare le tue designazioni e partite.',
