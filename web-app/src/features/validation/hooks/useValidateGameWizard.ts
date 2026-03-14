@@ -513,6 +513,7 @@ export function useValidateGameWizard({
     rosterValidation,
 
     // Computed values
+    useSafeValidation,
     canMarkCurrentStepDone,
     allPreviousRequiredStepsDone,
     isSwipeEnabled,

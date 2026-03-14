@@ -388,6 +388,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
                 !wizard.allPreviousRequiredStepsDone
               }
               isFinalizing={wizard.isFinalizing}
+              useSafeValidation={wizard.useSafeValidation}
             />
           ) : (
             <EditModeButtons
@@ -397,6 +398,7 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
               onBack={wizard.goBack}
               onValidateAndNext={wizard.handleValidateAndNext}
               onFinish={wizard.handleFinish}
+              useSafeValidation={wizard.useSafeValidation}
             />
           )}
           {/* Quick-compare toggle — between Previous and Validate, always visible */}

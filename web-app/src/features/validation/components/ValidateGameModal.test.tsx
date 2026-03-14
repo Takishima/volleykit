@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { Assignment } from '@/api/client'
 import * as useNominationListModule from '@/features/validation/hooks/useNominationList'
 import * as useValidationStateModule from '@/features/validation/hooks/useValidationState'
+import { useSettingsStore } from '@/shared/stores/settings'
 
 import { ValidateGameModal } from './ValidateGameModal'
 
@@ -317,7 +318,7 @@ describe('ValidateGameModal', () => {
       expect(screen.getByText('VBC Basel')).toBeInTheDocument()
     })
 
-    it('shows Scorer panel and Finish button on step 4 (last step)', async () => {
+    it('shows Scorer panel and Finalize button on step 4 (last step)', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -339,7 +340,7 @@ describe('ValidateGameModal', () => {
       // ScorerPanel shows search input and no-selection message
       expect(screen.getByPlaceholderText('Search scorer by name...')).toBeInTheDocument()
       expect(screen.getByText(/No scorer selected/)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /Finish/i, hidden: true })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Finalize/i, hidden: true })).toBeInTheDocument()
     })
 
     it('updates step indicator when navigating', async () => {
@@ -483,7 +484,7 @@ describe('ValidateGameModal', () => {
   })
 
   describe('validation state', () => {
-    it('renders Finish button on last step (Scorer)', async () => {
+    it('renders Finalize button on last step (Scorer)', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -502,10 +503,10 @@ describe('ValidateGameModal', () => {
 
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
-      expect(screen.getByRole('button', { name: /Finish/i, hidden: true })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /Finalize/i, hidden: true })).toBeInTheDocument()
     })
 
-    it('disables Finish button when previous panels are not validated', async () => {
+    it('disables Finalize button when previous panels are not validated', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -526,13 +527,13 @@ describe('ValidateGameModal', () => {
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
       const finishButton = screen.getByRole('button', {
-        name: /Finish/i,
+        name: /Finalize/i,
         hidden: true,
       })
       expect(finishButton).toBeDisabled()
     })
 
-    it('disables Finish button on scorer panel (last step) when no scorer is selected', async () => {
+    it('disables Finalize button on scorer panel (last step) when no scorer is selected', async () => {
       render(
         <ValidateGameModal
           assignment={createMockAssignment()}
@@ -550,10 +551,10 @@ describe('ValidateGameModal', () => {
       fireEvent.click(scorerStep)
       await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
 
-      // Finish button should be disabled because no scorer is selected and
+      // Finalize button should be disabled because no scorer is selected and
       // previous required steps are not marked done
       const finishButton = screen.getByRole('button', {
-        name: /Finish/i,
+        name: /Finalize/i,
         hidden: true,
       })
       expect(finishButton).toBeDisabled()
@@ -571,6 +572,74 @@ describe('ValidateGameModal', () => {
 
       expect(screen.getByRole('button', { name: /Cancel/i, hidden: true })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /Validate/i, hidden: true })).toBeInTheDocument()
+    })
+  })
+
+  describe('safe mode button labels', () => {
+    it('shows Save button on last step when safe mode is enabled', async () => {
+      vi.mocked(useSettingsStore).mockImplementation((selector) => {
+        const state = {
+          isSafeModeEnabled: true,
+          isOCREnabled: false,
+          validationReferenceMode: 'quick-compare',
+        }
+        return typeof selector === 'function' ? selector(state) : state
+      })
+
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() }
+      )
+
+      // Navigate to last step (Scorer) using step indicator
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
+        hidden: true,
+      })
+      fireEvent.click(scorerStep)
+
+      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+
+      expect(screen.getByRole('button', { name: /Save/i, hidden: true })).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /Finalize/i, hidden: true })
+      ).not.toBeInTheDocument()
+    })
+
+    it('shows Finalize button on last step when safe mode is disabled', async () => {
+      vi.mocked(useSettingsStore).mockImplementation((selector) => {
+        const state = {
+          isSafeModeEnabled: false,
+          isOCREnabled: false,
+          validationReferenceMode: 'quick-compare',
+        }
+        return typeof selector === 'function' ? selector(state) : state
+      })
+
+      render(
+        <ValidateGameModal
+          assignment={createMockAssignment()}
+          isOpen={true}
+          onClose={mockOnClose}
+        />,
+        { wrapper: createWrapper() }
+      )
+
+      // Navigate to last step (Scorer) using step indicator
+      const scorerStep = screen.getByRole('button', {
+        name: 'Scorer',
+        hidden: true,
+      })
+      fireEvent.click(scorerStep)
+
+      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+
+      expect(screen.getByRole('button', { name: /Finalize/i, hidden: true })).toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /Save/i, hidden: true })).not.toBeInTheDocument()
     })
   })
 

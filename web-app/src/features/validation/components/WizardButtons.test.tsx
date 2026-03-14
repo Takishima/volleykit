@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { ValidatedModeButtons, EditModeButtons } from './WizardButtons'
+import { ValidatedModeButtons, ReadOnlyStepButtons, EditModeButtons } from './WizardButtons'
 
 // Mock useTranslation hook
 vi.mock('@/shared/hooks/useTranslation', () => ({
@@ -12,7 +12,8 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
         'validation.wizard.previous': 'Previous',
         'validation.wizard.next': 'Next',
         'validation.wizard.validate': 'Validate',
-        'validation.wizard.finish': 'Finish',
+        'validation.wizard.save': 'Save',
+        'validation.wizard.finalize': 'Finalize',
         'validation.state.markAllStepsTooltip': 'Complete all required steps first',
         'common.close': 'Close',
         'common.cancel': 'Cancel',
@@ -107,6 +108,41 @@ describe('ValidatedModeButtons', () => {
   })
 })
 
+describe('ReadOnlyStepButtons', () => {
+  const defaultProps = {
+    navigation: { isFirstStep: false, isLastStep: true },
+    onBack: vi.fn(),
+    onNext: vi.fn(),
+    onFinish: vi.fn().mockResolvedValue(undefined),
+    finishDisabled: false,
+    isFinalizing: false,
+    useSafeValidation: false,
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('shows Finalize button on last step when safe mode is off', () => {
+    render(<ReadOnlyStepButtons {...defaultProps} />)
+
+    expect(screen.getByRole('button', { name: 'Finalize' })).toBeInTheDocument()
+  })
+
+  it('shows Save button on last step when safe mode is on', () => {
+    render(<ReadOnlyStepButtons {...defaultProps} useSafeValidation={true} />)
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Finalize' })).not.toBeInTheDocument()
+  })
+
+  it('shows Loading text when finalizing', () => {
+    render(<ReadOnlyStepButtons {...defaultProps} isFinalizing={true} />)
+
+    expect(screen.getByRole('button', { name: 'Loading...' })).toBeInTheDocument()
+  })
+})
+
 describe('EditModeButtons', () => {
   const defaultState = {
     isFinalizing: false,
@@ -124,6 +160,7 @@ describe('EditModeButtons', () => {
     onBack: vi.fn(),
     onValidateAndNext: vi.fn(),
     onFinish: vi.fn().mockResolvedValue(undefined),
+    useSafeValidation: false,
   }
 
   beforeEach(() => {
@@ -150,15 +187,15 @@ describe('EditModeButtons', () => {
     render(<EditModeButtons {...defaultProps} />)
 
     expect(screen.getByRole('button', { name: 'Validate' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Finish' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Finalize' })).not.toBeInTheDocument()
   })
 
-  it('shows Finish button on last step', () => {
+  it('shows Finalize button on last step when safe mode is off', () => {
     render(
       <EditModeButtons {...defaultProps} navigation={{ isFirstStep: false, isLastStep: true }} />
     )
 
-    expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Finalize' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Validate' })).not.toBeInTheDocument()
   })
 
@@ -201,7 +238,20 @@ describe('EditModeButtons', () => {
     expect(onValidateAndNext).toHaveBeenCalledTimes(1)
   })
 
-  it('calls onFinish when Finish button is clicked', async () => {
+  it('shows Save button on last step when safe mode is on', () => {
+    render(
+      <EditModeButtons
+        {...defaultProps}
+        navigation={{ isFirstStep: false, isLastStep: true }}
+        useSafeValidation={true}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Finalize' })).not.toBeInTheDocument()
+  })
+
+  it('calls onFinish when Finalize button is clicked', async () => {
     const onFinish = vi.fn().mockResolvedValue(undefined)
     const user = userEvent.setup()
 
@@ -213,7 +263,7 @@ describe('EditModeButtons', () => {
       />
     )
 
-    await user.click(screen.getByRole('button', { name: 'Finish' }))
+    await user.click(screen.getByRole('button', { name: 'Finalize' }))
 
     expect(onFinish).toHaveBeenCalledTimes(1)
   })
@@ -258,7 +308,7 @@ describe('EditModeButtons', () => {
     expect(screen.getByRole('button', { name: 'Validate' })).toBeDisabled()
   })
 
-  it('disables Finish when allPreviousRequiredStepsDone is false', () => {
+  it('disables Finalize when allPreviousRequiredStepsDone is false', () => {
     render(
       <EditModeButtons
         {...defaultProps}
@@ -267,12 +317,12 @@ describe('EditModeButtons', () => {
       />
     )
 
-    const finishButton = screen.getByRole('button', { name: 'Finish' })
+    const finishButton = screen.getByRole('button', { name: 'Finalize' })
     expect(finishButton).toBeDisabled()
     expect(finishButton).toHaveAttribute('title', 'Complete all required steps first')
   })
 
-  it('enables Finish when currentStepIsOptional even if canMarkCurrentStepDone is false', () => {
+  it('enables Finalize when currentStepIsOptional even if canMarkCurrentStepDone is false', () => {
     render(
       <EditModeButtons
         {...defaultProps}
@@ -285,7 +335,7 @@ describe('EditModeButtons', () => {
       />
     )
 
-    expect(screen.getByRole('button', { name: 'Finish' })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Finalize' })).not.toBeDisabled()
   })
 
   it('shows Loading... text when finalizing', () => {
