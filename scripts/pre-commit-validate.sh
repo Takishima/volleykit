@@ -105,6 +105,10 @@ run_validation() {
   local output_file="$TEMP_DIR/${name}.out"
   local result_file="$TEMP_DIR/${name}.result"
 
+  # Ensure each background job runs from web-app directory
+  # (prevents failures when parent shell cwd changes or is a subfolder)
+  cd "$WEB_APP_DIR"
+
   # Default to failure, only set success if command passes
   if $cmd >"$output_file" 2>&1; then
     echo "0" >"$result_file"

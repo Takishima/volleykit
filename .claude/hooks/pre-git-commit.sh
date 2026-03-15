@@ -243,9 +243,12 @@ mkdir -p "$VALIDATION_STEPS_DIR"
 echo "$(date +%s)" >"$VALIDATION_START_FILE"
 
 # Start validation in background
+# cd to project root first to ensure git/pnpm commands resolve correctly
+# even when Claude is cd'ed into a subfolder
 (
   # Disable errexit inside subshell to ensure exit code is captured even on failure
   set +e
+  cd "$PROJECT_DIR" || exit 1
   CLAUDE_CODE_REMOTE=true VALIDATION_STEPS_DIR="$VALIDATION_STEPS_DIR" \
     "$VALIDATION_SCRIPT" >"$VALIDATION_OUTPUT_FILE" 2>&1
   echo "$?" >"$VALIDATION_RESULT_FILE"
