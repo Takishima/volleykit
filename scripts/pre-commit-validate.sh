@@ -106,9 +106,12 @@ if [ "$HAS_SHARED" = true ]; then
   HAS_MOBILE=true
 fi
 
-# Root config changes affect everything
+# Root config changes affect all packages
 if echo "$STAGED_FILES" | grep -qE '^(package\.json|tsconfig\.json|eslint\.config)'; then
   HAS_WEB_APP=true
+  HAS_SHARED=true
+  HAS_MOBILE=true
+  HAS_WORKER=true
 fi
 
 # Log affected packages
@@ -145,15 +148,14 @@ run_validation() {
   local name=$1
   local dir=$2
   shift 2
-  local cmd="$*"
   local output_file="$TEMP_DIR/${name}.out"
   local result_file="$TEMP_DIR/${name}.result"
 
   # Ensure each background job runs from the correct directory
   cd "$dir"
 
-  # Default to failure, only set success if command passes
-  if eval "$cmd" >"$output_file" 2>&1; then
+  # Execute command directly via "$@" (avoids eval and command injection risks)
+  if "$@" >"$output_file" 2>&1; then
     echo "0" >"$result_file"
   else
     echo "1" >"$result_file"
@@ -213,42 +215,42 @@ launch_job() {
 # --- Web App checks ---
 if [ "$HAS_WEB_APP" = true ]; then
   WEB_DIR="$ROOT_DIR/web-app"
-  launch_job "web:format"  "$WEB_DIR" "pnpm run format:check"
-  launch_job "web:lint"    "$WEB_DIR" "pnpm run lint"
-  launch_job "web:knip"    "$WEB_DIR" "pnpm run knip"
-  launch_job "web:test"    "$WEB_DIR" "pnpm test"
+  launch_job "web:format"  "$WEB_DIR" pnpm run format:check
+  launch_job "web:lint"    "$WEB_DIR" pnpm run lint
+  launch_job "web:knip"    "$WEB_DIR" pnpm run knip
+  launch_job "web:test"    "$WEB_DIR" pnpm test
 fi
 
 # --- Shared package checks ---
 if [ "$HAS_SHARED" = true ]; then
   SHARED_DIR="$ROOT_DIR/packages/shared"
-  launch_job "shared:format"    "$SHARED_DIR" "pnpm run format:check"
-  launch_job "shared:lint"      "$SHARED_DIR" "pnpm run lint"
-  launch_job "shared:typecheck" "$SHARED_DIR" "pnpm run typecheck"
-  launch_job "shared:test"      "$SHARED_DIR" "pnpm test"
+  launch_job "shared:format"    "$SHARED_DIR" pnpm run format:check
+  launch_job "shared:lint"      "$SHARED_DIR" pnpm run lint
+  launch_job "shared:typecheck" "$SHARED_DIR" pnpm run typecheck
+  launch_job "shared:test"      "$SHARED_DIR" pnpm test
 fi
 
 # --- Mobile package checks ---
 if [ "$HAS_MOBILE" = true ]; then
   MOBILE_DIR="$ROOT_DIR/packages/mobile"
-  launch_job "mobile:format"    "$MOBILE_DIR" "pnpm run format:check"
-  launch_job "mobile:lint"      "$MOBILE_DIR" "pnpm run lint"
-  launch_job "mobile:typecheck" "$MOBILE_DIR" "pnpm run typecheck"
-  launch_job "mobile:test"      "$MOBILE_DIR" "pnpm test"
+  launch_job "mobile:format"    "$MOBILE_DIR" pnpm run format:check
+  launch_job "mobile:lint"      "$MOBILE_DIR" pnpm run lint
+  launch_job "mobile:typecheck" "$MOBILE_DIR" pnpm run typecheck
+  launch_job "mobile:test"      "$MOBILE_DIR" pnpm test
 fi
 
 # --- Worker checks ---
 if [ "$HAS_WORKER" = true ]; then
   WORKER_DIR="$ROOT_DIR/worker"
-  launch_job "worker:format" "$WORKER_DIR" "pnpm run format:check"
-  launch_job "worker:lint"   "$WORKER_DIR" "pnpm run lint"
-  launch_job "worker:test"   "$WORKER_DIR" "pnpm test"
+  launch_job "worker:format" "$WORKER_DIR" pnpm run format:check
+  launch_job "worker:lint"   "$WORKER_DIR" pnpm run lint
+  launch_job "worker:test"   "$WORKER_DIR" pnpm test
 fi
 
 # --- Help site checks ---
 if [ "$HAS_HELP_SITE" = true ]; then
   HELP_DIR="$ROOT_DIR/help-site"
-  launch_job "help:format" "$HELP_DIR" "pnpm run format:check"
+  launch_job "help:format" "$HELP_DIR" pnpm run format:check
 fi
 
 NUM_JOBS=${#JOB_NAMES[@]}
