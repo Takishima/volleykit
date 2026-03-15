@@ -109,7 +109,7 @@ jobs:
         if: steps.check-updates.outputs.has_updates == 'true'
         run: |
           echo "Checking for fixable audit vulnerabilities..."
-          if ! pnpm audit --audit-level high --prod > /dev/null 2>&1; then
+          if ! pnpm audit --audit-level high --prod; then
             echo "Audit issues found, attempting auto-fix..."
             pnpm audit --fix || true
             pnpm install --no-frozen-lockfile
@@ -128,6 +128,7 @@ jobs:
           name: updated-packages-shared
           path: |
             pnpm-lock.yaml
+            package.json
             packages/shared/package.json
           retention-days: 1
   validate:
