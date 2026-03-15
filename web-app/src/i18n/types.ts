@@ -639,6 +639,9 @@ export interface Translations {
       rotateRight: string
       players: string
       coaches: string
+      discrepancies: string
+      discrepanciesFound: string
+      ocrTeamLabel: string
       scoresheetType: {
         title: string
         electronic: string

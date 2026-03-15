@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronUp } from '@/shared/components/icons'
+import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface CollapsibleSectionProps {
   title: string
@@ -22,6 +23,7 @@ export function CollapsibleSection({
   sectionId,
   children,
 }: CollapsibleSectionProps) {
+  const { tInterpolate } = useTranslation()
   const Icon = expanded ? ChevronUp : ChevronDown
 
   return (
@@ -40,7 +42,7 @@ export function CollapsibleSection({
         </div>
         {discrepancies > 0 && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-warning-100 dark:bg-warning-900/30 text-warning-700 dark:text-warning-400">
-            {discrepancies} discrepancies
+            {tInterpolate('validation.ocr.discrepancies', { count: discrepancies })}
           </span>
         )}
       </button>

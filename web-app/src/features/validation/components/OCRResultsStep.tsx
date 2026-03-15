@@ -43,7 +43,7 @@ export function OCRResultsStep({
   expandedSections,
   onToggleSection,
 }: OCRResultsStepProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
 
   const totalDiscrepancies =
     (homeComparison
@@ -65,7 +65,7 @@ export function OCRResultsStep({
       {totalDiscrepancies > 0 && (
         <div className="mb-4 p-3 bg-warning-50 dark:bg-warning-900/20 border border-warning-200 dark:border-warning-800 rounded-lg">
           <p className="text-sm text-warning-700 dark:text-warning-400">
-            {totalDiscrepancies} discrepancies found
+            {tInterpolate('validation.ocr.discrepanciesFound', { count: totalDiscrepancies })}
           </p>
         </div>
       )}
@@ -78,7 +78,9 @@ export function OCRResultsStep({
             {homeComparison.ocrTeamName &&
               homeComparison.ocrTeamName !== homeComparison.teamName && (
                 <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  (OCR: {homeComparison.ocrTeamName})
+                  {tInterpolate('validation.ocr.ocrTeamLabel', {
+                    name: homeComparison.ocrTeamName,
+                  })}
                 </span>
               )}
           </h3>
@@ -129,7 +131,9 @@ export function OCRResultsStep({
             {awayComparison.ocrTeamName &&
               awayComparison.ocrTeamName !== awayComparison.teamName && (
                 <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                  (OCR: {awayComparison.ocrTeamName})
+                  {tInterpolate('validation.ocr.ocrTeamLabel', {
+                    name: awayComparison.ocrTeamName,
+                  })}
                 </span>
               )}
           </h3>

@@ -797,6 +797,9 @@ const fr: Translations = {
       rotateRight: 'Pivoter à droite',
       players: 'Joueurs',
       coaches: 'Entraîneurs',
+      discrepancies: '{count} divergences',
+      discrepanciesFound: '{count} divergences trouvées',
+      ocrTeamLabel: '(OCR : {name})',
       scoresheetType: {
         title: 'Type de feuille de match',
         electronic: 'Électronique',

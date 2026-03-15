@@ -773,6 +773,9 @@ const en: Translations = {
       rotateRight: 'Rotate right',
       players: 'Players',
       coaches: 'Coaches',
+      discrepancies: '{count} discrepancies',
+      discrepanciesFound: '{count} discrepancies found',
+      ocrTeamLabel: '(OCR: {name})',
       scoresheetType: {
         title: 'Scoresheet Type',
         electronic: 'Electronic',
