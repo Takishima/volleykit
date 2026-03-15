@@ -52,6 +52,11 @@ export function useActiveSeason(): UseQueryResult<Season, Error> {
 export function useSuspenseAssociationSettings() {
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const dataSource = useAuthStore((state) => state.dataSource)
+
+  if (dataSource === 'demo') {
+    throw new Error('useSuspenseAssociationSettings cannot be used in demo mode')
+  }
+
   const apiClient = getApiClient(dataSource)
 
   return useSuspenseQuery(associationSettingsOptions(apiClient, activeOccupationId))
@@ -67,6 +72,11 @@ export function useSuspenseAssociationSettings() {
 export function useSuspenseActiveSeason() {
   const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const dataSource = useAuthStore((state) => state.dataSource)
+
+  if (dataSource === 'demo') {
+    throw new Error('useSuspenseActiveSeason cannot be used in demo mode')
+  }
+
   const apiClient = getApiClient(dataSource)
 
   return useSuspenseQuery(activeSeasonOptions(apiClient, activeOccupationId))

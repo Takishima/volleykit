@@ -344,19 +344,27 @@ export function ExchangePage() {
     setStatusFilter(tabId as ExchangeStatus)
   }, [])
 
-  const handleTakeOverConfirm = useCallback(() => {
+  const handleTakeOverConfirm = useCallback(async () => {
     if (takeOverModal.exchange) {
       applyOptimisticRemoval(takeOverModal.exchange.__identity)
-      handleTakeOver(takeOverModal.exchange)
+      try {
+        await handleTakeOver(takeOverModal.exchange)
+      } catch {
+        refetch()
+      }
     }
-  }, [takeOverModal.exchange, handleTakeOver, applyOptimisticRemoval])
+  }, [takeOverModal.exchange, handleTakeOver, applyOptimisticRemoval, refetch])
 
-  const handleRemoveConfirm = useCallback(() => {
+  const handleRemoveConfirm = useCallback(async () => {
     if (removeFromExchangeModal.exchange) {
       applyOptimisticRemoval(removeFromExchangeModal.exchange.__identity)
-      handleRemoveFromExchange(removeFromExchangeModal.exchange)
+      try {
+        await handleRemoveFromExchange(removeFromExchangeModal.exchange)
+      } catch {
+        refetch()
+      }
     }
-  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange, applyOptimisticRemoval])
+  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange, applyOptimisticRemoval, refetch])
 
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null
