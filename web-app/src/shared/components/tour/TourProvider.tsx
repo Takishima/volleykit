@@ -1,5 +1,7 @@
 import { useEffect, useCallback, useRef, useState } from 'react'
 
+import { useShallow } from 'zustand/react/shallow'
+
 import type { TourId } from '@/shared/stores/tour'
 import { useTourStore } from '@/shared/stores/tour'
 import { MODAL_ANIMATION_MS, TOAST_MIN_DURATION_MS } from '@/shared/utils/constants'
@@ -21,7 +23,16 @@ interface AutoSwipeCompletedFor {
 
 export function TourProvider({ children }: TourProviderProps) {
   const { activeTour, currentStep, nextStep, previousStep, completeTour, dismissTour } =
-    useTourStore()
+    useTourStore(
+      useShallow((s) => ({
+        activeTour: s.activeTour,
+        currentStep: s.currentStep,
+        nextStep: s.nextStep,
+        previousStep: s.previousStep,
+        completeTour: s.completeTour,
+        dismissTour: s.dismissTour,
+      }))
+    )
 
   const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [autoSwipeCompletedFor, setAutoSwipeCompletedFor] = useState<AutoSwipeCompletedFor | null>(

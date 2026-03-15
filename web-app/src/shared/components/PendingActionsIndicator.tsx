@@ -11,6 +11,8 @@
 
 import { useEffect, useRef } from 'react'
 
+import { useShallow } from 'zustand/react/shallow'
+
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useActionQueueStore, initializeActionQueueStore } from '@/shared/stores/action-queue'
@@ -29,8 +31,10 @@ function useAutoSync() {
   const isOnline = useNetworkStatus()
   const wasOnlineRef = useRef(isOnline)
   const dataSource = useAuthStore((state) => state.dataSource)
-  const { sync, pendingCount, isSyncing } = useActionQueueStore()
-  const { addToast } = useToastStore()
+  const { sync, pendingCount, isSyncing } = useActionQueueStore(
+    useShallow((s) => ({ sync: s.sync, pendingCount: s.pendingCount, isSyncing: s.isSyncing }))
+  )
+  const addToast = useToastStore((s) => s.addToast)
   const { t, tInterpolate } = useTranslation()
 
   // Initialize store on mount
@@ -84,7 +88,9 @@ function useAutoSync() {
  * Only visible when there are pending actions.
  */
 export function PendingActionsBadge() {
-  const { pendingCount, isSyncing } = useActionQueueStore()
+  const { pendingCount, isSyncing } = useActionQueueStore(
+    useShallow((s) => ({ pendingCount: s.pendingCount, isSyncing: s.isSyncing }))
+  )
   const { t, tInterpolate } = useTranslation()
 
   useAutoSync()

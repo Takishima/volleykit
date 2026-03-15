@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from 'react'
+import { useState, useCallback, useMemo, useOptimistic, lazy, Suspense, Fragment } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
@@ -119,7 +119,20 @@ export function ExchangePage() {
     }
   }, [associationCode, hideOwnExchanges, setHideOwnExchangesForAssociation])
 
-  const { data, isLoading: queryLoading, error, refetch } = useGameExchanges(statusFilter)
+  const {
+    data: queryData,
+    isLoading: queryLoading,
+    error,
+    refetch,
+  } = useGameExchanges(statusFilter)
+
+  // Optimistic UI: instantly remove exchanges from the list when the user
+  // confirms a take-over or removal, before the API responds. The optimistic
+  // state reverts automatically when queryData updates with fresh server data.
+  const [data, applyOptimisticRemoval] = useOptimistic(queryData, (current, removedId: string) =>
+    current?.filter((e) => e.__identity !== removedId)
+  )
+
   // Show loading when switching associations or when query is loading
   const isLoading = isAssociationSwitching || queryLoading
 
@@ -331,17 +344,27 @@ export function ExchangePage() {
     setStatusFilter(tabId as ExchangeStatus)
   }, [])
 
-  const handleTakeOverConfirm = useCallback(() => {
+  const handleTakeOverConfirm = useCallback(async () => {
     if (takeOverModal.exchange) {
-      handleTakeOver(takeOverModal.exchange)
+      applyOptimisticRemoval(takeOverModal.exchange.__identity)
+      try {
+        await handleTakeOver(takeOverModal.exchange)
+      } catch {
+        refetch()
+      }
     }
-  }, [takeOverModal.exchange, handleTakeOver])
+  }, [takeOverModal.exchange, handleTakeOver, applyOptimisticRemoval, refetch])
 
-  const handleRemoveConfirm = useCallback(() => {
+  const handleRemoveConfirm = useCallback(async () => {
     if (removeFromExchangeModal.exchange) {
-      handleRemoveFromExchange(removeFromExchangeModal.exchange)
+      applyOptimisticRemoval(removeFromExchangeModal.exchange.__identity)
+      try {
+        await handleRemoveFromExchange(removeFromExchangeModal.exchange)
+      } catch {
+        refetch()
+      }
     }
-  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange])
+  }, [removeFromExchangeModal.exchange, handleRemoveFromExchange, applyOptimisticRemoval, refetch])
 
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null

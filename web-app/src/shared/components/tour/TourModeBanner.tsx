@@ -1,8 +1,12 @@
+import { useShallow } from 'zustand/react/shallow'
+
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useTourStore } from '@/shared/stores/tour'
 
 export function TourModeBanner() {
-  const { activeTour, dismissTour } = useTourStore()
+  const { activeTour, dismissTour } = useTourStore(
+    useShallow((s) => ({ activeTour: s.activeTour, dismissTour: s.dismissTour }))
+  )
   const { t } = useTranslation()
 
   if (!activeTour) return null

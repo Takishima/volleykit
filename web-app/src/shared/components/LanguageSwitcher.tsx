@@ -1,3 +1,5 @@
+import { useShallow } from 'zustand/react/shallow'
+
 import { getAvailableLocales } from '@/i18n'
 import { useLanguageStore } from '@/shared/stores/language'
 
@@ -7,7 +9,9 @@ interface LanguageSwitcherProps {
 }
 
 export function LanguageSwitcher({ variant = 'compact', className = '' }: LanguageSwitcherProps) {
-  const { locale, changeLocale } = useLanguageStore()
+  const { locale, changeLocale } = useLanguageStore(
+    useShallow((s) => ({ locale: s.locale, changeLocale: s.changeLocale }))
+  )
   const languages = getAvailableLocales()
 
   const containerClass =

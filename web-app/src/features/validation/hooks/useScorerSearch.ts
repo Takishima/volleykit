@@ -1,13 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { getApiClient, type PersonSearchFilter } from '@/api/client'
-import { queryKeys } from '@/api/queryKeys'
-import {
-  validateResponse,
-  personSearchResponseSchema,
-  type ValidatedPersonSearchResult,
-} from '@/api/validation'
-import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
+import { scorerSearchOptions } from '@/api/queryOptions'
+import type { ValidatedPersonSearchResult } from '@/api/validation'
 import { useAuthStore } from '@/shared/stores/auth'
 
 /**
@@ -129,14 +124,8 @@ export function useScorerSearch(
   )
 
   const query = useQuery({
-    queryKey: queryKeys.scorerSearch.search(filters),
-    queryFn: async () => {
-      const response = await apiClient.searchPersons(filters)
-      const validated = validateResponse(response, personSearchResponseSchema, 'scorerSearch')
-      return validated.items ?? []
-    },
+    ...scorerSearchOptions(apiClient, filters),
     enabled: options.enabled !== false && hasFilters,
-    staleTime: ASSIGNMENTS_STALE_TIME_MS,
   })
 
   return {

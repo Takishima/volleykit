@@ -10,6 +10,8 @@
 
 import { useMemo, useCallback, useEffect } from 'react'
 
+import { useShallow } from 'zustand/react/shallow'
+
 import type { CalendarAssignment } from '@/features/assignments/api/calendar-api'
 import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter'
 
@@ -71,7 +73,13 @@ export interface UseCalendarAssociationFilterResult {
 export function useCalendarAssociationFilter(
   calendarData: CalendarAssignment[]
 ): UseCalendarAssociationFilterResult {
-  const { selectedAssociation, setSelectedAssociation, setAssociations } = useCalendarFilterStore()
+  const { selectedAssociation, setSelectedAssociation, setAssociations } = useCalendarFilterStore(
+    useShallow((s) => ({
+      selectedAssociation: s.selectedAssociation,
+      setSelectedAssociation: s.setSelectedAssociation,
+      setAssociations: s.setAssociations,
+    }))
+  )
 
   // Extract unique associations from calendar data
   const associations = useMemo(() => {
