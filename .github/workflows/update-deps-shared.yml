@@ -105,6 +105,22 @@ jobs:
 
           # Install updated dependencies (--no-frozen-lockfile needed since ncu modified package.json)
           pnpm install --no-frozen-lockfile
+      - name: Auto-fix audit vulnerabilities
+        if: steps.check-updates.outputs.has_updates == 'true'
+        run: |
+          echo "Checking for fixable audit vulnerabilities..."
+          if ! pnpm audit --audit-level high --prod > /dev/null 2>&1; then
+            echo "Audit issues found, attempting auto-fix..."
+            pnpm audit --fix || true
+            pnpm install --no-frozen-lockfile
+            if pnpm audit --audit-level high --prod > /dev/null 2>&1; then
+              echo "::notice::Audit vulnerabilities were automatically fixed"
+            else
+              echo "::warning::Some audit vulnerabilities could not be auto-fixed"
+            fi
+          else
+            echo "No audit issues found"
+          fi
       - name: Upload updated files
         if: steps.check-updates.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v7
