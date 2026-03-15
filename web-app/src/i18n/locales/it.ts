@@ -789,6 +789,9 @@ const it: Translations = {
       rotateRight: 'Ruota a destra',
       players: 'Giocatori',
       coaches: 'Allenatori',
+      discrepancies: '{count} discrepanze',
+      discrepanciesFound: '{count} discrepanze trovate',
+      ocrTeamLabel: '(OCR: {name})',
       scoresheetType: {
         title: 'Tipo di referto',
         electronic: 'Elettronico',

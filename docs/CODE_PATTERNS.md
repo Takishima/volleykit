@@ -45,7 +45,10 @@ import { useShallow } from 'zustand/react/shallow'
 const state = useAuthStore()
 
 // Bad: new object reference every render — defeats shallow comparison
-const { user, isAuthenticated } = useAuthStore((s) => ({ user: s.user, isAuthenticated: s.isAuthenticated }))
+const { user, isAuthenticated } = useAuthStore((s) => ({
+  user: s.user,
+  isAuthenticated: s.isAuthenticated,
+}))
 
 // Good: useShallow compares each field individually
 const { user, isAuthenticated } = useAuthStore(

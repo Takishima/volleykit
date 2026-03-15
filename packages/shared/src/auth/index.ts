@@ -4,7 +4,17 @@
  * Platform-agnostic authentication utilities used by both web and mobile.
  */
 
-// Types
+// Domain types (canonical source)
+export type {
+  OccupationType,
+  Occupation,
+  UserProfile,
+  AuthError,
+  AuthStatus,
+  DataSource,
+} from './types'
+
+// Auth flow types
 export type {
   LoginFormFields,
   LoginResult,

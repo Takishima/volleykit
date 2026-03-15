@@ -228,8 +228,8 @@ export interface UserData {
   occupations: OccupationData[]
 }
 
-// OccupationType is defined in stores/auth.ts - re-export it here for API consumers
-import type { OccupationType } from '../stores'
+// OccupationType is defined in auth/types.ts - re-export it here for API consumers
+import type { OccupationType } from '../auth/types'
 export type { OccupationType }
 
 /**

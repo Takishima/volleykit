@@ -6,10 +6,10 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 | Application    | Location           | Description                                             |
 | -------------- | ------------------ | ------------------------------------------------------- |
-| Web App (PWA)  | `web-app/`         | React 19 + Vite 7 + Tailwind 4                         |
-| Mobile App     | `packages/mobile/` | React Native 0.83 + Expo 55 + NativeWind               |
+| Web App (PWA)  | `web-app/`         | React 19 + Vite 7 + Tailwind 4                          |
+| Mobile App     | `packages/mobile/` | React Native 0.83 + Expo 55 + NativeWind                |
 | Shared Package | `packages/shared/` | API client, hooks, stores, i18n, offline (~70% sharing) |
-| Help Site      | `help-site/`       | Astro 6 + Pagefind search                              |
+| Help Site      | `help-site/`       | Astro 6 + Pagefind search                               |
 | CORS Proxy     | `worker/`          | Cloudflare Worker (auth lockout, OCR proxy, OJP proxy)  |
 
 **Always check official docs**: [react.dev](https://react.dev), [reactnative.dev](https://reactnative.dev), [docs.expo.dev](https://docs.expo.dev), [vite.dev](https://vite.dev)
@@ -22,11 +22,11 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 | ----------------------------- | ----------------------------------------------------------------------------- |
 | Before committing             | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits |
 | Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)                      |
-| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                               |
+| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                                |
 | Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                          |
-| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures               |
-| Reviewing PRs                 | [docs/REVIEW_CHECKLIST.md](docs/REVIEW_CHECKLIST.md)                         |
-| Data storage questions        | [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md)                             |
+| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures                |
+| Reviewing PRs                 | [docs/REVIEW_CHECKLIST.md](docs/REVIEW_CHECKLIST.md)                          |
+| Data storage questions        | [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md)                              |
 
 ## Development Workflow
 

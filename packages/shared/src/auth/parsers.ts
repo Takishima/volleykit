@@ -11,7 +11,7 @@ import type {
   AttributeValue,
   InflatedAssociationValue,
 } from './types'
-import type { Occupation } from '../stores'
+import type { Occupation } from './types'
 
 // ============================================================================
 // HTML Parsing - Login Form Fields

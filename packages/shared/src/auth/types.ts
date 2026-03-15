@@ -2,7 +2,85 @@
  * Shared authentication types.
  *
  * These types are platform-agnostic and used by both web and mobile.
+ * Domain types (OccupationType, Occupation, UserProfile) live here as the
+ * canonical source and are re-exported by stores/auth.ts for backward compat.
  */
+
+// ============================================================================
+// Domain Types - User occupations and profiles
+// ============================================================================
+
+/**
+ * Occupation types for volleyball referees and administrators.
+ */
+export type OccupationType = 'referee' | 'linesmen' | 'player' | 'clubAdmin' | 'associationAdmin'
+
+/**
+ * User occupation (role within an association or club).
+ */
+export interface Occupation {
+  /** Unique identifier for this occupation */
+  id: string
+  /** Type of occupation */
+  type: OccupationType
+  /** Association code (e.g., 'SV', 'RVNO', 'RVSZ') */
+  associationCode?: string
+  /** Association name */
+  associationName?: string
+  /** Club name (for club-level occupations) */
+  clubName?: string
+  /** Referee level (e.g., 'National', 'Regional') */
+  level?: string
+}
+
+/**
+ * User profile information.
+ */
+export interface UserProfile {
+  /** Unique identifier (SwissVolley person ID) */
+  id: string
+  /** First name */
+  firstName: string
+  /** Last name */
+  lastName: string
+  /** Email address */
+  email?: string
+  /** SwissVolley license number */
+  svNumber?: string
+  /** User's occupations/roles */
+  occupations: Occupation[]
+  /** Profile picture URL */
+  profilePictureUrl?: string
+}
+
+/**
+ * Authentication error details.
+ */
+export interface AuthError {
+  /** Error message */
+  message: string
+  /** Error code (for programmatic handling) */
+  code?: 'invalid_credentials' | 'session_expired' | 'network_error' | 'locked' | 'unknown'
+  /** Seconds until lockout expires (for rate limiting) */
+  lockedUntilSeconds?: number
+}
+
+/**
+ * Authentication status states.
+ */
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error'
+
+/**
+ * Data source for assignments and compensations.
+ * - 'api': Real SwissVolley API (full authentication)
+ * - 'demo': Demo mode with simulated data
+ * - 'calendar': Calendar mode with read-only iCal feed access
+ */
+export type DataSource = 'api' | 'demo' | 'calendar'
+
+// ============================================================================
+// Auth Flow Types
+// ============================================================================
 
 /**
  * Login form fields extracted from the Neos Flow login page HTML.

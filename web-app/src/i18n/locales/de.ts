@@ -803,6 +803,9 @@ const de: Translations = {
       rotateRight: 'Nach rechts drehen',
       players: 'Spieler',
       coaches: 'Trainer',
+      discrepancies: '{count} Abweichungen',
+      discrepanciesFound: '{count} Abweichungen gefunden',
+      ocrTeamLabel: '(OCR: {name})',
       scoresheetType: {
         title: 'Spielberichtstyp',
         electronic: 'Elektronisch',
