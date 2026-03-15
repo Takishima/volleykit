@@ -1,8 +1,8 @@
 name: Update Dependencies (Mobile)
 on:
-  # Run weekly on Sundays at 14:30 UTC (offset from web, before Dependabot on Monday 07:00 UTC)
+  # Run weekly on Sundays at 14:00 UTC (after shared/web, before worker)
   schedule:
-    - cron: '30 14 * * 0'
+    - cron: '0 14 * * 0'
   # Allow manual trigger
   workflow_dispatch:
     inputs:
@@ -47,7 +47,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
       - name: Install root dependencies
@@ -81,9 +81,6 @@ jobs:
           # Filter to only devDependencies using --dep dev
           DEV_UPDATES=$(ncu --target minor --dep dev --format lines 2>/dev/null || true)
 
-          # Check packages/shared updates (use absolute path from workspace root)
-          SHARED_UPDATES=$(cd "$GITHUB_WORKSPACE/packages/shared" && ncu --target minor --format lines 2>/dev/null || true)
-
           # Combine updates
           ALL_UPDATES=""
 
@@ -99,15 +96,7 @@ jobs:
             fi
           fi
 
-          if [ -n "$SHARED_UPDATES" ]; then
-            if [ -n "$ALL_UPDATES" ]; then
-              ALL_UPDATES="$ALL_UPDATES\n\n**packages/shared:**\n$SHARED_UPDATES"
-            else
-              ALL_UPDATES="**packages/shared:**\n$SHARED_UPDATES"
-            fi
-          fi
-
-          if [ "$EXPO_HAS_UPDATES" = "true" ] || [ -n "$DEV_UPDATES" ] || [ -n "$SHARED_UPDATES" ]; then
+          if [ "$EXPO_HAS_UPDATES" = "true" ] || [ -n "$DEV_UPDATES" ]; then
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
             {
               echo "updates_summary<<EOF"
@@ -130,10 +119,6 @@ jobs:
         if: steps.check-updates.outputs.has_updates == 'true'
         working-directory: packages/mobile
         run: ncu --target minor --dep dev -u
-      - name: Update shared dependencies
-        if: steps.check-updates.outputs.has_updates == 'true'
-        working-directory: packages/shared
-        run: ncu --target minor -u
       - name: Reinstall dependencies
         if: steps.check-updates.outputs.has_updates == 'true'
         run: pnpm install --no-frozen-lockfile
@@ -166,7 +151,6 @@ jobs:
           path: |
             pnpm-lock.yaml
             packages/mobile/package.json
-            packages/shared/package.json
           retention-days: 1
   validate:
     name: Validate
