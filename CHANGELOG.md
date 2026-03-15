@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.23.1
+
+### Patch Changes
+
+- [#998](https://github.com/Takishima/volleykit/pull/998) [`f7ce175`](https://github.com/Takishima/volleykit/commit/f7ce175ddb606f147bd98af849ce0b0280b21d8f) Thanks [@Takishima](https://github.com/Takishima)! - Adopt React 19 useActionState in ExchangeConfirmationModal
+
+- [#1000](https://github.com/Takishima/volleykit/pull/1000) [`325ee6e`](https://github.com/Takishima/volleykit/commit/325ee6e7dc37b47f54d4b1cfcd52ea6f4085de0f) Thanks [@Takishima](https://github.com/Takishima)! - Hide "use current location" button and address search field when a home address is already set
+
 ## 1.23.0
 
 ### Minor Changes
