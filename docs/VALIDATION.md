@@ -9,12 +9,24 @@ The pre-commit hook (`scripts/pre-commit-validate.sh`) runs automatically in Cla
 ### What the Hook Does
 
 1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
-2. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-3. **Format (auto-fix)** - Run `pnpm run format` to auto-fix formatting issues
-4. **Run in PARALLEL**: lint, knip, test
-5. **Run build** - Production build (only if parallel steps pass)
+2. **Detect affected packages** - Determines which packages have changes (web-app, shared, mobile, worker, help-site)
+3. **Generate API types** - If `volleymanager-openapi.yaml` is staged
+4. **Run checks in PARALLEL** - Per-package validation (format, lint, knip, typecheck, test)
+5. **Run build sequentially** - Build affected packages (shared → web-app → help-site)
+
+Shared package changes also trigger web-app and mobile validation (downstream consumers).
 
 The commit is **blocked** if any step fails. Fix issues and commit again.
+
+### Checks Per Package
+
+| Package   | format | lint | knip | typecheck | test | build |
+| --------- | ------ | ---- | ---- | --------- | ---- | ----- |
+| web-app   | ✓      | ✓    | ✓    | (in build)| ✓    | ✓     |
+| shared    | ✓      | ✓    | –    | ✓         | ✓    | ✓     |
+| mobile    | ✓      | ✓    | –    | ✓         | ✓    | –     |
+| worker    | ✓      | ✓    | –    | –         | ✓    | –     |
+| help-site | ✓      | –    | –    | –         | –    | ✓     |
 
 ### Manual Validation Commands
 

@@ -26,7 +26,7 @@ set -euo pipefail
 # =============================================================================
 
 # File patterns that require validation (regex for grep -E)
-SOURCE_PATTERNS='\.(ts|tsx|js|jsx)$'
+SOURCE_PATTERNS='\.(ts|tsx|js|jsx|astro)$'
 
 # File patterns that can be skipped (validation not needed)
 SKIP_PATTERNS='\.(md|txt|json|yaml|yml|sh|css|svg|png|jpg|jpeg|gif|ico)$'
