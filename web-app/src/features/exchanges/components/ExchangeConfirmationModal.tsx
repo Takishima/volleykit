@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, memo } from 'react'
+import { memo, useActionState } from 'react'
 
 import type { GameExchange } from '@/api/client'
 import { Button } from '@/shared/components/Button'
@@ -27,39 +27,19 @@ function ExchangeConfirmationModalComponent({
 }: ExchangeConfirmationModalProps) {
   const { t } = useTranslation()
 
-  const isSubmittingRef = useRef(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const ignoreRef = useRef(false)
-
-  useEffect(() => {
-    ignoreRef.current = false
-    return () => {
-      ignoreRef.current = true
-    }
-  }, [])
-
-  const handleConfirm = useCallback(async () => {
-    if (isSubmittingRef.current) return
-    isSubmittingRef.current = true
-    setIsSubmitting(true)
-
-    try {
-      await onConfirm()
-    } catch (error) {
-      logger.error('[ExchangeConfirmationModal] Failed to confirm action:', error)
-      if (!ignoreRef.current) {
-        isSubmittingRef.current = false
-        setIsSubmitting(false)
+  const [, submitAction, isPending] = useActionState(
+    async (_previousState: string | null) => {
+      try {
+        await onConfirm()
+        onClose()
+        return null
+      } catch (err) {
+        logger.error('[ExchangeConfirmationModal] Failed to confirm action:', err)
+        return 'error'
       }
-      return
-    }
-
-    if (!ignoreRef.current) {
-      isSubmittingRef.current = false
-      setIsSubmitting(false)
-      onClose()
-    }
-  }, [onConfirm, onClose])
+    },
+    null
+  )
 
   const game = exchange.refereeGame?.game
   const homeTeam = game?.encounter?.teamHome?.name || t('common.tbd')
@@ -136,25 +116,28 @@ function ExchangeConfirmationModalComponent({
         <div className="border-t border-border-default dark:border-border-default-dark pt-4">
           <p className="text-sm text-text-muted dark:text-text-muted-dark mb-4">{t(confirmKey)}</p>
 
-          <ModalFooter>
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant={confirmVariant}
-              className="flex-1"
-              onClick={handleConfirm}
-              disabled={isSubmitting}
-              aria-busy={isSubmitting}
-            >
-              {isSubmitting ? t('common.loading') : t(buttonKey)}
-            </Button>
-          </ModalFooter>
+          <form action={submitAction}>
+            <ModalFooter>
+              <Button
+                variant="secondary"
+                className="flex-1"
+                type="button"
+                onClick={onClose}
+                disabled={isPending}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button
+                variant={confirmVariant}
+                className="flex-1"
+                type="submit"
+                disabled={isPending}
+                aria-busy={isPending}
+              >
+                {isPending ? t('common.loading') : t(buttonKey)}
+              </Button>
+            </ModalFooter>
+          </form>
         </div>
       </ModalErrorBoundary>
     </Modal>
