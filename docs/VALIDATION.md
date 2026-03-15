@@ -20,13 +20,13 @@ The commit is **blocked** if any step fails. Fix issues and commit again.
 
 ### Checks Per Package
 
-| Package   | format | lint | knip | typecheck | test | build |
-| --------- | ------ | ---- | ---- | --------- | ---- | ----- |
-| web-app   | ✓      | ✓    | ✓    | (in build)| ✓    | ✓     |
-| shared    | ✓      | ✓    | –    | ✓         | ✓    | ✓     |
-| mobile    | ✓      | ✓    | –    | ✓         | ✓    | –     |
-| worker    | ✓      | ✓    | –    | –         | ✓    | –     |
-| help-site | ✓      | –    | –    | –         | –    | ✓     |
+| Package   | format | lint | knip | typecheck  | test | build |
+| --------- | ------ | ---- | ---- | ---------- | ---- | ----- |
+| web-app   | ✓      | ✓    | ✓    | (in build) | ✓    | ✓     |
+| shared    | ✓      | ✓    | –    | ✓          | ✓    | ✓     |
+| mobile    | ✓      | ✓    | –    | ✓          | ✓    | –     |
+| worker    | ✓      | ✓    | –    | –          | ✓    | –     |
+| help-site | ✓      | –    | –    | –          | –    | ✓     |
 
 ### Manual Validation Commands
 
