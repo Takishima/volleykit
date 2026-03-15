@@ -27,19 +27,16 @@ function ExchangeConfirmationModalComponent({
 }: ExchangeConfirmationModalProps) {
   const { t } = useTranslation()
 
-  const [, submitAction, isPending] = useActionState(
-    async (_previousState: string | null) => {
-      try {
-        await onConfirm()
-        onClose()
-        return null
-      } catch (err) {
-        logger.error('[ExchangeConfirmationModal] Failed to confirm action:', err)
-        return 'error'
-      }
-    },
-    null
-  )
+  const [, submitAction, isPending] = useActionState(async (_previousState: string | null) => {
+    try {
+      await onConfirm()
+      onClose()
+      return null
+    } catch (err) {
+      logger.error('[ExchangeConfirmationModal] Failed to confirm action:', err)
+      return 'error'
+    }
+  }, null)
 
   const game = exchange.refereeGame?.game
   const homeTeam = game?.encounter?.teamHome?.name || t('common.tbd')

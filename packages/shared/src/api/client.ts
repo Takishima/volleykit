@@ -186,9 +186,7 @@ export interface ApiClient {
   switchRoleAndAttribute(attributeValueId: string): Promise<void>
 
   // Referee backup
-  searchRefereeBackups(
-    config?: SearchConfiguration
-  ): Promise<PaginatedResponse<RefereeBackupEntry>>
+  searchRefereeBackups(config?: SearchConfiguration): Promise<PaginatedResponse<RefereeBackupEntry>>
 }
 
 /**

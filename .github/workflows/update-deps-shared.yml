@@ -1,8 +1,8 @@
-name: Update Dependencies (Worker)
+name: Update Dependencies (Shared)
 on:
-  # Run weekly on Sundays at 14:30 UTC (after shared/web/mobile)
+  # Run weekly on Sundays at 13:00 UTC (before web/mobile/worker)
   schedule:
-    - cron: '30 14 * * 0'
+    - cron: '0 13 * * 0'
   # Allow manual trigger
   workflow_dispatch:
     inputs:
@@ -21,21 +21,22 @@ on:
         default: false
         type: boolean
 # =============================================================================
-# Worker Dependency Update Workflow
+# Shared Package Dependency Update Workflow
 # =============================================================================
 #
-# This workflow automatically updates dependencies for the worker,
+# This workflow automatically updates dependencies for @volleykit/shared,
 # runs full validation, and creates a PR if successful.
 #
 # Flow:
 #   1. Check for updates using npm-check-updates
 #   2. If updates found, install and run validation
-#   3. Run lint, test, and typecheck
-#   4. Create PR with changes if all validations pass
+#   3. Generate API types (in case openapi-typescript updated)
+#   4. Run lint, typecheck, and test
+#   5. Create PR with changes if all validations pass
 #
 # =============================================================================
 concurrency:
-  group: update-deps-worker
+  group: update-deps-shared
   cancel-in-progress: true
 jobs:
   update:
@@ -75,22 +76,20 @@ jobs:
           NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
           echo "Checking for updates with target: $NCU_TARGET"
 
-          # Check worker updates
-          cd worker
-          WORKER_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
-          cd ..
+          cd packages/shared
+          SHARED_UPDATES=$(ncu --target "$NCU_TARGET" --format lines 2>/dev/null || true)
+          cd ../..
 
-          if [ -n "$WORKER_UPDATES" ]; then
+          if [ -n "$SHARED_UPDATES" ]; then
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
-            # Escape for multiline output
             {
               echo "updates_summary<<EOF"
-              echo "**worker:**"
-              echo "$WORKER_UPDATES"
+              echo "**packages/shared:**"
+              echo "$SHARED_UPDATES"
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
             echo "Updates found:"
-            echo "$WORKER_UPDATES"
+            echo "$SHARED_UPDATES"
           else
             echo "has_updates=false" >> "$GITHUB_OUTPUT"
             echo "No updates available"
@@ -100,10 +99,9 @@ jobs:
         run: |
           NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
 
-          # Update worker dependencies
-          cd worker
+          cd packages/shared
           ncu --target "$NCU_TARGET" -u
-          cd ..
+          cd ../..
 
           # Install updated dependencies (--no-frozen-lockfile needed since ncu modified package.json)
           pnpm install --no-frozen-lockfile
@@ -111,10 +109,10 @@ jobs:
         if: steps.check-updates.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: updated-packages-worker
+          name: updated-packages-shared
           path: |
             pnpm-lock.yaml
-            worker/package.json
+            packages/shared/package.json
           retention-days: 1
   validate:
     name: Validate
@@ -123,21 +121,24 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: worker
+        working-directory: packages/shared
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Download updated packages
         uses: actions/download-artifact@v8
         with:
-          name: updated-packages-worker
+          name: updated-packages-shared
           path: .
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: worker
+          working-directory: packages/shared
+      - name: Generate API types
+        run: pnpm run generate:api
+        working-directory: web-app
       - name: TypeScript check
-        run: pnpm exec tsc --noEmit
+        run: pnpm run typecheck
       - name: Lint
         run: pnpm run lint
       - name: Security audit
@@ -145,8 +146,6 @@ jobs:
         working-directory: .
       - name: Test
         run: pnpm test
-      - name: Build (dry-run)
-        run: pnpm exec wrangler deploy --dry-run
   create-pr:
     name: Create PR
     needs: [update, validate]
@@ -162,14 +161,14 @@ jobs:
       - name: Download updated packages
         uses: actions/download-artifact@v8
         with:
-          name: updated-packages-worker
+          name: updated-packages-shared
           path: .
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
-          commit-message: 'chore(worker): update dependencies'
-          title: 'chore(worker): update dependencies'
+          commit-message: 'chore(shared): update dependencies'
+          title: 'chore(shared): update dependencies'
           body: |
             ## Dependency Updates
 
@@ -186,8 +185,7 @@ jobs:
             - Lint
             - Security audit
             - Tests
-            - Build (dry-run)
-          branch: chore/update-worker-deps
+          branch: chore/update-shared-deps
           delete-branch: true
           labels: |
             dependencies
