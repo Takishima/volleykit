@@ -1,49 +1,21 @@
-import { useState, useCallback, useMemo, lazy, Suspense, Fragment } from 'react'
-
-import { useShallow } from 'zustand/react/shallow'
+import { lazy, Suspense, Fragment } from 'react'
 
 import type { Assignment } from '@/api/client'
-import { TOUR_DUMMY_ASSIGNMENT } from '@/features/assignments/assignments'
 import { AssignmentCard } from '@/features/assignments/components/AssignmentCard'
-import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-actions'
-import {
-  useMyOnCallAssignments,
-  OnCallCard,
-  type OnCallAssignment,
-} from '@/features/referee-backup'
+import { OnCallCard } from '@/features/referee-backup'
 import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
 import { PullToRefresh } from '@/shared/components/PullToRefresh'
 import { SwipeableCard } from '@/shared/components/SwipeableCard'
 import { WeekSeparator } from '@/shared/components/WeekSeparator'
-import { useTour } from '@/shared/hooks/useTour'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { groupByWeek } from '@/shared/utils/date-helpers'
 
-import { useAssignmentActions } from './hooks/useAssignmentActions'
-import { useUpcomingAssignments, useValidationClosedAssignments } from './hooks/useAssignments'
-import { useCalendarAssignments, type CalendarAssignment } from './hooks/useCalendarAssignments'
-import { useCalendarAssociationFilter } from './hooks/useCalendarAssociationFilter'
-import { useDailyGameBadge } from './hooks/useDailyGameBadge'
-import { createAssignmentActions } from './utils/assignment-actions'
-import { isGameReportEligible, isValidationEligible } from './utils/assignment-helpers'
+import {
+  useAssignmentsPageLogic,
+  getEmptyStateContent,
+  type DisplayItem,
+  type CalendarAssignment,
+} from './hooks/useAssignmentsPageLogic'
 import { mapCalendarAssignmentToAssignment } from './utils/calendar-helpers'
-
-/**
- * Discriminated union for items that can be displayed in the assignments list.
- * Allows mixing regular assignments with on-call assignments inline.
- */
-type DisplayItem =
-  | { type: 'assignment'; item: Assignment }
-  | { type: 'onCall'; item: OnCallAssignment }
-
-/** Extract date from a display item for sorting/grouping */
-function getDisplayItemDate(item: DisplayItem): string | undefined {
-  if (item.type === 'onCall') {
-    return item.item.date
-  }
-  return item.item.refereeGame?.game?.startingDateTime
-}
 
 const PdfLanguageModal = lazy(() =>
   import('@/shared/components/PdfLanguageModal').then((m) => ({
@@ -63,284 +35,26 @@ const ValidateGameModal = lazy(() =>
   }))
 )
 
-type TabType = 'upcoming' | 'validationClosed'
-
-type TranslationFn = ReturnType<typeof useTranslation>['t']
-
-/**
- * Get empty state content for assignments page.
- * Extracted to reduce cognitive complexity of main component.
- */
-function getEmptyStateContent(
-  isCalendarMode: boolean,
-  activeTab: TabType,
-  hasCalendarData: boolean,
-  t: TranslationFn
-): { title: string; description: string } {
-  if (isCalendarMode && activeTab === 'upcoming') {
-    return hasCalendarData
-      ? {
-          title: t('assignments.calendarNoUpcomingTitle'),
-          description: t('assignments.calendarNoUpcomingDescription'),
-        }
-      : {
-          title: t('assignments.calendarEmptyTitle'),
-          description: t('assignments.calendarEmptyDescription'),
-        }
-  }
-  if (activeTab === 'upcoming') {
-    return {
-      title: t('assignments.noUpcomingTitle'),
-      description: t('assignments.noUpcomingDescription'),
-    }
-  }
-  return {
-    title: t('assignments.noClosedTitle'),
-    description: t('assignments.noClosedDescription'),
-  }
-}
-
 export function AssignmentsPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('upcoming')
   const { t } = useTranslation()
-  const { isAssociationSwitching, isCalendarMode } = useAuthStore(
-    useShallow((state) => ({
-      isAssociationSwitching: state.isAssociationSwitching,
-      isCalendarMode: state.isCalendarMode(),
-    }))
-  )
-
-  // Initialize tour for this page (triggers auto-start on first visit)
-  // Use showDummyData to show dummy data immediately, avoiding race condition with empty states
-  const { showDummyData } = useTour('assignments')
-
   const {
+    activeTab,
+    setActiveTab,
+    groupedData,
+    showDummyData,
+    calendarData,
+    isLoading,
+    error,
+    isCalendarMode,
+    getSwipeConfig,
+    handleRefresh,
+    refetch,
     editCompensationModal,
     validateGameModal,
     pdfReportModal,
-    handleGenerateReport,
-    handleAddToExchange,
-  } = useAssignmentActions()
-
-  // Fetch regular assignments (only enabled when not in calendar mode)
-  const {
-    data: upcomingData,
-    isLoading: upcomingLoading,
-    error: upcomingError,
-    refetch: refetchUpcoming,
-  } = useUpcomingAssignments()
-
-  const {
-    data: validationClosedData,
-    isLoading: validationClosedLoading,
-    error: validationClosedError,
-    refetch: refetchValidationClosed,
-  } = useValidationClosedAssignments()
-
-  // Fetch calendar assignments (only enabled in calendar mode)
-  const {
-    data: calendarData,
-    isLoading: calendarLoading,
-    error: calendarError,
-    refetch: refetchCalendar,
-  } = useCalendarAssignments()
-
-  // Association filter for calendar mode (extracts unique associations from data)
-  // The filter selection is managed in the AppShell header dropdown
-  const { filterByAssociation } = useCalendarAssociationFilter(calendarData ?? [])
-
-  // Fetch on-call (Pikett) assignments - only in full API mode
-  const { data: onCallAssignments } = useMyOnCallAssignments()
-
-  // Update PWA badge with today's game count (only for regular assignments, not calendar mode)
-  useDailyGameBadge(isCalendarMode ? [] : (upcomingData ?? []))
-
-  // Compute calendar-specific data (filter by upcoming/past and association)
-  const calendarUpcoming = useMemo(() => {
-    if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
-    const upcoming = calendarData.filter((a) => new Date(a.startTime) >= now)
-    return filterByAssociation(upcoming)
-  }, [isCalendarMode, calendarData, filterByAssociation])
-
-  const calendarPast = useMemo(() => {
-    if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
-    const past = calendarData.filter((a) => new Date(a.startTime) < now)
-    return filterByAssociation(past)
-  }, [isCalendarMode, calendarData, filterByAssociation])
-
-  // Select the appropriate data source based on mode and tab
-  const rawData = useMemo(() => {
-    if (isCalendarMode) {
-      // Calendar mode: return calendar data filtered by tab
-      // Note: Calendar assignments are displayed as limited info since they don't have full Assignment structure
-      return activeTab === 'upcoming' ? calendarUpcoming : calendarPast
-    }
-    return activeTab === 'upcoming' ? upcomingData : validationClosedData
-  }, [
-    isCalendarMode,
-    activeTab,
-    calendarUpcoming,
-    calendarPast,
-    upcomingData,
-    validationClosedData,
-  ])
-
-  // Show loading when switching associations or when query is loading
-  const isLoading = useMemo(() => {
-    if (isAssociationSwitching) return true
-    if (isCalendarMode) return calendarLoading
-    return activeTab === 'upcoming' ? upcomingLoading : validationClosedLoading
-  }, [
-    isAssociationSwitching,
-    isCalendarMode,
-    calendarLoading,
-    activeTab,
-    upcomingLoading,
-    validationClosedLoading,
-  ])
-
-  const error = useMemo(() => {
-    if (isCalendarMode) return calendarError
-    return activeTab === 'upcoming' ? upcomingError : validationClosedError
-  }, [isCalendarMode, calendarError, activeTab, upcomingError, validationClosedError])
-
-  const refetch = useCallback(() => {
-    if (isCalendarMode) {
-      return refetchCalendar()
-    }
-    return activeTab === 'upcoming' ? refetchUpcoming() : refetchValidationClosed()
-  }, [isCalendarMode, activeTab, refetchCalendar, refetchUpcoming, refetchValidationClosed])
-
-  // When tour is active (or about to auto-start), show ONLY the dummy assignment
-  // to ensure tour works regardless of whether tabs have real data
-  const data = useMemo(() => {
-    if (showDummyData) {
-      // Safe cast: TourDummyAssignment provides all fields used by AssignmentCard and
-      // eligibility checks (refereePosition, refereeGame, convocationCompensation)
-      const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment
-      return [tourAssignment]
-    }
-    return rawData
-  }, [showDummyData, rawData])
-
-  // Merge on-call assignments with regular assignments for upcoming tab (API/demo mode only)
-  // Creates a unified list of DisplayItems sorted by date
-  const mergedDisplayItems = useMemo((): DisplayItem[] => {
-    // Only merge for upcoming tab in non-calendar mode
-    if (activeTab !== 'upcoming' || isCalendarMode || showDummyData) {
-      return []
-    }
-
-    const items: DisplayItem[] = []
-
-    // Add regular assignments
-    if (data) {
-      for (const assignment of data as Assignment[]) {
-        items.push({ type: 'assignment', item: assignment })
-      }
-    }
-
-    // Add on-call assignments
-    for (const onCall of onCallAssignments) {
-      items.push({ type: 'onCall', item: onCall })
-    }
-
-    // Sort by date ascending
-    return items.sort((a, b) => {
-      const dateA = getDisplayItemDate(a)
-      const dateB = getDisplayItemDate(b)
-      if (!dateA || !dateB) return 0
-      return new Date(dateA).getTime() - new Date(dateB).getTime()
-    })
-  }, [activeTab, isCalendarMode, showDummyData, data, onCallAssignments])
-
-  // Group assignments by week for visual separation
-  // Handle regular Assignment, CalendarAssignment, and merged DisplayItem types
-  const groupedData = useMemo(() => {
-    // Use merged display items for upcoming tab in non-calendar mode
-    if (activeTab === 'upcoming' && !isCalendarMode && !showDummyData) {
-      if (mergedDisplayItems.length === 0) return []
-      return groupByWeek(mergedDisplayItems, getDisplayItemDate)
-    }
-
-    if (!data || data.length === 0) return []
-    // For calendar mode, CalendarAssignment has startTime, regular Assignment has refereeGame?.game?.startingDateTime
-    // When showDummyData is true, always use regular Assignment extractor since tour dummy is an Assignment
-    const getDate =
-      isCalendarMode && !showDummyData
-        ? (a: { startTime?: string }) => a.startTime
-        : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
-            a.refereeGame?.game?.startingDateTime
-    return groupByWeek(data, getDate as (item: unknown) => string | undefined)
-  }, [activeTab, isCalendarMode, showDummyData, mergedDisplayItems, data])
-
-  const getSwipeConfig = useCallback(
-    (assignment: Assignment) => {
-      const actions = createAssignmentActions(
-        assignment,
-        {
-          onEditCompensation: editCompensationModal.open,
-          onValidateGame: validateGameModal.open,
-          onGenerateReport: handleGenerateReport,
-          onAddToExchange: handleAddToExchange,
-        },
-        t
-      )
-
-      const canGenerateReport = isGameReportEligible(assignment)
-
-      // In calendar mode, only allow report generation for NLA/NLB games
-      // Other actions require full API access
-      if (isCalendarMode) {
-        return {
-          left: canGenerateReport ? [actions.generateReport] : [],
-          right: [],
-        }
-      }
-
-      const isGameInFuture = assignment.refereeGame?.isGameInFuture === '1'
-      const canValidateGame = isValidationEligible(assignment)
-      const canEditCompensation = isAssignmentCompensationEditable(assignment)
-
-      // Action array ordering: first item = furthest from card = full swipe default
-      // When swiping left, actions appear right-to-left from the card edge
-      // Validate action only shown for first referee (head-one position)
-      // Report action only shown for NLA/NLB games where user is first referee
-      // Edit compensation action only shown if compensation is editable
-      const leftActions = canValidateGame ? [actions.validateGame] : []
-      if (canEditCompensation) {
-        leftActions.push(actions.editCompensation)
-      }
-      if (canGenerateReport) {
-        leftActions.push(actions.generateReport)
-      }
-
-      return {
-        // Swipe left reveals: [Report?] [Edit] [Validate] <- card
-        // Full swipe left triggers: validateGame (first in array = leftmost)
-        left: leftActions,
-        // Swipe right reveals: card -> [Exchange]
-        // Full swipe right triggers: addToExchange
-        // Only show exchange action for upcoming assignments
-        right: isGameInFuture ? [actions.addToExchange] : [],
-      }
-    },
-    [
-      isCalendarMode,
-      editCompensationModal,
-      validateGameModal,
-      handleGenerateReport,
-      handleAddToExchange,
-      t,
-    ]
-  )
-
-  // Handler for pull-to-refresh - wraps refetch in async function
-  const handleRefresh = useCallback(async () => {
-    await refetch()
-  }, [refetch])
+    upcomingCount,
+    validationClosedCount,
+  } = useAssignmentsPageLogic()
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -367,16 +81,11 @@ export function AssignmentsPage() {
           `}
           >
             {t('assignments.upcoming')}
-            {(() => {
-              const regularCount = (isCalendarMode ? calendarUpcoming : upcomingData)?.length ?? 0
-              const onCallCount = isCalendarMode ? 0 : onCallAssignments.length
-              const totalCount = regularCount + onCallCount
-              return totalCount > 0 ? (
-                <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
-                  {totalCount}
-                </span>
-              ) : null
-            })()}
+            {upcomingCount > 0 ? (
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
+                {upcomingCount}
+              </span>
+            ) : null}
           </button>
           <button
             role="tab"
@@ -394,9 +103,9 @@ export function AssignmentsPage() {
           `}
           >
             {isCalendarMode ? t('assignments.past') : t('assignments.validationClosed')}
-            {((isCalendarMode ? calendarPast : validationClosedData) ?? []).length > 0 && (
+            {validationClosedCount > 0 && (
               <span className="ml-2 px-2 py-0.5 rounded-full bg-surface-subtle dark:bg-surface-card-dark text-text-secondary dark:text-text-muted-dark text-xs">
-                {(isCalendarMode ? calendarPast : validationClosedData)?.length}
+                {validationClosedCount}
               </span>
             )}
           </button>
@@ -451,7 +160,7 @@ export function AssignmentsPage() {
                             return (
                               <SwipeableCard
                                 key={calendarAssignment.gameId}
-                                swipeConfig={getSwipeConfig(assignment)}
+                                swipeConfig={getSwipeConfig(assignment, t)}
                               >
                                 {({ isDrawerOpen }) => (
                                   <AssignmentCard
@@ -483,7 +192,7 @@ export function AssignmentsPage() {
                             return (
                               <SwipeableCard
                                 key={assignment.__identity}
-                                swipeConfig={getSwipeConfig(assignment)}
+                                swipeConfig={getSwipeConfig(assignment, t)}
                               >
                                 {({ isDrawerOpen }) => (
                                   <AssignmentCard
@@ -503,7 +212,7 @@ export function AssignmentsPage() {
                           (group.items as Assignment[]).map((assignment, itemIndex) => (
                             <SwipeableCard
                               key={assignment.__identity}
-                              swipeConfig={getSwipeConfig(assignment)}
+                              swipeConfig={getSwipeConfig(assignment, t)}
                             >
                               {({ isDrawerOpen }) => (
                                 <AssignmentCard

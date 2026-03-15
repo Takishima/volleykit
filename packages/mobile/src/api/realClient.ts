@@ -345,4 +345,7 @@ export const realApiClient = {
   },
 }
 
+// Note: Mobile client implements a subset of the shared ApiClient interface.
+// Full conformance will be achieved as more endpoints are implemented.
+// See shared ApiClient for the full contract.
 export type RealApiClient = typeof realApiClient
