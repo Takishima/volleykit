@@ -186,7 +186,7 @@ jobs:
           name: ocr-poc-dist
           path: ocr-poc-dist
       - name: Delete artifacts
-        uses: geekyeggo/delete-artifact@v5
+        uses: geekyeggo/delete-artifact@v6
         with:
           name: |
             web-app-dist
