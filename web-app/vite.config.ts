@@ -344,9 +344,6 @@ export default defineConfig(({ mode }) => {
           // Lazy-loaded chunks get "chunk-" prefix to distinguish from main "index-" bundle.
           // This ensures size-limit's "index-*.js" pattern only matches the main bundle.
           chunkFileNames: 'assets/chunk-[name]-[hash].js',
-          // Merge small chunks (under 5KB) to reduce HTTP overhead.
-          // Very small chunks add module wrapper overhead without significant lazy-loading benefit.
-          experimentalMinChunkSize: 5_000,
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
           // Current sizes (gzipped) and limits:
           //   - Main App Bundle (index-*.js):     ~117 kB, limit 145 kB (+28 kB headroom)
@@ -355,13 +352,25 @@ export default defineConfig(({ mode }) => {
           //   - Image Cropper (cropper-*.js):     ~6 kB,   limit 10 kB  (+4 kB headroom) - lazy-loaded
           //   - OCR Feature (OCRPanel-*.js):      ~8 kB,   limit 12 kB  (+4 kB headroom) - lazy-loaded
           //   - Total JS Bundle:                  ~480 kB, limit 510 kB (+30 kB headroom)
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            router: ['react-router-dom'],
-            state: ['zustand', '@tanstack/react-query'],
-            validation: ['zod'],
-            'pdf-lib': ['pdf-lib'],
-            cropper: ['react-easy-crop'],
+          manualChunks(id) {
+            if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+              return 'react-vendor'
+            }
+            if (id.includes('node_modules/react-router-dom') || id.includes('node_modules/react-router/')) {
+              return 'router'
+            }
+            if (id.includes('node_modules/zustand') || id.includes('node_modules/@tanstack/react-query')) {
+              return 'state'
+            }
+            if (id.includes('node_modules/zod')) {
+              return 'validation'
+            }
+            if (id.includes('node_modules/pdf-lib')) {
+              return 'pdf-lib'
+            }
+            if (id.includes('node_modules/react-easy-crop')) {
+              return 'cropper'
+            }
           },
         },
       },
