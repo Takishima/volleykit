@@ -1,8 +1,8 @@
 version: 2
 updates:
-  # Enable version updates for npm (web-app)
+  # Single npm entry at root so dependabot finds the pnpm-lock.yaml
   - package-ecosystem: "npm"
-    directory: "/web-app"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -18,35 +18,15 @@ updates:
       - "dependencies"
       - "javascript"
     groups:
-      # Group minor/patch updates to reduce PR noise
-      dev-dependencies:
-        dependency-type: "development"
+      # Group all minor/patch updates into a single PR
+      all-minor-patch:
         update-types:
           - "minor"
           - "patch"
-      prod-dependencies:
-        dependency-type: "production"
+      # Group major updates separately so they're visible but consolidated
+      all-major:
         update-types:
-          - "minor"
-          - "patch"
-  # Enable version updates for npm (worker)
-  - package-ecosystem: "npm"
-    directory: "/worker"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
-      timezone: "UTC"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "Takishima"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "javascript"
-      - "worker"
+          - "major"
   # Enable version updates for pub (Dart/Flutter)
   - package-ecosystem: "pub"
     directory: "/"
