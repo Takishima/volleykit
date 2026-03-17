@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.24.0
+
+### Minor Changes
+
+- [#1014](https://github.com/Takishima/volleykit/pull/1014) [`ee8be0d`](https://github.com/Takishima/volleykit/commit/ee8be0d70dc7251328134b0ec8b6717b35072cd5) Thanks [@Takishima](https://github.com/Takishima)! - Upgrade to Vite 8 (Rolldown) and @vitejs/plugin-react 6
+
 ## 1.23.1
 
 ### Patch Changes
