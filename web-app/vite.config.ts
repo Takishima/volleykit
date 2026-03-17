@@ -344,24 +344,33 @@ export default defineConfig(({ mode }) => {
           // Lazy-loaded chunks get "chunk-" prefix to distinguish from main "index-" bundle.
           // This ensures size-limit's "index-*.js" pattern only matches the main bundle.
           chunkFileNames: 'assets/chunk-[name]-[hash].js',
-          // Merge small chunks (under 5KB) to reduce HTTP overhead.
-          // Very small chunks add module wrapper overhead without significant lazy-loading benefit.
-          experimentalMinChunkSize: 5_000,
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
-          // Current sizes (gzipped) and limits:
-          //   - Main App Bundle (index-*.js):     ~117 kB, limit 145 kB (+28 kB headroom)
-          //   - Vendor Chunks (combined):         ~47 kB,  limit 50 kB  (+3 kB headroom)
-          //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
-          //   - Image Cropper (cropper-*.js):     ~6 kB,   limit 10 kB  (+4 kB headroom) - lazy-loaded
-          //   - OCR Feature (OCRPanel-*.js):      ~8 kB,   limit 12 kB  (+4 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~480 kB, limit 510 kB (+30 kB headroom)
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            router: ['react-router-dom'],
-            state: ['zustand', '@tanstack/react-query'],
-            validation: ['zod'],
-            'pdf-lib': ['pdf-lib'],
-            cropper: ['react-easy-crop'],
+          // Current sizes (gzipped) and limits (Vite 8 / Rolldown):
+          // Note: CI builds merge commit which may produce slightly different sizes than local.
+          //   - Main App Bundle (index-*.js):     ~19 kB,  limit 25 kB  (+6 kB headroom)
+          //   - Vendor Chunks (combined):         ~111 kB, limit 115 kB (+4 kB headroom)
+          //   - PDF Library (pdf-lib-*.js):       ~178 kB, limit 185 kB (+7 kB headroom) - lazy-loaded
+          //   - Image Cropper (cropper-*.js):     ~9 kB,   limit 10 kB  (+1 kB headroom) - lazy-loaded
+          //   - Total JS Bundle:                  ~580 kB, limit 590 kB (+10 kB headroom)
+          manualChunks(id) {
+            if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+              return 'react-vendor'
+            }
+            if (id.includes('node_modules/react-router-dom') || id.includes('node_modules/react-router/')) {
+              return 'router'
+            }
+            if (id.includes('node_modules/zustand') || id.includes('node_modules/@tanstack/react-query')) {
+              return 'state'
+            }
+            if (id.includes('node_modules/zod')) {
+              return 'validation'
+            }
+            if (id.includes('node_modules/pdf-lib')) {
+              return 'pdf-lib'
+            }
+            if (id.includes('node_modules/react-easy-crop')) {
+              return 'cropper'
+            }
           },
         },
       },
