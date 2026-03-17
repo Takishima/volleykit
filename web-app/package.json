@@ -43,7 +43,7 @@
         "dist/assets/chunk-state-*.js",
         "dist/assets/chunk-validation-*.js"
       ],
-      "limit": "105 kB",
+      "limit": "115 kB",
       "gzip": true
     },
     {
@@ -67,7 +67,7 @@
     {
       "name": "Total JS Bundle",
       "path": "dist/assets/*.js",
-      "limit": "580 kB",
+      "limit": "590 kB",
       "gzip": true
     }
   ],

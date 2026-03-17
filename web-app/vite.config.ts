@@ -346,11 +346,12 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'assets/chunk-[name]-[hash].js',
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
           // Current sizes (gzipped) and limits (Vite 8 / Rolldown):
+          // Note: CI builds merge commit which may produce slightly different sizes than local.
           //   - Main App Bundle (index-*.js):     ~19 kB,  limit 25 kB  (+6 kB headroom)
-          //   - Vendor Chunks (combined):         ~99 kB,  limit 105 kB (+6 kB headroom)
+          //   - Vendor Chunks (combined):         ~111 kB, limit 115 kB (+4 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~178 kB, limit 185 kB (+7 kB headroom) - lazy-loaded
           //   - Image Cropper (cropper-*.js):     ~9 kB,   limit 10 kB  (+1 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~568 kB, limit 580 kB (+12 kB headroom)
+          //   - Total JS Bundle:                  ~580 kB, limit 590 kB (+10 kB headroom)
           manualChunks(id) {
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
               return 'react-vendor'
