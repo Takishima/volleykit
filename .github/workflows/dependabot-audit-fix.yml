@@ -1,0 +1,72 @@
+name: Dependabot Audit Fix
+on:
+  pull_request:
+    branches: [main]
+# =============================================================================
+# Dependabot Audit Fix Workflow
+# =============================================================================
+#
+# Automatically runs `pnpm audit --fix` on dependabot PRs to resolve any
+# transitive vulnerabilities introduced by dependency updates.
+#
+# Flow:
+#   1. Triggered on dependabot PRs
+#   2. Runs pnpm audit --fix
+#   3. If changes detected, commits and pushes back to the dependabot branch
+#
+# =============================================================================
+concurrency:
+  group: dependabot-audit-fix-${{ github.head_ref }}
+  cancel-in-progress: true
+jobs:
+  audit-fix:
+    name: Audit Fix
+    # Only run on dependabot PRs
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+          # Use a token with write access to push back to the branch
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: web-app
+      - name: Run pnpm audit fix
+        id: audit-fix
+        run: |
+          echo "Checking for fixable audit vulnerabilities..."
+          AUDIT_BEFORE=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
+          VULN_BEFORE=$(echo "$AUDIT_BEFORE" | jq -r '[.vulnerabilities | to_entries[] | select(.value.fixAvailable == true)] | length' 2>/dev/null || echo "0")
+
+          if [ "$VULN_BEFORE" = "0" ]; then
+            echo "No fixable vulnerabilities found."
+            echo "has_fixes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Found $VULN_BEFORE fixable vulnerabilities, attempting auto-fix..."
+          pnpm audit --fix || true
+          pnpm install --no-frozen-lockfile
+
+          if git diff --quiet; then
+            echo "No changes after audit fix."
+            echo "has_fixes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Audit fix produced changes."
+            echo "has_fixes=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Commit and push fixes
+        if: steps.audit-fix.outputs.has_fixes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml package.json **/package.json
+          git commit -m "fix(deps): auto-fix audit vulnerabilities"
+          git push
