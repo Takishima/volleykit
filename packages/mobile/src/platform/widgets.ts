@@ -4,7 +4,9 @@
  * Provides cross-platform interface for updating widget data on iOS and Android.
  */
 
-import { Platform } from 'react-native'
+import React from 'react'
+
+import { Platform, View } from 'react-native'
 
 import {
   EMPTY_WIDGET_DATA,
@@ -98,7 +100,7 @@ async function reloadAndroidWidget(): Promise<void> {
     const { requestWidgetUpdate } = await import('react-native-android-widget')
     await requestWidgetUpdate({
       widgetName: 'VolleyKitWidget',
-      renderWidget: () => null, // Widget renders from stored data
+      renderWidget: () => React.createElement(View), // Widget renders from stored data
       widgetNotFound: () => {
         // Widget not added to home screen yet
       },
