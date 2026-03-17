@@ -345,13 +345,12 @@ export default defineConfig(({ mode }) => {
           // This ensures size-limit's "index-*.js" pattern only matches the main bundle.
           chunkFileNames: 'assets/chunk-[name]-[hash].js',
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
-          // Current sizes (gzipped) and limits:
-          //   - Main App Bundle (index-*.js):     ~117 kB, limit 145 kB (+28 kB headroom)
-          //   - Vendor Chunks (combined):         ~47 kB,  limit 50 kB  (+3 kB headroom)
-          //   - PDF Library (pdf-lib-*.js):       ~181 kB, limit 185 kB (+4 kB headroom) - lazy-loaded
-          //   - Image Cropper (cropper-*.js):     ~6 kB,   limit 10 kB  (+4 kB headroom) - lazy-loaded
-          //   - OCR Feature (OCRPanel-*.js):      ~8 kB,   limit 12 kB  (+4 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~480 kB, limit 510 kB (+30 kB headroom)
+          // Current sizes (gzipped) and limits (Vite 8 / Rolldown):
+          //   - Main App Bundle (index-*.js):     ~19 kB,  limit 25 kB  (+6 kB headroom)
+          //   - Vendor Chunks (combined):         ~99 kB,  limit 105 kB (+6 kB headroom)
+          //   - PDF Library (pdf-lib-*.js):       ~178 kB, limit 185 kB (+7 kB headroom) - lazy-loaded
+          //   - Image Cropper (cropper-*.js):     ~9 kB,   limit 10 kB  (+1 kB headroom) - lazy-loaded
+          //   - Total JS Bundle:                  ~568 kB, limit 580 kB (+12 kB headroom)
           manualChunks(id) {
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
               return 'react-vendor'
