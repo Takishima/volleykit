@@ -1,6 +1,6 @@
 ---
-'volleykit-web': minor
-'@volleykit/shared': minor
+'volleykit-web': patch
+'@volleykit/shared': patch
 ---
 
 Improve code structure and separation of concerns across the monorepo

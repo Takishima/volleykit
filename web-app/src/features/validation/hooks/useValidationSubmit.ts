@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { logger } from '@/shared/utils/logger'
@@ -27,9 +27,6 @@ export interface UseValidationSubmitResult {
   showSafeValidationComplete: boolean
   saveError: string | null
   successToast: string | null
-
-  // Loading state
-  isSubmitting: boolean
 
   // Handlers
   /** Run the finalization/save flow */
@@ -82,10 +79,14 @@ export function useValidationSubmit({
     setShowSafeValidationComplete(false)
   }, [])
 
-  // Cleanup toast timeout — the caller should wire this to the modal's open effect.
-  // We expose resetUIState for that purpose; the timeout is cleaned up on unmount
-  // via the ref check below. However, since the hook itself doesn't own a useEffect
-  // for unmount (the parent does), we guard against stale timeouts inside handlers.
+  // Clean up toast timeout on unmount to avoid setState on unmounted component
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const performFinalization = useCallback(async () => {
     if (isSubmittingRef.current) return
@@ -151,7 +152,6 @@ export function useValidationSubmit({
     showSafeValidationComplete,
     saveError,
     successToast,
-    isSubmitting: isSubmittingRef.current,
     performFinalization,
     handleSaveAndClose,
     handleDiscardAndClose,
