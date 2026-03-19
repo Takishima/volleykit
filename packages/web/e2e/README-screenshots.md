@@ -5,7 +5,7 @@ This document explains how to capture screenshots for the help site documentatio
 ## Quick Start
 
 ```bash
-cd web-app
+cd packages/web
 
 # Install Playwright browser
 pnpm exec playwright install chromium

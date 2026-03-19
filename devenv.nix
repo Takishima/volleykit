@@ -56,23 +56,23 @@
 
     # Web app
     web-dev.exec = ''
-      cd web-app && pnpm run dev
+      cd packages/web && pnpm run dev
     '';
 
     web-build.exec = ''
-      cd web-app && VITE_BASE_PATH=/volleykit/ pnpm run build
+      cd packages/web && VITE_BASE_PATH=/volleykit/ pnpm run build
     '';
 
     web-preview.exec = ''
-      cd web-app && VITE_BASE_PATH=/volleykit/ pnpm run preview
+      cd packages/web && VITE_BASE_PATH=/volleykit/ pnpm run preview
     '';
 
     web-test.exec = ''
-      cd web-app && pnpm test
+      cd packages/web && pnpm test
     '';
 
     web-lint.exec = ''
-      cd web-app && pnpm run lint
+      cd packages/web && pnpm run lint
     '';
 
     generate-api.exec = ''
@@ -103,11 +103,11 @@
 
     # Cloudflare Worker
     worker-dev.exec = ''
-      cd worker && pnpm run dev
+      cd packages/worker && pnpm run dev
     '';
 
     worker-deploy.exec = ''
-      cd worker && pnpm exec wrangler deploy
+      cd packages/worker && pnpm exec wrangler deploy
     '';
 
     # Help site
@@ -122,7 +122,7 @@
 
   # Background process for development with production-like base path
   # Run with: devenv up
-  processes.web.exec = "cd web-app && VITE_BASE_PATH=/volleykit/ pnpm run dev";
+  processes.web.exec = "cd packages/web && VITE_BASE_PATH=/volleykit/ pnpm run dev";
 
   # Treefmt for code formatting
   treefmt = {
@@ -171,7 +171,7 @@
           "**/dist"
           "**/.expo"
           # Generated files
-          "web-app/src/api/schema.ts"
+          "packages/web/src/api/schema.ts"
         ];
       };
     };

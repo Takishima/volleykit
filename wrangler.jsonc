@@ -2,11 +2,11 @@
   "$schema": "node_modules/wrangler/config-schema.json",
 
   // Root-level wrangler config for Cloudflare CI deployment
-  // This file redirects wrangler to the worker/ subdirectory
-  // For local development, use: cd worker && npx wrangler dev
+  // This file redirects wrangler to the packages/worker/ subdirectory
+  // For local development, use: cd packages/worker && npx wrangler dev
 
   "name": "volleykit-proxy",
-  "main": "worker/src/index.ts",
+  "main": "packages/worker/src/index.ts",
   "compatibility_date": "2024-12-01",
   "compatibility_flags": ["nodejs_compat"],
 
