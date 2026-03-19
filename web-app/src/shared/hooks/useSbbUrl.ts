@@ -5,8 +5,8 @@
 
 import { useState, useCallback } from 'react'
 
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import type { Locale } from '@/i18n'
+import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
 import {
   calculateTravelTime,
   calculateMockTravelTime,

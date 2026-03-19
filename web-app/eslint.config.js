@@ -159,6 +159,26 @@ export default tseslint.config(
       'sonarjs/cognitive-complexity': ['error', 25],
     },
   },
+  // Prevent deep cross-feature imports from shared/ code.
+  // Shared hooks/utils/components should not import from feature internals.
+  // They should import from feature barrel files (index.ts) if needed at all.
+  {
+    files: ['src/shared/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', 'src/shared/stores/**'],
+    rules: {
+      'no-restricted-imports': [
+        'warn',
+        {
+          patterns: [
+            {
+              group: ['@/features/*/hooks/*', '@/features/*/utils/*', '@/features/*/services/*', '@/features/*/components/*', '@/features/*/api/*'],
+              message: 'Shared code should not import feature internals. Import from the feature barrel (@/features/X) or promote the utility to shared/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Relaxed rules for test files - testing patterns require different constraints
   {
     files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],

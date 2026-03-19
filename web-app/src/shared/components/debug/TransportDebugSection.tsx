@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Debug panel uses inline styles with pixel values */
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
 import { isOjpConfigured } from '@/shared/services/transport'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useSettingsStore } from '@/shared/stores/settings'

@@ -19,7 +19,7 @@ vi.mock('@/shared/stores/settings', () => ({
   DEFAULT_MAX_TRAVEL_TIME_MINUTES: 120,
 }))
 
-vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
+vi.mock('@/shared/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: vi.fn(),
 }))
 

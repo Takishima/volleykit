@@ -1,10 +1,11 @@
 import { createElement } from 'react'
 
-import { isFromCalendarMode } from '@volleykit/shared/utils'
-
-import type { Assignment, CompensationRecord } from '@/api/client'
+import type { CompensationRecord } from '@/api/client'
 import { Wallet, FileText } from '@/shared/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
+
+// Re-export from shared for backward compatibility
+export { isAssignmentCompensationEditable } from '@/shared/utils/compensation-helpers'
 
 /**
  * Disbursement method for compensation payments.
@@ -69,42 +70,6 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
     | ConvocationCompensationWithLockFlags
     | undefined
   if (!cc) return false
-
-  // Already paid - not editable
-  if (cc.paymentDone) return false
-
-  // Check the appropriate lock based on disbursement method
-  if (isCompensationLocked(cc)) return false
-
-  return true
-}
-
-/**
- * Checks if an assignment's compensation can be edited.
- *
- * Editability rules (same as isCompensationEditable):
- * - Non-editable: Calendar mode assignments (missing compensation data entirely)
- * - Non-editable: API explicitly denies update permission (_permissions.properties.convocationCompensation.update === false)
- * - Non-editable: paymentDone=true (already paid)
- * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
- * - Editable: convocationCompensation not present but NOT calendar mode (defaults to editable for backwards compatibility)
- * - Editable: not paid AND relevant lock is false
- */
-export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
-  // Calendar mode assignments are read-only - compensation editing not available
-  if (isFromCalendarMode(assignment)) {
-    return false
-  }
-
-  // Check API-level permissions first - server knows best
-  if (assignment._permissions?.properties?.convocationCompensation?.update === false) {
-    return false
-  }
-
-  const cc = assignment.convocationCompensation as ConvocationCompensationWithLockFlags | undefined
-  // If no compensation data but NOT calendar mode, default to editable
-  // (for backwards compatibility and when the API doesn't return compensation properties)
-  if (!cc) return true
 
   // Already paid - not editable
   if (cc.paymentDone) return false

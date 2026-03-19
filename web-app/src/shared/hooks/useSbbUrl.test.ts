@@ -27,7 +27,7 @@ vi.mock('@/shared/stores/settings', () => ({
   ),
 }))
 
-vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
+vi.mock('@/shared/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'test-assoc',
 }))
 

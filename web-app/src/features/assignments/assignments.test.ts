@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 import type { Assignment } from '@/api/client'
-import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-actions'
+import { isAssignmentCompensationEditable } from '@/shared/utils/compensation-helpers'
 
 import { TOUR_DUMMY_ASSIGNMENT } from './assignments'
 import { isGameReportEligible, isValidationEligible } from './utils/assignment-helpers'
