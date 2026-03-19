@@ -3,11 +3,11 @@ import { useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
-import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
 import {
+  useCalendarConflicts,
   hasMinimumGapFromAssignments,
   DEFAULT_SAME_LOCATION_DISTANCE_KM,
-} from '@/features/assignments/utils/conflict-detection'
+} from '@/features/assignments'
 import { features } from '@/shared/config/features'
 import { useTravelTimeFilter } from '@/shared/hooks/useTravelTimeFilter'
 import { useDemoStore } from '@/shared/stores/demo'

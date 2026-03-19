@@ -1,52 +1,15 @@
 import { createElement } from 'react'
 
-import { isFromCalendarMode } from '@volleykit/shared/utils'
-
-import type { Assignment, CompensationRecord } from '@/api/client'
+import type { CompensationRecord } from '@/api/client'
 import { Wallet, FileText } from '@/shared/components/icons'
+import {
+  type ConvocationCompensationWithLockFlags,
+  isCompensationLocked,
+} from '@/shared/utils/compensation-helpers'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
-/**
- * Disbursement method for compensation payments.
- */
-type DisbursementMethod = 'payout_on_site' | 'central_payout'
-
-/**
- * Extended compensation type that includes lock flags and disbursement method.
- * The API returns these fields in ConvocationCompensationDetailed,
- * and demo mode generates them for testing regional association behavior.
- */
-interface ConvocationCompensationWithLockFlags {
-  paymentDone?: boolean
-  lockPayoutOnSiteCompensation?: boolean
-  lockPayoutCentralPayoutCompensation?: boolean
-  methodOfDisbursementArbitration?: DisbursementMethod
-}
-
-/**
- * Checks if compensation is locked based on the disbursement method.
- *
- * The API uses different lock flags depending on how compensation is paid:
- * - On-site payout (regional associations): Check lockPayoutOnSiteCompensation
- * - Central payout (SV national): Check lockPayoutCentralPayoutCompensation
- */
-function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean {
-  const method = cc.methodOfDisbursementArbitration
-
-  if (method === 'payout_on_site') {
-    // For on-site payout, check the on-site lock
-    return cc.lockPayoutOnSiteCompensation === true
-  }
-
-  if (method === 'central_payout') {
-    // For central payout, check the central payout lock
-    return cc.lockPayoutCentralPayoutCompensation === true
-  }
-
-  // If disbursement method is unknown, check both locks
-  // This provides backwards compatibility when the field isn't requested
-  return cc.lockPayoutOnSiteCompensation === true || cc.lockPayoutCentralPayoutCompensation === true
-}
+// Re-export from shared for backward compatibility
+export { isAssignmentCompensationEditable } from '@/shared/utils/compensation-helpers'
 
 /**
  * Checks if a compensation record can be edited.
@@ -69,42 +32,6 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
     | ConvocationCompensationWithLockFlags
     | undefined
   if (!cc) return false
-
-  // Already paid - not editable
-  if (cc.paymentDone) return false
-
-  // Check the appropriate lock based on disbursement method
-  if (isCompensationLocked(cc)) return false
-
-  return true
-}
-
-/**
- * Checks if an assignment's compensation can be edited.
- *
- * Editability rules (same as isCompensationEditable):
- * - Non-editable: Calendar mode assignments (missing compensation data entirely)
- * - Non-editable: API explicitly denies update permission (_permissions.properties.convocationCompensation.update === false)
- * - Non-editable: paymentDone=true (already paid)
- * - Non-editable: relevant lock is true based on methodOfDisbursementArbitration
- * - Editable: convocationCompensation not present but NOT calendar mode (defaults to editable for backwards compatibility)
- * - Editable: not paid AND relevant lock is false
- */
-export function isAssignmentCompensationEditable(assignment: Assignment): boolean {
-  // Calendar mode assignments are read-only - compensation editing not available
-  if (isFromCalendarMode(assignment)) {
-    return false
-  }
-
-  // Check API-level permissions first - server knows best
-  if (assignment._permissions?.properties?.convocationCompensation?.update === false) {
-    return false
-  }
-
-  const cc = assignment.convocationCompensation as ConvocationCompensationWithLockFlags | undefined
-  // If no compensation data but NOT calendar mode, default to editable
-  // (for backwards compatibility and when the API doesn't return compensation properties)
-  if (!cc) return true
 
   // Already paid - not editable
   if (cc.paymentDone) return false

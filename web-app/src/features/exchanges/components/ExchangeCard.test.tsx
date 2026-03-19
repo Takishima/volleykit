@@ -7,7 +7,7 @@ import type { GameExchange } from '@/api/client'
 import { ExchangeCard } from './ExchangeCard'
 
 // Mock dependencies
-vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
+vi.mock('@/shared/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'SV',
 }))
 

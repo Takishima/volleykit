@@ -44,7 +44,7 @@ vi.mock('@/features/assignments/utils/conflict-detection', () => ({
   hasMinimumGapFromAssignments: () => true,
   DEFAULT_SAME_LOCATION_DISTANCE_KM: 5,
 }))
-vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
+vi.mock('@/shared/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
 vi.mock('@/shared/hooks/useTravelTime', () => ({

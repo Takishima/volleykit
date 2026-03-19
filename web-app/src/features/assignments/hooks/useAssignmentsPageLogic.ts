@@ -4,10 +4,10 @@ import { useShallow } from 'zustand/react/shallow'
 
 import type { Assignment } from '@/api/client'
 import { TOUR_DUMMY_ASSIGNMENT } from '@/features/assignments/assignments'
-import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-actions'
 import { useMyOnCallAssignments, type OnCallAssignment } from '@/features/referee-backup'
 import { useTour } from '@/shared/hooks/useTour'
 import { useAuthStore } from '@/shared/stores/auth'
+import { isAssignmentCompensationEditable } from '@/shared/utils/compensation-helpers'
 import { groupByWeek } from '@/shared/utils/date-helpers'
 import type { SwipeConfig } from '@/types/swipe'
 

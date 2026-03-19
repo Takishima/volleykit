@@ -2,10 +2,10 @@ import { useState, useCallback, memo, useMemo } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { Settings, X, MapPin, TrainFront, Clock } from '@/shared/components/icons'
 import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
 import { features } from '@/shared/config/features'
+import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useTravelTimeAvailable } from '@/shared/hooks/useTravelTime'
 import { useSettingsStore } from '@/shared/stores/settings'

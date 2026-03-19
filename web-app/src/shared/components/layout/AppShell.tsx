@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
+import { useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
 import { getApiClient } from '@/api/client'
@@ -11,7 +11,6 @@ import {
   Wallet,
   ArrowLeftRight,
   Settings,
-  ChevronDown,
   Calendar,
 } from '@/shared/components/icons'
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator'
@@ -23,11 +22,11 @@ import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore, type Occupation } from '@/shared/stores/auth'
 import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter'
 import { toast } from '@/shared/stores/toast'
-import { useTourStore } from '@/shared/stores/tour'
 import { createLogger } from '@/shared/utils/logger'
 import { getOccupationLabelKey } from '@/shared/utils/occupation-labels'
 
-import type { LucideIcon } from 'lucide-react'
+import { BottomNavigation, type NavItem } from './BottomNavigation'
+import { HeaderDropdown } from './HeaderDropdown'
 
 const log = createLogger('AppShell')
 
@@ -40,13 +39,6 @@ const DebugPanel = lazy(() =>
 
 const MINIMUM_OCCUPATIONS_FOR_SWITCHER = 2
 const MINIMUM_ASSOCIATIONS_FOR_FILTER = 2
-
-interface NavItem {
-  path: string
-  labelKey: 'nav.assignments' | 'nav.compensations' | 'nav.exchange' | 'nav.settings'
-  icon: LucideIcon
-  testId: string
-}
 
 const allNavItems: NavItem[] = [
   { path: '/', labelKey: 'nav.assignments', icon: ClipboardList, testId: 'nav-assignments' },
@@ -64,7 +56,6 @@ const allNavItems: NavItem[] = [
 const CALENDAR_MODE_HIDDEN_PATHS = ['/compensations', '/exchange']
 
 export function AppShell() {
-  const location = useLocation()
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const {
@@ -90,7 +81,7 @@ export function AppShell() {
       isCalendarMode: state.isCalendarMode(),
     }))
   )
-  const activeTour = useTourStore((state) => state.activeTour)
+
   const {
     selectedAssociation,
     associations: calendarAssociations,
@@ -102,7 +93,6 @@ export function AppShell() {
       setSelectedAssociation: s.setSelectedAssociation,
     }))
   )
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   // Track the latest switch request to handle race conditions
   // when user rapidly clicks different associations
@@ -110,8 +100,6 @@ export function AppShell() {
 
   const getOccupationLabel = useCallback(
     (occupation: Occupation): string => {
-      // Prioritize showing the association/club identifier for easier differentiation
-      // Only fall back to occupation type if no identifier is available
       if (occupation.clubName) {
         return occupation.clubName
       }
@@ -124,25 +112,13 @@ export function AppShell() {
     [t]
   )
 
-  const getCalendarAssociationLabel = useCallback(
-    (association: string): string => {
-      if (association === ALL_ASSOCIATIONS) {
-        return t('calendar.allAssociations')
-      }
-      return association
-    },
-    [t]
-  )
-
-  // Determine if we should show the dropdown based on mode
+  // Determine if we should show dropdowns based on mode
   const showCalendarDropdown =
     isCalendarMode && calendarAssociations.length >= MINIMUM_ASSOCIATIONS_FOR_FILTER
   const showOccupationDropdown =
     !isCalendarMode &&
     user?.occupations &&
     user.occupations.length >= MINIMUM_OCCUPATIONS_FOR_SWITCHER
-  const calendarDropdownRef = useRef<HTMLDivElement>(null)
-  const occupationDropdownRef = useRef<HTMLDivElement>(null)
   const isAuthenticated = status === 'authenticated'
 
   // Filter nav items based on calendar mode
@@ -153,87 +129,66 @@ export function AppShell() {
     return allNavItems
   }, [isCalendarMode])
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Node
-      const isOutsideCalendar = !calendarDropdownRef.current?.contains(target)
-      const isOutsideOccupation = !occupationDropdownRef.current?.contains(target)
-
-      if (isOutsideCalendar && isOutsideOccupation) {
-        setIsDropdownOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
   const activeOccupation =
     user?.occupations?.find((o) => o.id === activeOccupationId) ?? user?.occupations?.[0]
 
-  const handleCalendarAssociationSelect = (association: string) => {
-    setSelectedAssociation(association)
-    setIsDropdownOpen(false)
-  }
+  // Build dropdown options for calendar associations
+  const calendarOptions = useMemo(() => {
+    const options = [{ id: ALL_ASSOCIATIONS, label: t('calendar.allAssociations') }]
+    for (const assoc of calendarAssociations) {
+      options.push({ id: assoc, label: assoc })
+    }
+    return options
+  }, [calendarAssociations, t])
+
+  // Build dropdown options for occupations
+  const occupationOptions = useMemo(
+    () =>
+      (user?.occupations ?? []).map((o) => ({
+        id: o.id,
+        label: getOccupationLabel(o),
+      })),
+    [user?.occupations, getOccupationLabel]
+  )
 
   const handleOccupationSelect = async (id: string) => {
     // Don't switch if selecting the same occupation
     if (id === activeOccupationId) {
-      setIsDropdownOpen(false)
       return
     }
 
     // Increment counter to track this specific switch request
-    // This handles race conditions when user rapidly clicks different associations
     const currentSwitch = ++switchCounterRef.current
 
     setAssociationSwitching(true)
-    setIsDropdownOpen(false)
 
     try {
-      // Call API to switch association (works for both demo and production mode)
-      // In demo mode, the mock API handles regenerating demo data
-      // In production mode, this switches the server-side active party
       const apiClient = getApiClient(dataSource)
       await apiClient.switchRoleAndAttribute(id)
 
       // Check if this is still the latest switch request (race condition protection)
       if (currentSwitch !== switchCounterRef.current) {
-        // A newer switch was initiated, don't update state or invalidate queries
         return
       }
 
-      // Update state AFTER the API call succeeds to prevent race conditions.
-      // If we update state before the API call, queries will start refetching
-      // with new keys while the server is still in the old association context,
-      // causing stale data to be cached under the new association key.
+      // Update state AFTER the API call succeeds to prevent race conditions
       setActiveOccupation(id)
 
-      // Reset all queries to clear cached data and force fresh fetches.
-      // Using resetQueries() instead of invalidateQueries() ensures:
-      // 1. Old association's data is cleared immediately (shows loading state)
-      // 2. New data is fetched fresh from the server
-      // This prevents showing stale data from the previous association.
+      // Reset all queries to clear cached data and force fresh fetches
       await queryClient.resetQueries()
 
-      // Prefetch data for all tabs in production mode.
-      // This improves UX by loading data for tabs the user hasn't visited yet.
-      // In demo mode, data comes directly from the store, so no prefetch needed.
+      // Prefetch data for all tabs in production mode
       if (dataSource === 'api') {
-        // Don't await - let prefetch happen in background while user interacts
         prefetchAllTabData(queryClient, id, getApiClient(dataSource)).catch(() => {
-          // Errors are already logged in prefetchAllTabData, no action needed
+          // Errors are already logged in prefetchAllTabData
         })
       }
     } catch (error) {
-      // Check if this is still the latest switch request before showing error
       if (currentSwitch === switchCounterRef.current) {
-        // Show error toast to user - state was not changed so no revert needed
         toast.error(t('common.switchAssociationFailed'))
         log.error('Failed to switch association:', error)
       }
     } finally {
-      // Only clear switching state if this is still the latest request
       if (currentSwitch === switchCounterRef.current) {
         setAssociationSwitching(false)
       }
@@ -258,7 +213,6 @@ export function AppShell() {
 
             {isAuthenticated && (
               <div className="flex items-center gap-3">
-                {/* Pending actions indicator (features.offline) */}
                 {features.offline && <PendingActionsIndicator />}
 
                 {/* Calendar Mode Indicator */}
@@ -281,112 +235,23 @@ export function AppShell() {
 
                 {/* Calendar mode: Association filter dropdown */}
                 {showCalendarDropdown && (
-                  <div className="relative" ref={calendarDropdownRef}>
-                    <button
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50"
-                      aria-expanded={isDropdownOpen}
-                      aria-haspopup="listbox"
-                      aria-label={t('calendar.filterByAssociation')}
-                    >
-                      <span className="max-w-[100px] truncate">
-                        {getCalendarAssociationLabel(selectedAssociation)}
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-
-                    {isDropdownOpen && (
-                      <div
-                        className="absolute right-0 mt-1 w-48 bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-lg border border-border-default dark:border-border-default-dark py-1 z-50"
-                        role="listbox"
-                        aria-label={t('calendar.selectAssociation')}
-                      >
-                        {/* All associations option */}
-                        <button
-                          onClick={() => handleCalendarAssociationSelect(ALL_ASSOCIATIONS)}
-                          className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                            selectedAssociation === ALL_ASSOCIATIONS
-                              ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                              : 'text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
-                          }`}
-                          role="option"
-                          aria-selected={selectedAssociation === ALL_ASSOCIATIONS}
-                        >
-                          {t('calendar.allAssociations')}
-                        </button>
-                        {/* Individual association options */}
-                        {calendarAssociations.map((association) => (
-                          <button
-                            key={association}
-                            onClick={() => handleCalendarAssociationSelect(association)}
-                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                              selectedAssociation === association
-                                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                                : 'text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
-                            }`}
-                            role="option"
-                            aria-selected={selectedAssociation === association}
-                          >
-                            {association}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <HeaderDropdown
+                    selected={selectedAssociation}
+                    options={calendarOptions}
+                    onSelect={setSelectedAssociation}
+                    ariaLabel={t('calendar.filterByAssociation')}
+                  />
                 )}
 
                 {/* Normal mode: Occupation switcher dropdown */}
                 {showOccupationDropdown && (
-                  <div className="relative" ref={occupationDropdownRef}>
-                    <button
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      disabled={isAssociationSwitching}
-                      className={`flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
-                        isAssociationSwitching
-                          ? 'text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark cursor-wait'
-                          : 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50'
-                      }`}
-                      aria-expanded={isDropdownOpen}
-                      aria-haspopup="listbox"
-                    >
-                      <span className="max-w-[100px] truncate">
-                        {activeOccupation
-                          ? getOccupationLabel(activeOccupation)
-                          : t('common.selectRole')}
-                      </span>
-                      <ChevronDown
-                        className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-
-                    {isDropdownOpen && (
-                      <div
-                        className="absolute right-0 mt-1 w-48 bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-lg border border-border-default dark:border-border-default-dark py-1 z-50"
-                        role="listbox"
-                        aria-label={t('common.selectOccupation')}
-                      >
-                        {user?.occupations?.map((occupation) => (
-                          <button
-                            key={occupation.id}
-                            onClick={() => handleOccupationSelect(occupation.id)}
-                            className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                              occupation.id === activeOccupationId
-                                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400'
-                                : 'text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
-                            }`}
-                            role="option"
-                            aria-selected={occupation.id === activeOccupationId}
-                          >
-                            {getOccupationLabel(occupation)}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <HeaderDropdown
+                    selected={activeOccupationId ?? activeOccupation?.id ?? ''}
+                    options={occupationOptions}
+                    onSelect={handleOccupationSelect}
+                    disabled={isAssociationSwitching}
+                    ariaLabel={t('common.selectOccupation')}
+                  />
                 )}
 
                 {user && (
@@ -409,7 +274,6 @@ export function AppShell() {
       {/* Spacer to account for fixed header height plus safe area inset */}
       <div className="header-spacer" aria-hidden="true" />
 
-      {/* Offline indicator - shows when network is unavailable */}
       <OfflineIndicator />
 
       {/* Demo mode banner */}
@@ -442,60 +306,16 @@ export function AppShell() {
         </div>
       )}
 
-      {/* Tour mode banner (features.helpTours) */}
       {features.helpTours && <TourModeBanner />}
 
-      {/* Main content
-          pb-16 (4rem/64px) provides padding to prevent content from being hidden
-          behind the fixed bottom nav. This matches the compact nav height. */}
+      {/* Main content */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 pb-16">
         <Outlet />
       </main>
 
-      {/* Bottom navigation (mobile-first) - fixed to always stay visible */}
-      <nav className="bg-surface-card dark:bg-surface-card-dark border-t border-border-default dark:border-border-default-dark fixed bottom-0 left-0 right-0 z-50 safe-area-inset-bottom">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-around">
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path
-              const Icon = item.icon
-              const isDisabled = activeTour !== null && !isActive
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  data-testid={item.testId}
-                  onClick={(e) => {
-                    if (isDisabled) {
-                      e.preventDefault()
-                    }
-                  }}
-                  className={`
-                    flex flex-col items-center py-2 px-4 text-[10px] font-medium
-                    transition-all duration-150 rounded-lg mx-1
-                    ${
-                      isActive
-                        ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30'
-                        : isDisabled
-                          ? 'text-text-muted/50 dark:text-text-muted-dark/50 cursor-not-allowed'
-                          : 'text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark'
-                    }
-                  `}
-                  aria-disabled={isDisabled}
-                >
-                  <Icon
-                    className={`w-5 h-5 ${isActive ? 'scale-110' : ''} transition-transform`}
-                    aria-hidden="true"
-                  />
-                  <span>{t(item.labelKey)}</span>
-                </NavLink>
-              )
-            })}
-          </div>
-        </div>
-      </nav>
+      <BottomNavigation navItems={navItems} />
 
-      {/* Debug panel - toggle via ?debug or console: window.dispatchEvent(new Event('vk-debug-toggle')) */}
+      {/* Debug panel */}
       <Suspense fallback={null}>
         <DebugPanel />
       </Suspense>

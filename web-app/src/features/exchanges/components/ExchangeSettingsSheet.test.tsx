@@ -43,7 +43,7 @@ vi.mock('@/shared/hooks/useTravelTime', () => ({
 }))
 
 // Mock useActiveAssociationCode hook
-vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
+vi.mock('@/shared/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
 

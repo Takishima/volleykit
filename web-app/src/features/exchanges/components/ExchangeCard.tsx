@@ -3,7 +3,6 @@ import { memo, useMemo } from 'react'
 import { format, parseISO } from 'date-fns'
 
 import type { GameExchange } from '@/api/client'
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
 import { ExpandableCard } from '@/shared/components/ExpandableCard'
 import {
   MapPin,
@@ -17,6 +16,7 @@ import {
 } from '@/shared/components/icons'
 import { TravelTimeBadge } from '@/shared/components/TravelTimeBadge'
 import { features } from '@/shared/config/features'
+import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
 import { useDateLocale } from '@/shared/hooks/useDateFormat'
 import { useSbbUrl } from '@/shared/hooks/useSbbUrl'
 import { useTranslation } from '@/shared/hooks/useTranslation'

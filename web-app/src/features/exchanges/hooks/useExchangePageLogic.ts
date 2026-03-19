@@ -3,7 +3,7 @@ import { useState, useCallback, useMemo, useOptimistic } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
-import { useActiveAssociationCode } from '@/features/auth/hooks/useActiveAssociation'
+import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
 import { useTour } from '@/shared/hooks/useTour'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'

@@ -45,7 +45,7 @@ vi.mock('@/shared/stores/settings', () => ({
   getDefaultArrivalBuffer: vi.fn(() => 30),
 }))
 
-vi.mock('@/features/auth/hooks/useActiveAssociation', () => ({
+vi.mock('@/shared/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: vi.fn(() => 'TEST'),
 }))
 
