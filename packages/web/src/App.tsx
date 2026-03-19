@@ -1,14 +1,17 @@
-import { useEffect, useState, useRef, lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // features.offline — IndexedDB query cache persistence (delete this import when removing offline feature)
+import { QueryClientProvider } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
-import { useShallow } from 'zustand/react/shallow'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import { PWAProvider } from '@/contexts/PWAContext'
 import { CalendarErrorHandler } from '@/features/assignments/components/CalendarErrorHandler'
 import { useCalendarTheme } from '@/features/assignments/hooks/useCalendarTheme'
+import { useAuthSync } from '@/hooks/useAuthSync'
+import { queryClient } from '@/queryClientConfig'
+import { QueryErrorHandler } from '@/QueryErrorHandler'
+import { ProtectedRoute, PublicRoute } from '@/RouteGuards'
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
 import { AppShell } from '@/shared/components/layout/AppShell'
 import { LoadingState } from '@/shared/components/LoadingSpinner'
@@ -16,25 +19,10 @@ import { PageErrorBoundary } from '@/shared/components/PageErrorBoundary'
 import { ReloadPrompt } from '@/shared/components/ReloadPrompt'
 import { ToastContainer } from '@/shared/components/Toast'
 import { features } from '@/shared/config/features'
-// features.offline — Cache warming for offline support (delete this import when removing offline feature)
-import { useCacheWarming } from '@/shared/hooks/useCacheWarming'
-import { ASSIGNMENTS_STALE_TIME_MS, OFFLINE_GC_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
 import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
-// features.offline — IndexedDB persistence and action queue (delete these imports when removing offline feature)
-import { persistOptions, clearPersistedCache, clearAllActions } from '@/shared/services/offline'
-import { useAuthStore, registerCacheCleanup } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import { useSettingsStore } from '@/shared/stores/settings'
-import { logger } from '@/shared/utils/logger'
-import {
-  classifyQueryError,
-  isRetryableError,
-  calculateRetryDelay,
-  isAuthError,
-  RETRY_CONFIG,
-} from '@/shared/utils/query-error-utils'
+// features.offline — IndexedDB persistence (delete this import when removing offline feature)
+import { persistOptions } from '@/shared/services/offline'
 
 // Lazy load pages to reduce initial bundle size
 // Each page becomes a separate chunk that loads on-demand
@@ -72,144 +60,6 @@ const QueryProvider = features.offline
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-// features.offline — Cache warming no-op when offline is disabled
-const useOfflineCacheWarming: () => void = features.offline ? useCacheWarming : () => {}
-
-/**
- * Global error handler for React Query mutations.
- * Logs errors with context for debugging. Network errors allow retry,
- * while other errors may need different handling.
- */
-function handleMutationError(error: unknown, variables: unknown, context: unknown): void {
-  const message = error instanceof Error ? error.message : 'Unknown error'
-  const errorType = classifyQueryError(message)
-  const stack = error instanceof Error ? error.stack : undefined
-
-  logger.error('Mutation error:', {
-    message,
-    errorType,
-    variables: variables ? '[redacted]' : undefined, // Don't log sensitive data
-    hasContext: context !== undefined,
-    stack: import.meta.env.DEV ? stack : undefined, // Only show stack in dev
-  })
-}
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (failureCount, error) => {
-        if (!isRetryableError(error)) return false
-        return failureCount < RETRY_CONFIG.MAX_QUERY_RETRIES
-      },
-      // Use exponential backoff with jitter for retry delays
-      retryDelay: calculateRetryDelay,
-      refetchOnWindowFocus: false,
-      // Cache data for 5 minutes before considering it stale
-      staleTime: ASSIGNMENTS_STALE_TIME_MS,
-      // Keep unused data in cache for 7 days (offline persistence)
-      gcTime: OFFLINE_GC_TIME_MS,
-    },
-    mutations: {
-      // Log mutation errors globally with context
-      onError: handleMutationError,
-      // Don't retry mutations by default - they have side effects
-      retry: false,
-    },
-  },
-})
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { status, checkSession, dataSource } = useAuthStore(
-    useShallow((state) => ({
-      status: state.status,
-      checkSession: state.checkSession,
-      dataSource: state.dataSource,
-    }))
-  )
-  const { assignments, activeAssociationCode, initializeDemoData } = useDemoStore(
-    useShallow((state) => ({
-      assignments: state.assignments,
-      activeAssociationCode: state.activeAssociationCode,
-      initializeDemoData: state.initializeDemoData,
-    }))
-  )
-  const { t } = useTranslation()
-  const isDemoMode = dataSource === 'demo'
-
-  // Warm cache with critical data after login for offline support (features.offline)
-  useOfflineCacheWarming()
-
-  // Only verify session for API mode - demo and calendar modes don't need server verification
-  const shouldVerifySession = status === 'authenticated' && dataSource === 'api'
-  const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession)
-  const [verifyError, setVerifyError] = useState<string | null>(null)
-
-  // Regenerate demo data on page load if demo mode is enabled but data is empty
-  // This only runs once when data needs initialization, not on association changes
-  // (association changes are handled by AppShell when user switches occupation)
-  useEffect(() => {
-    if (isDemoMode && assignments.length === 0) {
-      initializeDemoData(activeAssociationCode ?? 'SV')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run when data is empty, not on association changes
-  }, [isDemoMode, assignments.length, initializeDemoData])
-
-  // Verify persisted session is still valid on mount
-  useEffect(() => {
-    if (!isVerifying || dataSource !== 'api') return
-
-    const controller = new AbortController()
-
-    checkSession(controller.signal)
-      .catch((error: unknown) => {
-        // Ignore AbortError - this is expected when component unmounts
-        if (error instanceof Error && error.name === 'AbortError') {
-          return
-        }
-        const message = error instanceof Error ? error.message : 'Session verification failed'
-        setVerifyError(message)
-      })
-      .finally(() => {
-        // Only update state if not aborted
-        if (!controller.signal.aborted) {
-          setIsVerifying(false)
-        }
-      })
-
-    return () => {
-      controller.abort()
-    }
-  }, [isVerifying, checkSession, dataSource])
-
-  // Show loading state while verifying session
-  if (status === 'loading' || isVerifying) {
-    return <LoadingState message={t('auth.checkingSession')} />
-  }
-
-  // If verification failed, redirect to login (session may be invalid)
-  if (verifyError) {
-    logger.warn('Session verification failed:', verifyError)
-    return <Navigate to="/login" replace />
-  }
-
-  if (status !== 'authenticated') {
-    return <Navigate to="/login" replace />
-  }
-
-  // Wrap children in ErrorBoundary to catch route-level errors
-  return <ErrorBoundary>{children}</ErrorBoundary>
-}
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const status = useAuthStore((state) => state.status)
-
-  if (status === 'authenticated') {
-    return <Navigate to="/" replace />
-  }
-
-  return <>{children}</>
-}
-
 // Base path for router - Vite sets BASE_URL from the `base` config
 // Remove trailing slash for React Router basename (it adds its own)
 // Handle edge case where BASE_URL is just "/" - use empty string instead
@@ -222,107 +72,11 @@ function getBasename(): string {
 }
 const BASE_PATH = getBasename()
 
-/**
- * QueryErrorHandler monitors React Query errors and redirects to login on auth failures.
- * This catches stale session errors (401, 403, 406) that occur after initial auth check.
- */
-function QueryErrorHandler({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate()
-  const logout = useAuthStore((state) => state.logout)
-  const dataSource = useAuthStore((state) => state.dataSource)
-  const isRedirectingRef = useRef(false)
-
-  useEffect(() => {
-    const handleQueryError = (error: unknown) => {
-      // Only handle auth errors for API mode - demo and calendar modes don't use server auth
-      if (dataSource !== 'api' || isRedirectingRef.current) return
-
-      if (isAuthError(error)) {
-        isRedirectingRef.current = true
-        logger.warn('Authentication error detected, redirecting to login:', error)
-        logout()
-          .catch((err) => logger.error('Logout failed during redirect:', err))
-          .finally(() => {
-            navigate('/login', { replace: true })
-          })
-      }
-    }
-
-    const unsubscribeQueries = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type === 'updated' && event.query.state.error) {
-        handleQueryError(event.query.state.error)
-      }
-    })
-
-    const unsubscribeMutations = queryClient.getMutationCache().subscribe((event) => {
-      if (event.type === 'updated' && event.mutation.state.error) {
-        handleQueryError(event.mutation.state.error)
-      }
-    })
-
-    return () => {
-      unsubscribeQueries()
-      unsubscribeMutations()
-    }
-  }, [navigate, logout, dataSource])
-
-  return <>{children}</>
-}
-
 export default function App() {
   usePreloadLocales()
   useViewportZoom()
   useCalendarTheme()
-
-  // Sync settings store with auth store and handle logout cache clearing.
-  // Uses a single subscription for better performance.
-  useEffect(() => {
-    // Set initial mode from auth store
-    const initialDataSource = useAuthStore.getState().dataSource
-    useSettingsStore.getState()._setCurrentMode(initialDataSource)
-
-    // Register cache cleanup callback so auth store can clear cache during logout.
-    // This ensures cache is cleared synchronously before state updates,
-    // preventing any race conditions with React re-renders.
-    const unregisterCacheCleanup = registerCacheCleanup(() => {
-      queryClient.resetQueries()
-      // features.offline — Also clear the persisted IndexedDB cache and action queue
-      if (features.offline) {
-        clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
-        clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
-      }
-    })
-
-    // Track state to detect changes
-    let previousDataSource = initialDataSource
-    let wasAuthenticated = useAuthStore.getState().user !== null
-
-    const unsubscribe = useAuthStore.subscribe((state) => {
-      // Sync dataSource changes to settings store
-      if (state.dataSource !== previousDataSource) {
-        previousDataSource = state.dataSource
-        useSettingsStore.getState()._setCurrentMode(state.dataSource)
-      }
-
-      // Clear query cache on auth state transitions to prevent stale data.
-      // - On logout: handled by cacheCleanupCallback in auth store (synchronous)
-      // - On login: prevents seeing stale cached data from previous sessions
-      //   (e.g., when persisted auth state restored an old activeOccupationId)
-      const isAuthenticated = state.user !== null
-      if (wasAuthenticated !== isAuthenticated && isAuthenticated) {
-        // Only clear on login transition here - logout is handled synchronously
-        // in the auth store via cacheCleanupCallback
-        queryClient.resetQueries()
-        logger.info('Query cache cleared on login')
-      }
-      wasAuthenticated = isAuthenticated
-    })
-
-    return () => {
-      unsubscribe()
-      unregisterCacheCleanup()
-    }
-  }, [])
+  useAuthSync()
 
   return (
     <ErrorBoundary>

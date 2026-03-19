@@ -9,5 +9,13 @@ export { useCompensationActions } from './hooks/useCompensationActions'
 export { CompensationCard } from './components/CompensationCard'
 export { EditCompensationModal } from './components/EditCompensationModal'
 
+// Utils
+export {
+  isAssignmentCompensationEditable,
+  isCompensationLocked,
+  type ConvocationCompensationWithLockFlags,
+  type DisbursementMethod,
+} from './utils/compensation-helpers'
+
 // Tour
 export { compensationsTour } from './compensations'
