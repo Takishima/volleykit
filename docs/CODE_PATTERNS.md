@@ -502,6 +502,79 @@ export function useAssignments({ apiClient, period }: Options) {
 // Both call the same shared hook with their platform-specific client
 ```
 
+## Feature Module Structure
+
+### Directory Layout
+
+Each web-app feature follows this directory structure:
+
+```
+web-app/src/features/<feature>/
+├── index.ts              # Public API — explicit exports only (no export *)
+├── components/
+│   ├── index.ts          # Internal barrel for components within the feature
+│   └── *.tsx             # UI components
+├── hooks/
+│   ├── use<Feature>.ts   # Main state hook (state derivation + setters)
+│   ├── use<Feature>Actions.ts  # API mutation logic (save, finalize, etc.)
+│   └── types.ts          # Shared types for the feature's hooks
+├── api/
+│   └── api-helpers.ts    # Pure API orchestration functions
+└── utils/
+    └── *.ts              # Pure utility functions
+```
+
+### Separation of Concerns in Hooks
+
+Split large hooks by concern:
+
+- **State hooks** (`useState`, `useMemo`, `useCallback` setters) — derive and manage local state
+- **Action hooks** (API calls, cache invalidation) — orchestrate side effects
+- **Components** consume both, but logic stays in hooks
+
+```typescript
+// useValidationState.ts — state derivation + setters (280 LOC)
+export function useValidationState(gameId?: string) {
+  const [state, setState] = useState(createInitialState)
+  // ... memos, setters, completion status derivation
+  const { saveProgress, finalizeValidation, isSaving, isFinalizing } =
+    useValidationActions({ gameId, state, gameDetails, ... })
+  return { state, isDirty, completionStatus, saveProgress, ... }
+}
+
+// useValidationActions.ts — API orchestration (180 LOC)
+export function useValidationActions({ gameId, state, gameDetails }) {
+  // ... file upload, roster save, scorer save, cache invalidation
+  return { saveProgress, finalizeValidation, isSaving, isFinalizing }
+}
+```
+
+### Barrel File Exports
+
+Feature barrel files (`index.ts`) use **explicit exports only** — never `export *`:
+
+```typescript
+// Good — explicit public API
+export { ValidateGameModal } from './components/ValidateGameModal'
+export { useValidateGameWizard } from './hooks/useValidateGameWizard'
+
+// Bad — leaks internal components as public API
+export * from './components'
+```
+
+Internal component barrels (`components/index.ts`) may use explicit re-exports for convenience within the feature, but these are not exposed at the feature boundary.
+
+### Hook Extraction Guidelines
+
+Extract a hook when a component or hook exceeds ~300 LOC and mixes concerns:
+
+- **File upload logic** (validation, progress, preview URLs) → `useFileUpload`
+- **API mutations** (save, finalize, cache invalidation) → `use<Feature>Actions`
+- **Gesture handling** (touch events, animations) → `useSwipeGesture`
+- **Form orchestration** (wizard steps, validation state) → `use<Feature>Wizard`
+
+The extracted hook should be in the same `hooks/` directory with a descriptive name.
+
 ## E2E Testing Patterns
 
 ### Page Object Model

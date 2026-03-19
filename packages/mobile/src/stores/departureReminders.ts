@@ -3,7 +3,11 @@
  *
  * Manages transient state for active departure reminders.
  * Reminders are cleared after assignment completion.
+ *
+ * Uses Zustand for consistency with all other stores in the project.
  */
+
+import { createStore } from 'zustand'
 
 import type { DepartureReminder, Coordinates } from '../types/departureReminder'
 
@@ -22,41 +26,9 @@ export interface DepartureRemindersState {
 }
 
 /**
- * Initial state.
+ * Departure reminders actions.
  */
-const initialState: DepartureRemindersState = {
-  reminders: new Map(),
-  lastKnownLocation: null,
-  locationUpdatedAt: null,
-  isTracking: false,
-}
-
-/**
- * In-memory state (not persisted).
- */
-let state: DepartureRemindersState = { ...initialState }
-
-/**
- * State change listeners.
- */
-type Listener = (state: DepartureRemindersState) => void
-const listeners = new Set<Listener>()
-
-/**
- * Notify all listeners of state change.
- */
-function notifyListeners(): void {
-  listeners.forEach((listener) => listener(state))
-}
-
-/**
- * Departure reminders store operations.
- */
-export interface DepartureRemindersStore {
-  /** Get current state */
-  getState(): DepartureRemindersState
-  /** Subscribe to state changes */
-  subscribe(listener: Listener): () => void
+export interface DepartureRemindersActions {
   /** Add or update a reminder */
   upsertReminder(reminder: DepartureReminder): void
   /** Remove a reminder by assignment ID */
@@ -77,132 +49,112 @@ export interface DepartureRemindersStore {
   reset(): void
 }
 
-/**
- * Get current state.
- */
-function getState(): DepartureRemindersState {
-  return state
-}
+const departureRemindersZustandStore = createStore<
+  DepartureRemindersState & DepartureRemindersActions
+>()((set, get) => ({
+  reminders: new Map(),
+  lastKnownLocation: null,
+  locationUpdatedAt: null,
+  isTracking: false,
 
-/**
- * Subscribe to state changes.
- */
-function subscribe(listener: Listener): () => void {
-  listeners.add(listener)
-  return () => listeners.delete(listener)
-}
+  upsertReminder(reminder) {
+    set((state) => {
+      const newReminders = new Map(state.reminders)
+      newReminders.set(reminder.assignmentId, reminder)
+      return { reminders: newReminders }
+    })
+  },
 
-/**
- * Add or update a reminder.
- */
-function upsertReminder(reminder: DepartureReminder): void {
-  const newReminders = new Map(state.reminders)
-  newReminders.set(reminder.assignmentId, reminder)
-  state = { ...state, reminders: newReminders }
-  notifyListeners()
-}
+  removeReminder(assignmentId) {
+    set((state) => {
+      const newReminders = new Map(state.reminders)
+      newReminders.delete(assignmentId)
+      return { reminders: newReminders }
+    })
+  },
 
-/**
- * Remove a reminder by assignment ID.
- */
-function removeReminder(assignmentId: string): void {
-  const newReminders = new Map(state.reminders)
-  newReminders.delete(assignmentId)
-  state = { ...state, reminders: newReminders }
-  notifyListeners()
-}
+  cleanupPastReminders(currentTime) {
+    const { reminders } = get()
+    const newReminders = new Map<string, DepartureReminder>()
+    const cutoffTime = currentTime.toISOString()
 
-/**
- * Remove reminders for past assignments.
- */
-function cleanupPastReminders(currentTime: Date): void {
-  const newReminders = new Map<string, DepartureReminder>()
-  const cutoffTime = currentTime.toISOString()
+    reminders.forEach((reminder, id) => {
+      if (reminder.arrivalTime > cutoffTime) {
+        newReminders.set(id, reminder)
+      }
+    })
 
-  state.reminders.forEach((reminder, id) => {
-    // Keep reminder if arrival time is in the future
-    if (reminder.arrivalTime > cutoffTime) {
-      newReminders.set(id, reminder)
+    if (newReminders.size !== reminders.size) {
+      set({ reminders: newReminders })
     }
-  })
+  },
 
-  if (newReminders.size !== state.reminders.size) {
-    state = { ...state, reminders: newReminders }
-    notifyListeners()
-  }
-}
+  getReminder(assignmentId) {
+    return get().reminders.get(assignmentId)
+  },
 
-/**
- * Get reminder for assignment.
- */
-function getReminder(assignmentId: string): DepartureReminder | undefined {
-  return state.reminders.get(assignmentId)
-}
+  getActiveReminders() {
+    return Array.from(get().reminders.values())
+  },
 
-/**
- * Get all active reminders.
- */
-function getActiveReminders(): DepartureReminder[] {
-  return Array.from(state.reminders.values())
-}
+  updateLocation(location) {
+    set({
+      lastKnownLocation: location,
+      locationUpdatedAt: new Date().toISOString(),
+    })
+  },
 
-/**
- * Update user location.
- */
-function updateLocation(location: Coordinates): void {
-  state = {
-    ...state,
-    lastKnownLocation: location,
-    locationUpdatedAt: new Date().toISOString(),
-  }
-  notifyListeners()
-}
+  setTracking(isTracking) {
+    set({ isTracking })
+  },
 
-/**
- * Set tracking status.
- */
-function setTracking(isTracking: boolean): void {
-  state = { ...state, isTracking }
-  notifyListeners()
-}
+  clearAll() {
+    set({ reminders: new Map() })
+  },
+
+  reset() {
+    set({
+      reminders: new Map(),
+      lastKnownLocation: null,
+      locationUpdatedAt: null,
+      isTracking: false,
+    })
+  },
+}))
 
 /**
- * Clear all reminders.
+ * Backward-compatible store interface.
+ *
+ * Preserves the existing imperative API used by service files
+ * while backed by Zustand internally.
  */
-function clearAll(): void {
-  state = {
-    ...state,
-    reminders: new Map(),
-  }
-  notifyListeners()
+export interface DepartureRemindersStore {
+  getState(): DepartureRemindersState
+  subscribe(
+    listener: (state: DepartureRemindersState & DepartureRemindersActions) => void
+  ): () => void
+  upsertReminder(reminder: DepartureReminder): void
+  removeReminder(assignmentId: string): void
+  cleanupPastReminders(currentTime: Date): void
+  getReminder(assignmentId: string): DepartureReminder | undefined
+  getActiveReminders(): DepartureReminder[]
+  updateLocation(location: Coordinates): void
+  setTracking(isTracking: boolean): void
+  clearAll(): void
+  reset(): void
 }
 
-/**
- * Reset to initial state.
- */
-function reset(): void {
-  state = {
-    reminders: new Map(),
-    lastKnownLocation: null,
-    locationUpdatedAt: null,
-    isTracking: false,
-  }
-  notifyListeners()
-}
-
-/**
- * Departure reminders store implementation.
- */
 export const departureRemindersStore: DepartureRemindersStore = {
-  getState,
-  subscribe,
-  upsertReminder,
-  removeReminder,
-  cleanupPastReminders,
-  getReminder,
-  getActiveReminders,
-  updateLocation,
-  setTracking,
-  clearAll,
-  reset,
+  getState: departureRemindersZustandStore.getState,
+  subscribe: departureRemindersZustandStore.subscribe,
+  upsertReminder: (...args) => departureRemindersZustandStore.getState().upsertReminder(...args),
+  removeReminder: (...args) => departureRemindersZustandStore.getState().removeReminder(...args),
+  cleanupPastReminders: (...args) =>
+    departureRemindersZustandStore.getState().cleanupPastReminders(...args),
+  getReminder: (...args) => departureRemindersZustandStore.getState().getReminder(...args),
+  getActiveReminders: () => departureRemindersZustandStore.getState().getActiveReminders(),
+  updateLocation: (...args) => departureRemindersZustandStore.getState().updateLocation(...args),
+  setTracking: (...args) => departureRemindersZustandStore.getState().setTracking(...args),
+  clearAll: () => departureRemindersZustandStore.getState().clearAll(),
+  reset: () => departureRemindersZustandStore.getState().reset(),
 }

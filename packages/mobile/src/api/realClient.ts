@@ -7,8 +7,6 @@
  * Resolves TODO(#775): Replace mock API client with real implementation.
  */
 
-import Constants from 'expo-constants'
-
 import type {
   SearchConfiguration,
   Assignment,
@@ -22,14 +20,7 @@ import {
   COMPENSATION_PROPERTIES,
 } from '@volleykit/shared/api'
 
-import { SESSION_TOKEN_HEADER } from '../constants'
-
-/**
- * API base URL for requests.
- * Uses the CORS proxy configured in app.json extra settings.
- */
-const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? 'https://proxy.volleykit.app'
+import { API_BASE_URL, SESSION_TOKEN_HEADER } from '../constants'
 
 /**
  * In-memory session token storage.

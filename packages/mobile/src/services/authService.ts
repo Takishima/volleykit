@@ -7,24 +7,14 @@
  * - Mobile-specific session handling
  */
 
-import Constants from 'expo-constants'
-
 import { createAuthService, type LoginResult } from '@volleykit/shared/auth'
 import { useAuthStore } from '@volleykit/shared/stores'
 
 import { setSessionToken, setCsrfToken, clearTokens, getSessionToken } from '../api'
-import { SESSION_TOKEN_HEADER } from '../constants'
+import { API_BASE_URL, SESSION_TOKEN_HEADER } from '../constants'
 import { onUserLogout as cleanupDepartureReminders } from './departure-reminder'
 import { secureStorage } from '../platform/secureStorage'
 import { useActionQueueStore } from './offline/action-queue-store'
-
-/**
- * API base URL for authentication requests.
- * Uses the CORS proxy configured in app.json extra settings.
- * Falls back to production proxy URL if not configured.
- */
-const API_BASE_URL =
-  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? 'https://proxy.volleykit.app'
 
 /**
  * Get session headers for API requests.

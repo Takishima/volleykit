@@ -2,6 +2,8 @@
  * Mobile app constants
  */
 
+import Constants from 'expo-constants'
+
 /**
  * Theme colors for the mobile app
  * These match the Tailwind CSS color palette
@@ -60,6 +62,14 @@ export const BIOMETRIC_ICON_SIZE = 64
 export const CALENDAR_SETTINGS_KEY = 'calendar_settings'
 
 // === API ===
+
+/**
+ * API base URL for all requests.
+ * Uses the CORS proxy configured in app.json extra settings.
+ * Falls back to production proxy URL if not configured.
+ */
+export const API_BASE_URL =
+  (Constants.expoConfig?.extra?.apiBaseUrl as string | undefined) ?? 'https://proxy.volleykit.app'
 
 /** Session token header name used by the Cloudflare Worker for iOS Safari PWA */
 export const SESSION_TOKEN_HEADER = 'X-Session-Token'

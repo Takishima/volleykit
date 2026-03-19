@@ -89,8 +89,9 @@ export default tseslint.config(
       'security/detect-object-injection': 'off',
       'security/detect-non-literal-fs-filename': 'off',
 
-      // Magic numbers - disabled for mobile as existing codebase has many
-      // time constants and configuration values that would require significant refactoring
+      // Magic numbers - disabled: existing codebase has many time constants and
+      // configuration values; --max-warnings 0 makes warnings a build failure.
+      // TODO: enable incrementally as constants are extracted
       '@typescript-eslint/no-magic-numbers': 'off',
 
       // SonarJS rules - code quality and complexity

@@ -20,49 +20,11 @@ import {
   isFailedLoginResponse,
   isSuccessfulLoginResponse,
   recordFailedAttempt,
+  // Session relay imports
+  SESSION_TOKEN_HEADER,
+  extractSessionCookies,
+  mergeSessionCookies,
 } from '../utils'
-
-/**
- * Custom header for iOS Safari PWA session cookie relay.
- * iOS Safari's Intelligent Tracking Prevention (ITP) blocks third-party cookies
- * in PWA standalone mode. This header allows the client to:
- * 1. Receive session cookies as a readable header (not blocked by ITP)
- * 2. Store the session token in JavaScript
- * 3. Send it back to the proxy, which converts it to a Cookie header
- */
-const SESSION_TOKEN_HEADER = 'X-Session-Token'
-
-/**
- * Extract session cookie values from Set-Cookie headers.
- * Returns a base64-encoded string of cookie name=value pairs.
- */
-function extractSessionCookies(cookies: string[]): string | null {
-  if (cookies.length === 0) return null
-
-  // Extract just the cookie name=value part (before attributes like Path, Secure, etc.)
-  const cookieValues = cookies
-    .map((cookie) => {
-      const [nameValue] = cookie.split(';')
-      return nameValue?.trim()
-    })
-    .filter(Boolean)
-
-  if (cookieValues.length === 0) return null
-
-  // Join all cookies and base64 encode for safe transport
-  return btoa(cookieValues.join('; '))
-}
-
-/**
- * Decode session token back to cookie string.
- */
-function decodeSessionToken(token: string): string | null {
-  try {
-    return atob(token)
-  } catch {
-    return null
-  }
-}
 
 /**
  * Handle the main CORS proxy route.
@@ -225,11 +187,8 @@ export async function handleProxy(
   // This bypasses iOS Safari's ITP which blocks third-party cookies in PWA mode
   const sessionToken = request.headers.get(SESSION_TOKEN_HEADER)
   if (sessionToken) {
-    const cookieValue = decodeSessionToken(sessionToken)
-    if (cookieValue) {
-      // Merge with any existing cookies (from browsers that do support cookies)
-      const existingCookies = proxyRequest.headers.get('Cookie')
-      const mergedCookies = existingCookies ? `${existingCookies}; ${cookieValue}` : cookieValue
+    const mergedCookies = mergeSessionCookies(proxyRequest.headers.get('Cookie'), sessionToken)
+    if (mergedCookies) {
       proxyRequest.headers.set('Cookie', mergedCookies)
     }
   }
