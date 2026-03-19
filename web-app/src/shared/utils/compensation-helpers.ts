@@ -12,12 +12,12 @@ import type { Assignment } from '@/api/client'
 /**
  * Disbursement method for compensation payments.
  */
-type DisbursementMethod = 'payout_on_site' | 'central_payout'
+export type DisbursementMethod = 'payout_on_site' | 'central_payout'
 
 /**
  * Extended compensation type that includes lock flags and disbursement method.
  */
-interface ConvocationCompensationWithLockFlags {
+export interface ConvocationCompensationWithLockFlags {
   paymentDone?: boolean
   lockPayoutOnSiteCompensation?: boolean
   lockPayoutCentralPayoutCompensation?: boolean
@@ -27,7 +27,7 @@ interface ConvocationCompensationWithLockFlags {
 /**
  * Checks if compensation is locked based on the disbursement method.
  */
-function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean {
+export function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean {
   const method = cc.methodOfDisbursementArbitration
 
   if (method === 'payout_on_site') {

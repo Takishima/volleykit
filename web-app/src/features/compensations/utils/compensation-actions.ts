@@ -2,52 +2,14 @@ import { createElement } from 'react'
 
 import type { CompensationRecord } from '@/api/client'
 import { Wallet, FileText } from '@/shared/components/icons'
+import {
+  type ConvocationCompensationWithLockFlags,
+  isCompensationLocked,
+} from '@/shared/utils/compensation-helpers'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 // Re-export from shared for backward compatibility
 export { isAssignmentCompensationEditable } from '@/shared/utils/compensation-helpers'
-
-/**
- * Disbursement method for compensation payments.
- */
-type DisbursementMethod = 'payout_on_site' | 'central_payout'
-
-/**
- * Extended compensation type that includes lock flags and disbursement method.
- * The API returns these fields in ConvocationCompensationDetailed,
- * and demo mode generates them for testing regional association behavior.
- */
-interface ConvocationCompensationWithLockFlags {
-  paymentDone?: boolean
-  lockPayoutOnSiteCompensation?: boolean
-  lockPayoutCentralPayoutCompensation?: boolean
-  methodOfDisbursementArbitration?: DisbursementMethod
-}
-
-/**
- * Checks if compensation is locked based on the disbursement method.
- *
- * The API uses different lock flags depending on how compensation is paid:
- * - On-site payout (regional associations): Check lockPayoutOnSiteCompensation
- * - Central payout (SV national): Check lockPayoutCentralPayoutCompensation
- */
-function isCompensationLocked(cc: ConvocationCompensationWithLockFlags): boolean {
-  const method = cc.methodOfDisbursementArbitration
-
-  if (method === 'payout_on_site') {
-    // For on-site payout, check the on-site lock
-    return cc.lockPayoutOnSiteCompensation === true
-  }
-
-  if (method === 'central_payout') {
-    // For central payout, check the central payout lock
-    return cc.lockPayoutCentralPayoutCompensation === true
-  }
-
-  // If disbursement method is unknown, check both locks
-  // This provides backwards compatibility when the field isn't requested
-  return cc.lockPayoutOnSiteCompensation === true || cc.lockPayoutCentralPayoutCompensation === true
-}
 
 /**
  * Checks if a compensation record can be edited.

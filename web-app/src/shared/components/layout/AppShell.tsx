@@ -250,6 +250,7 @@ export function AppShell() {
                     options={occupationOptions}
                     onSelect={handleOccupationSelect}
                     disabled={isAssociationSwitching}
+                    ariaLabel={t('common.selectOccupation')}
                   />
                 )}
 

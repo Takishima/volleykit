@@ -9,12 +9,10 @@ interface HeaderDropdownProps<T extends string> {
   options: { id: T; label: string }[]
   /** Called when an option is selected */
   onSelect: (id: T) => void
-  /** Accessible label for the dropdown. If provided, overrides the button's visible text for screen readers. */
+  /** Accessible label for the dropdown listbox panel */
   ariaLabel?: string
   /** Whether the dropdown button is disabled */
   disabled?: boolean
-  /** Additional CSS class for the button when disabled */
-  disabledClassName?: string
 }
 
 export function HeaderDropdown<T extends string>({
@@ -23,7 +21,6 @@ export function HeaderDropdown<T extends string>({
   onSelect,
   ariaLabel,
   disabled = false,
-  disabledClassName,
 }: HeaderDropdownProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -39,6 +36,18 @@ export function HeaderDropdown<T extends string>({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!isOpen) return
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
   const selectedOption = options.find((o) => o.id === selected)
 
   return (
@@ -48,13 +57,11 @@ export function HeaderDropdown<T extends string>({
         disabled={disabled}
         className={`flex items-center gap-1 px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
           disabled
-            ? (disabledClassName ??
-              'text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark cursor-wait')
+            ? 'text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark cursor-wait'
             : 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
-        {...(ariaLabel ? { 'aria-label': ariaLabel } : {})}
       >
         <span className="max-w-[100px] truncate">{selectedOption?.label ?? selected}</span>
         <ChevronDown
