@@ -42,14 +42,16 @@ Use `/pr-review` to create PR and auto-fix Claude Code Review issues.
 ```
 volleykit/
 ├── packages/
-│   ├── shared/src/           # @volleykit/shared - API, hooks, stores, i18n, utils, adapters, offline
-│   └── mobile/src/           # @volleykit/mobile - screens, navigation, components, services
+│   ├── shared/src/           # @volleykit/shared - API, auth, hooks, stores, i18n, types, utils, adapters, offline
+│   └── mobile/src/           # @volleykit/mobile - screens, navigation, components, services, hooks, stores, contexts
 ├── web-app/
 │   ├── src/features/         # assignments, auth, compensations, exchanges, ocr, referee-backup, settings, validation
 │   ├── src/shared/           # components, hooks, utils, stores, services, config
 │   └── e2e/                  # Playwright tests with Page Object Models
-├── help-site/src/            # Astro pages, components, i18n
-├── worker/src/               # CORS proxy (auth lockout, OCR, OJP)
+├── help-site/src/            # Astro pages, layouts, components, i18n, styles
+├── worker/src/               # CORS proxy - handlers, utils (auth lockout, OCR, OJP)
+├── ocr-poc/                  # OCR proof-of-concept app
+├── scripts/                  # Utility scripts
 ├── docs/                     # Guides and API docs
 ├── .changeset/               # Changelog staging
 └── .github/workflows/        # CI, deploy, release
