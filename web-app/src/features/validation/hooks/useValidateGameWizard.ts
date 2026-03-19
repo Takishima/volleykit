@@ -6,31 +6,27 @@ import type { Assignment, NominationList } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import type { ValidatedGameInfo } from '@/features/validation/hooks/types'
 import { useValidationState } from '@/features/validation/hooks/useValidationState'
+import { useValidationSubmit } from '@/features/validation/hooks/useValidationSubmit'
 import {
   validateBothRosters,
   type RosterValidationStatus,
 } from '@/features/validation/utils/roster-validation'
 import { isImageUrl } from '@/features/validation/utils/scoresheet'
+import {
+  type ValidationStep,
+  type ValidationStepId,
+  buildWizardSteps,
+  canMarkStepDone,
+  allPreviousRequiredDone,
+  firstInvalidRosterStepIndex,
+} from '@/features/validation/utils/wizard-steps'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useWizardNavigation } from '@/shared/hooks/useWizardNavigation'
 import { useAuthStore } from '@/shared/stores/auth'
 import { useSettingsStore } from '@/shared/stores/settings'
-import { logger } from '@/shared/utils/logger'
 
-/** Duration to show success toast before auto-dismissing */
-const SUCCESS_TOAST_DURATION_MS = 3000
-
-export type ValidationStepId = 'home-roster' | 'away-roster' | 'scorer' | 'scoresheet'
-
-export interface ValidationStep {
-  id: ValidationStepId
-  label: string
-  isOptional?: boolean
-  /** Whether the step has validation errors (e.g., insufficient players/coaches) */
-  isInvalid?: boolean
-  /** Whether the step is read-only (already finalized externally) */
-  isReadOnly?: boolean
-}
+// Re-export types so existing consumers continue to work
+export type { ValidationStepId, ValidationStep } from '@/features/validation/utils/wizard-steps'
 
 interface UseValidateGameWizardOptions {
   assignment: Assignment
@@ -109,11 +105,11 @@ export interface UseValidateGameWizardResult {
 /**
  * Hook to manage the validate game wizard state machine.
  *
- * Encapsulates:
- * - Wizard navigation and step management
- * - UI state (dialogs, toasts, errors)
- * - Close/save/finalize logic
- * - All navigation handlers
+ * Orchestrates:
+ * - Wizard navigation and step management (via wizard-steps utils)
+ * - Submission / save / finalize flows (via useValidationSubmit)
+ * - Roster warning dialog
+ * - Close-with-unsaved-changes flow
  */
 export function useValidateGameWizard({
   assignment,
@@ -122,12 +118,8 @@ export function useValidateGameWizard({
 }: UseValidateGameWizardOptions): UseValidateGameWizardResult {
   const { t } = useTranslation()
 
-  // UI state
-  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
+  // Local UI state not owned by sub-hooks
   const [showRosterWarningDialog, setShowRosterWarningDialog] = useState(false)
-  const [showSafeValidationComplete, setShowSafeValidationComplete] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [successToast, setSuccessToast] = useState<string | null>(null)
   const [isAddPlayerSheetOpen, setIsAddPlayerSheetOpen] = useState(false)
 
   // Check if safe mode is enabled (only applies when not in demo mode)
@@ -166,6 +158,28 @@ export function useValidateGameWizard({
     awayNominationList,
     existingScoresheetUrl,
   } = useValidationState(gameId)
+
+  // Submission / save / dialog logic
+  const {
+    showUnsavedDialog,
+    showSafeValidationComplete,
+    saveError,
+    successToast,
+    performFinalization,
+    handleSaveAndClose,
+    handleDiscardAndClose,
+    handleCancelClose,
+    handleSafeValidationCompleteClose,
+    showUnsavedPrompt,
+    resetUIState,
+  } = useValidationSubmit({
+    useSafeValidation,
+    scorerNotFound: validationState.scorer.notFound,
+    saveProgress,
+    finalizeValidation,
+    reset,
+    onClose,
+  })
 
   // The assignment list data may be fresher than the cached game details query.
   // When a game is validated externally on volleymanager, the assignment list
@@ -208,44 +222,23 @@ export function useValidateGameWizard({
   ])
 
   // Per-step read-only detection based on individual form closure status.
-  // Roster steps are locked when their nomination list is independently closed.
-  // Scorer/scoresheet steps are locked when scoresheet.closedAt is set.
-  // We check both data sources (game details query and fresher assignment list)
-  // since the assignment list may reflect external changes sooner.
   const isHomeRosterClosed = !!homeNominationList?.closed
   const isAwayRosterClosed = !!awayNominationList?.closed
   const isScoresheetClosed = isScoresheetClosedFromQuery || !!assignmentClosedAt
 
   const wizardSteps = useMemo<ValidationStep[]>(
-    () => [
-      {
-        id: 'scoresheet',
-        label: t('validation.scoresheet'),
-        isOptional: true,
-        isReadOnly: isScoresheetClosed,
-      },
-      {
-        id: 'home-roster',
-        label: t('validation.homeRoster'),
-        isInvalid: !isHomeRosterClosed && !rosterValidation.home.isValid,
-        isReadOnly: isHomeRosterClosed,
-      },
-      {
-        id: 'away-roster',
-        label: t('validation.awayRoster'),
-        isInvalid: !isAwayRosterClosed && !rosterValidation.away.isValid,
-        isReadOnly: isAwayRosterClosed,
-      },
-      { id: 'scorer', label: t('validation.scorer'), isReadOnly: isScoresheetClosed },
-    ],
-    [
-      t,
-      rosterValidation.home.isValid,
-      rosterValidation.away.isValid,
-      isHomeRosterClosed,
-      isAwayRosterClosed,
-      isScoresheetClosed,
-    ]
+    () =>
+      buildWizardSteps(
+        {
+          scoresheet: t('validation.scoresheet'),
+          homeRoster: t('validation.homeRoster'),
+          awayRoster: t('validation.awayRoster'),
+          scorer: t('validation.scorer'),
+        },
+        rosterValidation,
+        { isHomeRosterClosed, isAwayRosterClosed, isScoresheetClosed }
+      ),
+    [t, rosterValidation, isHomeRosterClosed, isAwayRosterClosed, isScoresheetClosed]
   )
 
   const {
@@ -275,117 +268,66 @@ export function useValidateGameWizard({
 
   const isCurrentStepReadOnly = currentStep.isReadOnly ?? false
 
-  // Refs for tracking state without re-renders
+  // Ref for dirty check in attemptClose (avoids re-render dependency)
   const isDirtyRef = useRef(isDirty)
-  const isFinalizingRef = useRef(false)
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Keep dirty ref in sync
   useEffect(() => {
     isDirtyRef.current = isDirty
   }, [isDirty])
 
-  // Cleanup toast timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current)
-        toastTimeoutRef.current = null
-      }
-    }
-  }, [])
-
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      // Invalidate game details cache so we fetch fresh data. The assignment list
-      // may already reflect an external validation that happened on volleymanager,
-      // but the game details cache could still have stale data.
+      // Invalidate game details cache so we fetch fresh data.
       if (gameId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
       }
-      setSaveError(null)
-      setSuccessToast(null)
+      // Reset all transient UI state for a fresh wizard session.
+      // These setState calls are intentional — they reset dialog/error/toast state
+      // when the modal opens, matching the pattern from before the hook extraction.
+      resetUIState()
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting UI on modal open
       setShowRosterWarningDialog(false)
-      setShowSafeValidationComplete(false)
       reset()
       resetToStart()
     }
-  }, [isOpen, reset, resetToStart, gameId, queryClient])
+  }, [isOpen, reset, resetToStart, gameId, queryClient, resetUIState])
 
   // Set reference image from existing scoresheet when game details load
-  // This allows the quick-compare toggle to work with previously uploaded scoresheets
   useEffect(() => {
     if (isOpen && existingScoresheetUrl && !referenceImageUrl) {
-      // Only use as reference if it's an image (not PDF)
       if (isImageUrl(existingScoresheetUrl)) {
         setReferenceImageUrl(existingScoresheetUrl)
       }
     }
   }, [isOpen, existingScoresheetUrl, referenceImageUrl, setReferenceImageUrl])
 
-  // Computed values
-  const canMarkCurrentStepDone = useMemo(() => {
-    const stepId = wizardSteps[currentStepIndex]?.id
-    if (stepId === 'scorer') return completionStatus.scorer
-    return true
-  }, [currentStepIndex, wizardSteps, completionStatus.scorer])
+  // Computed values (delegated to pure functions)
+  const canMarkCurrentStepDone = useMemo(
+    () => canMarkStepDone(wizardSteps[currentStepIndex]?.id, completionStatus.scorer),
+    [currentStepIndex, wizardSteps, completionStatus.scorer]
+  )
 
-  const allPreviousRequiredStepsDone = useMemo(() => {
-    for (let i = 0; i < currentStepIndex; i++) {
-      const step = wizardSteps[i]
-      if (!step?.isOptional && !stepsMarkedDone.has(i)) {
-        return false
-      }
-    }
-    return true
-  }, [wizardSteps, currentStepIndex, stepsMarkedDone])
+  const allPreviousRequiredStepsDone = useMemo(
+    () => allPreviousRequiredDone(wizardSteps, currentStepIndex, stepsMarkedDone),
+    [wizardSteps, currentStepIndex, stepsMarkedDone]
+  )
 
   const isSwipeEnabled = !isFinalizing && !isLoadingGameDetails && !isAddPlayerSheetOpen
 
-  // Handlers
+  // --- Handlers ---
+
   const attemptClose = useCallback(() => {
     if (isValidated) {
       onClose()
     } else if (isDirtyRef.current) {
-      setShowUnsavedDialog(true)
+      showUnsavedPrompt()
     } else {
       onClose()
     }
-  }, [onClose, isValidated])
-
-  // Shared finalization logic used by both handleFinish and handleRosterWarningProceed
-  // When scorer is marked as "not found", we force save-only mode (like safe validation)
-  // to prevent finalizing without a scorer on volleymanager.
-  const scorerNotFound = validationState.scorer.notFound
-  const performFinalization = useCallback(async () => {
-    isFinalizingRef.current = true
-    setSaveError(null)
-
-    try {
-      if (useSafeValidation || scorerNotFound) {
-        // Safe validation mode (or scorer not found): save only, don't finalize
-        await saveProgress()
-        setShowSafeValidationComplete(true)
-      } else {
-        // Normal mode: finalize the validation
-        await finalizeValidation()
-        setSuccessToast(t('validation.state.saveSuccess'))
-        toastTimeoutRef.current = setTimeout(() => {
-          setSuccessToast(null)
-        }, SUCCESS_TOAST_DURATION_MS)
-        onClose()
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t('validation.state.saveError')
-      setSaveError(message)
-    } finally {
-      isFinalizingRef.current = false
-    }
-  }, [useSafeValidation, scorerNotFound, saveProgress, finalizeValidation, t, onClose])
+  }, [onClose, isValidated, showUnsavedPrompt])
 
   const handleFinish = useCallback(async () => {
-    if (isFinalizingRef.current) return
+    if (isFinalizing) return
 
     const lastStep = wizardSteps[wizardSteps.length - 1]
     if (!lastStep?.isOptional && !canMarkCurrentStepDone) return
@@ -403,6 +345,7 @@ export function useValidateGameWizard({
 
     await performFinalization()
   }, [
+    isFinalizing,
     wizardSteps,
     canMarkCurrentStepDone,
     allPreviousRequiredStepsDone,
@@ -411,28 +354,6 @@ export function useValidateGameWizard({
     setStepDone,
     performFinalization,
   ])
-
-  const handleSaveAndClose = useCallback(async () => {
-    try {
-      await saveProgress()
-      setShowUnsavedDialog(false)
-      onClose()
-    } catch (error) {
-      logger.error('[ValidateGameModal] Save failed during close:', error)
-      setSaveError(t('validation.state.saveError'))
-      setShowUnsavedDialog(false)
-    }
-  }, [saveProgress, onClose, t])
-
-  const handleDiscardAndClose = useCallback(() => {
-    setShowUnsavedDialog(false)
-    reset()
-    onClose()
-  }, [reset, onClose])
-
-  const handleCancelClose = useCallback(() => {
-    setShowUnsavedDialog(false)
-  }, [])
 
   const handleValidateAndNext = useCallback(() => {
     if (!canMarkCurrentStepDone) return
@@ -447,17 +368,13 @@ export function useValidateGameWizard({
   // Roster warning dialog handlers
   const handleRosterWarningGoBack = useCallback(() => {
     setShowRosterWarningDialog(false)
-    // Navigate to the first invalid roster step
-    // Step order: scoresheet(0), home-roster(1), away-roster(2), scorer(3)
-    if (!rosterValidation.home.isValid) {
-      goToStep(1) // Home roster
-    } else if (!rosterValidation.away.isValid) {
-      goToStep(2) // Away roster
+    const target = firstInvalidRosterStepIndex(rosterValidation)
+    if (target !== null) {
+      goToStep(target)
     }
-  }, [rosterValidation.home.isValid, rosterValidation.away.isValid, goToStep])
+  }, [rosterValidation, goToStep])
 
   const handleRosterWarningProceed = useCallback(async () => {
-    // User chose to proceed despite invalid rosters (game will be forfeited)
     setShowRosterWarningDialog(false)
 
     const lastStep = wizardSteps[wizardSteps.length - 1]
@@ -467,11 +384,6 @@ export function useValidateGameWizard({
 
     await performFinalization()
   }, [wizardSteps, currentStepIndex, setStepDone, performFinalization])
-
-  const handleSafeValidationCompleteClose = useCallback(() => {
-    setShowSafeValidationComplete(false)
-    onClose()
-  }, [onClose])
 
   return {
     // Wizard navigation

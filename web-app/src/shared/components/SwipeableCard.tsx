@@ -3,6 +3,7 @@ import { type ReactNode, useState, useRef, useCallback, useEffect, useMemo } fro
 import { useSwipeGesture } from '@/shared/hooks/useSwipeGesture'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
+import { SwipeableCardActions } from './SwipeableCardActions'
 import {
   type SwipeConfig,
   type SwipeAction,
@@ -18,16 +19,9 @@ import {
 // Layout constants for action buttons (others imported from types/swipe.ts)
 const MAX_DRAWER_WIDTH_RATIO = 0.8
 const SWIPE_OVERSHOOT_MULTIPLIER = 1.2
-const OPACITY_FADE_MULTIPLIER = 1.5
-const MIN_CLICKABLE_WIDTH = 30
-// Scale animation constants
-const SCALE_MIN = 0.8 // Minimum scale when action first appears
-const SCALE_RANGE = 0.2 // Scale grows from 0.8 to 1.0
 // Click blocking delay after drag ends (prevents unwanted expansion)
 // 150ms provides margin for click event to fire after mouseup
 const CLICK_BLOCK_DELAY_MS = 150
-// Maximum opacity for action hint overlay
-const MAX_HINT_OPACITY = 0.3
 
 /** Calculate drawer width based on number of actions */
 function calculateDrawerWidth(actionsCount: number, containerWidth: number): number {
@@ -326,31 +320,6 @@ export function SwipeableCard({
   const showProgressiveActions =
     thresholds && swipeAmount > thresholds.minVisibility && currentActions
 
-  // Not memoized: intentionally recalculates each render using current swipeAmount,
-  // thresholds, containerWidth, and isDrawerOpen. All values change during drag animations.
-  const getActionStyle = (totalActions: number) => {
-    if (!thresholds || !containerWidth) return {}
-
-    // Progressive reveal: actions expand from edge
-    const progress = Math.min(swipeAmount / thresholds.drawerOpen, 1)
-
-    // Each action gets a portion of the revealed space
-    const revealedWidth = swipeAmount
-    const actionShare = revealedWidth / totalActions
-
-    // Width grows from 0 to ACTION_BUTTON_WIDTH as swipe progresses
-    const width = Math.min(actionShare - ACTION_BUTTON_GAP, ACTION_BUTTON_WIDTH)
-
-    // Opacity fades in as action becomes visible
-    const opacity = Math.min((width / ACTION_BUTTON_WIDTH) * OPACITY_FADE_MULTIPLIER, 1)
-
-    return {
-      width: isDrawerOpen ? ACTION_BUTTON_WIDTH : Math.max(0, width),
-      opacity: isDrawerOpen ? 1 : opacity,
-      transform: `scale(${isDrawerOpen ? 1 : SCALE_MIN + progress * SCALE_RANGE})`,
-    }
-  }
-
   return (
     <div
       ref={containerRef}
@@ -364,62 +333,15 @@ export function SwipeableCard({
     >
       {/* iOS-style progressive action reveal */}
       {showProgressiveActions && thresholds && (
-        <div
-          className={`absolute inset-y-0 ${currentDirection === 'right' ? 'left-0' : 'right-0'} flex items-stretch ${currentDirection === 'right' ? 'flex-row' : 'flex-row-reverse'}`}
-          style={{
-            width: Math.abs(translateX),
-          }}
-        >
-          {currentActions.map((action, index) => {
-            const style = getActionStyle(currentActions.length)
-            const isFirstButton = index === 0
-
-            return (
-              <button
-                key={action.id}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  action.onAction()
-                  closeDrawer()
-                }}
-                className={`${action.color} text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-inset flex flex-col items-center justify-center gap-1 transition-transform overflow-hidden shrink-0 ${!isFirstButton ? 'border-l border-white/25' : ''}`}
-                style={{
-                  width: style.width,
-                  opacity: style.opacity,
-                  pointerEvents:
-                    typeof style.width === 'number' && style.width > MIN_CLICKABLE_WIDTH
-                      ? 'auto'
-                      : 'none',
-                }}
-                aria-label={action.label}
-              >
-                {action.icon}
-                <span className="text-xs font-medium">
-                  {action.shortLabel || action.label.split(' ')[0]}
-                </span>
-              </button>
-            )
-          })}
-
-          {/* Full swipe indicator - shows when approaching full swipe threshold */}
-          {!isDrawerOpen &&
-            swipeAmount > thresholds.drawerOpen &&
-            currentActions.length > 0 &&
-            currentActions[0] && (
-              <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                style={{
-                  opacity: Math.min(
-                    (swipeAmount - thresholds.drawerOpen) /
-                      (thresholds.full - thresholds.drawerOpen),
-                    MAX_HINT_OPACITY
-                  ),
-                }}
-              >
-                <div className={`${currentActions[0].color} absolute inset-0`} />
-              </div>
-            )}
-        </div>
+        <SwipeableCardActions
+          actions={currentActions}
+          direction={currentDirection}
+          translateX={translateX}
+          swipeAmount={swipeAmount}
+          thresholds={thresholds}
+          isDrawerOpen={isDrawerOpen}
+          onCloseDrawer={closeDrawer}
+        />
       )}
 
       <div

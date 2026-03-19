@@ -8,9 +8,29 @@
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers/getSetCookie
  */
 
+import type { AuthLockoutKV } from './utils'
+
 // Helper type to access getSetCookie on Headers instances
 export type HeadersWithCookies = Headers & {
   getSetCookie(): string[]
+}
+
+/**
+ * Cloudflare Rate Limiter binding interface.
+ * @see https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+ */
+export interface RateLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>
+}
+
+export interface Env {
+  ALLOWED_ORIGINS: string
+  TARGET_HOST: string
+  RATE_LIMITER: RateLimiter
+  KILL_SWITCH?: string // Set to "true" to disable the proxy
+  MISTRAL_API_KEY?: string // API key for Mistral OCR
+  OJP_API_KEY?: string // API key for Swiss public transport OJP 2.0 API
+  AUTH_LOCKOUT?: AuthLockoutKV // KV namespace for auth lockout state
 }
 
 /**

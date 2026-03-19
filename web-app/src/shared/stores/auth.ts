@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-import { clearSession, setCsrfToken } from '@/api/session'
-import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
+import { clearSession } from '@/api/session'
+import { performCalendarLogin } from '@/features/auth/services/calendar-auth'
 import {
   hasMultipleAssociations,
   type AttributeValue,
@@ -17,6 +17,13 @@ import {
 } from '@/features/auth/utils/api-auth-flow'
 import { logger } from '@/shared/utils/logger'
 
+import {
+  AUTH_STORE_NAME,
+  AUTH_STORE_VERSION,
+  partializeAuthState,
+  migrateAuthState,
+  mergeAuthState,
+} from './auth-persistence'
 import { useDemoStore } from './demo'
 import { useSettingsStore, DEMO_HOME_LOCATION } from './settings'
 
@@ -36,16 +43,6 @@ export function registerCacheCleanup(callback: () => void): () => void {
     cacheCleanupCallback = null
   }
 }
-
-/**
- * Storage version for the auth store.
- * Increment this to invalidate all cached auth state and force re-login.
- *
- * Version history:
- * - 1: Initial version (pre-groupedEligibleAttributeValues)
- * - 2: Added groupedEligibleAttributeValues for multi-association detection
- */
-const AUTH_STORE_VERSION = 2
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'error'
 
@@ -104,24 +101,12 @@ export interface AuthState {
   setActiveOccupation: (id: string) => void
   setAssociationSwitching: (isSwitching: boolean) => void
   hasMultipleAssociations: () => boolean
-  /**
-   * Clears stale session data (CSRF token and session token).
-   * Call this when the login page is displayed to prevent stale tokens
-   * from causing authentication errors.
-   */
   clearStaleSession: () => void
-  /** Returns true if in calendar mode */
   isCalendarMode: () => boolean
-  /** Login with a calendar code. Validates the code format and fetches calendar data. */
   loginWithCalendar: (code: string) => Promise<void>
-  /** Logout from calendar mode (alias for logout) */
   logoutCalendar: () => Promise<void>
-  /** Get the current authentication mode */
   getAuthMode: () => 'full' | 'calendar' | 'demo' | 'none'
 }
-
-/** Calendar codes are exactly 6 alphanumeric characters */
-const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/
 
 /**
  * Dummy association code for calendar mode transport settings.
@@ -177,8 +162,6 @@ export const useAuthStore = create<AuthState>()(
         clearSession()
 
         // Clear React Query cache synchronously to prevent stale data.
-        // This is called BEFORE updating state to ensure cache is cleared
-        // before any React re-renders can trigger new queries.
         if (cacheCleanupCallback) {
           cacheCleanupCallback()
           logger.info('Query cache cleared during logout')
@@ -216,7 +199,6 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Skip session check if authentication happened very recently.
-        // This prevents redundant network requests right after login.
         const lastAuth = get()._lastAuthTimestamp
         if (lastAuth && Date.now() - lastAuth < SESSION_CHECK_GRACE_PERIOD_MS) {
           logger.info('Session check: skipping, authenticated recently')
@@ -280,7 +262,6 @@ export const useAuthStore = create<AuthState>()(
 
         const demoOccupations = filterRefereeOccupations(rawDemoOccupations)
 
-        // Set auth state to demo mode first
         set({
           status: 'authenticated',
           dataSource: 'demo',
@@ -296,11 +277,6 @@ export const useAuthStore = create<AuthState>()(
         })
 
         // Set demo home location for distance filtering showcase
-        // Must be called after dataSource is set to "demo" so the settings
-        // store's mode is synced and the location is stored in demo settings.
-        // Note: We explicitly call _setCurrentMode here for immediate sync because
-        // the App.tsx subscription fires asynchronously after state updates.
-        // The idempotent nature of _setCurrentMode makes this double-call safe.
         const settingsStore = useSettingsStore.getState()
         settingsStore._setCurrentMode('demo')
         settingsStore.setHomeLocation(DEMO_HOME_LOCATION)
@@ -315,14 +291,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hasMultipleAssociations: () => {
-        // Use groupedEligibleAttributeValues which contains all user associations
         return hasMultipleAssociations(get().groupedEligibleAttributeValues)
       },
 
       clearStaleSession: () => {
-        // Clear both the API client session (CSRF token + session token) and the store's csrfToken.
-        // This prevents stale tokens from causing authentication errors when the user
-        // arrives at the login page with outdated cached credentials.
         clearSession()
         set({ csrfToken: null })
       },
@@ -332,80 +304,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithCalendar: async (code: string): Promise<void> => {
-        const trimmedCode = code.trim()
-
-        // Validate calendar code format (6 alphanumeric characters)
-        // Note: The calendar code should already be validated by LoginPage before
-        // calling this function. This is just a safeguard for direct API calls.
-        if (!CALENDAR_CODE_PATTERN.test(trimmedCode)) {
-          set({ status: 'error', error: 'auth.invalidCalendarCode' })
-          return
-        }
-
-        set({ status: 'loading', error: null })
-
-        try {
-          // Fetch calendar data to extract associations for transport settings
-          // This unifies calendar mode with regular API mode - both have occupations
-          const assignments = await fetchCalendarAssignments(trimmedCode)
-
-          // Extract unique associations from calendar assignments
-          const uniqueAssociations = new Set<string>()
-          for (const assignment of assignments) {
-            if (assignment.association) {
-              uniqueAssociations.add(assignment.association)
-            }
-          }
-
-          // Create synthetic occupations from associations found in calendar
-          // This allows transport settings to work per-association like regular mode
-          const occupations: Occupation[] = Array.from(uniqueAssociations)
-            .sort()
-            .map((assoc) => ({
-              id: `calendar-${assoc}`,
-              type: 'referee' as const,
-              associationCode: assoc,
-            }))
-
-          // Set authenticated state with occupations derived from calendar data
-          set({
-            status: 'authenticated',
-            dataSource: 'calendar',
-            calendarCode: trimmedCode,
-            user: {
-              id: `calendar-${trimmedCode}`,
-              firstName: 'Calendar',
-              lastName: 'User',
-              occupations,
-            },
-            // Set first occupation as active if any found
-            activeOccupationId: occupations[0]?.id ?? null,
-            error: null,
-          })
-        } catch (error) {
-          // If fetching fails, fall back to no occupations
-          // This allows login to succeed even if calendar is empty or fails
-          logger.warn('Failed to fetch calendar for associations:', error)
-
-          set({
-            status: 'authenticated',
-            dataSource: 'calendar',
-            calendarCode: trimmedCode,
-            user: {
-              id: `calendar-${trimmedCode}`,
-              firstName: 'Calendar',
-              lastName: 'User',
-              occupations: [],
-            },
-            activeOccupationId: null,
-            error: null,
-          })
-        }
+        await performCalendarLogin(code, set)
       },
 
       logoutCalendar: async () => {
-        // Separate method for API clarity and future extensibility
-        // (e.g., calendar-specific cleanup or analytics)
         await get().logout()
       },
 
@@ -425,68 +327,11 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'volleykit-auth',
+      name: AUTH_STORE_NAME,
       version: AUTH_STORE_VERSION,
-      partialize: (state) => ({
-        // Persist minimal user data for UX (immediate name display).
-        // Session cookies are HttpOnly and managed by browser.
-        // CSRF token is persisted to enable POST requests after page reload.
-        // groupedEligibleAttributeValues persisted for hasMultipleAssociations() on refresh.
-        user: state.user,
-        csrfToken: state.csrfToken,
-        _wasAuthenticated: state.status === 'authenticated',
-        dataSource: state.dataSource,
-        calendarCode: state.calendarCode,
-        activeOccupationId: state.activeOccupationId,
-        eligibleAttributeValues: state.eligibleAttributeValues,
-        groupedEligibleAttributeValues: state.groupedEligibleAttributeValues,
-      }),
-      // Clean break: invalidate old cached state when version changes
-      // Users will need to re-login to get fresh association data
-      migrate: (persistedState, version) => {
-        if (version < AUTH_STORE_VERSION) {
-          // Return undefined to use defaults (forces re-login)
-          return undefined
-        }
-        return persistedState
-      },
-      merge: (persisted, current) => {
-        const persistedState = persisted as
-          | {
-              user?: UserProfile | null
-              csrfToken?: string | null
-              _wasAuthenticated?: boolean
-              dataSource?: DataSource
-              calendarCode?: string | null
-              isDemoMode?: boolean
-              activeOccupationId?: string | null
-              eligibleAttributeValues?: AttributeValue[] | null
-              groupedEligibleAttributeValues?: AttributeValue[] | null
-            }
-          | undefined
-
-        const restoredCsrfToken = persistedState?.csrfToken ?? null
-        if (restoredCsrfToken) {
-          setCsrfToken(restoredCsrfToken)
-        }
-
-        // Derive dataSource from isDemoMode for backwards compatibility with old persisted state
-        const dataSource: DataSource =
-          persistedState?.dataSource ?? (persistedState?.isDemoMode ? 'demo' : 'api')
-
-        return {
-          ...current,
-          user: persistedState?.user ?? null,
-          csrfToken: restoredCsrfToken,
-          status: persistedState?._wasAuthenticated ? 'authenticated' : 'idle',
-          dataSource,
-          calendarCode: persistedState?.calendarCode ?? null,
-          activeOccupationId: persistedState?.activeOccupationId ?? null,
-          eligibleAttributeValues: persistedState?.eligibleAttributeValues ?? null,
-          groupedEligibleAttributeValues: persistedState?.groupedEligibleAttributeValues ?? null,
-          _checkSessionPromise: null,
-        }
-      },
+      partialize: partializeAuthState,
+      migrate: migrateAuthState,
+      merge: mergeAuthState,
     }
   )
 )
