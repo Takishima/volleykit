@@ -1,14 +1,12 @@
 ---
 'volleykit-web': patch
-'@volleykit/shared': patch
 ---
 
-Improve code structure and separation of concerns across the monorepo
+Improve code structure and separation of concerns
 
-- Extract exchange filtering logic into dedicated useExchangeFilters hook
-- Unify web and mobile toast stores into shared package with createToastStore factory
-- Split web auth store: extract calendar auth service and persistence configuration
-- Split worker monolith (1,273 lines) into route handler modules with shared middleware
-- Decompose useValidateGameWizard into wizard-steps utils and useValidationSubmit hook
-- Decompose useCompensationForm into compensation-cache utils and useCompensationData hook
-- Extract SwipeableCardActions component from SwipeableCard
+- Promote useActiveAssociation hook to shared/hooks (eliminates cross-feature coupling)
+- Extract compensation-helpers to shared/utils
+- Extract BottomNavigation and HeaderDropdown from AppShell
+- Add barrel exports to assignments feature for conflict detection utils
+- Add ESLint rule preventing shared/ from importing feature internals
+- Split worker/utils.ts into 9 focused modules
