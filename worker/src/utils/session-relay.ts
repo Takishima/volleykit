@@ -37,8 +37,9 @@ export function extractSessionCookies(cookies: string[]): string | null {
 
 /**
  * Decode session token back to cookie string.
+ * Internal helper — use mergeSessionCookies() from external call sites.
  */
-export function decodeSessionToken(token: string): string | null {
+function decodeSessionToken(token: string): string | null {
   try {
     return atob(token)
   } catch {

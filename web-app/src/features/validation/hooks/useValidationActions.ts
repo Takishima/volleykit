@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
 
+import type { GameDetails } from '@/api/client'
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { useAuthStore } from '@/shared/stores/auth'
@@ -20,38 +21,7 @@ interface UseValidationActionsParams {
   gameId?: string
   state: ValidationState
   scoresheetNotRequired: boolean
-  gameDetails:
-    | {
-        nominationListOfTeamHome?: {
-          __identity?: string
-          team?: { __identity?: string }
-          indoorPlayerNominations?: { __identity?: string }[]
-          nominationListValidation?: { __identity?: string }
-          coachPerson?: { __identity?: string }
-          firstAssistantCoachPerson?: { __identity?: string }
-          secondAssistantCoachPerson?: { __identity?: string }
-          closed?: boolean
-        }
-        nominationListOfTeamAway?: {
-          __identity?: string
-          team?: { __identity?: string }
-          indoorPlayerNominations?: { __identity?: string }[]
-          nominationListValidation?: { __identity?: string }
-          coachPerson?: { __identity?: string }
-          firstAssistantCoachPerson?: { __identity?: string }
-          secondAssistantCoachPerson?: { __identity?: string }
-          closed?: boolean
-        }
-        scoresheet?: {
-          __identity?: string
-          isSimpleScoresheet?: boolean
-          scoresheetValidation?: { __identity?: string }
-          closedAt?: string | null
-          file?: { __identity?: string; publicResourceUri?: string }
-        }
-        group?: { hasNoScoresheet?: boolean }
-      }
-    | undefined
+  gameDetails: GameDetails | undefined
   existingFileResourceId: string | null
 }
 
