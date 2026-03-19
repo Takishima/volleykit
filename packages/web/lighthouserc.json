@@ -2,7 +2,7 @@
   "$comment": "Note: Tests static dist locally, not production worker setup. Real-world performance may differ due to CORS proxy latency.",
   "ci": {
     "collect": {
-      "staticDistDir": "./web-app/dist",
+      "staticDistDir": "./packages/web/dist",
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",

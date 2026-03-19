@@ -153,7 +153,7 @@ jobs:
           working-directory: packages/shared
       - name: Generate API types
         run: pnpm run generate:api
-        working-directory: web-app
+        working-directory: packages/web
       - name: TypeScript check
         run: pnpm run typecheck
       - name: Lint

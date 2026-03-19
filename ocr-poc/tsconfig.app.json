@@ -28,9 +28,9 @@
       /* PoC and web-app path aliases */
       "@/*": ["./src/*"],
       "@/shared/*": ["./src/shared/*"],
-      "@/features/*": ["../web-app/src/features/*"],
-      "@volleykit/ocr/*": ["../web-app/src/features/ocr/*"],
-      "@volleykit/validation/*": ["../web-app/src/features/validation/*"]
+      "@/features/*": ["../packages/web/src/features/*"],
+      "@volleykit/ocr/*": ["../packages/web/src/features/ocr/*"],
+      "@volleykit/validation/*": ["../packages/web/src/features/validation/*"]
     },
 
     /* Linting */

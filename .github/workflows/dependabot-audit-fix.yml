@@ -37,7 +37,7 @@ jobs:
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Run pnpm audit fix
         id: audit-fix
         run: |
