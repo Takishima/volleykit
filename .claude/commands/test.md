@@ -3,7 +3,7 @@
 Run tests only.
 
 ```bash
-cd web-app && pnpm test
+cd packages/web && pnpm test
 ```
 
 Output: `✓ Test (N passed)` or `✗ Test: [failed test names]`

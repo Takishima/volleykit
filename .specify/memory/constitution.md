@@ -107,7 +107,7 @@
 
 **Sensitive Files** (elevated review required):
 
-- `worker/src/index.ts` - CORS proxy, origin validation
+- `packages/worker/src/index.ts` - CORS proxy, origin validation
 - `src/api/client.ts` - API requests, credential handling
 - `src/stores/auth.ts` - Authentication state
 - `packages/mobile/src/platform/biometrics.ts` - Credential storage

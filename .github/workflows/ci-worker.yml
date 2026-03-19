@@ -3,12 +3,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'worker/**'
+      - 'packages/worker/**'
       - '.github/workflows/ci-worker.yml'
       - '.github/actions/**'
   pull_request:
     paths:
-      - 'worker/**'
+      - 'packages/worker/**'
       - '.github/workflows/ci-worker.yml'
       - '.github/actions/**'
 jobs:
@@ -17,23 +17,23 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: worker
+        working-directory: packages/worker
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: worker
+          working-directory: packages/worker
       # Cache ESLint results per branch
       - name: Cache ESLint
         uses: actions/cache@v5
         with:
-          path: worker/.eslintcache
-          key: worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('worker/src/**/*.ts') }}
+          path: packages/worker/.eslintcache
+          key: packages/worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('packages/worker/src/**/*.ts') }}
           restore-keys: |
-            worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            worker-eslint-${{ runner.os }}-
+            packages/worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+            packages/worker-eslint-${{ runner.os }}-
       - name: Lint
         run: pnpm run lint --cache --cache-location .eslintcache
   test:
@@ -41,13 +41,13 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: worker
+        working-directory: packages/worker
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: worker
+          working-directory: packages/worker
       - name: Run tests
         run: pnpm test

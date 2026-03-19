@@ -34,7 +34,7 @@ needs_install() {
 needs_api_generation() {
   local openapi_spec="docs/api/volleymanager-openapi.yaml"
   local shared_output="packages/shared/src/api/schema.ts"
-  local webapp_output="web-app/src/api/schema.ts"
+  local webapp_output="packages/web/src/api/schema.ts"
 
   # Output files don't exist = need generation
   [ ! -f "$shared_output" ] || [ ! -f "$webapp_output" ] && return 0

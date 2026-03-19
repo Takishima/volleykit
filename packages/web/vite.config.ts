@@ -584,14 +584,14 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, './src'),
         // Fix React dual instance issue in monorepo
         // Ensures all imports resolve to the same React instance (in root node_modules)
-        react: path.resolve(__dirname, '../node_modules/react'),
-        'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
+        react: path.resolve(__dirname, '../../node_modules/react'),
+        'react-dom': path.resolve(__dirname, '../../node_modules/react-dom'),
         // Fix tslib CJS interop issue with Vite 8 / Rolldown
         // tslib's exports field maps "import" to modules/index.js which does:
         //   import tslib from '../tslib.js' (CJS default import)
         // Rolldown's CJS interop resolves this to null, breaking pdf-lib's
         // `import { __extends } from "tslib"`. Point directly to the ESM file.
-        tslib: path.resolve(__dirname, '../node_modules/tslib/tslib.es6.js'),
+        tslib: path.resolve(__dirname, '../../node_modules/tslib/tslib.es6.js'),
       },
       // Fix dual package hazard with react-router in Node v22.12+
       // See: https://github.com/vitest-dev/vitest/issues/7692

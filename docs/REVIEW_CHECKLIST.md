@@ -45,7 +45,7 @@ Single source of truth for Claude Code Review. This file is automatically loaded
 
 ### Sensitive Files (Require extra scrutiny)
 
-- `worker/src/index.ts` - CORS proxy
+- `packages/worker/src/index.ts` - CORS proxy
 - `**/api/client.ts` - API requests
 - `**/stores/auth.ts` - Authentication
 - `vite.config.ts` - Build config

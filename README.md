@@ -9,17 +9,17 @@ A multi-platform app suite for Swiss volleyball referees, providing an improved 
 
 | App            | Location                                 | Description                     |
 | -------------- | ---------------------------------------- | ------------------------------- |
-| Web App (PWA)  | [`web-app/`](./web-app/)                 | React 19 + Vite 7 + Tailwind 4  |
+| Web App (PWA)  | [`packages/web/`](./packages/web/)       | React 19 + Vite 7 + Tailwind 4  |
 | Mobile App     | [`packages/mobile/`](./packages/mobile/) | React Native 0.81 + Expo 54     |
 | Shared Package | [`packages/shared/`](./packages/shared/) | API client, hooks, stores, i18n |
 | Help Site      | [`help-site/`](./help-site/)             | Astro 6 documentation           |
-| CORS Proxy     | [`worker/`](./worker/)                   | Cloudflare Worker               |
+| CORS Proxy     | [`packages/worker/`](./packages/worker/) | Cloudflare Worker               |
 
 ## Quick Start
 
 ```bash
 pnpm install                       # Install all dependencies
-cd web-app && pnpm run dev         # Start web dev server (localhost:5173)
+cd packages/web && pnpm run dev    # Start web dev server (localhost:5173)
 cd packages/mobile && pnpm start   # Start Expo dev server
 ```
 

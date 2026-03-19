@@ -6,11 +6,11 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 | Application    | Location           | Description                                             |
 | -------------- | ------------------ | ------------------------------------------------------- |
-| Web App (PWA)  | `web-app/`         | React 19 + Vite 7 + Tailwind 4                          |
+| Web App (PWA)  | `packages/web/`    | React 19 + Vite 7 + Tailwind 4                          |
 | Mobile App     | `packages/mobile/` | React Native 0.83 + Expo 55 + NativeWind                |
 | Shared Package | `packages/shared/` | API client, hooks, stores, i18n, offline (~70% sharing) |
 | Help Site      | `help-site/`       | Astro 6 + Pagefind search                               |
-| CORS Proxy     | `worker/`          | Cloudflare Worker (auth lockout, OCR proxy, OJP proxy)  |
+| CORS Proxy     | `packages/worker/` | Cloudflare Worker (auth lockout, OCR proxy, OJP proxy)  |
 
 **Always check official docs**: [react.dev](https://react.dev), [reactnative.dev](https://reactnative.dev), [docs.expo.dev](https://docs.expo.dev), [vite.dev](https://vite.dev)
 
@@ -43,13 +43,10 @@ Use `/pr-review` to create PR and auto-fix Claude Code Review issues.
 volleykit/
 ├── packages/
 │   ├── shared/src/           # @volleykit/shared - API, auth, hooks, stores, i18n, types, utils, adapters, offline
-│   └── mobile/src/           # @volleykit/mobile - screens, navigation, components, services, hooks, stores, contexts
-├── web-app/
-│   ├── src/features/         # assignments, auth, compensations, exchanges, ocr, referee-backup, settings, validation
-│   ├── src/shared/           # components, hooks, utils, stores, services, config
-│   └── e2e/                  # Playwright tests with Page Object Models
+│   ├── mobile/src/           # @volleykit/mobile - screens, navigation, components, services, hooks, stores, contexts
+│   ├── web/src/              # volleykit-web - features, shared, e2e (Playwright)
+│   └── worker/src/           # CORS proxy - handlers, utils (auth lockout, OCR, OJP)
 ├── help-site/src/            # Astro pages, layouts, components, i18n, styles
-├── worker/src/               # CORS proxy - handlers, utils (auth lockout, OCR, OJP)
 ├── ocr-poc/                  # OCR proof-of-concept app
 ├── scripts/                  # Utility scripts
 ├── docs/                     # Guides and API docs
@@ -107,10 +104,10 @@ Added dark mode toggle
 pnpm install                    # Root: all dependencies
 pnpm run generate:api           # Generate API types (required before build)
 
-cd web-app && pnpm run dev      # Start dev server
-cd web-app && pnpm run build    # Production build
-cd web-app && pnpm run knip     # Dead code detection
-cd web-app && pnpm run size     # Bundle size check
+cd packages/web && pnpm run dev      # Start dev server
+cd packages/web && pnpm run build    # Production build
+cd packages/web && pnpm run knip     # Dead code detection
+cd packages/web && pnpm run size     # Bundle size check
 
 cd packages/mobile && pnpm start  # Expo dev server
 cd packages/mobile && pnpm run typecheck  # TypeScript check

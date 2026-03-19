@@ -111,7 +111,7 @@ These files have elevated security sensitivity:
 
 | File                  | Reason                                       |
 | --------------------- | -------------------------------------------- |
-| `worker/src/index.ts` | CORS proxy, origin validation, rate limiting |
+| `packages/worker/src/index.ts` | CORS proxy, origin validation, rate limiting |
 | `src/api/client.ts`   | API requests, credential handling            |
 | `src/stores/auth.ts`  | Authentication state                         |
 | `vite.config.ts`      | Build configuration, proxy settings          |

@@ -33,7 +33,7 @@ git diff --name-only --cached 2>/dev/null || echo "no-staged"
 If `docs/api/volleymanager-openapi.yaml` changed:
 
 ```bash
-cd web-app && pnpm run generate:api
+cd packages/web && pnpm run generate:api
 ```
 
 ### Step 3: Format (Auto-fix)
@@ -56,21 +56,21 @@ Each subagent should use `subagent_type: "Bash"` for direct command execution:
 
 ```
 subagent_type: Bash
-prompt: cd web-app && pnpm run lint
+prompt: cd packages/web && pnpm run lint
 ```
 
 **Subagent 2 - Knip**:
 
 ```
 subagent_type: Bash
-prompt: cd web-app && pnpm run knip
+prompt: cd packages/web && pnpm run knip
 ```
 
 **Subagent 3 - Test**:
 
 ```
 subagent_type: Bash
-prompt: cd web-app && pnpm test
+prompt: cd packages/web && pnpm test
 ```
 
 ### Step 5: Build (Sequential)
@@ -78,7 +78,7 @@ prompt: cd web-app && pnpm test
 **Only if ALL parallel checks passed**, run the build:
 
 ```bash
-cd web-app && pnpm run build
+cd packages/web && pnpm run build
 ```
 
 ### Step 6: Summary
@@ -112,7 +112,7 @@ If a subagent times out or fails unexpectedly:
 
 - Note the failure in the summary with `✗` status
 - Include a brief error description
-- Suggest manual execution: `cd web-app && pnpm run <command>`
+- Suggest manual execution: `cd packages/web && pnpm run <command>`
 - Do NOT proceed to build if any check fails
 
 ## Status Icons

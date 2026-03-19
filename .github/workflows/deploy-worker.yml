@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'worker/**'
+      - 'packages/worker/**'
       - '.github/workflows/deploy-worker.yml'
   workflow_dispatch: # Allow manual trigger
 jobs:
@@ -14,14 +14,14 @@ jobs:
     if: ${{ vars.CLOUDFLARE_ACCOUNT_ID != '' }}
     defaults:
       run:
-        working-directory: worker
+        working-directory: packages/worker
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: worker
+          working-directory: packages/worker
       - name: Lint
         run: pnpm run lint
       - name: Run tests
@@ -29,7 +29,7 @@ jobs:
       - name: Compute worker git hash
         id: worker-hash
         run: |
-          # Compute a short hash based on the last commit that modified worker/ files.
+          # Compute a short hash based on the last commit that modified packages/worker/ files.
           # This ensures the hash only changes when worker code changes, not when
           # web app code changes. Used for PWA version tracking.
           WORKER_GIT_HASH=$(git log -1 --format='%h' -- .)

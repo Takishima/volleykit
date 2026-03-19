@@ -3,7 +3,7 @@
 Run production build only.
 
 ```bash
-cd web-app && pnpm run build
+cd packages/web && pnpm run build
 ```
 
 Output: `✓ Build` or `✗ Build: [error summary]`

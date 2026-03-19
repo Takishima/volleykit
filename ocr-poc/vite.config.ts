@@ -36,17 +36,17 @@ export default defineConfig({
       // Web-app shared components resolve to PoC stubs (translation, icons)
       { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
       // Web-app features resolve to actual web-app code
-      { find: '@/features', replacement: path.resolve(__dirname, '../web-app/src/features') },
+      { find: '@/features', replacement: path.resolve(__dirname, '../packages/web/src/features') },
       // PoC's own source files (must come after more specific paths)
       { find: '@', replacement: path.resolve(__dirname, './src') },
       // Legacy aliases for explicit imports
       {
         find: '@volleykit/ocr',
-        replacement: path.resolve(__dirname, '../web-app/src/features/ocr'),
+        replacement: path.resolve(__dirname, '../packages/web/src/features/ocr'),
       },
       {
         find: '@volleykit/validation',
-        replacement: path.resolve(__dirname, '../web-app/src/features/validation'),
+        replacement: path.resolve(__dirname, '../packages/web/src/features/validation'),
       },
       // Ensure fuse.js resolves from root node_modules (npm workspaces hoisting)
       { find: 'fuse.js', replacement: path.resolve(__dirname, '../node_modules/fuse.js') },
