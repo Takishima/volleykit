@@ -117,7 +117,7 @@ jobs:
             packages/web/package.json
             packages/shared/package.json
             packages/mobile/package.json
-            worker/package.json
+            packages/worker/package.json
           retention-days: 1
   validate:
     name: Validate
