@@ -78,7 +78,7 @@ jobs:
           # Check worker updates
           cd packages/worker
           WORKER_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
-          cd ..
+          cd ../..
 
           if [ -n "$WORKER_UPDATES" ]; then
             echo "has_updates=true" >> "$GITHUB_OUTPUT"
@@ -103,7 +103,7 @@ jobs:
           # Update worker dependencies
           cd packages/worker
           ncu --target "$NCU_TARGET" -u
-          cd ..
+          cd ../..
 
           # Install updated dependencies (--no-frozen-lockfile needed since ncu modified package.json)
           pnpm install --no-frozen-lockfile
