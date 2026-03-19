@@ -1,11 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-
-import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from '@/api/constants'
-import { isImageUrl } from '@/features/validation/utils/scoresheet'
 import { Upload, Camera, CheckCircle, FileText, AlertCircle, Info } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useAuthStore } from '@/shared/stores/auth'
 import { BYTES_PER_KB, BYTES_PER_MB } from '@/shared/utils/constants'
+
+import { useFileUpload } from '../hooks/useFileUpload'
+import { isImageUrl } from '../utils/scoresheet'
 
 interface ScoresheetPanelProps {
   /** Callback when scoresheet state changes */
@@ -21,18 +20,6 @@ interface ScoresheetPanelProps {
 }
 
 const ACCEPTED_EXTENSIONS = '.jpg,.jpeg,.png,.pdf'
-const SIMULATED_UPLOAD_DURATION_MS = 1500
-const PROGRESS_INCREMENT_PERCENT = 10
-const PROGRESS_STOP_THRESHOLD = 90
-const PROGRESS_COMPLETE = 100
-const PROGRESS_STEPS = 10
-
-type UploadState = 'idle' | 'uploading' | 'complete'
-
-interface SelectedFile {
-  file: File
-  previewUrl: string | null
-}
 
 function formatFileSize(bytes: number): string {
   if (bytes < BYTES_PER_KB) return `${bytes} B`
@@ -50,157 +37,18 @@ export function ScoresheetPanel({
   const { t } = useTranslation()
   const dataSource = useAuthStore((state) => state.dataSource)
   const isDemoMode = dataSource === 'demo'
-  const onScoresheetChangeRef = useRef(onScoresheetChange)
 
-  // Keep ref in sync with prop
-  useEffect(() => {
-    onScoresheetChangeRef.current = onScoresheetChange
-  }, [onScoresheetChange])
-
-  const [selectedFile, setSelectedFile] = useState<SelectedFile | null>(null)
-  const [uploadState, setUploadState] = useState<UploadState>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [uploadProgress, setUploadProgress] = useState(0)
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const cameraInputRef = useRef<HTMLInputElement>(null)
-  const uploadTimersRef = useRef<{
-    interval?: ReturnType<typeof setInterval>
-    timeout?: ReturnType<typeof setTimeout>
-  }>({})
-  const previewUrlRef = useRef<string | null>(null)
-  // Prevent concurrent uploads (race condition prevention - not for unmount tracking)
-  const isUploadingRef = useRef(false)
-
-  // Cleanup preview URL and upload timers on unmount
-  useEffect(() => {
-    const timers = uploadTimersRef.current
-    return () => {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current)
-      }
-      if (timers.interval) {
-        clearInterval(timers.interval)
-      }
-      if (timers.timeout) {
-        clearTimeout(timers.timeout)
-      }
-    }
-  }, [])
-
-  const validateFile = useCallback(
-    (file: File): string | null => {
-      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-        return t('validation.scoresheetUpload.invalidFileType')
-      }
-      if (file.size > MAX_FILE_SIZE_BYTES) {
-        return t('validation.scoresheetUpload.fileTooLarge')
-      }
-      return null
-    },
-    [t]
-  )
-
-  const simulateUpload = useCallback((file: File) => {
-    // Clear any existing timers
-    if (uploadTimersRef.current.interval) {
-      clearInterval(uploadTimersRef.current.interval)
-    }
-    if (uploadTimersRef.current.timeout) {
-      clearTimeout(uploadTimersRef.current.timeout)
-    }
-
-    isUploadingRef.current = true
-    setUploadState('uploading')
-    setUploadProgress(0)
-    // Notify that file is selected but not yet uploaded
-    onScoresheetChangeRef.current?.(file, false)
-
-    uploadTimersRef.current.interval = setInterval(() => {
-      setUploadProgress((p) => {
-        if (p >= PROGRESS_STOP_THRESHOLD) {
-          if (uploadTimersRef.current.interval) {
-            clearInterval(uploadTimersRef.current.interval)
-          }
-          return p
-        }
-        return p + PROGRESS_INCREMENT_PERCENT
-      })
-    }, SIMULATED_UPLOAD_DURATION_MS / PROGRESS_STEPS)
-
-    uploadTimersRef.current.timeout = setTimeout(() => {
-      if (uploadTimersRef.current.interval) {
-        clearInterval(uploadTimersRef.current.interval)
-      }
-      setUploadProgress(PROGRESS_COMPLETE)
-      setUploadState('complete')
-      isUploadingRef.current = false
-      // Notify that upload is complete
-      onScoresheetChangeRef.current?.(file, true)
-    }, SIMULATED_UPLOAD_DURATION_MS)
-  }, [])
-
-  const handleFileSelect = useCallback(
-    (file: File) => {
-      // Prevent concurrent uploads
-      if (isUploadingRef.current) return
-
-      const error = validateFile(file)
-      if (error) {
-        setErrorMessage(error)
-        return
-      }
-
-      // Revoke previous preview URL if exists
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current)
-      }
-
-      setErrorMessage(null)
-      const newPreviewUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-      previewUrlRef.current = newPreviewUrl
-      setSelectedFile({
-        file,
-        previewUrl: newPreviewUrl,
-      })
-      simulateUpload(file)
-    },
-    [validateFile, simulateUpload]
-  )
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) handleFileSelect(file)
-      e.target.value = ''
-    },
-    [handleFileSelect]
-  )
-
-  const resetState = useCallback(() => {
-    if (previewUrlRef.current) {
-      URL.revokeObjectURL(previewUrlRef.current)
-      previewUrlRef.current = null
-    }
-    if (uploadTimersRef.current.interval) {
-      clearInterval(uploadTimersRef.current.interval)
-    }
-    if (uploadTimersRef.current.timeout) {
-      clearTimeout(uploadTimersRef.current.timeout)
-    }
-    isUploadingRef.current = false
-    setSelectedFile(null)
-    setUploadState('idle')
-    setUploadProgress(0)
-    setErrorMessage(null)
-    // Notify that scoresheet was removed
-    onScoresheetChangeRef.current?.(null, false)
-  }, [])
-
-  const handleReplace = useCallback(() => {
-    resetState()
-    fileInputRef.current?.click()
-  }, [resetState])
+  const {
+    selectedFile,
+    uploadState,
+    errorMessage,
+    uploadProgress,
+    fileInputRef,
+    cameraInputRef,
+    handleInputChange,
+    handleReplace,
+    resetState,
+  } = useFileUpload({ onScoresheetChange })
 
   const tKey = (key: string) => t(`validation.scoresheetUpload.${key}` as Parameters<typeof t>[0])
 

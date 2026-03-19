@@ -9,8 +9,5 @@ export {
   useSuspenseActiveSeason,
 } from './hooks/useSettings'
 
-// Components
-export * from './components'
-
 // Tour
 export { settingsTour } from './settings'

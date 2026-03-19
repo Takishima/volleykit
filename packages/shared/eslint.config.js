@@ -30,6 +30,10 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      // Magic numbers - disabled: existing codebase has many HTTP status codes and
+      // test values; --max-warnings 0 makes warnings a build failure.
+      // TODO: enable incrementally as constants are extracted
+      '@typescript-eslint/no-magic-numbers': 'off',
     },
   },
   {
