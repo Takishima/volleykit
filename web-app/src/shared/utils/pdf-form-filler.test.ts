@@ -452,6 +452,31 @@ describe('pdf-form-filler', () => {
     })
   })
 
+  describe('pdf-lib dynamic import', () => {
+    it('successfully imports pdf-lib with working tslib helpers', async () => {
+      // This test catches tslib CJS/ESM interop issues that break pdf-lib at runtime.
+      // pdf-lib uses tslib helpers (__extends, __assign) which can fail if the bundler
+      // resolves tslib incorrectly (e.g., Rolldown CJS interop returning null).
+      const { PDFDocument } = await import('pdf-lib')
+
+      expect(PDFDocument).toBeDefined()
+      expect(typeof PDFDocument.create).toBe('function')
+      expect(typeof PDFDocument.load).toBe('function')
+    })
+
+    it('can create a PDF document (verifies tslib __extends works)', async () => {
+      // PDFDocument.create() exercises tslib's __extends internally via class
+      // inheritance chains (PDFPage extends PDFObject, etc.). If tslib resolution
+      // is broken, this will throw "Cannot destructure property '__extends'".
+      const { PDFDocument } = await import('pdf-lib')
+      const doc = await PDFDocument.create()
+
+      expect(doc).toBeDefined()
+      expect(typeof doc.getPageCount).toBe('function')
+      expect(doc.getPageCount()).toBe(0)
+    })
+  })
+
   describe('extractSportsHallReportData - edge cases', () => {
     it('handles missing encounter data gracefully', () => {
       const assignment: Assignment = {

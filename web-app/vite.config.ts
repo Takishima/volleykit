@@ -350,7 +350,7 @@ export default defineConfig(({ mode }) => {
           //   - Main App Bundle (index-*.js):     ~19 kB,  limit 25 kB  (+6 kB headroom)
           //   - Vendor Chunks (combined):         ~111 kB, limit 115 kB (+4 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~178 kB, limit 185 kB (+7 kB headroom) - lazy-loaded
-          //   - Image Cropper (cropper-*.js):     ~9 kB,   limit 10 kB  (+1 kB headroom) - lazy-loaded
+          //   - Image Cropper (cropper-*.js):     ~10 kB,  limit 11 kB  (+1 kB headroom) - lazy-loaded
           //   - Total JS Bundle:                  ~580 kB, limit 590 kB (+10 kB headroom)
           manualChunks(id) {
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
@@ -586,6 +586,12 @@ export default defineConfig(({ mode }) => {
         // Ensures all imports resolve to the same React instance (in root node_modules)
         react: path.resolve(__dirname, '../node_modules/react'),
         'react-dom': path.resolve(__dirname, '../node_modules/react-dom'),
+        // Fix tslib CJS interop issue with Vite 8 / Rolldown
+        // tslib's exports field maps "import" to modules/index.js which does:
+        //   import tslib from '../tslib.js' (CJS default import)
+        // Rolldown's CJS interop resolves this to null, breaking pdf-lib's
+        // `import { __extends } from "tslib"`. Point directly to the ESM file.
+        tslib: path.resolve(__dirname, '../node_modules/tslib/tslib.es6.js'),
       },
       // Fix dual package hazard with react-router in Node v22.12+
       // See: https://github.com/vitest-dev/vitest/issues/7692
