@@ -77,7 +77,7 @@ jobs:
           echo "Checking for updates with target: $NCU_TARGET"
 
           # Check web-app updates
-          cd web-app
+          cd packages/web
           WEB_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
           cd ..
 
@@ -101,7 +101,7 @@ jobs:
           NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
 
           # Update web-app dependencies
-          cd web-app
+          cd packages/web
           ncu --target "$NCU_TARGET" -u
           cd ..
 
@@ -131,7 +131,7 @@ jobs:
           path: |
             pnpm-lock.yaml
             package.json
-            web-app/package.json
+            packages/web/package.json
           retention-days: 1
   validate:
     name: Validate
@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -152,7 +152,7 @@ jobs:
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Generate API types
         run: pnpm run generate:api
       - name: Lint

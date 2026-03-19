@@ -9,12 +9,12 @@ The pre-commit hook (`scripts/pre-commit-validate.sh`) runs automatically in Cla
 ### What the Hook Does
 
 1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
-2. **Detect affected packages** - Determines which packages have changes (web-app, shared, mobile, worker, help-site)
+2. **Detect affected packages** - Determines which packages have changes (web, shared, mobile, worker, help-site)
 3. **Generate API types** - If `volleymanager-openapi.yaml` is staged
 4. **Run checks in PARALLEL** - Per-package validation (format, lint, knip, typecheck, test)
-5. **Run build sequentially** - Build affected packages (shared → web-app → help-site)
+5. **Run build sequentially** - Build affected packages (shared → web → help-site)
 
-Shared package changes also trigger web-app and mobile validation (downstream consumers).
+Shared package changes also trigger web and mobile validation (downstream consumers).
 
 The commit is **blocked** if any step fails. Fix issues and commit again.
 
@@ -22,7 +22,7 @@ The commit is **blocked** if any step fails. Fix issues and commit again.
 
 | Package   | format | lint | knip | typecheck  | test | build |
 | --------- | ------ | ---- | ---- | ---------- | ---- | ----- |
-| web-app   | ✓      | ✓    | ✓    | (in build) | ✓    | ✓     |
+| web       | ✓      | ✓    | ✓    | (in build) | ✓    | ✓     |
 | shared    | ✓      | ✓    | –    | ✓          | ✓    | ✓     |
 | mobile    | ✓      | ✓    | –    | ✓          | ✓    | –     |
 | worker    | ✓      | ✓    | –    | –          | ✓    | –     |
@@ -30,7 +30,7 @@ The commit is **blocked** if any step fails. Fix issues and commit again.
 
 ### Manual Validation Commands
 
-Run from `web-app/` directory:
+Run from `packages/web/` directory:
 
 ```bash
 # Generate API types (if OpenAPI spec changed)
@@ -82,7 +82,7 @@ pnpm test              # Jest tests
 
 ## Worker Validation
 
-Run from `worker/` directory:
+Run from `packages/worker/` directory:
 
 ```bash
 pnpm run lint          # ESLint
@@ -91,7 +91,7 @@ pnpm test              # Tests
 
 ## E2E Tests (Web App)
 
-Run from `web-app/` directory:
+Run from `packages/web/` directory:
 
 ```bash
 pnpm run test:e2e      # Run all E2E tests (headless)
@@ -113,7 +113,7 @@ E2E tests use POMs in `e2e/pages/` for maintainable selectors.
 ## Bundle Size Check
 
 ```bash
-cd web-app
+cd packages/web
 pnpm run build
 pnpm run size
 ```

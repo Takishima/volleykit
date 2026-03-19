@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'web-app/**'
+      - 'packages/web/**'
       - 'packages/shared/**'
       - 'docs/api/volleymanager-openapi.yaml'
       - 'ocr-poc/**'
@@ -22,21 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       # Cache generated API types (shared across branches)
       - name: Cache generated API types
         id: api-cache
         uses: actions/cache@v5
         with:
           path: |
-            web-app/src/api/schema.ts
+            packages/web/src/api/schema.ts
             packages/shared/src/api/schema.ts
           key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}
       - name: Generate API types
@@ -46,8 +46,8 @@ jobs:
       - name: Cache ESLint
         uses: actions/cache@v5
         with:
-          path: web-app/.eslintcache
-          key: eslint-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx') }}
+          path: packages/web/.eslintcache
+          key: eslint-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx') }}
           restore-keys: |
             eslint-${{ runner.os }}-${{ github.head_ref }}-
             eslint-${{ runner.os }}-
@@ -57,8 +57,8 @@ jobs:
       - name: Cache Vitest
         uses: actions/cache@v5
         with:
-          path: web-app/node_modules/.vitest
-          key: vitest-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/src/**/*.test.ts', 'web-app/src/**/*.test.tsx') }}
+          path: packages/web/node_modules/.vitest
+          key: vitest-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx', 'packages/web/src/**/*.test.ts', 'packages/web/src/**/*.test.tsx') }}
           restore-keys: |
             vitest-${{ runner.os }}-${{ github.head_ref }}-
             vitest-${{ runner.os }}-
@@ -68,8 +68,8 @@ jobs:
       - name: Cache Vite build
         uses: actions/cache@v5
         with:
-          path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('web-app/src/**/*.ts', 'web-app/src/**/*.tsx', 'web-app/vite.config.ts') }}
+          path: packages/web/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx', 'packages/web/vite.config.ts') }}
           restore-keys: |
             vite-${{ runner.os }}-${{ github.head_ref }}-
             vite-${{ runner.os }}-
@@ -83,11 +83,11 @@ jobs:
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
-      - name: Upload web-app artifact
+      - name: Upload packages/web artifact
         uses: actions/upload-artifact@v7
         with:
           name: web-app-dist
-          path: web-app/dist
+          path: packages/web/dist
           retention-days: 1
   build-help-site:
     runs-on: ubuntu-latest
@@ -170,7 +170,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Download web-app artifact
+      - name: Download packages/web artifact
         uses: actions/download-artifact@v8
         with:
           name: web-app-dist
@@ -209,7 +209,7 @@ jobs:
           if [ -d "gh-pages-current" ]; then
             rsync -a --exclude='.git' gh-pages-current/ deploy/
           fi
-          # Add/update this PR's preview (web-app)
+          # Add/update this PR's preview (packages/web)
           mkdir -p deploy/pr-${{ github.event.pull_request.number }}
           cp -r web-app-dist/* deploy/pr-${{ github.event.pull_request.number }}/
           # Add/update OCR POC preview

@@ -94,10 +94,10 @@ HAS_MOBILE=false
 HAS_WORKER=false
 HAS_HELP_SITE=false
 
-has_changes_in "web-app/" && HAS_WEB_APP=true
+has_changes_in "packages/web/" && HAS_WEB_APP=true
 has_changes_in "packages/shared/" && HAS_SHARED=true
 has_changes_in "packages/mobile/" && HAS_MOBILE=true
-has_changes_in "worker/" && HAS_WORKER=true
+has_changes_in "packages/worker/" && HAS_WORKER=true
 has_changes_in "help-site/" && HAS_HELP_SITE=true
 
 # Shared changes also affect web-app and mobile (downstream consumers)
@@ -214,7 +214,7 @@ launch_job() {
 
 # --- Web App checks ---
 if [ "$HAS_WEB_APP" = true ]; then
-  WEB_DIR="$ROOT_DIR/web-app"
+  WEB_DIR="$ROOT_DIR/packages/web"
   launch_job "web:format"  "$WEB_DIR" pnpm run format:check
   launch_job "web:lint"    "$WEB_DIR" pnpm run lint
   launch_job "web:knip"    "$WEB_DIR" pnpm run knip
@@ -241,7 +241,7 @@ fi
 
 # --- Worker checks ---
 if [ "$HAS_WORKER" = true ]; then
-  WORKER_DIR="$ROOT_DIR/worker"
+  WORKER_DIR="$ROOT_DIR/packages/worker"
   launch_job "worker:format" "$WORKER_DIR" pnpm run format:check
   launch_job "worker:lint"   "$WORKER_DIR" pnpm run lint
   launch_job "worker:test"   "$WORKER_DIR" pnpm test
@@ -320,7 +320,7 @@ if [ "$HAS_FAILURES" = false ]; then
   # Build web-app (only if shared build passed)
   if [ "$HAS_WEB_APP" = true ] && [ "$BUILD_RESULT" -eq 0 ]; then
     echo "Building web-app..."
-    if (cd "$ROOT_DIR/web-app" && pnpm run build) ; then
+    if (cd "$ROOT_DIR/packages/web" && pnpm run build) ; then
       echo -e "${GREEN}web-app build passed${NC}"
     else
       echo -e "${RED}web-app build failed${NC}"

@@ -3,14 +3,14 @@ on:
   push:
     branches: [main]
     paths:
-      - 'web-app/**'
+      - 'packages/web/**'
       - 'packages/shared/**'
       - 'docs/api/volleymanager-openapi.yaml'
       - '.github/workflows/ci.yml'
       - '.github/actions/**'
   pull_request:
     paths:
-      - 'web-app/**'
+      - 'packages/web/**'
       - 'packages/shared/**'
       - 'docs/api/volleymanager-openapi.yaml'
       - '.changeset/**'
@@ -53,14 +53,14 @@ jobs:
       api-cache-key: ${{ steps.api-cache-key.outputs.key }}
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Generate API cache key
         id: api-cache-key
         run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            web-app/src/api/schema.ts
+            packages/web/src/api/schema.ts
             packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
       - name: Generate API types
@@ -81,7 +81,7 @@ jobs:
         with:
           name: api-types
           path: |
-            web-app/src/api/schema.ts
+            packages/web/src/api/schema.ts
             packages/shared/src/api/schema.ts
           retention-days: 1
   # Security audit - runs independently (doesn't need API types)
@@ -90,14 +90,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Audit dependencies
         run: |
           # Known unfixable vulnerabilities to ignore:
@@ -152,14 +152,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download API types
         uses: actions/download-artifact@v8
         with:
@@ -170,8 +170,8 @@ jobs:
       - name: Cache ESLint
         uses: actions/cache@v5
         with:
-          path: web-app/.eslintcache
-          key: eslint-${{ runner.os }}-${{ hashFiles('web-app/eslint.config.js', 'web-app/tsconfig.json', 'pnpm-lock.yaml') }}
+          path: packages/web/.eslintcache
+          key: eslint-${{ runner.os }}-${{ hashFiles('packages/web/eslint.config.js', 'packages/web/tsconfig.json', 'pnpm-lock.yaml') }}
           restore-keys: |
             eslint-${{ runner.os }}-
       - name: Lint
@@ -183,14 +183,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download API types
         uses: actions/download-artifact@v8
         with:
@@ -207,7 +207,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -217,7 +217,7 @@ jobs:
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download API types
         uses: actions/download-artifact@v8
         with:
@@ -228,8 +228,8 @@ jobs:
       - name: Cache Vite
         uses: actions/cache@v5
         with:
-          path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
+          path: packages/web/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
       - name: Run tests
@@ -248,14 +248,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download API types
         uses: actions/download-artifact@v8
         with:
@@ -266,8 +266,8 @@ jobs:
       - name: Cache Vite
         uses: actions/cache@v5
         with:
-          path: web-app/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'web-app/vite.config.ts', 'web-app/tsconfig.json') }}
+          path: packages/web/node_modules/.vite
+          key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
       - name: Build
@@ -276,7 +276,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: web-app-dist
-          path: web-app/dist
+          path: packages/web/dist
           retention-days: 1
   # Bundle size check - lightweight job, only needs build artifact
   bundle-size:
@@ -285,19 +285,19 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download build artifact
         uses: actions/download-artifact@v8
         with:
           name: web-app-dist
-          path: web-app/dist
+          path: packages/web/dist
       - name: Check bundle size
         run: pnpm run size
   # E2E tests - per browser, uses build artifact
@@ -318,7 +318,7 @@ jobs:
         browser: ${{ github.event_name == 'pull_request' && fromJson('["chromium"]') || fromJson('["chromium", "firefox", "webkit"]') }}
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     # Firefox requires HOME to be owned by current user in containers
     env:
       HOME: /root
@@ -328,12 +328,12 @@ jobs:
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download build artifact
         uses: actions/download-artifact@v8
         with:
           name: web-app-dist
-          path: web-app/dist
+          path: packages/web/dist
       - name: Run E2E tests
         run: pnpm exec playwright test --project=${{ matrix.browser }} --retries=2
       - name: Upload test results
@@ -341,7 +341,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.browser }}
-          path: web-app/playwright-report/
+          path: packages/web/playwright-report/
           retention-days: 7
   # Lighthouse performance audit - uses build artifact
   lighthouse:
@@ -350,24 +350,24 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web-app
+        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: web-app
+          working-directory: packages/web
       - name: Download build artifact
         uses: actions/download-artifact@v8
         with:
           name: web-app-dist
-          path: web-app/dist
+          path: packages/web/dist
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v12
         with:
           uploadArtifacts: true
-          configPath: ./web-app/lighthouserc.json
+          configPath: ./packages/web/lighthouserc.json
   # Changeset check - ensures PRs include changelog entries
   # Only runs on PRs, reports missing changesets (informational)
   changeset:

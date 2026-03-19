@@ -93,7 +93,7 @@ describe('association switching', () => {
 
 ### E2E Tests (`e2e/*.spec.ts`)
 
-**Location**: `web-app/e2e/*.spec.ts`
+**Location**: `packages/web/e2e/*.spec.ts`
 
 **Use for**:
 

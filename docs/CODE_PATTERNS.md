@@ -174,7 +174,7 @@ function renderItem(displayItem: DisplayItem) {
 
 **Lazy Loading / Code Splitting**
 
-Use `lazy()` + `Suspense` for route-level and heavy component splitting. See `web-app/src/App.tsx`.
+Use `lazy()` + `Suspense` for route-level and heavy component splitting. See `packages/web/src/App.tsx`.
 
 ```typescript
 import { lazy, Suspense } from 'react'
@@ -279,7 +279,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   {isSubmitting ? 'Submitting...' : 'Submit'}
 </button>
 
-// Best: useSafeMutation wraps all of this (see web-app/src/shared/hooks/useSafeMutation.ts)
+// Best: useSafeMutation wraps all of this (see packages/web/src/shared/hooks/useSafeMutation.ts)
 const { execute, isExecuting } = useSafeMutation(
   (id: string) => api.deleteItem(id),
   {
@@ -464,7 +464,7 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
 ## Error Boundaries
 
-Use the class-based `ErrorBoundary` in `web-app/src/shared/components/ErrorBoundary.tsx`. Wrap route-level or feature-level components.
+Use the class-based `ErrorBoundary` in `packages/web/src/shared/components/ErrorBoundary.tsx`. Wrap route-level or feature-level components.
 
 ```typescript
 import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
@@ -509,7 +509,7 @@ export function useAssignments({ apiClient, period }: Options) {
 Each web-app feature follows this directory structure:
 
 ```
-web-app/src/features/<feature>/
+packages/web/src/features/<feature>/
 ├── index.ts              # Public API — explicit exports only (no export *)
 ├── components/
 │   ├── index.ts          # Internal barrel for components within the feature

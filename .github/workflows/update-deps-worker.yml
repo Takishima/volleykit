@@ -76,7 +76,7 @@ jobs:
           echo "Checking for updates with target: $NCU_TARGET"
 
           # Check worker updates
-          cd worker
+          cd packages/worker
           WORKER_UPDATES=$(ncu --target "${NCU_TARGET}" --format lines 2>/dev/null || true)
           cd ..
 
@@ -101,7 +101,7 @@ jobs:
           NCU_TARGET="${{ steps.update-target.outputs.ncu_target }}"
 
           # Update worker dependencies
-          cd worker
+          cd packages/worker
           ncu --target "$NCU_TARGET" -u
           cd ..
 
@@ -131,7 +131,7 @@ jobs:
           path: |
             pnpm-lock.yaml
             package.json
-            worker/package.json
+            packages/worker/package.json
           retention-days: 1
   validate:
     name: Validate
@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: worker
+        working-directory: packages/worker
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -152,7 +152,7 @@ jobs:
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
-          working-directory: worker
+          working-directory: packages/worker
       - name: TypeScript check
         run: pnpm exec tsc --noEmit
       - name: Lint
