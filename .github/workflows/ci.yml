@@ -164,7 +164,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: api-types
-          path: .
+          path: packages
       # Cache ESLint results (ESLint handles per-file invalidation internally)
       # Key based on ESLint config, TypeScript config, and plugins
       - name: Cache ESLint
@@ -195,7 +195,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: api-types
-          path: .
+          path: packages
       - name: Check for dead code
         run: pnpm run knip
   # Unit tests - needs API types from setup
@@ -222,7 +222,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: api-types
-          path: .
+          path: packages
       # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
       # Key based on tooling config - source file changes don't invalidate transforms
       - name: Cache Vite
@@ -260,7 +260,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: api-types
-          path: .
+          path: packages
       # Cache Vite pre-bundled dependencies (shared key with test job)
       # Key based on dependencies and config - source changes don't affect dep pre-bundling
       - name: Cache Vite

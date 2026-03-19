@@ -57,7 +57,7 @@ jobs:
           path: |
             packages/web/src/api/schema.ts
             packages/shared/src/api/schema.ts
-          key: api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}
+          key: api-types-v2-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: pnpm run generate:api
