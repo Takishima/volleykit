@@ -139,7 +139,6 @@ describe('useAssignmentActions', () => {
     expect(result.current.validateGameModal.assignment).toBeNull()
     expect(result.current.pdfReportModal.isOpen).toBe(false)
     expect(result.current.pdfReportModal.assignment).toBeNull()
-    expect(result.current.pdfReportModal.isLoading).toBe(false)
     expect(result.current.pdfReportModal.defaultLanguage).toBe('de')
   })
 

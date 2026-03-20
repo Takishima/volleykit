@@ -485,6 +485,15 @@ export interface Translations {
     generating: string
     exportError: string
     sportsHallReport: string
+    wizard: {
+      title: string
+      confirmLabel: string
+      allCheckpointsOk: string
+      advertisingDeclared: string
+      generate: string
+      downloadBlank: string
+      reportGenerated: string
+    }
   }
   errorBoundary: {
     connectionProblem: string

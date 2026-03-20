@@ -17,9 +17,9 @@ import {
 } from './hooks/useAssignmentsPageLogic'
 import { mapCalendarAssignmentToAssignment } from './utils/calendar-helpers'
 
-const PdfLanguageModal = lazy(() =>
-  import('@/shared/components/PdfLanguageModal').then((m) => ({
-    default: m.PdfLanguageModal,
+const SportsHallReportWizardModal = lazy(() =>
+  import('@/features/sports-hall-report').then((m) => ({
+    default: m.SportsHallReportWizardModal,
   }))
 )
 
@@ -256,13 +256,12 @@ export function AssignmentsPage() {
           </Suspense>
         )}
 
-        {pdfReportModal.isOpen && (
+        {pdfReportModal.isOpen && pdfReportModal.assignment && (
           <Suspense fallback={null}>
-            <PdfLanguageModal
+            <SportsHallReportWizardModal
+              assignment={pdfReportModal.assignment}
               isOpen={pdfReportModal.isOpen}
               onClose={pdfReportModal.close}
-              onConfirm={pdfReportModal.onConfirm}
-              isLoading={pdfReportModal.isLoading}
               defaultLanguage={pdfReportModal.defaultLanguage}
             />
           </Suspense>
