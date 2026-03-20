@@ -100,13 +100,13 @@ export function SportsHallReportWizardModal({
 
         const { generateWizardReportBytes } = await import('@/shared/utils/pdf-form-filler')
 
-        const { pdfBytes, filename } = await generateWizardReportBytes(
-          info.reportData,
-          info.leagueCategory,
+        const { pdfBytes, filename } = await generateWizardReportBytes({
+          data: info.reportData,
+          leagueCategory: info.leagueCategory,
           language,
           signatureDataUrl,
-          jerseyAdvertising
-        )
+          jerseyAdvertising,
+        })
 
         const { downloadPdf } = await import('@/shared/utils/pdf-form-filler')
         downloadPdf(pdfBytes, filename)

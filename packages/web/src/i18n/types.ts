@@ -489,7 +489,6 @@ export interface Translations {
       title: string
       confirmLabel: string
       allCheckpointsOk: string
-      advertisingDeclared: string
       advertisingHomeTeam: string
       advertisingAwayTeam: string
 
