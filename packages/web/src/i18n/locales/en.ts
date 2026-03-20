@@ -498,16 +498,6 @@ const en: Translations = {
       quickCompareDescription:
         'Tap a button to flip between the form and a full-screen zoomable scoresheet photo.',
     },
-    scoreSheetShare: {
-      title: 'Score Sheet Sharing',
-      description: 'Choose what happens after the score sheet PDF is generated.',
-      download: 'Download',
-      downloadDescription: 'Download the PDF to your device',
-      email: 'Email',
-      emailDescription: 'Send to escoresheet@volleyball.ch',
-      emailSubject: 'Game report #{{gameNumber}}',
-      emailBody: 'Please find the game report attached.\n\nKind regards',
-    },
     accessibility: {
       title: 'Accessibility',
       description: 'Adjust accessibility settings to customize your experience.',

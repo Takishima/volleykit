@@ -44,14 +44,6 @@ export type SbbDestinationType = 'address' | 'station'
 export type ValidationReferenceMode = 'quick-compare'
 
 /**
- * How the score sheet PDF is shared after generation.
- * - 'download': Download the PDF directly
- * - 'email': Share via email to escoresheet@volleyball.ch (Web Share API on
- *   mobile, mailto: + download fallback on desktop)
- */
-export type ScoreSheetShareMode = 'download' | 'email'
-
-/**
  * Travel time filter configuration for exchanges.
  * Uses Swiss public transport travel times.
  */
@@ -219,10 +211,6 @@ export interface SettingsState {
   // Validation reference mode (how scoresheet photo is displayed during validation)
   validationReferenceMode: ValidationReferenceMode
   setValidationReferenceMode: (mode: ValidationReferenceMode) => void
-
-  // Score sheet share mode
-  scoreSheetShareMode: ScoreSheetShareMode
-  setScoreSheetShareMode: (mode: ScoreSheetShareMode) => void
 
   // Accessibility settings
   preventZoom: boolean

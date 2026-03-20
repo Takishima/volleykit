@@ -8,7 +8,6 @@ import { ModalFooter } from '@/shared/components/ModalFooter'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useSettingsStore } from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
 import type { Language, LeagueCategory, SportsHallReportData } from '@/shared/utils/pdf-form-filler'
@@ -55,7 +54,7 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t, tInterpolate } = useTranslation()
+  const { t } = useTranslation()
   const [language, setLanguage] = useState<Language>(defaultLanguage)
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -98,19 +97,8 @@ export function SportsHallReportWizardModal({
           signatureDataUrl
         )
 
-        const shareMode = useSettingsStore.getState().scoreSheetShareMode
-        const gameNumber = assignment.refereeGame?.game?.number?.toString() ?? ''
-
-        if (shareMode === 'email') {
-          const { emailPdf } = await import('@/shared/utils/pdf-share')
-          await emailPdf(pdfBytes, filename, {
-            subject: tInterpolate('settings.scoreSheetShare.emailSubject', { gameNumber }),
-            body: t('settings.scoreSheetShare.emailBody'),
-          })
-        } else {
-          const { downloadPdf } = await import('@/shared/utils/pdf-form-filler')
-          downloadPdf(pdfBytes, filename)
-        }
+        const { downloadPdf } = await import('@/shared/utils/pdf-form-filler')
+        downloadPdf(pdfBytes, filename)
 
         log.debug('Generated signed PDF report for:', assignment.__identity)
         toast.success(t('pdf.wizard.reportGenerated'))
@@ -122,7 +110,7 @@ export function SportsHallReportWizardModal({
         setIsGenerating(false)
       }
     },
-    [assignment, language, onClose, t, tInterpolate]
+    [assignment, language, onClose, t]
   )
 
   const handleSignatureCancel = useCallback(() => {

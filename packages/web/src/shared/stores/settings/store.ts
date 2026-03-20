@@ -16,7 +16,6 @@ import type {
   ModeSettings,
   UserLocation,
   ValidationReferenceMode,
-  ScoreSheetShareMode,
   SbbDestinationType,
 } from './types'
 
@@ -73,7 +72,6 @@ export const useSettingsStore = create<SettingsState>()(
         isSafeModeEnabled: true,
         isOCREnabled: false,
         validationReferenceMode: 'quick-compare' as ValidationReferenceMode,
-        scoreSheetShareMode: 'email' as ScoreSheetShareMode,
         preventZoom: false,
         settingsGroupExpanded: {},
 
@@ -115,10 +113,6 @@ export const useSettingsStore = create<SettingsState>()(
 
         setValidationReferenceMode: (mode: ValidationReferenceMode) => {
           set({ validationReferenceMode: mode })
-        },
-
-        setScoreSheetShareMode: (mode: ScoreSheetShareMode) => {
-          set({ scoreSheetShareMode: mode })
         },
 
         setPreventZoom: (enabled: boolean) => {
@@ -383,7 +377,6 @@ export const useSettingsStore = create<SettingsState>()(
           isSafeModeEnabled: state.isSafeModeEnabled,
           isOCREnabled: state.isOCREnabled,
           validationReferenceMode: state.validationReferenceMode,
-          scoreSheetShareMode: state.scoreSheetShareMode,
           preventZoom: state.preventZoom,
           settingsGroupExpanded: state.settingsGroupExpanded,
           // Mode-specific settings stored per mode
@@ -399,7 +392,6 @@ export const useSettingsStore = create<SettingsState>()(
                 isSafeModeEnabled?: boolean
                 isOCREnabled?: boolean
                 validationReferenceMode?: ValidationReferenceMode
-                scoreSheetShareMode?: ScoreSheetShareMode
                 preventZoom?: boolean
                 settingsGroupExpanded?: Record<string, boolean>
                 settingsByMode?: Record<DataSource, Partial<ModeSettings>>
@@ -470,7 +462,6 @@ export const useSettingsStore = create<SettingsState>()(
             isOCREnabled: persistedState?.isOCREnabled ?? current.isOCREnabled,
             validationReferenceMode:
               persistedState?.validationReferenceMode ?? current.validationReferenceMode,
-            scoreSheetShareMode: persistedState?.scoreSheetShareMode ?? current.scoreSheetShareMode,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,
             settingsGroupExpanded:
               persistedState?.settingsGroupExpanded ?? current.settingsGroupExpanded,
