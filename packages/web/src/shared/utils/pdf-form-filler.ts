@@ -202,8 +202,11 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
   return `${basePath}assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadPdfForm(leagueCategory: LeagueCategory, language: Language): Promise<{ pdfDoc: any; form: any }> {
+async function loadPdfForm(
+  leagueCategory: LeagueCategory,
+  language: Language
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<{ pdfDoc: any; form: any }> {
   const { PDFDocument } = await import('pdf-lib')
 
   const pdfPath = getPdfPath(leagueCategory, language)
@@ -311,49 +314,36 @@ function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMappi
 }
 
 /**
- * Fills the sports hall report with all checkpoints marked as OK and the
- * "all points in order" checkbox checked. This is the "happy path" wizard flow
- * where everything is in order.
+ * Fills the sports hall report with "all points in order" checked and
+ * advertising declared as "Ja" for both teams. Individual checklist items
+ * are left unchecked — the referee only needs to fill these if something
+ * is not in order. This is the "happy path" wizard flow.
  */
 export async function fillSportsHallReportWizard(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
   language: Language
 ): Promise<Uint8Array> {
-  const { PDFRadioGroup } = await import('pdf-lib')
-
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const wizardMapping = getWizardFieldMapping(leagueCategory)
 
   fillBaseGameInfo(form, data, mapping)
 
-  // Set all checklist radio groups to OK (Auswahl3)
-  // Iterate all form fields and select OK for every radio group that has the OK option
-  const fields = form.getFields()
-  for (const field of fields) {
-    if (!(field instanceof PDFRadioGroup)) continue
-    const fieldName = field.getName()
-    // Skip the gender radio group (it uses Auswahl1/Auswahl2)
-    if (fieldName === mapping.genderRadio) continue
-    // Skip advertising radio groups (Ja/Nein) — left for manual verification
-    if (wizardMapping.advertisingRadioGroups.includes(fieldName)) continue
-    try {
-      const radioGroup = form.getRadioGroup(fieldName)
-      const options = radioGroup.getOptions()
-      if (options.includes(RADIO_OK_OPTION)) {
-        radioGroup.select(RADIO_OK_OPTION)
-      }
-    } catch (error) {
-      logger.warn(`Could not set radio group "${fieldName}" to OK:`, error)
-    }
-  }
-
   // Check the "all points in order" checkbox
   try {
     form.getCheckBox(wizardMapping.allPointsInOrderCheckbox).check()
   } catch (error) {
     logger.warn(`Could not check "${wizardMapping.allPointsInOrderCheckbox}":`, error)
+  }
+
+  // Set advertising "Werbung auf Spielerkleidung" to Ja for both teams
+  for (const adField of wizardMapping.advertisingRadioGroups) {
+    try {
+      form.getRadioGroup(adField).select(RADIO_OK_OPTION)
+    } catch (error) {
+      logger.warn(`Could not set advertising "${adField}" to Ja:`, error)
+    }
   }
 
   return pdfDoc.save()

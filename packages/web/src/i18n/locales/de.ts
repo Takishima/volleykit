@@ -638,7 +638,8 @@ const de: Translations = {
     wizard: {
       title: 'Hallenrapport',
       confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
-      allCheckpointsOk: 'Alle Kontrollpunkte als OK markiert',
+      allCheckpointsOk: 'Alle Punkte in Ordnung',
+      advertisingDeclared: 'Werbung auf Spielerkleidung für beide Teams deklariert',
 
       generate: 'Rapport erstellen',
       downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',

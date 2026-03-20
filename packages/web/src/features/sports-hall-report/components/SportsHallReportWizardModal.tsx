@@ -50,15 +50,14 @@ export function SportsHallReportWizardModal({
 
   const generateReport = useCallback(
     async (
-      downloadFn: typeof import('@/shared/utils/pdf-form-filler')['generateAndDownloadWizardReport'],
+      downloadFn: (typeof import('@/shared/utils/pdf-form-filler'))['generateAndDownloadWizardReport'],
       successMessage: string
     ) => {
       if (isGenerating) return
       setIsGenerating(true)
       try {
-        const { extractSportsHallReportData, getLeagueCategoryFromAssignment } = await import(
-          '@/shared/utils/pdf-form-filler'
-        )
+        const { extractSportsHallReportData, getLeagueCategoryFromAssignment } =
+          await import('@/shared/utils/pdf-form-filler')
 
         const reportData = extractSportsHallReportData(assignment)
         const leagueCategory = getLeagueCategoryFromAssignment(assignment)
@@ -177,6 +176,7 @@ export function SportsHallReportWizardModal({
               {confirmed && (
                 <ul className="mt-3 space-y-1.5">
                   <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
+                  <ConfirmItem label={t('pdf.wizard.advertisingDeclared')} />
                 </ul>
               )}
             </div>
@@ -208,7 +208,10 @@ export function SportsHallReportWizardModal({
         >
           {isGenerating ? (
             <>
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              <span
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                aria-hidden="true"
+              />
               {t('pdf.generating')}
             </>
           ) : (

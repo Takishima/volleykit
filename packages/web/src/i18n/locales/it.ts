@@ -628,7 +628,8 @@ const it: Translations = {
     wizard: {
       title: 'Rapporto sala sportiva',
       confirmLabel: 'Confermo che tutto è in ordine',
-      allCheckpointsOk: 'Tutti i punti di controllo segnati come OK',
+      allCheckpointsOk: 'Tutti i punti in ordine',
+      advertisingDeclared: 'Pubblicità sulla tenuta dichiarata per entrambe le squadre',
 
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto precompilato',
