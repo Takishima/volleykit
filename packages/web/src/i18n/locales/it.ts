@@ -625,6 +625,16 @@ const it: Translations = {
     generating: 'Generazione...',
     exportError: 'Generazione PDF fallita',
     sportsHallReport: 'Rapporto sala sportiva',
+    wizard: {
+      title: 'Rapporto sala sportiva',
+      confirmLabel: 'Confermo che tutto è in ordine',
+      allCheckpointsOk: 'Tutti i punti in ordine',
+      advertisingDeclared: 'Pubblicità sulla tenuta dichiarata per entrambe le squadre',
+
+      generate: 'Genera rapporto',
+      downloadPreFilled: 'Scarica il rapporto precompilato',
+      reportGenerated: 'Rapporto generato con successo',
+    },
   },
   errorBoundary: {
     connectionProblem: 'Problema di connessione',

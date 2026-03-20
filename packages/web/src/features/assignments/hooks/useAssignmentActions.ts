@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -43,11 +43,9 @@ interface UseAssignmentActionsResult {
   pdfReportModal: {
     isOpen: boolean
     assignment: Assignment | null
-    isLoading: boolean
     defaultLanguage: PdfLanguage
     open: (assignment: Assignment) => void
     close: () => void
-    onConfirm: (language: PdfLanguage) => void
   }
   handleGenerateReport: (assignment: Assignment) => void
   handleAddToExchange: (assignment: Assignment) => void
@@ -64,7 +62,6 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
   const editCompensationModal = useModalState<Assignment>()
   const validateGameModal = useModalState<Assignment>()
   const pdfReportModal = useModalState<Assignment>()
-  const [pdfReportLoading, setPdfReportLoading] = useState(false)
 
   const openValidateGame = useCallback(
     (assignment: Assignment) => {
@@ -88,47 +85,6 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
       pdfReportModal.open(assignment)
     },
     [t, pdfReportModal]
-  )
-
-  const closePdfReport = useCallback(() => {
-    if (pdfReportLoading) return
-    pdfReportModal.close()
-  }, [pdfReportLoading, pdfReportModal])
-
-  const handleConfirmPdfLanguage = useCallback(
-    async (language: PdfLanguage) => {
-      if (!pdfReportModal.data) return
-
-      setPdfReportLoading(true)
-      try {
-        // Dynamic import to keep PDF utilities out of the main bundle
-        const {
-          extractSportsHallReportData,
-          getLeagueCategoryFromAssignment,
-          generateAndDownloadSportsHallReport,
-        } = await import('@/shared/utils/pdf-form-filler')
-
-        const reportData = extractSportsHallReportData(pdfReportModal.data)
-        const leagueCategory = getLeagueCategoryFromAssignment(pdfReportModal.data)
-
-        if (!reportData || !leagueCategory) {
-          log.error('Failed to extract report data for:', pdfReportModal.data.__identity)
-          toast.error(t('pdf.exportError'))
-          return
-        }
-
-        await generateAndDownloadSportsHallReport(reportData, leagueCategory, language)
-        log.debug('Generated PDF report for:', pdfReportModal.data.__identity)
-        toast.success(t('assignments.reportGenerated'))
-        closePdfReport()
-      } catch (error) {
-        log.error('PDF generation failed:', error)
-        toast.error(t('pdf.exportError'))
-      } finally {
-        setPdfReportLoading(false)
-      }
-    },
-    [pdfReportModal.data, closePdfReport, t]
   )
 
   const handleGenerateReport = useCallback(
@@ -209,11 +165,9 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
     pdfReportModal: {
       isOpen: pdfReportModal.isOpen,
       assignment: pdfReportModal.data,
-      isLoading: pdfReportLoading,
       defaultLanguage: mapLocaleToPdfLanguage(locale),
       open: openPdfReport,
-      close: closePdfReport,
-      onConfirm: handleConfirmPdfLanguage,
+      close: pdfReportModal.close,
     },
     handleGenerateReport,
     handleAddToExchange,

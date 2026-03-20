@@ -635,6 +635,16 @@ const de: Translations = {
     generating: 'Wird erstellt...',
     exportError: 'PDF konnte nicht erstellt werden',
     sportsHallReport: 'Hallenrapport',
+    wizard: {
+      title: 'Hallenrapport',
+      confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
+      allCheckpointsOk: 'Alle Punkte in Ordnung',
+      advertisingDeclared: 'Werbung auf Spielerkleidung für beide Teams deklariert',
+
+      generate: 'Rapport erstellen',
+      downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',
+      reportGenerated: 'Rapport erfolgreich erstellt',
+    },
   },
   errorBoundary: {
     connectionProblem: 'Verbindungsproblem',

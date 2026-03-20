@@ -630,6 +630,16 @@ const fr: Translations = {
     generating: 'Génération...',
     exportError: 'Échec de la génération du PDF',
     sportsHallReport: 'Rapport de salle',
+    wizard: {
+      title: 'Rapport de salle',
+      confirmLabel: 'Je confirme que tout est en ordre',
+      allCheckpointsOk: 'Tous les points en ordre',
+      advertisingDeclared: 'Publicité sur la tenue déclarée pour les deux équipes',
+
+      generate: 'Générer le rapport',
+      downloadPreFilled: 'Télécharger le rapport pré-rempli',
+      reportGenerated: 'Rapport généré avec succès',
+    },
   },
   errorBoundary: {
     connectionProblem: 'Problème de connexion',

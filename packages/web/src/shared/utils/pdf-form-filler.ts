@@ -141,6 +141,60 @@ function getFieldMapping(leagueCategory: LeagueCategory): FieldMapping {
   return leagueCategory === 'NLA' ? NLA_FIELD_MAPPING : NLB_FIELD_MAPPING
 }
 
+/**
+ * Safely sets a text field in a PDF form, logging a warning on failure.
+ * Uses `any` for form parameter because pdf-lib types are lazily imported.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function trySetTextField(form: any, fieldName: string, value: string | undefined): void {
+  if (!value) return
+  try {
+    form.getTextField(fieldName).setText(value)
+  } catch (error) {
+    logger.warn(`Could not set text field "${fieldName}":`, error)
+  }
+}
+
+/**
+ * Fills the basic game info fields (teams, date, hall, referees, gender) in a PDF form.
+ * Shared between the standard report and the wizard report.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fillBaseGameInfo(form: any, data: SportsHallReportData, mapping: FieldMapping): void {
+  trySetTextField(form, mapping.gameNumber, data.gameNumber)
+  trySetTextField(form, mapping.homeTeam, data.homeTeam)
+  trySetTextField(form, mapping.awayTeam, data.awayTeam)
+  trySetTextField(form, mapping.hallName, data.hallName)
+  trySetTextField(form, mapping.location, data.location)
+  trySetTextField(form, mapping.date, data.date)
+  trySetTextField(form, mapping.firstRefereeName, data.firstRefereeName)
+  trySetTextField(form, mapping.secondRefereeName, data.secondRefereeName)
+
+  // Select gender radio button
+  // PDF radio options are 'Auswahl1' (M/Male) and 'Auswahl2' (F/Female)
+  const genderOption = data.gender === 'm' ? 'Auswahl1' : 'Auswahl2'
+  try {
+    const radioGroup = form.getRadioGroup(mapping.genderRadio)
+    try {
+      radioGroup.select(genderOption)
+    } catch {
+      const options = radioGroup.getOptions()
+      const matchingOption = options.find(
+        (opt: string) => opt.toUpperCase().startsWith(genderOption) || opt.includes(genderOption)
+      )
+      if (matchingOption) {
+        radioGroup.select(matchingOption)
+      } else {
+        logger.warn(
+          `Could not find option "${genderOption}" in radio group "${mapping.genderRadio}". Available: ${options.join(', ')}`
+        )
+      }
+    }
+  } catch (error) {
+    logger.warn(`Could not access radio group "${mapping.genderRadio}":`, error)
+  }
+}
+
 function getPdfPath(leagueCategory: LeagueCategory, language: Language): string {
   const categoryPath = leagueCategory === 'NLA' ? 'nla-' : ''
   // Use import.meta.env.BASE_URL to handle deployment to subdirectories (e.g., /volleykit/)
@@ -148,12 +202,11 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
   return `${basePath}assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`
 }
 
-export async function fillSportsHallReportForm(
-  data: SportsHallReportData,
+async function loadPdfForm(
   leagueCategory: LeagueCategory,
   language: Language
-): Promise<Uint8Array> {
-  // Dynamic import to keep pdf-lib out of the main bundle
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<{ pdfDoc: any; form: any }> {
   const { PDFDocument } = await import('pdf-lib')
 
   const pdfPath = getPdfPath(leagueCategory, language)
@@ -163,61 +216,19 @@ export async function fillSportsHallReportForm(
   }
   const pdfBytes = await response.arrayBuffer()
   const pdfDoc = await PDFDocument.load(pdfBytes)
-
   const form = pdfDoc.getForm()
+  return { pdfDoc, form }
+}
+
+export async function fillSportsHallReportForm(
+  data: SportsHallReportData,
+  leagueCategory: LeagueCategory,
+  language: Language
+): Promise<Uint8Array> {
+  const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
 
-  // Helper to safely set text fields with error handling
-  const trySetTextField = (fieldName: string, value: string | undefined): void => {
-    if (!value) return
-    try {
-      form.getTextField(fieldName).setText(value)
-    } catch (error) {
-      logger.warn(`Could not set text field "${fieldName}":`, error)
-    }
-  }
-
-  // Helper to safely select radio options with fallback matching
-  const trySelectRadioOption = (groupName: string, option: string): void => {
-    try {
-      const radioGroup = form.getRadioGroup(groupName)
-      try {
-        radioGroup.select(option)
-      } catch {
-        // Try fallback matching for different naming conventions
-        const options = radioGroup.getOptions()
-        const matchingOption = options.find(
-          (opt) => opt.toUpperCase().startsWith(option) || opt.includes(option)
-        )
-        if (matchingOption) {
-          radioGroup.select(matchingOption)
-        } else {
-          logger.warn(
-            `Could not find option "${option}" in radio group "${groupName}". Available: ${options.join(', ')}`
-          )
-        }
-      }
-    } catch (error) {
-      logger.warn(`Could not access radio group "${groupName}":`, error)
-    }
-  }
-
-  // Set basic game info fields
-  trySetTextField(mapping.gameNumber, data.gameNumber)
-  trySetTextField(mapping.homeTeam, data.homeTeam)
-  trySetTextField(mapping.awayTeam, data.awayTeam)
-  trySetTextField(mapping.hallName, data.hallName)
-  trySetTextField(mapping.location, data.location)
-  trySetTextField(mapping.date, data.date)
-
-  // Select gender radio button
-  // PDF radio options are 'Auswahl1' (M/Male) and 'Auswahl2' (F/Female)
-  const genderOption = data.gender === 'm' ? 'Auswahl1' : 'Auswahl2'
-  trySelectRadioOption(mapping.genderRadio, genderOption)
-
-  // Set referee names
-  trySetTextField(mapping.firstRefereeName, data.firstRefereeName)
-  trySetTextField(mapping.secondRefereeName, data.secondRefereeName)
+  fillBaseGameInfo(form, data, mapping)
 
   return pdfDoc.save()
 }
@@ -265,6 +276,89 @@ export async function generateAndDownloadSportsHallReport(
   language: Language
 ): Promise<void> {
   const pdfBytes = await fillSportsHallReportForm(data, leagueCategory, language)
+  const filename = buildReportFilename(
+    leagueCategory,
+    language,
+    data.startingDateTime,
+    data.gameNumber
+  )
+  downloadPdf(pdfBytes, filename)
+}
+
+/**
+ * Wizard-specific field mapping for checkbox/radio fields that the wizard fills
+ * in addition to the base game info fields.
+ */
+interface WizardFieldMapping {
+  /** Checkbox field name for "Tous les points sont en ordre" / "Alle Punkte in Ordnung" */
+  allPointsInOrderCheckbox: string
+  /** Radio group field names for "Werbung auf Spielerkleidung" (Ja/Nein) — left unchecked for manual verification */
+  advertisingRadioGroups: readonly string[]
+}
+
+const NLA_WIZARD_FIELDS: WizardFieldMapping = {
+  allPointsInOrderCheckbox: 'Kontrollkästchen8',
+  advertisingRadioGroups: ['Gruppe430', 'Gruppe434'],
+}
+
+const NLB_WIZARD_FIELDS: WizardFieldMapping = {
+  allPointsInOrderCheckbox: 'Kontrollkästchen17',
+  advertisingRadioGroups: ['31', '34'],
+}
+
+/** OK option value used by all radio groups in the PDF templates */
+const RADIO_OK_OPTION = 'Auswahl3'
+
+function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMapping {
+  return leagueCategory === 'NLA' ? NLA_WIZARD_FIELDS : NLB_WIZARD_FIELDS
+}
+
+/**
+ * Fills the sports hall report with "all points in order" checked and
+ * advertising declared as "Ja" for both teams. Individual checklist items
+ * are left unchecked — the referee only needs to fill these if something
+ * is not in order. This is the "happy path" wizard flow.
+ */
+export async function fillSportsHallReportWizard(
+  data: SportsHallReportData,
+  leagueCategory: LeagueCategory,
+  language: Language
+): Promise<Uint8Array> {
+  const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
+  const mapping = getFieldMapping(leagueCategory)
+  const wizardMapping = getWizardFieldMapping(leagueCategory)
+
+  fillBaseGameInfo(form, data, mapping)
+
+  // Check the "all points in order" checkbox
+  try {
+    form.getCheckBox(wizardMapping.allPointsInOrderCheckbox).check()
+  } catch (error) {
+    logger.warn(`Could not check "${wizardMapping.allPointsInOrderCheckbox}":`, error)
+  }
+
+  // Set advertising "Werbung auf Spielerkleidung" to Ja for both teams
+  for (const adField of wizardMapping.advertisingRadioGroups) {
+    try {
+      form.getRadioGroup(adField).select(RADIO_OK_OPTION)
+    } catch (error) {
+      logger.warn(`Could not set advertising "${adField}" to Ja:`, error)
+    }
+  }
+
+  return pdfDoc.save()
+}
+
+/**
+ * Generates and downloads a sports hall report with all checkpoints marked as OK.
+ * Used by the wizard modal for the "happy path" flow.
+ */
+export async function generateAndDownloadWizardReport(
+  data: SportsHallReportData,
+  leagueCategory: LeagueCategory,
+  language: Language
+): Promise<void> {
+  const pdfBytes = await fillSportsHallReportWizard(data, leagueCategory, language)
   const filename = buildReportFilename(
     leagueCategory,
     language,
