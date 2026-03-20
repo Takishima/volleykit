@@ -634,9 +634,9 @@ const fr: Translations = {
       title: 'Rapport de salle',
       confirmLabel: 'Je confirme que tout est en ordre',
       allCheckpointsOk: 'Tous les points de contrôle marqués OK',
-      advertisingDeclared: 'Publicité sur la tenue déclarée pour les deux équipes',
+
       generate: 'Générer le rapport',
-      downloadBlank: 'Télécharger le rapport vierge',
+      downloadPreFilled: 'Télécharger le rapport pré-rempli',
       reportGenerated: 'Rapport généré avec succès',
     },
   },

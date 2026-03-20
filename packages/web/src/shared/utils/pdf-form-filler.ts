@@ -202,12 +202,8 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
   return `${basePath}assets/pdf/sports-hall-report-${categoryPath}${language}.pdf`
 }
 
-export async function fillSportsHallReportForm(
-  data: SportsHallReportData,
-  leagueCategory: LeagueCategory,
-  language: Language
-): Promise<Uint8Array> {
-  // Dynamic import to keep pdf-lib out of the main bundle
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadPdfForm(leagueCategory: LeagueCategory, language: Language): Promise<{ pdfDoc: any; form: any }> {
   const { PDFDocument } = await import('pdf-lib')
 
   const pdfPath = getPdfPath(leagueCategory, language)
@@ -217,8 +213,16 @@ export async function fillSportsHallReportForm(
   }
   const pdfBytes = await response.arrayBuffer()
   const pdfDoc = await PDFDocument.load(pdfBytes)
-
   const form = pdfDoc.getForm()
+  return { pdfDoc, form }
+}
+
+export async function fillSportsHallReportForm(
+  data: SportsHallReportData,
+  leagueCategory: LeagueCategory,
+  language: Language
+): Promise<Uint8Array> {
+  const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
 
   fillBaseGameInfo(form, data, mapping)
@@ -285,14 +289,18 @@ export async function generateAndDownloadSportsHallReport(
 interface WizardFieldMapping {
   /** Checkbox field name for "Tous les points sont en ordre" / "Alle Punkte in Ordnung" */
   allPointsInOrderCheckbox: string
+  /** Radio group field names for "Werbung auf Spielerkleidung" (Ja/Nein) — left unchecked for manual verification */
+  advertisingRadioGroups: readonly string[]
 }
 
 const NLA_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen8',
+  advertisingRadioGroups: ['Gruppe430', 'Gruppe434'],
 }
 
 const NLB_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen17',
+  advertisingRadioGroups: ['31', '34'],
 }
 
 /** OK option value used by all radio groups in the PDF templates */
@@ -312,17 +320,9 @@ export async function fillSportsHallReportWizard(
   leagueCategory: LeagueCategory,
   language: Language
 ): Promise<Uint8Array> {
-  const { PDFDocument } = await import('pdf-lib')
+  const { PDFRadioGroup } = await import('pdf-lib')
 
-  const pdfPath = getPdfPath(leagueCategory, language)
-  const response = await fetch(pdfPath)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch PDF template: ${response.statusText}`)
-  }
-  const pdfBytes = await response.arrayBuffer()
-  const pdfDoc = await PDFDocument.load(pdfBytes)
-
-  const form = pdfDoc.getForm()
+  const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const wizardMapping = getWizardFieldMapping(leagueCategory)
 
@@ -332,10 +332,12 @@ export async function fillSportsHallReportWizard(
   // Iterate all form fields and select OK for every radio group that has the OK option
   const fields = form.getFields()
   for (const field of fields) {
-    if (field.constructor.name !== 'PDFRadioGroup') continue
+    if (!(field instanceof PDFRadioGroup)) continue
     const fieldName = field.getName()
     // Skip the gender radio group (it uses Auswahl1/Auswahl2)
     if (fieldName === mapping.genderRadio) continue
+    // Skip advertising radio groups (Ja/Nein) — left for manual verification
+    if (wizardMapping.advertisingRadioGroups.includes(fieldName)) continue
     try {
       const radioGroup = form.getRadioGroup(fieldName)
       const options = radioGroup.getOptions()

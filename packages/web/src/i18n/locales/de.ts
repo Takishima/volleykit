@@ -639,9 +639,9 @@ const de: Translations = {
       title: 'Hallenrapport',
       confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
       allCheckpointsOk: 'Alle Kontrollpunkte als OK markiert',
-      advertisingDeclared: 'Werbung auf Spielerkleidung für beide Teams deklariert',
+
       generate: 'Rapport erstellen',
-      downloadBlank: 'Leeren Rapport herunterladen',
+      downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',
       reportGenerated: 'Rapport erfolgreich erstellt',
     },
   },

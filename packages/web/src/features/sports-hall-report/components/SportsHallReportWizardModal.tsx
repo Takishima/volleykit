@@ -48,67 +48,51 @@ export function SportsHallReportWizardModal({
     }
   }, [isOpen, defaultLanguage])
 
+  const generateReport = useCallback(
+    async (
+      downloadFn: typeof import('@/shared/utils/pdf-form-filler')['generateAndDownloadWizardReport'],
+      successMessage: string
+    ) => {
+      if (isGenerating) return
+      setIsGenerating(true)
+      try {
+        const { extractSportsHallReportData, getLeagueCategoryFromAssignment } = await import(
+          '@/shared/utils/pdf-form-filler'
+        )
+
+        const reportData = extractSportsHallReportData(assignment)
+        const leagueCategory = getLeagueCategoryFromAssignment(assignment)
+
+        if (!reportData || !leagueCategory) {
+          log.error('Failed to extract report data for:', assignment.__identity)
+          toast.error(t('pdf.exportError'))
+          return
+        }
+
+        await downloadFn(reportData, leagueCategory, language)
+        log.debug('Generated PDF report for:', assignment.__identity)
+        toast.success(successMessage)
+        onClose()
+      } catch (error) {
+        log.error('PDF generation failed:', error)
+        toast.error(t('pdf.exportError'))
+      } finally {
+        setIsGenerating(false)
+      }
+    },
+    [isGenerating, assignment, language, onClose, t]
+  )
+
   const handleGenerate = useCallback(async () => {
-    if (!confirmed || isGenerating) return
-    setIsGenerating(true)
-    try {
-      const {
-        extractSportsHallReportData,
-        getLeagueCategoryFromAssignment,
-        generateAndDownloadWizardReport,
-      } = await import('@/shared/utils/pdf-form-filler')
+    if (!confirmed) return
+    const { generateAndDownloadWizardReport } = await import('@/shared/utils/pdf-form-filler')
+    await generateReport(generateAndDownloadWizardReport, t('pdf.wizard.reportGenerated'))
+  }, [confirmed, generateReport, t])
 
-      const reportData = extractSportsHallReportData(assignment)
-      const leagueCategory = getLeagueCategoryFromAssignment(assignment)
-
-      if (!reportData || !leagueCategory) {
-        log.error('Failed to extract report data for:', assignment.__identity)
-        toast.error(t('pdf.exportError'))
-        return
-      }
-
-      await generateAndDownloadWizardReport(reportData, leagueCategory, language)
-      log.debug('Generated wizard PDF report for:', assignment.__identity)
-      toast.success(t('pdf.wizard.reportGenerated'))
-      onClose()
-    } catch (error) {
-      log.error('Wizard PDF generation failed:', error)
-      toast.error(t('pdf.exportError'))
-    } finally {
-      setIsGenerating(false)
-    }
-  }, [confirmed, isGenerating, assignment, language, onClose, t])
-
-  const handleDownloadBlank = useCallback(async () => {
-    if (isGenerating) return
-    setIsGenerating(true)
-    try {
-      const {
-        extractSportsHallReportData,
-        getLeagueCategoryFromAssignment,
-        generateAndDownloadSportsHallReport,
-      } = await import('@/shared/utils/pdf-form-filler')
-
-      const reportData = extractSportsHallReportData(assignment)
-      const leagueCategory = getLeagueCategoryFromAssignment(assignment)
-
-      if (!reportData || !leagueCategory) {
-        log.error('Failed to extract report data for blank:', assignment.__identity)
-        toast.error(t('pdf.exportError'))
-        return
-      }
-
-      await generateAndDownloadSportsHallReport(reportData, leagueCategory, language)
-      log.debug('Generated blank PDF report for:', assignment.__identity)
-      toast.success(t('assignments.reportGenerated'))
-      onClose()
-    } catch (error) {
-      log.error('Blank PDF generation failed:', error)
-      toast.error(t('pdf.exportError'))
-    } finally {
-      setIsGenerating(false)
-    }
-  }, [isGenerating, assignment, language, onClose, t])
+  const handleDownloadPreFilled = useCallback(async () => {
+    const { generateAndDownloadSportsHallReport } = await import('@/shared/utils/pdf-form-filler')
+    await generateReport(generateAndDownloadSportsHallReport, t('assignments.reportGenerated'))
+  }, [generateReport, t])
 
   const homeTeam = assignment.refereeGame?.game?.encounter?.teamHome?.name ?? ''
   const awayTeam = assignment.refereeGame?.game?.encounter?.teamAway?.name ?? ''
@@ -193,7 +177,6 @@ export function SportsHallReportWizardModal({
               {confirmed && (
                 <ul className="mt-3 space-y-1.5">
                   <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
-                  <ConfirmItem label={t('pdf.wizard.advertisingDeclared')} />
                 </ul>
               )}
             </div>
@@ -201,15 +184,15 @@ export function SportsHallReportWizardModal({
         </div>
       </div>
 
-      {/* Download blank fallback */}
+      {/* Download pre-filled fallback (game data only, no checkpoints) */}
       <div className="mb-5">
         <button
           type="button"
-          onClick={handleDownloadBlank}
+          onClick={handleDownloadPreFilled}
           disabled={isGenerating}
           className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {t('pdf.wizard.downloadBlank')}
+          {t('pdf.wizard.downloadPreFilled')}
         </button>
       </div>
 
@@ -225,7 +208,7 @@ export function SportsHallReportWizardModal({
         >
           {isGenerating ? (
             <>
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
               {t('pdf.generating')}
             </>
           ) : (

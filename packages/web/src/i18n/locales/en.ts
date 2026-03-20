@@ -616,9 +616,9 @@ const en: Translations = {
       title: 'Sports Hall Report',
       confirmLabel: 'I confirm everything is in order',
       allCheckpointsOk: 'All checkpoints marked as OK',
-      advertisingDeclared: 'Advertising on uniform declared for both teams',
+
       generate: 'Generate Report',
-      downloadBlank: 'Download blank report instead',
+      downloadPreFilled: 'Download pre-filled report instead',
       reportGenerated: 'Report generated successfully',
     },
   },

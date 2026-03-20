@@ -489,9 +489,9 @@ export interface Translations {
       title: string
       confirmLabel: string
       allCheckpointsOk: string
-      advertisingDeclared: string
+
       generate: string
-      downloadBlank: string
+      downloadPreFilled: string
       reportGenerated: string
     }
   }
