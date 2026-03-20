@@ -325,8 +325,8 @@ interface SignaturePosition {
 }
 
 const SIGNATURE_POSITIONS: Record<LeagueCategory, SignaturePosition> = {
-  NLA: { x: 340, y: 65, width: 130, height: 50 },
-  NLB: { x: 340, y: 118, width: 130, height: 50 },
+  NLA: { x: 340, y: 78, width: 130, height: 22 },
+  NLB: { x: 340, y: 131, width: 130, height: 22 },
 }
 
 /**
