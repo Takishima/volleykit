@@ -639,7 +639,7 @@ const de: Translations = {
       title: 'Hallenrapport',
       confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
       allCheckpointsOk: 'Alle Punkte in Ordnung',
-      advertisingTeam: 'Werbung auf Trikot — {team}',
+      advertisingTeam: 'Werbung — {team}',
 
       generate: 'Rapport erstellen',
       downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',

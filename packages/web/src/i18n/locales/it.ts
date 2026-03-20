@@ -629,7 +629,7 @@ const it: Translations = {
       title: 'Rapporto sala sportiva',
       confirmLabel: 'Confermo che tutto è in ordine',
       allCheckpointsOk: 'Tutti i punti in ordine',
-      advertisingTeam: 'Pubblicità sulla tenuta — {team}',
+      advertisingTeam: 'Pubblicità — {team}',
 
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto precompilato',
