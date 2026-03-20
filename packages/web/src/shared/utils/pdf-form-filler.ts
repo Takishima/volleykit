@@ -344,6 +344,8 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
 }
 
 const SIGNATURE_CROP_PADDING = 10
+const RGBA_CHANNELS = 4
+const ALPHA_CHANNEL_OFFSET = 3
 
 /**
  * Crop a signature PNG data URL to its bounding box, removing transparent
@@ -375,7 +377,7 @@ async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const alpha = data[(y * width + x) * 4 + 3]
+      const alpha = data[(y * width + x) * RGBA_CHANNELS + ALPHA_CHANNEL_OFFSET]
       if (alpha > 0) {
         if (x < minX) minX = x
         if (x > maxX) maxX = x
