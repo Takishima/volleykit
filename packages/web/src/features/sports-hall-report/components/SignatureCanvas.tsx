@@ -131,8 +131,17 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
     }
   }, [])
 
+  // Stop all touch events from propagating through the React tree.
+  // Without this, React's synthetic events bubble from this portal through the
+  // React component hierarchy up to PullToRefresh, which interprets drawing
+  // strokes as pull-to-refresh gestures and unmounts the signature overlay.
+  const stopPropagation = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation()
+  }, [])
+
   // Prevent swipe-to-navigate gestures on the overlay container
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation()
     // Allow touch events on the canvas (signature_pad handles them)
     if (e.target instanceof HTMLCanvasElement) return
     e.preventDefault()
@@ -147,7 +156,9 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
       role="dialog"
       aria-modal="true"
       aria-label={t('pdf.wizard.signature.title')}
+      onTouchStart={stopPropagation}
       onTouchMove={handleTouchMove}
+      onTouchEnd={stopPropagation}
     >
       {/* Header toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
