@@ -378,6 +378,16 @@ export interface Translations {
       quickCompare: string
       quickCompareDescription: string
     }
+    scoreSheetShare: {
+      title: string
+      description: string
+      download: string
+      downloadDescription: string
+      email: string
+      emailDescription: string
+      emailSubject: string
+      emailBody: string
+    }
     accessibility: {
       title: string
       description: string

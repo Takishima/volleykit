@@ -514,6 +514,16 @@ const de: Translations = {
       quickCompareDescription:
         'Tippen Sie auf eine Schaltfläche, um zwischen dem Formular und einem zoombaren Spielberichtsfoto zu wechseln.',
     },
+    scoreSheetShare: {
+      title: 'Spielbericht teilen',
+      description: 'Wählen Sie, was nach der Erstellung des Spielbericht-PDFs passiert.',
+      download: 'Herunterladen',
+      downloadDescription: 'PDF auf Ihr Gerät herunterladen',
+      email: 'E-Mail',
+      emailDescription: 'An escoresheet@volleyball.ch senden',
+      emailSubject: 'Spielbericht #{{gameNumber}}',
+      emailBody: 'Anbei finden Sie den Spielbericht.\n\nFreundliche Grüsse',
+    },
     accessibility: {
       title: 'Barrierefreiheit',
       description:

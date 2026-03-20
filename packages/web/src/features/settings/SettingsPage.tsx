@@ -38,12 +38,21 @@ export function SettingsPage() {
       refreshData: state.refreshData,
     }))
   )
-  const { isSafeModeEnabled, setSafeMode, preventZoom, setPreventZoom } = useSettingsStore(
+  const {
+    isSafeModeEnabled,
+    setSafeMode,
+    preventZoom,
+    setPreventZoom,
+    scoreSheetShareMode,
+    setScoreSheetShareMode,
+  } = useSettingsStore(
     useShallow((state) => ({
       isSafeModeEnabled: state.isSafeModeEnabled,
       setSafeMode: state.setSafeMode,
       preventZoom: state.preventZoom,
       setPreventZoom: state.setPreventZoom,
+      scoreSheetShareMode: state.scoreSheetShareMode,
+      setScoreSheetShareMode: state.setScoreSheetShareMode,
     }))
   )
   const { t } = useTranslation()
@@ -82,7 +91,12 @@ export function SettingsPage() {
           ) : undefined
         }
       >
-        <PreferencesSection preventZoom={preventZoom} onSetPreventZoom={setPreventZoom} />
+        <PreferencesSection
+          preventZoom={preventZoom}
+          onSetPreventZoom={setPreventZoom}
+          scoreSheetShareMode={scoreSheetShareMode}
+          onSetScoreSheetShareMode={setScoreSheetShareMode}
+        />
 
         {showSafeMode && (
           <>

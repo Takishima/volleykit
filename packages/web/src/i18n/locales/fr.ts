@@ -513,6 +513,16 @@ const fr: Translations = {
       quickCompareDescription:
         'Appuyez sur un bouton pour basculer entre le formulaire et une photo zoomable de la feuille de match.',
     },
+    scoreSheetShare: {
+      title: 'Partage de la feuille de match',
+      description: 'Choisissez ce qui se passe après la génération du PDF de la feuille de match.',
+      download: 'Télécharger',
+      downloadDescription: 'Télécharger le PDF sur votre appareil',
+      email: 'E-mail',
+      emailDescription: 'Envoyer à escoresheet@volleyball.ch',
+      emailSubject: 'Rapport de match #{{gameNumber}}',
+      emailBody: 'Veuillez trouver le rapport de match en pièce jointe.\n\nCordialement',
+    },
     accessibility: {
       title: 'Accessibilité',
       description: "Ajustez les paramètres d'accessibilité pour personnaliser votre expérience.",

@@ -509,6 +509,16 @@ const it: Translations = {
       quickCompareDescription:
         'Tocca un pulsante per alternare tra il modulo e una foto zoomabile del referto.',
     },
+    scoreSheetShare: {
+      title: 'Condivisione del referto',
+      description: 'Scegli cosa succede dopo la generazione del PDF del referto.',
+      download: 'Scarica',
+      downloadDescription: 'Scarica il PDF sul tuo dispositivo',
+      email: 'E-mail',
+      emailDescription: 'Invia a escoresheet@volleyball.ch',
+      emailSubject: 'Rapporto di gioco #{{gameNumber}}',
+      emailBody: 'In allegato trovate il rapporto di gioco.\n\nCordiali saluti',
+    },
     accessibility: {
       title: 'Accessibilità',
       description: 'Regola le impostazioni di accessibilità per personalizzare la tua esperienza.',
