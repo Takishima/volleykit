@@ -314,15 +314,82 @@ function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMappi
 }
 
 /**
+ * Signature placement coordinates per league category.
+ * Positioned to the right of the referee name text fields at the bottom of the page.
+ */
+interface SignaturePosition {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+const SIGNATURE_POSITIONS: Record<LeagueCategory, SignaturePosition> = {
+  NLA: { x: 340, y: 65, width: 130, height: 50 },
+  NLB: { x: 340, y: 118, width: 130, height: 50 },
+}
+
+/**
+ * Decode a data URL (e.g. from canvas.toDataURL) to raw bytes.
+ */
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(',')[1]
+  if (!base64) throw new Error('Invalid data URL')
+  const binaryString = atob(base64)
+  const bytes = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
+  }
+  return bytes
+}
+
+/**
+ * Embed a PNG signature image into a PDF document at the first referee's
+ * signature position.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function embedSignature(
+  pdfDoc: any,
+  signatureDataUrl: string,
+  leagueCategory: LeagueCategory
+): Promise<void> {
+  const signatureBytes = dataUrlToBytes(signatureDataUrl)
+  const signatureImage = await pdfDoc.embedPng(signatureBytes)
+
+  const page = pdfDoc.getPage(0)
+  const pos = SIGNATURE_POSITIONS[leagueCategory]
+
+  // Scale the signature to fit the designated area while maintaining aspect ratio
+  const aspectRatio = signatureImage.width / signatureImage.height
+  let drawWidth = pos.width
+  let drawHeight = drawWidth / aspectRatio
+  if (drawHeight > pos.height) {
+    drawHeight = pos.height
+    drawWidth = drawHeight * aspectRatio
+  }
+
+  page.drawImage(signatureImage, {
+    x: pos.x,
+    y: pos.y,
+    width: drawWidth,
+    height: drawHeight,
+  })
+}
+
+/**
  * Fills the sports hall report with "all points in order" checked and
  * advertising declared as "Ja" for both teams. Individual checklist items
  * are left unchecked — the referee only needs to fill these if something
  * is not in order. This is the "happy path" wizard flow.
+ *
+ * When a signatureDataUrl is provided, the first referee's signature is
+ * embedded at the designated position on the PDF.
  */
 export async function fillSportsHallReportWizard(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
-  language: Language
+  language: Language,
+  signatureDataUrl?: string
 ): Promise<Uint8Array> {
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
@@ -346,24 +413,40 @@ export async function fillSportsHallReportWizard(
     }
   }
 
+  // Embed first referee signature if provided
+  if (signatureDataUrl) {
+    try {
+      await embedSignature(pdfDoc, signatureDataUrl, leagueCategory)
+    } catch (error) {
+      logger.warn('Could not embed signature in PDF:', error)
+    }
+  }
+
   return pdfDoc.save()
 }
 
 /**
- * Generates and downloads a sports hall report with all checkpoints marked as OK.
- * Used by the wizard modal for the "happy path" flow.
+ * Generates a sports hall report with all checkpoints marked as OK and
+ * the first referee's signature embedded. Returns the PDF bytes and filename
+ * for use with the Web Share API or print dialog.
  */
-export async function generateAndDownloadWizardReport(
+export async function generateWizardReportBytes(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
-  language: Language
-): Promise<void> {
-  const pdfBytes = await fillSportsHallReportWizard(data, leagueCategory, language)
+  language: Language,
+  signatureDataUrl: string
+): Promise<{ pdfBytes: Uint8Array; filename: string }> {
+  const pdfBytes = await fillSportsHallReportWizard(
+    data,
+    leagueCategory,
+    language,
+    signatureDataUrl
+  )
   const filename = buildReportFilename(
     leagueCategory,
     language,
     data.startingDateTime,
     data.gameNumber
   )
-  downloadPdf(pdfBytes, filename)
+  return { pdfBytes, filename }
 }

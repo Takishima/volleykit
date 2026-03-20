@@ -12,6 +12,8 @@ import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
 import type { Language } from '@/shared/utils/pdf-form-filler'
 
+import { SignatureCanvas } from './SignatureCanvas'
+
 const log = createLogger('SportsHallReportWizardModal')
 
 const MODAL_TITLE_ID = 'sports-hall-report-wizard-title'
@@ -38,6 +40,7 @@ export function SportsHallReportWizardModal({
   const [language, setLanguage] = useState<Language>(defaultLanguage)
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showSignature, setShowSignature] = useState(false)
 
   // Reset state when modal opens
   useEffect(() => {
@@ -45,12 +48,13 @@ export function SportsHallReportWizardModal({
       setLanguage(defaultLanguage)
       setConfirmed(false)
       setIsGenerating(false)
+      setShowSignature(false)
     }
   }, [isOpen, defaultLanguage])
 
   const generateReport = useCallback(
     async (
-      downloadFn: (typeof import('@/shared/utils/pdf-form-filler'))['generateAndDownloadWizardReport'],
+      downloadFn: (typeof import('@/shared/utils/pdf-form-filler'))['generateAndDownloadSportsHallReport'],
       successMessage: string
     ) => {
       if (isGenerating) return
@@ -82,11 +86,57 @@ export function SportsHallReportWizardModal({
     [isGenerating, assignment, language, onClose, t]
   )
 
-  const handleGenerate = useCallback(async () => {
+  // "Generate" now opens the signature canvas instead of generating immediately
+  const handleGenerate = useCallback(() => {
     if (!confirmed) return
-    const { generateAndDownloadWizardReport } = await import('@/shared/utils/pdf-form-filler')
-    await generateReport(generateAndDownloadWizardReport, t('pdf.wizard.reportGenerated'))
-  }, [confirmed, generateReport, t])
+    setShowSignature(true)
+  }, [confirmed])
+
+  const handleSignatureComplete = useCallback(
+    async (signatureDataUrl: string) => {
+      setShowSignature(false)
+      setIsGenerating(true)
+      try {
+        const {
+          extractSportsHallReportData,
+          getLeagueCategoryFromAssignment,
+          generateWizardReportBytes,
+        } = await import('@/shared/utils/pdf-form-filler')
+        const { shareOrPrintPdf } = await import('@/shared/utils/pdf-share')
+
+        const reportData = extractSportsHallReportData(assignment)
+        const leagueCategory = getLeagueCategoryFromAssignment(assignment)
+
+        if (!reportData || !leagueCategory) {
+          log.error('Failed to extract report data for:', assignment.__identity)
+          toast.error(t('pdf.exportError'))
+          return
+        }
+
+        const { pdfBytes, filename } = await generateWizardReportBytes(
+          reportData,
+          leagueCategory,
+          language,
+          signatureDataUrl
+        )
+
+        await shareOrPrintPdf(pdfBytes, filename)
+        log.debug('Generated signed PDF report for:', assignment.__identity)
+        toast.success(t('pdf.wizard.reportGenerated'))
+        onClose()
+      } catch (error) {
+        log.error('PDF generation failed:', error)
+        toast.error(t('pdf.exportError'))
+      } finally {
+        setIsGenerating(false)
+      }
+    },
+    [assignment, language, onClose, t]
+  )
+
+  const handleSignatureCancel = useCallback(() => {
+    setShowSignature(false)
+  }, [])
 
   const handleDownloadPreFilled = useCallback(async () => {
     const { generateAndDownloadSportsHallReport } = await import('@/shared/utils/pdf-form-filler')
@@ -104,122 +154,128 @@ export function SportsHallReportWizardModal({
   )
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      titleId={MODAL_TITLE_ID}
-      size="sm"
-      isLoading={isGenerating}
-    >
-      <ModalHeader
-        title={t('pdf.wizard.title')}
-        titleId={MODAL_TITLE_ID}
-        titleSize="lg"
-        icon={pdfIcon}
-        subtitle={subtitle}
+    <>
+      <Modal
+        isOpen={isOpen}
         onClose={onClose}
-      />
+        titleId={MODAL_TITLE_ID}
+        size="sm"
+        isLoading={isGenerating}
+      >
+        <ModalHeader
+          title={t('pdf.wizard.title')}
+          titleId={MODAL_TITLE_ID}
+          titleSize="lg"
+          icon={pdfIcon}
+          subtitle={subtitle}
+          onClose={onClose}
+        />
 
-      {/* Language selection */}
-      <fieldset className="mb-5">
-        <legend className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2">
-          {t('pdf.selectLanguage')}
-        </legend>
-        <div className="flex gap-2">
-          {LANGUAGES.map(({ code, name }) => (
-            <label
-              key={code}
-              className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm ${
-                language === code
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-text-primary dark:text-text-primary-dark'
-                  : 'border-border-default dark:border-border-default-dark text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
-              }`}
-            >
-              <input
-                type="radio"
-                name="report-lang"
-                value={code}
-                checked={language === code}
-                onChange={() => setLanguage(code)}
-                className="sr-only"
-                disabled={isGenerating}
-              />
-              {name}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      {/* Confirmation */}
-      <div className="mb-5">
-        <div
-          className={`rounded-lg border p-4 transition-colors ${
-            confirmed
-              ? 'border-success-500 bg-success-50 dark:bg-success-900/20'
-              : 'border-border-default dark:border-border-default-dark'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex-1">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-                  {t('pdf.wizard.confirmLabel')}
-                </span>
-                <ToggleSwitch
-                  checked={confirmed}
-                  onChange={() => setConfirmed((prev) => !prev)}
-                  label={t('pdf.wizard.confirmLabel')}
-                  variant="success"
+        {/* Language selection */}
+        <fieldset className="mb-5">
+          <legend className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2">
+            {t('pdf.selectLanguage')}
+          </legend>
+          <div className="flex gap-2">
+            {LANGUAGES.map(({ code, name }) => (
+              <label
+                key={code}
+                className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm ${
+                  language === code
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-text-primary dark:text-text-primary-dark'
+                    : 'border-border-default dark:border-border-default-dark text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="report-lang"
+                  value={code}
+                  checked={language === code}
+                  onChange={() => setLanguage(code)}
+                  className="sr-only"
                   disabled={isGenerating}
                 />
+                {name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        {/* Confirmation */}
+        <div className="mb-5">
+          <div
+            className={`rounded-lg border p-4 transition-colors ${
+              confirmed
+                ? 'border-success-500 bg-success-50 dark:bg-success-900/20'
+                : 'border-border-default dark:border-border-default-dark'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                    {t('pdf.wizard.confirmLabel')}
+                  </span>
+                  <ToggleSwitch
+                    checked={confirmed}
+                    onChange={() => setConfirmed((prev) => !prev)}
+                    label={t('pdf.wizard.confirmLabel')}
+                    variant="success"
+                    disabled={isGenerating}
+                  />
+                </div>
+                {confirmed && (
+                  <ul className="mt-3 space-y-1.5">
+                    <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
+                    <ConfirmItem label={t('pdf.wizard.advertisingDeclared')} />
+                  </ul>
+                )}
               </div>
-              {confirmed && (
-                <ul className="mt-3 space-y-1.5">
-                  <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
-                  <ConfirmItem label={t('pdf.wizard.advertisingDeclared')} />
-                </ul>
-              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Download pre-filled fallback (game data only, no checkpoints) */}
-      <div className="mb-5">
-        <button
-          type="button"
-          onClick={handleDownloadPreFilled}
-          disabled={isGenerating}
-          className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {t('pdf.wizard.downloadPreFilled')}
-        </button>
-      </div>
+        {/* Download pre-filled fallback (game data only, no checkpoints) */}
+        <div className="mb-5">
+          <button
+            type="button"
+            onClick={handleDownloadPreFilled}
+            disabled={isGenerating}
+            className="text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark underline underline-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {t('pdf.wizard.downloadPreFilled')}
+          </button>
+        </div>
 
-      <ModalFooter>
-        <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isGenerating}>
-          {t('common.cancel')}
-        </Button>
-        <Button
-          variant="blue"
-          className="flex-1"
-          onClick={handleGenerate}
-          disabled={!confirmed || isGenerating}
-        >
-          {isGenerating ? (
-            <>
-              <span
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-                aria-hidden="true"
-              />
-              {t('pdf.generating')}
-            </>
-          ) : (
-            t('pdf.wizard.generate')
-          )}
-        </Button>
-      </ModalFooter>
-    </Modal>
+        <ModalFooter>
+          <Button variant="secondary" className="flex-1" onClick={onClose} disabled={isGenerating}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="blue"
+            className="flex-1"
+            onClick={handleGenerate}
+            disabled={!confirmed || isGenerating}
+          >
+            {isGenerating ? (
+              <>
+                <span
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                  aria-hidden="true"
+                />
+                {t('pdf.generating')}
+              </>
+            ) : (
+              t('pdf.wizard.generate')
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {showSignature && (
+        <SignatureCanvas onComplete={handleSignatureComplete} onCancel={handleSignatureCancel} />
+      )}
+    </>
   )
 }
 

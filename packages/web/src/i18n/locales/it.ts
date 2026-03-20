@@ -634,6 +634,14 @@ const it: Translations = {
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto precompilato',
       reportGenerated: 'Rapporto generato con successo',
+
+      signature: {
+        title: 'Firma — 1° arbitro',
+        rotateLandscape: 'Ruota il dispositivo in orizzontale',
+        clear: 'Cancella',
+        done: 'Fatto',
+        drawHint: 'Firma qui',
+      },
     },
   },
   errorBoundary: {

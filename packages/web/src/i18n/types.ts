@@ -494,6 +494,14 @@ export interface Translations {
       generate: string
       downloadPreFilled: string
       reportGenerated: string
+
+      signature: {
+        title: string
+        rotateLandscape: string
+        clear: string
+        done: string
+        drawHint: string
+      }
     }
   }
   errorBoundary: {

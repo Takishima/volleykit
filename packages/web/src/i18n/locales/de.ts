@@ -644,6 +644,14 @@ const de: Translations = {
       generate: 'Rapport erstellen',
       downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',
       reportGenerated: 'Rapport erfolgreich erstellt',
+
+      signature: {
+        title: 'Unterschrift — 1. Schiedsrichter',
+        rotateLandscape: 'Bitte drehen Sie Ihr Gerät ins Querformat',
+        clear: 'Löschen',
+        done: 'Fertig',
+        drawHint: 'Hier unterschreiben',
+      },
     },
   },
   errorBoundary: {

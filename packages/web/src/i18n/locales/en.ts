@@ -621,6 +621,14 @@ const en: Translations = {
       generate: 'Generate Report',
       downloadPreFilled: 'Download pre-filled report instead',
       reportGenerated: 'Report generated successfully',
+
+      signature: {
+        title: 'Signature — First Referee',
+        rotateLandscape: 'Please rotate your device to landscape',
+        clear: 'Clear',
+        done: 'Done',
+        drawHint: 'Sign here',
+      },
     },
   },
   errorBoundary: {
