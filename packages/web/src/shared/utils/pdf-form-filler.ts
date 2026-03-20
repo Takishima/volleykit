@@ -377,7 +377,7 @@ async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const alpha = data[(y * width + x) * RGBA_CHANNELS + ALPHA_CHANNEL_OFFSET]
+      const alpha = data[(y * width + x) * RGBA_CHANNELS + ALPHA_CHANNEL_OFFSET] ?? 0
       if (alpha > 0) {
         if (x < minX) minX = x
         if (x > maxX) maxX = x
