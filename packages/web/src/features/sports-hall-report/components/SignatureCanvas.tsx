@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { createPortal } from 'react-dom'
 import SignaturePad from 'signature_pad'
 
 import { Button } from '@/shared/components/Button'
@@ -137,7 +138,9 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
     e.preventDefault()
   }, [])
 
-  return (
+  // Portal to document.body so the overlay is outside the PullToRefresh DOM tree,
+  // preventing pull-to-refresh gestures from interfering with signature drawing
+  return createPortal(
     <div
       className="fixed inset-0 bg-white flex flex-col touch-none overscroll-none"
       style={{ zIndex: SIGNATURE_OVERLAY_Z_INDEX }}
@@ -196,6 +199,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
