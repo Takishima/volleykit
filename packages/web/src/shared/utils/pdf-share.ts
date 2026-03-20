@@ -29,14 +29,19 @@ export async function emailPdf(
   const file = new File([blob], filename, { type: 'application/pdf' })
 
   // Try Web Share API first (mobile) — attaches the PDF automatically.
-  // iOS ignores `title` for email subjects, so we pass a mailto: URL which
-  // iOS Mail uses to pre-fill recipient + subject when the user picks Mail.
+  // iOS ignores `title` for email subjects, and combining `url` with `files`
+  // drops the attachment. So we pass `files` + `text` only, and include
+  // the recipient address and subject in the body text as guidance.
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      const mailto = buildMailtoUrl(options.subject, options.body)
       await navigator.share({
         files: [file],
-        url: mailto,
+        text: [
+          `To: ${ESCORESHEET_EMAIL}`,
+          `Subject: ${options.subject}`,
+          '',
+          options.body,
+        ].join('\n'),
       })
       return
     } catch (error) {
@@ -53,9 +58,7 @@ export async function emailPdf(
 }
 
 function buildMailtoUrl(subject: string, body: string): string {
-  const params = new URLSearchParams({
-    subject,
-    body,
-  })
-  return `mailto:${ESCORESHEET_EMAIL}?${params.toString()}`
+  // Use encodeURIComponent (not URLSearchParams) because mailto: URLs treat
+  // '+' as a literal plus sign — spaces must be encoded as %20.
+  return `mailto:${ESCORESHEET_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
