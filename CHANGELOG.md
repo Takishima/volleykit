@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.25.0
+
+### Minor Changes
+
+- [#1026](https://github.com/Takishima/volleykit/pull/1026) [`ec1800d`](https://github.com/Takishima/volleykit/commit/ec1800d7cfd6803e53cbb9ed1853180867e9fd63) Thanks [@Takishima](https://github.com/Takishima)! - Added signature capture to sports hall report wizard — first referee signs on a full-screen canvas before the PDF is generated with the embedded signature and shared/printed
+
+- [#1025](https://github.com/Takishima/volleykit/pull/1025) [`4c27ab3`](https://github.com/Takishima/volleykit/commit/4c27ab31216b814c7919b4568c65d8547c3b7479) Thanks [@Takishima](https://github.com/Takishima)! - Add sports hall report wizard for quick happy-path PDF generation with all checkpoints pre-filled as OK
+
+### Patch Changes
+
+- [#1024](https://github.com/Takishima/volleykit/pull/1024) [`0d64a10`](https://github.com/Takishima/volleykit/commit/0d64a10c0a66e192a92ab4df5b6f44dfecb72742) Thanks [@Takishima](https://github.com/Takishima)! - Improve maintainability with targeted separation of concerns
+  - Extract CalendarSettingsScreen logic into useCalendarSettings hook (mobile)
+  - Decompose App.tsx into RouteGuards, QueryErrorHandler, useAuthSync, queryClientConfig (web)
+  - Move compensation-helpers from shared/utils to features/compensations where it belongs (web)
+  - Split worker test file into 11 focused test files covering utils and handlers
+  - Document services-vs-utils boundary in CODE_PATTERNS.md
+
+- [#1018](https://github.com/Takishima/volleykit/pull/1018) [`8f9b22f`](https://github.com/Takishima/volleykit/commit/8f9b22f34901353021f6aa5c97dcd75d0e0af2ff) Thanks [@Takishima](https://github.com/Takishima)! - Improve code structure and separation of concerns
+  - Promote useActiveAssociation hook to shared/hooks (eliminates cross-feature coupling)
+  - Extract compensation-helpers to shared/utils
+  - Extract BottomNavigation and HeaderDropdown from AppShell
+  - Add barrel exports to assignments feature for conflict detection utils
+  - Add ESLint rule preventing shared/ from importing feature internals
+  - Split worker/utils.ts into 9 focused modules
+
+- [#1026](https://github.com/Takishima/volleykit/pull/1026) [`ec1800d`](https://github.com/Takishima/volleykit/commit/ec1800d7cfd6803e53cbb9ed1853180867e9fd63) Thanks [@Takishima](https://github.com/Takishima)! - Crop signature to bounding box before embedding in PDF, removing transparent whitespace around strokes
+
+- [#1029](https://github.com/Takishima/volleykit/pull/1029) [`724f900`](https://github.com/Takishima/volleykit/commit/724f9004f3fa5479e2650385fb74fe8a5a70e8b9) Thanks [@Takishima](https://github.com/Takishima)! - Fixed PWA signature canvas being dismissed after drawing one stroke in landscape mode by stopping touch event propagation from the portaled overlay to PullToRefresh
+
+- [#1028](https://github.com/Takishima/volleykit/pull/1028) [`3c4655d`](https://github.com/Takishima/volleykit/commit/3c4655d61320c3cb7d5be3901784be1b428627be) Thanks [@Takishima](https://github.com/Takishima)! - Fix pull-to-refresh gesture triggering during signature drawing in PWA landscape mode
+
+- [#1027](https://github.com/Takishima/volleykit/pull/1027) [`37a1ebb`](https://github.com/Takishima/volleykit/commit/37a1ebbe6311a1f8a2d1c77645b4b8fb09799d6b) Thanks [@Takishima](https://github.com/Takishima)! - Prevent signature overlay from being swiped away on touch devices
+
+- [#1023](https://github.com/Takishima/volleykit/pull/1023) [`d9b8fbd`](https://github.com/Takishima/volleykit/commit/d9b8fbdf0606f761e3850b3bd65c66079da29696) Thanks [@Takishima](https://github.com/Takishima)! - Migrate web-app and worker into packages directory for consistent monorepo structure
+
 ## 1.24.0
 
 ### Minor Changes

@@ -1,5 +1,16 @@
 # @volleykit/mobile
 
+## 1.25.0
+
+### Patch Changes
+
+- [#1024](https://github.com/Takishima/volleykit/pull/1024) [`0d64a10`](https://github.com/Takishima/volleykit/commit/0d64a10c0a66e192a92ab4df5b6f44dfecb72742) Thanks [@Takishima](https://github.com/Takishima)! - Improve maintainability with targeted separation of concerns
+  - Extract CalendarSettingsScreen logic into useCalendarSettings hook (mobile)
+  - Decompose App.tsx into RouteGuards, QueryErrorHandler, useAuthSync, queryClientConfig (web)
+  - Move compensation-helpers from shared/utils to features/compensations where it belongs (web)
+  - Split worker test file into 11 focused test files covering utils and handlers
+  - Document services-vs-utils boundary in CODE_PATTERNS.md
+
 ## 1.21.3
 
 ### Patch Changes
