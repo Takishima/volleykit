@@ -44,10 +44,7 @@ describe('Integration: proxy handler', () => {
     }
   }
 
-  function createRequest(
-    path: string,
-    options: RequestInit & { origin?: string } = {}
-  ) {
+  function createRequest(path: string, options: RequestInit & { origin?: string } = {}) {
     const { origin = 'https://example.com', ...init } = options
     const headers = new Headers(init.headers)
     if (origin) headers.set('Origin', origin)
@@ -79,10 +76,7 @@ describe('Integration: proxy handler', () => {
       const { default: worker } = await import('../index')
       const mockEnv = createMockEnv()
 
-      const response = await worker.fetch(
-        createRequest('/not-allowed-path'),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest('/not-allowed-path'), mockEnv)
 
       expect(response.status).toBe(404)
       expect(await response.text()).toBe('Not Found: Path not proxied')
@@ -92,14 +86,9 @@ describe('Integration: proxy handler', () => {
       const { default: worker } = await import('../index')
       const mockEnv = createMockEnv()
 
-      const response = await worker.fetch(
-        createRequest('/not-allowed-path'),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest('/not-allowed-path'), mockEnv)
 
-      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
-        'https://example.com'
-      )
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
       expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff')
     })
   })
@@ -142,9 +131,7 @@ describe('Integration: proxy handler', () => {
 
     it('skips lockout check when CF-Connecting-IP is absent', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv({
@@ -177,54 +164,35 @@ describe('Integration: proxy handler', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH, { method: 'GET' }),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH, { method: 'GET' }), mockEnv)
 
       expect(response.status).toBe(200)
       expect(mockFetch).toHaveBeenCalledTimes(1)
 
       const fetchedRequest = mockFetch.mock.calls[0][0] as Request
       expect(fetchedRequest.url).toContain('volleymanager.volleyball.ch')
-      expect(fetchedRequest.headers.get('Host')).toBe(
-        'volleymanager.volleyball.ch'
-      )
+      expect(fetchedRequest.headers.get('Host')).toBe('volleymanager.volleyball.ch')
     })
 
     it('adds CORS headers to response', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
-      expect(response.headers.get('Access-Control-Allow-Origin')).toBe(
-        'https://example.com'
-      )
-      expect(response.headers.get('Access-Control-Allow-Credentials')).toBe(
-        'true'
-      )
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
+      expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true')
     })
 
     it('adds security headers to response', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff')
       expect(response.headers.get('X-Frame-Options')).toBe('SAMEORIGIN')
@@ -232,9 +200,7 @@ describe('Integration: proxy handler', () => {
 
     it('sets redirect to manual', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
@@ -246,9 +212,7 @@ describe('Integration: proxy handler', () => {
 
     it('rewrites Origin and Referer to target host', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
@@ -261,9 +225,7 @@ describe('Integration: proxy handler', () => {
       await worker.fetch(request, mockEnv)
 
       const fetchedRequest = mockFetch.mock.calls[0][0] as Request
-      expect(fetchedRequest.headers.get('Origin')).toBe(
-        'https://volleymanager.volleyball.ch'
-      )
+      expect(fetchedRequest.headers.get('Origin')).toBe('https://volleymanager.volleyball.ch')
       const referer = fetchedRequest.headers.get('Referer')
       expect(referer).toContain('volleymanager.volleyball.ch')
       expect(referer).not.toContain('debug')
@@ -271,9 +233,7 @@ describe('Integration: proxy handler', () => {
 
     it('sets VolleyKit user agent', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
@@ -299,10 +259,7 @@ describe('Integration: proxy handler', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       expect(response.headers.get('Cache-Control')).toContain('no-store')
       expect(response.headers.get('ETag')).toBeNull()
@@ -310,16 +267,11 @@ describe('Integration: proxy handler', () => {
 
     it('adds proxy timing header', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       const timestamp = response.headers.get('X-Proxy-Timestamp')
       expect(timestamp).toBeTruthy()
@@ -330,9 +282,7 @@ describe('Integration: proxy handler', () => {
   describe('iOS Safari workaround', () => {
     it('rewrites /login POST with auth credentials to auth endpoint', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
@@ -352,9 +302,7 @@ describe('Integration: proxy handler', () => {
 
     it('converts GET /login with auth credentials to POST', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
@@ -364,9 +312,7 @@ describe('Integration: proxy handler', () => {
 
       const fetchedRequest = mockFetch.mock.calls[0][0] as Request
       expect(fetchedRequest.method).toBe('POST')
-      expect(fetchedRequest.headers.get('Content-Type')).toBe(
-        'application/x-www-form-urlencoded'
-      )
+      expect(fetchedRequest.headers.get('Content-Type')).toBe('application/x-www-form-urlencoded')
     })
   })
 
@@ -384,10 +330,7 @@ describe('Integration: proxy handler', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       expect(response.status).toBe(302)
       const location = response.headers.get('Location')
@@ -438,10 +381,7 @@ describe('Integration: proxy handler', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       const setCookie = response.headers.get('Set-Cookie')
       expect(setCookie).toBeTruthy()
@@ -454,9 +394,7 @@ describe('Integration: proxy handler', () => {
   describe('session token relay', () => {
     it('merges base64-encoded X-Session-Token into Cookie header', async () => {
       const { default: worker } = await import('../index')
-      const mockFetch = vi.fn().mockResolvedValue(
-        createUpstreamResponse('OK', { status: 200 })
-      )
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
@@ -484,10 +422,7 @@ describe('Integration: proxy handler', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const mockEnv = createMockEnv()
-      const response = await worker.fetch(
-        createRequest(ALLOWED_PATH),
-        mockEnv
-      )
+      const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       expect(response.status).toBe(502)
       expect(await response.text()).toBe('Proxy Error')
