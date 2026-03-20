@@ -501,6 +501,95 @@ export interface Translations {
         done: string
         drawHint: string
       }
+
+      nonConformant: {
+        reportIssue: string
+        title: string
+        selectSections: string
+        selectSubItems: string
+        describeIssues: string
+        commentRequired: string
+        commentPlaceholder: string
+        issuesFoundIn: string
+        previewTitle: string
+        confirmAndSign: string
+        signaturesTitle: string
+        signaturesProgress: string
+        signAs: string
+        coachName: string
+        coachNamePlaceholder: string
+        addCoach: string
+        tapToSign: string
+        downloadFinal: string
+        next: string
+        back: string
+        stepSections: string
+        stepComment: string
+        stepPreview: string
+        stepSign: string
+      }
+
+      sections: {
+        fieldAndLines: string
+        warmUpArea: string
+        netEquipment: string
+        refereeChair: string
+        manometer: string
+        measuringRod: string
+        lineFlags: string
+        buzzer: string
+        eScoresheet: string
+        tablets: string
+        scoreboard: string
+        balls: string
+        ballRetrievers: string
+        quickMoppers: string
+        hallSpeaker: string
+        dressHome: string
+        dressAway: string
+        miscellaneous: string
+        numberPlates: string
+      }
+
+      subItems: {
+        boundaryLines: string
+        attackLine: string
+        freeZone: string
+        warmUpArea: string
+        antennas: string
+        netTopBand: string
+        reserveNet: string
+        postsNoWire: string
+        postsPadding: string
+        tabletMount: string
+        netHeight: string
+        refereeChair: string
+        manometer: string
+        measuringRod: string
+        lineFlags: string
+        buzzer: string
+        eScorerOnTime: string
+        reserveLaptop: string
+        usbStick: string
+        reserveMatchSheet: string
+        refereeTablets: string
+        benchTablets: string
+        tabletCharging: string
+        scoreboard: string
+        scoreboardFunction: string
+        ballCount: string
+        ballCondition: string
+        ballRetrievers: string
+        quickMoppers: string
+        hallSpeaker: string
+        dressColor: string
+        advertisingOnUniform: string
+        liberoDress: string
+        miscItem1: string
+        miscItem2: string
+        numberPlatesHome: string
+        numberPlatesAway: string
+      }
     }
   }
   errorBoundary: {
