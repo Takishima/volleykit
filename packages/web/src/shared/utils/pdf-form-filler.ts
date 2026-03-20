@@ -347,8 +347,8 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
  * Embed a PNG signature image into a PDF document at the first referee's
  * signature position.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function embedSignature(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pdfDoc: any,
   signatureDataUrl: string,
   leagueCategory: LeagueCategory
