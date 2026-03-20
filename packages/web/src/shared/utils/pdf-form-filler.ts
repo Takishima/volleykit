@@ -351,10 +351,7 @@ export async function fillSportsHallReportWizard(
   try {
     form.getCheckBox(wizardMapping.allPointsInOrderCheckbox).check()
   } catch (error) {
-    logger.warn(
-      `Could not check "${wizardMapping.allPointsInOrderCheckbox}":`,
-      error
-    )
+    logger.warn(`Could not check "${wizardMapping.allPointsInOrderCheckbox}":`, error)
   }
 
   return pdfDoc.save()
