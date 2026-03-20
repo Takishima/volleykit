@@ -629,8 +629,7 @@ const it: Translations = {
       title: 'Rapporto sala sportiva',
       confirmLabel: 'Confermo che tutto è in ordine',
       allCheckpointsOk: 'Tutti i punti in ordine',
-      advertisingHomeTeam: 'Pubblicità sulla tenuta — Squadra di casa',
-      advertisingAwayTeam: 'Pubblicità sulla tenuta — Squadra ospite',
+      advertisingTeam: 'Pubblicità sulla tenuta — {team}',
 
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto precompilato',

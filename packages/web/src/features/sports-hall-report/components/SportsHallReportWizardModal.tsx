@@ -59,7 +59,7 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const [language, setLanguage] = useState<Language>(defaultLanguage)
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -240,8 +240,9 @@ export function SportsHallReportWizardModal({
                     </ul>
                     <div className="space-y-2">
                       <JerseyAdToggle
-                        label={t('pdf.wizard.advertisingHomeTeam')}
-                        teamName={homeTeam}
+                        label={tInterpolate('pdf.wizard.advertisingTeam', {
+                          team: homeTeam || '–',
+                        })}
                         checked={jerseyAdvertising.homeTeam}
                         onChange={() =>
                           setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
@@ -249,8 +250,9 @@ export function SportsHallReportWizardModal({
                         disabled={isGenerating}
                       />
                       <JerseyAdToggle
-                        label={t('pdf.wizard.advertisingAwayTeam')}
-                        teamName={awayTeam}
+                        label={tInterpolate('pdf.wizard.advertisingTeam', {
+                          team: awayTeam || '–',
+                        })}
                         checked={jerseyAdvertising.awayTeam}
                         onChange={() =>
                           setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
@@ -320,13 +322,11 @@ function ConfirmItem({ label }: { label: string }) {
 
 function JerseyAdToggle({
   label,
-  teamName,
   checked,
   onChange,
   disabled,
 }: {
   label: string
-  teamName: string
   checked: boolean
   onChange: () => void
   disabled: boolean
@@ -340,18 +340,20 @@ function JerseyAdToggle({
         />
         <span
           className={`text-sm truncate ${checked ? 'text-success-700 dark:text-success-400' : 'text-warning-600 dark:text-warning-400'}`}
-          title={teamName ? `${label} (${teamName})` : label}
+          title={label}
         >
           {label}
         </span>
       </div>
-      <ToggleSwitch
-        checked={checked}
-        onChange={onChange}
-        label={label}
-        variant="success"
-        disabled={disabled}
-      />
+      <div className="flex-shrink-0">
+        <ToggleSwitch
+          checked={checked}
+          onChange={onChange}
+          label={label}
+          variant="success"
+          disabled={disabled}
+        />
+      </div>
     </div>
   )
 }

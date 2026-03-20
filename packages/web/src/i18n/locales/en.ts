@@ -616,8 +616,7 @@ const en: Translations = {
       title: 'Sports Hall Report',
       confirmLabel: 'I confirm everything is in order',
       allCheckpointsOk: 'All points in order',
-      advertisingHomeTeam: 'Advertising on uniform — Home team',
-      advertisingAwayTeam: 'Advertising on uniform — Away team',
+      advertisingTeam: 'Uniform advertising — {team}',
 
       generate: 'Generate Report',
       downloadPreFilled: 'Download pre-filled report instead',
