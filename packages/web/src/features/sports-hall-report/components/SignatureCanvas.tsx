@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 
+import { createPortal } from 'react-dom'
 import SignaturePad from 'signature_pad'
 
 import { Button } from '@/shared/components/Button'
