@@ -118,22 +118,33 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
     onComplete(dataUrl)
   }, [onComplete])
 
-  // Lock body scroll while overlay is open
+  // Lock body scroll and prevent swipe-to-navigate while overlay is open
   useEffect(() => {
     const prev = document.body.style.overflow
+    const prevOverscroll = document.body.style.overscrollBehavior
     document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
     return () => {
       document.body.style.overflow = prev
+      document.body.style.overscrollBehavior = prevOverscroll
     }
+  }, [])
+
+  // Prevent swipe-to-navigate gestures on the overlay container
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Allow touch events on the canvas (signature_pad handles them)
+    if (e.target instanceof HTMLCanvasElement) return
+    e.preventDefault()
   }, [])
 
   return (
     <div
-      className="fixed inset-0 bg-white flex flex-col"
+      className="fixed inset-0 bg-white flex flex-col touch-none overscroll-none"
       style={{ zIndex: SIGNATURE_OVERLAY_Z_INDEX }}
       role="dialog"
       aria-modal="true"
       aria-label={t('pdf.wizard.signature.title')}
+      onTouchMove={handleTouchMove}
     >
       {/* Header toolbar */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50">
