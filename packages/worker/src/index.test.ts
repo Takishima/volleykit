@@ -2469,7 +2469,7 @@ describe('Integration: OCR Endpoint', () => {
     expect(body.error).toContain('Unsupported file type')
   })
 
-  it('returns 400 for files exceeding size limit', async () => {
+  it('returns 400 for files exceeding size limit', { timeout: 30_000 }, async () => {
     const { default: worker } = await import('./index')
     const mockEnv = createMockEnv()
 

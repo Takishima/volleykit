@@ -575,6 +575,25 @@ Extract a hook when a component or hook exceeds ~300 LOC and mixes concerns:
 
 The extracted hook should be in the same `hooks/` directory with a descriptive name.
 
+## Services vs Utils
+
+Code in `shared/services/` and `shared/utils/` (both web and mobile) follows this distinction:
+
+**Services** (`services/`): Stateful modules that interact with browser/platform APIs (notifications, storage, network). They manage lifecycle, have side effects, and often expose singleton instances or factory functions. Examples: `unified-notification-service.ts`, `ojp-client.ts`, `badge/`, `offline/`.
+
+**Utils** (`utils/`): Pure or near-pure functions that transform data. No side effects, no platform API calls, easily unit-testable with no mocking. Examples: `date-helpers.ts`, `distance.ts`, `format-travel-time.ts`.
+
+> **Rule of thumb**: If it needs `vi.stubGlobal` or platform mocking to test, it belongs in `services/`. If it can be tested with plain input/output assertions, it belongs in `utils/`.
+
+## Feature-Level API Layer
+
+Features should use shared API hooks directly via `@volleykit/shared/hooks`. Create a feature-level `api/` directory **only** when the feature requires custom API client logic beyond what the shared layer provides:
+
+- **Has `api/`**: `assignments` (calendar API client, iCal parser), `validation` (multi-step API orchestration)
+- **No `api/`**: `compensations`, `exchanges`, `settings` (use shared hooks directly)
+
+This is intentional — not every feature needs its own API layer.
+
 ## E2E Testing Patterns
 
 ### Page Object Model

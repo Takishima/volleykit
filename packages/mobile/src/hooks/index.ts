@@ -3,5 +3,6 @@
  */
 
 export * from './useBiometricAuth'
-export * from './useSessionMonitor'
+export * from './useCalendarSettings'
 export * from './useCalendarSync'
+export * from './useSessionMonitor'

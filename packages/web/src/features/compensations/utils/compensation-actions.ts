@@ -2,14 +2,15 @@ import { createElement } from 'react'
 
 import type { CompensationRecord } from '@/api/client'
 import { Wallet, FileText } from '@/shared/components/icons'
+import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
+
 import {
   type ConvocationCompensationWithLockFlags,
   isCompensationLocked,
-} from '@/shared/utils/compensation-helpers'
-import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
+} from './compensation-helpers'
 
-// Re-export from shared for backward compatibility
-export { isAssignmentCompensationEditable } from '@/shared/utils/compensation-helpers'
+// Re-export for cross-feature access
+export { isAssignmentCompensationEditable } from './compensation-helpers'
 
 /**
  * Checks if a compensation record can be edited.
