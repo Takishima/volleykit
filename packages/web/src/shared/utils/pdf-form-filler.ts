@@ -325,8 +325,8 @@ interface SignaturePosition {
 }
 
 const SIGNATURE_POSITIONS: Record<LeagueCategory, SignaturePosition> = {
-  NLA: { x: 340, y: 105, width: 130, height: 22 },
-  NLB: { x: 340, y: 158, width: 130, height: 22 },
+  NLA: { x: 340, y: 95, width: 130, height: 30 },
+  NLB: { x: 340, y: 148, width: 130, height: 30 },
 }
 
 /**
@@ -424,7 +424,7 @@ async function embedSignature(
   const pos = SIGNATURE_POSITIONS[leagueCategory]
 
   // Scale the signature to fit within the field with padding
-  const padding = 6
+  const padding = 2
   const maxWidth = pos.width - padding * 2
   const maxHeight = pos.height - padding * 2
   const aspectRatio = signatureImage.width / signatureImage.height
