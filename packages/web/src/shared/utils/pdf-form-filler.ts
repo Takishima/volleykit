@@ -343,6 +343,67 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
   return bytes
 }
 
+const SIGNATURE_CROP_PADDING = 10
+
+/**
+ * Crop a signature PNG data URL to its bounding box, removing transparent
+ * whitespace around the actual strokes. Returns the cropped data URL.
+ */
+async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
+  const img = new Image()
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve()
+    img.onerror = () => reject(new Error('Failed to load signature image'))
+    img.src = dataUrl
+  })
+
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return dataUrl
+
+  ctx.drawImage(img, 0, 0)
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const { data, width, height } = imageData
+
+  // Find bounding box of non-transparent pixels
+  let minX = width
+  let minY = height
+  let maxX = 0
+  let maxY = 0
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const alpha = data[(y * width + x) * 4 + 3]
+      if (alpha > 0) {
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
+    }
+  }
+
+  // No visible pixels found — return original
+  if (maxX < minX || maxY < minY) return dataUrl
+
+  // Add padding, clamped to canvas bounds
+  const cropX = Math.max(0, minX - SIGNATURE_CROP_PADDING)
+  const cropY = Math.max(0, minY - SIGNATURE_CROP_PADDING)
+  const cropW = Math.min(width - cropX, maxX - minX + 1 + SIGNATURE_CROP_PADDING * 2)
+  const cropH = Math.min(height - cropY, maxY - minY + 1 + SIGNATURE_CROP_PADDING * 2)
+
+  const croppedCanvas = document.createElement('canvas')
+  croppedCanvas.width = cropW
+  croppedCanvas.height = cropH
+  const croppedCtx = croppedCanvas.getContext('2d')
+  if (!croppedCtx) return dataUrl
+
+  croppedCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+  return croppedCanvas.toDataURL('image/png')
+}
+
 /**
  * Embed a PNG signature image into a PDF document at the first referee's
  * signature position.
@@ -353,7 +414,8 @@ async function embedSignature(
   signatureDataUrl: string,
   leagueCategory: LeagueCategory
 ): Promise<void> {
-  const signatureBytes = dataUrlToBytes(signatureDataUrl)
+  const croppedDataUrl = await cropSignatureDataUrl(signatureDataUrl)
+  const signatureBytes = dataUrlToBytes(croppedDataUrl)
   const signatureImage = await pdfDoc.embedPng(signatureBytes)
 
   const page = pdfDoc.getPage(0)
