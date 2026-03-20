@@ -314,15 +314,153 @@ function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMappi
 }
 
 /**
+ * Signature placement coordinates per league category.
+ * Positioned to the right of the referee name text fields at the bottom of the page.
+ */
+interface SignaturePosition {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+const SIGNATURE_POSITIONS: Record<LeagueCategory, SignaturePosition> = {
+  NLA: { x: 340, y: 104, width: 130, height: 24 },
+  NLB: { x: 340, y: 157, width: 130, height: 24 },
+}
+
+/**
+ * Decode a data URL (e.g. from canvas.toDataURL) to raw bytes.
+ */
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(',')[1]
+  if (!base64) throw new Error('Invalid data URL')
+  const binaryString = atob(base64)
+  const bytes = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i)
+  }
+  return bytes
+}
+
+const SIGNATURE_CROP_PADDING = 10
+const RGBA_CHANNELS = 4
+const ALPHA_CHANNEL_OFFSET = 3
+
+/**
+ * Crop a signature PNG data URL to its bounding box, removing transparent
+ * whitespace around the actual strokes. Returns the cropped data URL.
+ */
+async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
+  const img = new Image()
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve()
+    img.onerror = () => reject(new Error('Failed to load signature image'))
+    img.src = dataUrl
+  })
+
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return dataUrl
+
+  ctx.drawImage(img, 0, 0)
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const { data, width, height } = imageData
+
+  // Find bounding box of non-transparent pixels
+  let minX = width
+  let minY = height
+  let maxX = 0
+  let maxY = 0
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const alpha = data[(y * width + x) * RGBA_CHANNELS + ALPHA_CHANNEL_OFFSET] ?? 0
+      if (alpha > 0) {
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+        if (y < minY) minY = y
+        if (y > maxY) maxY = y
+      }
+    }
+  }
+
+  // No visible pixels found — return original
+  if (maxX < minX || maxY < minY) return dataUrl
+
+  // Add padding, clamped to canvas bounds
+  const cropX = Math.max(0, minX - SIGNATURE_CROP_PADDING)
+  const cropY = Math.max(0, minY - SIGNATURE_CROP_PADDING)
+  const cropW = Math.min(width - cropX, maxX - minX + 1 + SIGNATURE_CROP_PADDING * 2)
+  const cropH = Math.min(height - cropY, maxY - minY + 1 + SIGNATURE_CROP_PADDING * 2)
+
+  const croppedCanvas = document.createElement('canvas')
+  croppedCanvas.width = cropW
+  croppedCanvas.height = cropH
+  const croppedCtx = croppedCanvas.getContext('2d')
+  if (!croppedCtx) return dataUrl
+
+  croppedCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
+  return croppedCanvas.toDataURL('image/png')
+}
+
+/**
+ * Embed a PNG signature image into a PDF document at the first referee's
+ * signature position.
+ */
+async function embedSignature(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pdfDoc: any,
+  signatureDataUrl: string,
+  leagueCategory: LeagueCategory
+): Promise<void> {
+  const croppedDataUrl = await cropSignatureDataUrl(signatureDataUrl)
+  const signatureBytes = dataUrlToBytes(croppedDataUrl)
+  const signatureImage = await pdfDoc.embedPng(signatureBytes)
+
+  const page = pdfDoc.getPage(0)
+  const pos = SIGNATURE_POSITIONS[leagueCategory]
+
+  // Scale the signature to fit within the field with padding
+  const padding = 3
+  const maxWidth = pos.width - padding * 2
+  const maxHeight = pos.height - padding * 2
+  const aspectRatio = signatureImage.width / signatureImage.height
+  let drawWidth = maxWidth
+  let drawHeight = drawWidth / aspectRatio
+  if (drawHeight > maxHeight) {
+    drawHeight = maxHeight
+    drawWidth = drawHeight * aspectRatio
+  }
+
+  // Center the signature within the field
+  const xOffset = pos.x + padding + (maxWidth - drawWidth) / 2
+  const yOffset = pos.y + padding + (maxHeight - drawHeight) / 2
+
+  page.drawImage(signatureImage, {
+    x: xOffset,
+    y: yOffset,
+    width: drawWidth,
+    height: drawHeight,
+  })
+}
+
+/**
  * Fills the sports hall report with "all points in order" checked and
  * advertising declared as "Ja" for both teams. Individual checklist items
  * are left unchecked — the referee only needs to fill these if something
  * is not in order. This is the "happy path" wizard flow.
+ *
+ * When a signatureDataUrl is provided, the first referee's signature is
+ * embedded at the designated position on the PDF.
  */
 export async function fillSportsHallReportWizard(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
-  language: Language
+  language: Language,
+  signatureDataUrl?: string
 ): Promise<Uint8Array> {
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
@@ -346,24 +484,40 @@ export async function fillSportsHallReportWizard(
     }
   }
 
+  // Embed first referee signature if provided
+  if (signatureDataUrl) {
+    try {
+      await embedSignature(pdfDoc, signatureDataUrl, leagueCategory)
+    } catch (error) {
+      logger.warn('Could not embed signature in PDF:', error)
+    }
+  }
+
   return pdfDoc.save()
 }
 
 /**
- * Generates and downloads a sports hall report with all checkpoints marked as OK.
- * Used by the wizard modal for the "happy path" flow.
+ * Generates a sports hall report with all checkpoints marked as OK and
+ * the first referee's signature embedded. Returns the PDF bytes and filename
+ * for use with the Web Share API or print dialog.
  */
-export async function generateAndDownloadWizardReport(
+export async function generateWizardReportBytes(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
-  language: Language
-): Promise<void> {
-  const pdfBytes = await fillSportsHallReportWizard(data, leagueCategory, language)
+  language: Language,
+  signatureDataUrl: string
+): Promise<{ pdfBytes: Uint8Array; filename: string }> {
+  const pdfBytes = await fillSportsHallReportWizard(
+    data,
+    leagueCategory,
+    language,
+    signatureDataUrl
+  )
   const filename = buildReportFilename(
     leagueCategory,
     language,
     data.startingDateTime,
     data.gameNumber
   )
-  downloadPdf(pdfBytes, filename)
+  return { pdfBytes, filename }
 }

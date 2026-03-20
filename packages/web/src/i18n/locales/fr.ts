@@ -639,6 +639,14 @@ const fr: Translations = {
       generate: 'Générer le rapport',
       downloadPreFilled: 'Télécharger le rapport pré-rempli',
       reportGenerated: 'Rapport généré avec succès',
+
+      signature: {
+        title: 'Signature — 1er arbitre',
+        rotateLandscape: 'Veuillez tourner votre appareil en mode paysage',
+        clear: 'Effacer',
+        done: 'Terminé',
+        drawHint: 'Signez ici',
+      },
     },
   },
   errorBoundary: {
