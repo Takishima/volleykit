@@ -6,6 +6,9 @@ import { Button } from '@/shared/components/Button'
 import { RotateCw, Trash2, Check, X } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 
+/** Z-index above the modal overlay (50) so the signature canvas is on top */
+const SIGNATURE_OVERLAY_Z_INDEX = 60
+
 interface SignatureCanvasProps {
   onComplete: (dataUrl: string) => void
   onCancel: () => void
@@ -27,13 +30,29 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
     () => window.matchMedia('(orientation: portrait)').matches
   )
 
-  // Track orientation changes
+  // Track orientation changes and enable/disable the pad accordingly
   useEffect(() => {
     const mql = window.matchMedia('(orientation: portrait)')
-    const handler = (e: MediaQueryListEvent) => setIsPortrait(e.matches)
+    const handler = (e: MediaQueryListEvent) => {
+      setIsPortrait(e.matches)
+      if (e.matches) {
+        padRef.current?.off()
+      } else {
+        padRef.current?.on()
+      }
+    }
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
   }, [])
+
+  // Dismiss on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [onCancel])
 
   // Initialize SignaturePad and handle resize
   useEffect(() => {
@@ -76,6 +95,11 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
     padRef.current = pad
     resizeCanvas()
 
+    // Disable drawing when starting in portrait
+    if (window.matchMedia('(orientation: portrait)').matches) {
+      pad.off()
+    }
+
     window.addEventListener('resize', resizeCanvas)
     return () => {
       window.removeEventListener('resize', resizeCanvas)
@@ -106,7 +130,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
   return (
     <div
       className="fixed inset-0 bg-white flex flex-col"
-      style={{ zIndex: 60 }}
+      style={{ zIndex: SIGNATURE_OVERLAY_Z_INDEX }}
       role="dialog"
       aria-modal="true"
       aria-label={t('pdf.wizard.signature.title')}
@@ -141,7 +165,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
         />
 
         {/* Center hint text (visible only when canvas is empty) */}
-        {isEmpty && (
+        {isEmpty && !isPortrait && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <p className="text-lg text-gray-300 select-none">
               {t('pdf.wizard.signature.drawHint')}
@@ -149,9 +173,9 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
           </div>
         )}
 
-        {/* Portrait orientation hint */}
+        {/* Portrait orientation hint — blocks drawing when device is in portrait */}
         {isPortrait && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm pointer-events-none">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-3 text-gray-500">
               <RotateCw className="w-10 h-10 animate-pulse" aria-hidden="true" />
               <p className="text-sm font-medium text-center px-8">
