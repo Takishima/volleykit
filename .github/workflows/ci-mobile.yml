@@ -50,7 +50,7 @@ jobs:
           key: ${{ steps.api-cache-key.outputs.key }}
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter volleykit-web exec openapi-typescript ../docs/api/volleymanager-openapi.yaml -o ../packages/shared/src/api/schema.ts
+        run: pnpm --filter volleykit-web exec openapi-typescript ../../docs/api/volleymanager-openapi.yaml -o ../shared/src/api/schema.ts
   typecheck:
     name: TypeScript Check
     runs-on: ubuntu-latest
