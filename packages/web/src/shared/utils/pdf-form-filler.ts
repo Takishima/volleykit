@@ -423,18 +423,25 @@ async function embedSignature(
   const page = pdfDoc.getPage(0)
   const pos = SIGNATURE_POSITIONS[leagueCategory]
 
-  // Scale the signature to fit the designated area while maintaining aspect ratio
+  // Scale the signature to fit within the field with padding
+  const padding = 6
+  const maxWidth = pos.width - padding * 2
+  const maxHeight = pos.height - padding * 2
   const aspectRatio = signatureImage.width / signatureImage.height
-  let drawWidth = pos.width
+  let drawWidth = maxWidth
   let drawHeight = drawWidth / aspectRatio
-  if (drawHeight > pos.height) {
-    drawHeight = pos.height
+  if (drawHeight > maxHeight) {
+    drawHeight = maxHeight
     drawWidth = drawHeight * aspectRatio
   }
 
+  // Center the signature within the field
+  const xOffset = pos.x + padding + (maxWidth - drawWidth) / 2
+  const yOffset = pos.y + padding + (maxHeight - drawHeight) / 2
+
   page.drawImage(signatureImage, {
-    x: pos.x,
-    y: pos.y,
+    x: xOffset,
+    y: yOffset,
     width: drawWidth,
     height: drawHeight,
   })
