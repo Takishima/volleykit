@@ -28,13 +28,15 @@ export async function emailPdf(
   const blob = new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })
   const file = new File([blob], filename, { type: 'application/pdf' })
 
-  // Try Web Share API first (mobile) — attaches the PDF automatically
+  // Try Web Share API first (mobile) — attaches the PDF automatically.
+  // iOS ignores `title` for email subjects, so we pass a mailto: URL which
+  // iOS Mail uses to pre-fill recipient + subject when the user picks Mail.
   if (navigator.canShare?.({ files: [file] })) {
     try {
+      const mailto = buildMailtoUrl(options.subject, options.body)
       await navigator.share({
         files: [file],
-        title: options.subject,
-        text: `${ESCORESHEET_EMAIL}\n\n${options.body}`,
+        url: mailto,
       })
       return
     } catch (error) {
