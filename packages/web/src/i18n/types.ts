@@ -490,6 +490,8 @@ export interface Translations {
       confirmLabel: string
       allCheckpointsOk: string
       advertisingDeclared: string
+      advertisingHomeTeam: string
+      advertisingAwayTeam: string
 
       generate: string
       downloadPreFilled: string

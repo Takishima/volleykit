@@ -630,6 +630,8 @@ const it: Translations = {
       confirmLabel: 'Confermo che tutto è in ordine',
       allCheckpointsOk: 'Tutti i punti in ordine',
       advertisingDeclared: 'Pubblicità sulla tenuta dichiarata per entrambe le squadre',
+      advertisingHomeTeam: 'Pubblicità sulla tenuta — Squadra di casa',
+      advertisingAwayTeam: 'Pubblicità sulla tenuta — Squadra ospite',
 
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto precompilato',

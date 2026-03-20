@@ -309,6 +309,14 @@ const NLB_WIZARD_FIELDS: WizardFieldMapping = {
 /** OK option value used by all radio groups in the PDF templates */
 const RADIO_OK_OPTION = 'Auswahl3'
 
+/** Not-OK option value used by advertising radio groups in the PDF templates */
+const RADIO_NOT_OK_OPTION = 'Auswahl4'
+
+export interface JerseyAdvertisingOptions {
+  homeTeam: boolean
+  awayTeam: boolean
+}
+
 function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMapping {
   return leagueCategory === 'NLA' ? NLA_WIZARD_FIELDS : NLB_WIZARD_FIELDS
 }
@@ -460,7 +468,8 @@ export async function fillSportsHallReportWizard(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
   language: Language,
-  signatureDataUrl?: string
+  signatureDataUrl?: string,
+  jerseyAdvertising: JerseyAdvertisingOptions = { homeTeam: true, awayTeam: true }
 ): Promise<Uint8Array> {
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
@@ -475,12 +484,15 @@ export async function fillSportsHallReportWizard(
     logger.warn(`Could not check "${wizardMapping.allPointsInOrderCheckbox}":`, error)
   }
 
-  // Set advertising "Werbung auf Spielerkleidung" to Ja for both teams
-  for (const adField of wizardMapping.advertisingRadioGroups) {
+  // Set advertising "Werbung auf Spielerkleidung" per team
+  const adFlags = [jerseyAdvertising.homeTeam, jerseyAdvertising.awayTeam]
+  for (let i = 0; i < wizardMapping.advertisingRadioGroups.length; i++) {
+    const adField = wizardMapping.advertisingRadioGroups[i]!
+    const hasAdvertising = adFlags[i] ?? true
     try {
-      form.getRadioGroup(adField).select(RADIO_OK_OPTION)
+      form.getRadioGroup(adField).select(hasAdvertising ? RADIO_OK_OPTION : RADIO_NOT_OK_OPTION)
     } catch (error) {
-      logger.warn(`Could not set advertising "${adField}" to Ja:`, error)
+      logger.warn(`Could not set advertising "${adField}":`, error)
     }
   }
 
@@ -505,13 +517,15 @@ export async function generateWizardReportBytes(
   data: SportsHallReportData,
   leagueCategory: LeagueCategory,
   language: Language,
-  signatureDataUrl: string
+  signatureDataUrl: string,
+  jerseyAdvertising?: JerseyAdvertisingOptions
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
   const pdfBytes = await fillSportsHallReportWizard(
     data,
     leagueCategory,
     language,
-    signatureDataUrl
+    signatureDataUrl,
+    jerseyAdvertising
   )
   const filename = buildReportFilename(
     leagueCategory,

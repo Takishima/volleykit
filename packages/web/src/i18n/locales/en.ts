@@ -617,6 +617,8 @@ const en: Translations = {
       confirmLabel: 'I confirm everything is in order',
       allCheckpointsOk: 'All points in order',
       advertisingDeclared: 'Advertising on uniform declared for both teams',
+      advertisingHomeTeam: 'Advertising on uniform — Home team',
+      advertisingAwayTeam: 'Advertising on uniform — Away team',
 
       generate: 'Generate Report',
       downloadPreFilled: 'Download pre-filled report instead',

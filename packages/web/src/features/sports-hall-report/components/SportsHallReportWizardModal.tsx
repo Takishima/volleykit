@@ -10,7 +10,12 @@ import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
-import type { Language, LeagueCategory, SportsHallReportData } from '@/shared/utils/pdf-form-filler'
+import type {
+  JerseyAdvertisingOptions,
+  Language,
+  LeagueCategory,
+  SportsHallReportData,
+} from '@/shared/utils/pdf-form-filler'
 
 import { SignatureCanvas } from './SignatureCanvas'
 
@@ -59,6 +64,10 @@ export function SportsHallReportWizardModal({
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showSignature, setShowSignature] = useState(false)
+  const [jerseyAdvertising, setJerseyAdvertising] = useState<JerseyAdvertisingOptions>({
+    homeTeam: true,
+    awayTeam: true,
+  })
 
   // Reset state when modal opens
   useEffect(() => {
@@ -67,6 +76,7 @@ export function SportsHallReportWizardModal({
       setConfirmed(false)
       setIsGenerating(false)
       setShowSignature(false)
+      setJerseyAdvertising({ homeTeam: true, awayTeam: true })
     }
   }, [isOpen, defaultLanguage])
 
@@ -94,7 +104,8 @@ export function SportsHallReportWizardModal({
           info.reportData,
           info.leagueCategory,
           language,
-          signatureDataUrl
+          signatureDataUrl,
+          jerseyAdvertising
         )
 
         const { downloadPdf } = await import('@/shared/utils/pdf-form-filler')
@@ -110,7 +121,7 @@ export function SportsHallReportWizardModal({
         setIsGenerating(false)
       }
     },
-    [assignment, language, onClose, t]
+    [assignment, language, jerseyAdvertising, onClose, t]
   )
 
   const handleSignatureCancel = useCallback(() => {
@@ -223,10 +234,31 @@ export function SportsHallReportWizardModal({
                   />
                 </div>
                 {confirmed && (
-                  <ul className="mt-3 space-y-1.5">
-                    <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
-                    <ConfirmItem label={t('pdf.wizard.advertisingDeclared')} />
-                  </ul>
+                  <div className="mt-3 space-y-2.5">
+                    <ul className="space-y-1.5">
+                      <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
+                    </ul>
+                    <div className="space-y-2">
+                      <JerseyAdToggle
+                        label={t('pdf.wizard.advertisingHomeTeam')}
+                        teamName={homeTeam}
+                        checked={jerseyAdvertising.homeTeam}
+                        onChange={() =>
+                          setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
+                        }
+                        disabled={isGenerating}
+                      />
+                      <JerseyAdToggle
+                        label={t('pdf.wizard.advertisingAwayTeam')}
+                        teamName={awayTeam}
+                        checked={jerseyAdvertising.awayTeam}
+                        onChange={() =>
+                          setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
+                        }
+                        disabled={isGenerating}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -283,5 +315,43 @@ function ConfirmItem({ label }: { label: string }) {
       <CheckCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
       <span>{label}</span>
     </li>
+  )
+}
+
+function JerseyAdToggle({
+  label,
+  teamName,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string
+  teamName: string
+  checked: boolean
+  onChange: () => void
+  disabled: boolean
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 min-w-0">
+        <CheckCircle
+          className={`w-4 h-4 flex-shrink-0 ${checked ? 'text-success-700 dark:text-success-400' : 'text-warning-500 dark:text-warning-400'}`}
+          aria-hidden="true"
+        />
+        <span
+          className={`text-sm truncate ${checked ? 'text-success-700 dark:text-success-400' : 'text-warning-600 dark:text-warning-400'}`}
+          title={teamName ? `${label} (${teamName})` : label}
+        >
+          {label}
+        </span>
+      </div>
+      <ToggleSwitch
+        checked={checked}
+        onChange={onChange}
+        label={label}
+        variant="success"
+        disabled={disabled}
+      />
+    </div>
   )
 }

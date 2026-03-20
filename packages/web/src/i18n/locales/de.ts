@@ -640,6 +640,8 @@ const de: Translations = {
       confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
       allCheckpointsOk: 'Alle Punkte in Ordnung',
       advertisingDeclared: 'Werbung auf Spielerkleidung für beide Teams deklariert',
+      advertisingHomeTeam: 'Werbung auf Spielerkleidung Heimteam',
+      advertisingAwayTeam: 'Werbung auf Spielerkleidung Gastteam',
 
       generate: 'Rapport erstellen',
       downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',

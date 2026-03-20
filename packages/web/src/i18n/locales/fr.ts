@@ -635,6 +635,8 @@ const fr: Translations = {
       confirmLabel: 'Je confirme que tout est en ordre',
       allCheckpointsOk: 'Tous les points en ordre',
       advertisingDeclared: 'Publicité sur la tenue déclarée pour les deux équipes',
+      advertisingHomeTeam: 'Publicité sur la tenue — Équipe domicile',
+      advertisingAwayTeam: 'Publicité sur la tenue — Équipe visiteur',
 
       generate: 'Générer le rapport',
       downloadPreFilled: 'Télécharger le rapport pré-rempli',
