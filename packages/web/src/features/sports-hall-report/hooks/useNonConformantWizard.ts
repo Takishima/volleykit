@@ -141,6 +141,7 @@ export function useNonConformantWizard(
       } catch (error) {
         log.error('Preview generation failed:', error)
         toast.error(t('pdf.exportError'))
+        return
       } finally {
         setIsGenerating(false)
       }
