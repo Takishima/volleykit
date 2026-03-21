@@ -47,7 +47,8 @@ export function SignatureCollectionStep({
     },
     {
       role: 'secondReferee',
-      label: `${t('pdf.wizard.nonConformant.secondRefereeLabel')}: ${secondRefereeName ?? ''}`.trim(),
+      label:
+        `${t('pdf.wizard.nonConformant.secondRefereeLabel')}: ${secondRefereeName ?? ''}`.trim(),
       name: secondRefereeName,
       needsNameInput: false,
     },
@@ -119,7 +120,10 @@ export function SignatureCollectionStep({
             {t('pdf.wizard.nonConformant.signaturesTitle')}
           </p>
           <span className="text-xs text-text-muted dark:text-text-muted-dark">
-            {tInterpolate('pdf.wizard.nonConformant.signaturesProgress', { count: completedCount, total: totalRequired })}
+            {tInterpolate('pdf.wizard.nonConformant.signaturesProgress', {
+              count: completedCount,
+              total: totalRequired,
+            })}
           </span>
         </div>
 
