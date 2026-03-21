@@ -708,16 +708,16 @@ interface AllSignaturePositions {
 
 const ALL_SIGNATURE_POSITIONS: Record<LeagueCategory, AllSignaturePositions> = {
   NLA: {
-    firstReferee: { x: 340, y: 124, width: 130, height: 18 },
-    secondReferee: { x: 340, y: 104, width: 130, height: 18 },
-    homeTeam: { x: 340, y: 83, width: 130, height: 18 },
-    awayTeam: { x: 340, y: 62, width: 130, height: 18 },
+    firstReferee: { x: 340, y: 104, width: 130, height: 18 },
+    secondReferee: { x: 340, y: 83, width: 130, height: 18 },
+    homeTeam: { x: 340, y: 62, width: 130, height: 18 },
+    awayTeam: { x: 340, y: 41, width: 130, height: 18 },
   },
   NLB: {
-    firstReferee: { x: 340, y: 199, width: 130, height: 18 },
-    secondReferee: { x: 340, y: 171, width: 130, height: 18 },
-    homeTeam: { x: 340, y: 143, width: 130, height: 18 },
-    awayTeam: { x: 340, y: 115, width: 130, height: 18 },
+    firstReferee: { x: 340, y: 157, width: 130, height: 18 },
+    secondReferee: { x: 340, y: 129, width: 130, height: 18 },
+    homeTeam: { x: 340, y: 101, width: 130, height: 18 },
+    awayTeam: { x: 340, y: 73, width: 130, height: 18 },
   },
 }
 
