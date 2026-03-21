@@ -171,8 +171,15 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['@/features/*/hooks/*', '@/features/*/utils/*', '@/features/*/services/*', '@/features/*/components/*', '@/features/*/api/*'],
-              message: 'Shared code should not import feature internals. Import from the feature barrel (@/features/X) or promote the utility to shared/.',
+              group: [
+                '@/features/*/hooks/*',
+                '@/features/*/utils/*',
+                '@/features/*/services/*',
+                '@/features/*/components/*',
+                '@/features/*/api/*',
+              ],
+              message:
+                'Shared code should not import feature internals. Import from the feature barrel (@/features/X) or promote the utility to shared/.',
             },
           ],
         },

@@ -3,14 +3,8 @@
   "entry": ["e2e/**/*.ts", "src/features/*/index.ts"],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
   "ignore": ["src/types/**/*.d.ts", "src/api/schema.ts"],
-  "ignoreDependencies": [
-    "tailwindcss",
-    "@volleykit/shared"
-  ],
-  "ignoreBinaries": [
-    "changeset",
-    "playwright"
-  ],
+  "ignoreDependencies": ["tailwindcss", "@volleykit/shared"],
+  "ignoreBinaries": ["changeset", "playwright"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "duplicates": "off"

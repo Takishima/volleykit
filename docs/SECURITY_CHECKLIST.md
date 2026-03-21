@@ -109,12 +109,12 @@ pnpm audit
 
 These files have elevated security sensitivity:
 
-| File                  | Reason                                       |
-| --------------------- | -------------------------------------------- |
+| File                           | Reason                                       |
+| ------------------------------ | -------------------------------------------- |
 | `packages/worker/src/index.ts` | CORS proxy, origin validation, rate limiting |
-| `src/api/client.ts`   | API requests, credential handling            |
-| `src/stores/auth.ts`  | Authentication state                         |
-| `vite.config.ts`      | Build configuration, proxy settings          |
+| `src/api/client.ts`            | API requests, credential handling            |
+| `src/stores/auth.ts`           | Authentication state                         |
+| `vite.config.ts`               | Build configuration, proxy settings          |
 
 ## Quick Reference: OWASP Top 10
 
