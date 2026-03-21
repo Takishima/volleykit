@@ -24,74 +24,56 @@ Interpret the user input as a GitHub API operation request. Examples:
 
 ## Setup
 
-### Step 1: Detect Repository
+Run the helper script to make API calls. It auto-detects the repo from git remote, chooses `gh` or `curl` (with proper `$GITHUB_TOKEN` auth), and handles JSON bodies.
+
+**IMPORTANT**: Always invoke the script via `bash -c` to ensure `$GITHUB_TOKEN` is accessible:
 
 ```bash
-bash -c 'REMOTE=$(git remote get-url origin 2>/dev/null); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+)(\.git)?$ ]]; then echo "owner=${BASH_REMATCH[1]}"; echo "repo=${BASH_REMATCH[2]}"; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then echo "owner=${BASH_REMATCH[1]}"; echo "repo=${BASH_REMATCH[2]}"; else echo "ERROR: Could not detect GitHub repo from remote: $REMOTE"; exit 1; fi'
+bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh METHOD ENDPOINT [JSON_BODY]'
 ```
 
-Store the `owner` and `repo` values for subsequent API calls.
+The script:
+- Auto-detects `OWNER`/`REPO` from git remote (or use literal `OWNER`/`REPO` in endpoints and they get replaced)
+- Prefers `gh api` when available, falls back to `curl` with `$GITHUB_TOKEN`
+- Appends `per_page=100` to GET requests automatically
+- Pipes JSON body via stdin for POST/PATCH/PUT
 
-### Step 2: Detect Available Tools
+## Usage Examples
+
+### GET requests
 
 ```bash
-bash -c 'if command -v gh &>/dev/null; then echo "TOOL=gh"; elif [ -n "$GITHUB_TOKEN" ]; then echo "TOOL=curl"; else echo "TOOL=none (read-only public access only)"; fi'
+bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh GET /repos/OWNER/REPO/pulls?state=open | jq .'
 ```
-
-- **`gh` available** (e.g., GitHub Actions): Use `gh api` — handles auth and JSON automatically
-- **`gh` unavailable, `$GITHUB_TOKEN` set** (e.g., Claude Code web): Use `curl` wrapped in `bash -c`
-- **Neither**: Read-only public API access only
-
-**IMPORTANT**: When using curl, you MUST wrap all curl commands in `bash -c '...'` to access `$GITHUB_TOKEN`. Direct curl commands will fail with 401 because the token is only available inside a `bash -c` subshell.
-
-## API Call Patterns
-
-### When `gh` is available (preferred)
-
-#### GET request
 
 ```bash
-gh api repos/OWNER/REPO/ENDPOINT
+bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh GET /repos/OWNER/REPO/issues/42 | jq .'
 ```
 
-#### POST/PATCH/PUT request
+### POST requests
 
 ```bash
-gh api repos/OWNER/REPO/ENDPOINT -X POST -f title="TITLE" -f body="BODY"
+bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh POST /repos/OWNER/REPO/issues "$(jq -n --arg title "Bug report" --arg body "Details here" "{title: \$title, body: \$body}")" | jq .'
 ```
 
-For multiline body content:
+### PATCH requests
 
 ```bash
-gh api repos/OWNER/REPO/ENDPOINT -X POST --input <(jq -n --arg title "TITLE" --arg body "BODY" '{title: $title, body: $body}')
+bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh PATCH /repos/OWNER/REPO/issues/42 "$(jq -n --arg state "closed" "{state: \$state}")" | jq .'
 ```
 
-### When using curl (fallback)
-
-**CRITICAL**: All curl commands MUST be wrapped in `bash -c` to access `$GITHUB_TOKEN`.
-Direct curl commands will fail with 401 - always use the `bash -c` wrapper.
-
-#### GET request
-
-```bash
-bash -c 'curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" | jq .'
-```
-
-#### POST/PATCH/PUT request
-
-**IMPORTANT**: Always use heredoc for multiline body content. Never use inline `\n` escapes in jq args.
+### Multiline body content
 
 ```bash
 bash -c 'BODY=$(cat <<'\''EOF'\''
-BODY_CONTENT_HERE
+This is a multiline
+body with **markdown**.
 EOF
 )
-jq -n --arg title "TITLE" --arg body "$BODY" "{title: \$title, body: \$body}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" -d @- | jq .'
+${CLAUDE_SKILL_DIR}/scripts/ghapi.sh POST /repos/OWNER/REPO/issues/42/comments "$(jq -n --arg body "$BODY" "{body: \$body}")" | jq .'
 ```
 
-## Common Operations Reference
-
-Use these as templates. Replace `OWNER`, `REPO`, and parameters as needed.
+## Common Endpoints Reference
 
 ### Pull Requests
 
@@ -140,11 +122,10 @@ Use these as templates. Replace `OWNER`, `REPO`, and parameters as needed.
 
 Based on the user input:
 
-1. Run **Step 1** and **Step 2** to detect repo and available tools
-2. Determine the appropriate API endpoint and method from the reference above
-3. Construct and execute the command using `gh api` (preferred) or `curl` (fallback)
-4. Parse the response with `jq` to show relevant fields
-5. If the response is paginated, use `gh api --paginate` or add `?per_page=100&page=N` for curl
+1. Determine the appropriate API endpoint and method from the reference above
+2. Construct and execute using the `ghapi.sh` wrapper script
+3. Pipe output through `jq` to show relevant fields
+4. For paginated results, call multiple pages: `ENDPOINT?page=1`, `ENDPOINT?page=2`, etc.
 
 ## Tips
 
