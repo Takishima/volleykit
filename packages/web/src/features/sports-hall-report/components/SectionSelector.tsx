@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import { AlertTriangle, CheckCircle } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { ChecklistSection } from '@/shared/utils/pdf-form-filler'
+import type { ChecklistSection } from '@/shared/utils/pdf-field-mappings'
 
 interface SectionSelectorProps {
   sections: readonly ChecklistSection[]

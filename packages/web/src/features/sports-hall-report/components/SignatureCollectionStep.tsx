@@ -21,6 +21,10 @@ interface SignatureCollectionStepProps {
   secondRefereeName?: string
   signatures: NonConformantSignatures
   onSignaturesChange: (signatures: NonConformantSignatures) => void
+  homeCoachName: string
+  onHomeCoachNameChange: (name: string) => void
+  awayCoachName: string
+  onAwayCoachNameChange: (name: string) => void
   showAwayCoach: boolean
   onToggleAwayCoach: () => void
 }
@@ -30,13 +34,15 @@ export function SignatureCollectionStep({
   secondRefereeName,
   signatures,
   onSignaturesChange,
+  homeCoachName,
+  onHomeCoachNameChange,
+  awayCoachName,
+  onAwayCoachNameChange,
   showAwayCoach,
   onToggleAwayCoach,
 }: SignatureCollectionStepProps) {
   const { t, tInterpolate } = useTranslation()
   const [activeSigner, setActiveSigner] = useState<SignerRole | null>(null)
-  const [homeCoachName, setHomeCoachName] = useState(signatures.homeTeamCoach?.name ?? '')
-  const [awayCoachName, setAwayCoachName] = useState(signatures.awayTeamCoach?.name ?? '')
 
   const signers: SignerInfo[] = [
     {
@@ -179,8 +185,8 @@ export function SignatureCollectionStep({
                       value={signer.role === 'homeTeamCoach' ? homeCoachName : awayCoachName}
                       onChange={(e) =>
                         signer.role === 'homeTeamCoach'
-                          ? setHomeCoachName(e.target.value)
-                          : setAwayCoachName(e.target.value)
+                          ? onHomeCoachNameChange(e.target.value)
+                          : onAwayCoachNameChange(e.target.value)
                       }
                       placeholder={t('pdf.wizard.nonConformant.coachNamePlaceholder')}
                       className="w-full rounded-md border border-border-default dark:border-border-default-dark bg-surface-primary dark:bg-surface-primary-dark text-text-primary dark:text-text-primary-dark text-sm px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-text-muted dark:placeholder:text-text-muted-dark"
