@@ -59,7 +59,7 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t, tInterpolate } = useTranslation()
+  const { t } = useTranslation()
   const [language, setLanguage] = useState<Language>(defaultLanguage)
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -254,24 +254,22 @@ export function SportsHallReportWizardModal({
                           disabled={isGenerating}
                         />
                       </div>
-                      <div className="flex gap-2">
-                        <JerseyAdButton
-                          team={homeTeam || '–'}
-                          checked={jerseyAdvertising.homeTeam}
-                          onChange={() =>
-                            setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
-                          }
-                          disabled={isGenerating}
-                        />
-                        <JerseyAdButton
-                          team={awayTeam || '–'}
-                          checked={jerseyAdvertising.awayTeam}
-                          onChange={() =>
-                            setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
-                          }
-                          disabled={isGenerating}
-                        />
-                      </div>
+                      <JerseyAdToggle
+                        team={homeTeam || '–'}
+                        checked={jerseyAdvertising.homeTeam}
+                        onChange={() =>
+                          setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
+                        }
+                        disabled={isGenerating}
+                      />
+                      <JerseyAdToggle
+                        team={awayTeam || '–'}
+                        checked={jerseyAdvertising.awayTeam}
+                        onChange={() =>
+                          setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
+                        }
+                        disabled={isGenerating}
+                      />
                     </div>
                   </div>
                 )}
@@ -333,7 +331,7 @@ function ConfirmItem({ label }: { label: string }) {
   )
 }
 
-function JerseyAdButton({
+function JerseyAdToggle({
   team,
   checked,
   onChange,
@@ -351,10 +349,10 @@ function JerseyAdButton({
       onClick={onChange}
       disabled={disabled}
       title={team}
-      className={`flex-1 min-w-0 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`flex items-center gap-2 min-w-0 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
         checked
-          ? 'border-success-500 bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400 dark:border-success-600'
-          : 'border-red-300 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 dark:border-red-600'
+          ? 'text-success-700 dark:text-success-400'
+          : 'text-red-600 dark:text-red-400'
       }`}
     >
       <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
