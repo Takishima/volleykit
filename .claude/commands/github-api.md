@@ -36,6 +36,8 @@ bash -c 'if command -v gh &>/dev/null; then echo "TOOL=gh"; elif [ -n "$GITHUB_T
 - **`gh` unavailable, `$GITHUB_TOKEN` set** (e.g., Claude Code web): Use `curl` wrapped in `bash -c`
 - **Neither**: Read-only public API access only
 
+**IMPORTANT**: When using curl, you MUST wrap all curl commands in `bash -c '...'` to access `$GITHUB_TOKEN`. Direct curl commands will fail with 401 because the token is only available inside a `bash -c` subshell.
+
 ## API Call Patterns
 
 ### When `gh` is available (preferred)
@@ -60,7 +62,8 @@ gh api repos/OWNER/REPO/ENDPOINT -X POST --input <(jq -n --arg title "TITLE" --a
 
 ### When using curl (fallback)
 
-**CRITICAL**: All curl commands MUST be wrapped in `bash -c` to access `$GITHUB_TOKEN`. Direct curl will fail with 401.
+**CRITICAL**: All curl commands MUST be wrapped in `bash -c` to access `$GITHUB_TOKEN`.
+Direct curl commands will fail with 401 - always use the `bash -c` wrapper.
 
 #### GET request
 
