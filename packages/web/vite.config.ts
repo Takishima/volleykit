@@ -356,10 +356,16 @@ export default defineConfig(({ mode }) => {
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
               return 'react-vendor'
             }
-            if (id.includes('node_modules/react-router-dom') || id.includes('node_modules/react-router/')) {
+            if (
+              id.includes('node_modules/react-router-dom') ||
+              id.includes('node_modules/react-router/')
+            ) {
               return 'router'
             }
-            if (id.includes('node_modules/zustand') || id.includes('node_modules/@tanstack/react-query')) {
+            if (
+              id.includes('node_modules/zustand') ||
+              id.includes('node_modules/@tanstack/react-query')
+            ) {
               return 'state'
             }
             if (id.includes('node_modules/zod')) {

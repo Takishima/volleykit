@@ -1,6 +1,7 @@
 import { format } from 'date-fns'
 
 import type { Assignment } from '@/api/client'
+import type { TranslationKey } from '@/i18n'
 import { logger } from '@/shared/utils/logger'
 
 export type LeagueCategory = 'NLA' | 'NLB'
@@ -230,6 +231,7 @@ export async function fillSportsHallReportForm(
 
   fillBaseGameInfo(form, data, mapping)
 
+  // Do not flatten: referees download this form to fill remaining fields themselves
   return pdfDoc.save()
 }
 
@@ -313,12 +315,397 @@ const NLB_WIZARD_FIELDS: WizardFieldMapping = {
 /** OK option value used by all radio groups in the PDF templates */
 const RADIO_OK_OPTION = 'Auswahl3'
 
-/** Not-OK option value used by advertising radio groups in the PDF templates */
+/** Not-OK option value used by all radio groups in the PDF templates */
 const RADIO_NOT_OK_OPTION = 'Auswahl4'
 
 export interface JerseyAdvertisingOptions {
   homeTeam: boolean
   awayTeam: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Checklist section / sub-item mappings for the non-conformant workflow
+// ---------------------------------------------------------------------------
+
+export interface ChecklistSubItem {
+  /** Unique key within the section (e.g. 'lines', 'attackLine') */
+  id: string
+  /** i18n key for the sub-item label */
+  labelKey: TranslationKey
+  /** PDF radio group field name(s) — one per sub-item row on the form */
+  radioField: string
+}
+
+export interface ChecklistSection {
+  /** Section letter matching the PDF form (A, B, C, …) */
+  id: string
+  /** i18n key for the section label */
+  labelKey: TranslationKey
+  /** Sub-items within this section */
+  subItems: readonly ChecklistSubItem[]
+  /** PDF text field name(s) for the remarks column */
+  commentFields: readonly string[]
+}
+
+const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
+  {
+    id: 'A',
+    labelKey: 'pdf.wizard.sections.fieldAndLines',
+    subItems: [
+      { id: 'lines', labelKey: 'pdf.wizard.subItems.boundaryLines', radioField: 'Gruppe4' },
+      { id: 'attackLine', labelKey: 'pdf.wizard.subItems.attackLine', radioField: 'Gruppe41' },
+    ],
+    commentFields: ['Text7.0.0'],
+  },
+  {
+    id: 'B',
+    labelKey: 'pdf.wizard.sections.warmUpArea',
+    subItems: [
+      { id: 'warmUp', labelKey: 'pdf.wizard.subItems.warmUpArea', radioField: 'Gruppe42' },
+    ],
+    commentFields: ['Text7.0.1'],
+  },
+  {
+    id: 'C',
+    labelKey: 'pdf.wizard.sections.netEquipment',
+    subItems: [
+      { id: 'antennas', labelKey: 'pdf.wizard.subItems.antennas', radioField: 'Gruppe43' },
+      { id: 'netBand', labelKey: 'pdf.wizard.subItems.netTopBand', radioField: 'Gruppe44' },
+      { id: 'reserveNet', labelKey: 'pdf.wizard.subItems.reserveNet', radioField: 'Gruppe45' },
+      { id: 'postsNoWire', labelKey: 'pdf.wizard.subItems.postsNoWire', radioField: 'Gruppe46' },
+      { id: 'postsPadding', labelKey: 'pdf.wizard.subItems.postsPadding', radioField: 'Gruppe47' },
+      { id: 'tabletMount', labelKey: 'pdf.wizard.subItems.tabletMount', radioField: 'Gruppe48' },
+      { id: 'netHeight', labelKey: 'pdf.wizard.subItems.netHeight', radioField: 'Gruppe49' },
+    ],
+    commentFields: ['Text7.0.2'],
+  },
+  {
+    id: 'D',
+    labelKey: 'pdf.wizard.sections.refereeChair',
+    subItems: [{ id: 'chair', labelKey: 'pdf.wizard.subItems.refereeChair', radioField: '10' }],
+    commentFields: ['Text7.0.3'],
+  },
+  {
+    id: 'E',
+    labelKey: 'pdf.wizard.sections.manometer',
+    subItems: [{ id: 'manometer', labelKey: 'pdf.wizard.subItems.manometer', radioField: '11' }],
+    commentFields: ['Text7.0.4'],
+  },
+  {
+    id: 'F',
+    labelKey: 'pdf.wizard.sections.measuringRod',
+    subItems: [{ id: 'rod', labelKey: 'pdf.wizard.subItems.measuringRod', radioField: '12' }],
+    commentFields: ['Text7.0.5'],
+  },
+  {
+    id: 'G',
+    labelKey: 'pdf.wizard.sections.lineFlags',
+    subItems: [{ id: 'flags', labelKey: 'pdf.wizard.subItems.lineFlags', radioField: '13' }],
+    commentFields: ['Text7.0.6'],
+  },
+  {
+    id: 'H',
+    labelKey: 'pdf.wizard.sections.buzzer',
+    subItems: [{ id: 'buzzer', labelKey: 'pdf.wizard.subItems.buzzer', radioField: '14' }],
+    commentFields: ['Text7.0.7'],
+  },
+  {
+    id: 'I',
+    labelKey: 'pdf.wizard.sections.eScoresheet',
+    subItems: [
+      { id: 'eScorerOnTime', labelKey: 'pdf.wizard.subItems.eScorerOnTime', radioField: '15' },
+      { id: 'reserveLaptop', labelKey: 'pdf.wizard.subItems.reserveLaptop', radioField: '16' },
+      { id: 'usbStick', labelKey: 'pdf.wizard.subItems.usbStick', radioField: '17' },
+      {
+        id: 'reserveMatchSheet',
+        labelKey: 'pdf.wizard.subItems.reserveMatchSheet',
+        radioField: '18',
+      },
+    ],
+    commentFields: ['Text7.1'],
+  },
+  {
+    id: 'J',
+    labelKey: 'pdf.wizard.sections.tablets',
+    subItems: [
+      { id: 'refereeTablets', labelKey: 'pdf.wizard.subItems.refereeTablets', radioField: '19' },
+      { id: 'benchTablets', labelKey: 'pdf.wizard.subItems.benchTablets', radioField: '20' },
+    ],
+    commentFields: ['Text7.2'],
+  },
+  {
+    id: 'K',
+    labelKey: 'pdf.wizard.sections.scoreboard',
+    subItems: [
+      { id: 'scoreboard', labelKey: 'pdf.wizard.subItems.scoreboard', radioField: '21' },
+      {
+        id: 'scoreboardFunction',
+        labelKey: 'pdf.wizard.subItems.scoreboardFunction',
+        radioField: '22',
+      },
+    ],
+    commentFields: ['Text7.3'],
+  },
+  {
+    id: 'L',
+    labelKey: 'pdf.wizard.sections.balls',
+    subItems: [
+      { id: 'ballCount', labelKey: 'pdf.wizard.subItems.ballCount', radioField: '23' },
+      {
+        id: 'ballCondition',
+        labelKey: 'pdf.wizard.subItems.ballCondition',
+        radioField: 'Gruppe424',
+      },
+    ],
+    commentFields: ['Text7.4'],
+  },
+  {
+    id: 'M',
+    labelKey: 'pdf.wizard.sections.ballRetrievers',
+    subItems: [
+      {
+        id: 'ballRetrievers',
+        labelKey: 'pdf.wizard.subItems.ballRetrievers',
+        radioField: 'Gruppe425',
+      },
+    ],
+    commentFields: ['Text7.5'],
+  },
+  {
+    id: 'N',
+    labelKey: 'pdf.wizard.sections.quickMoppers',
+    subItems: [
+      { id: 'quickMoppers', labelKey: 'pdf.wizard.subItems.quickMoppers', radioField: 'Gruppe426' },
+    ],
+    commentFields: ['Text7.6'],
+  },
+  {
+    id: 'O',
+    labelKey: 'pdf.wizard.sections.hallSpeaker',
+    subItems: [
+      { id: 'hallSpeaker', labelKey: 'pdf.wizard.subItems.hallSpeaker', radioField: 'Gruppe427' },
+    ],
+    commentFields: ['Text7.7'],
+  },
+  {
+    id: 'P',
+    labelKey: 'pdf.wizard.sections.dressHome',
+    subItems: [
+      { id: 'dressHomeColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: 'Gruppe428' },
+      {
+        id: 'dressHomeLibero',
+        labelKey: 'pdf.wizard.subItems.liberoDress',
+        radioField: 'Gruppe429',
+      },
+      {
+        id: 'dressHomeAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
+        radioField: 'Gruppe430',
+      },
+    ],
+    commentFields: ['Text7.8'],
+  },
+  {
+    id: 'Q',
+    labelKey: 'pdf.wizard.sections.dressAway',
+    subItems: [
+      { id: 'dressAwayColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: 'Gruppe431' },
+      {
+        id: 'dressAwayLibero',
+        labelKey: 'pdf.wizard.subItems.liberoDress',
+        radioField: 'Gruppe432',
+      },
+      {
+        id: 'dressAwayMatchkit',
+        labelKey: 'pdf.wizard.subItems.matchKit',
+        radioField: 'Gruppe433',
+      },
+      {
+        id: 'dressAwayAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
+        radioField: 'Gruppe434',
+      },
+    ],
+    commentFields: ['Text7.9'],
+  },
+  {
+    id: 'R',
+    labelKey: 'pdf.wizard.sections.miscellaneous',
+    subItems: [
+      { id: 'misc1', labelKey: 'pdf.wizard.subItems.miscItem1', radioField: 'Gruppe435' },
+      { id: 'misc2', labelKey: 'pdf.wizard.subItems.miscItem2', radioField: 'Gruppe440' },
+    ],
+    commentFields: ['Text7.10', 'Text7.11'],
+  },
+] as const
+
+const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
+  {
+    id: 'A',
+    labelKey: 'pdf.wizard.sections.fieldAndLines',
+    subItems: [
+      { id: 'lines', labelKey: 'pdf.wizard.subItems.boundaryLines', radioField: 'Gruppe16' },
+      { id: 'attackLine', labelKey: 'pdf.wizard.subItems.attackLine', radioField: 'Gruppe17' },
+    ],
+    commentFields: ['Text16.0.0'],
+  },
+  {
+    id: 'B',
+    labelKey: 'pdf.wizard.sections.netEquipment',
+    subItems: [
+      { id: 'antennas', labelKey: 'pdf.wizard.subItems.antennas', radioField: 'Gruppe18' },
+      { id: 'netBand', labelKey: 'pdf.wizard.subItems.netTopBand', radioField: 'Gruppe19' },
+      {
+        id: 'netBottomBand',
+        labelKey: 'pdf.wizard.subItems.netBottomBand',
+        radioField: 'Gruppe20',
+      },
+    ],
+    commentFields: ['Text16.0.1'],
+  },
+  {
+    id: 'C',
+    labelKey: 'pdf.wizard.sections.numberPlates',
+    subItems: [
+      {
+        id: 'numberPlates',
+        labelKey: 'pdf.wizard.subItems.numberPlates',
+        radioField: 'Gruppe21',
+      },
+    ],
+    commentFields: ['Text16.1'],
+  },
+  {
+    id: 'D',
+    labelKey: 'pdf.wizard.sections.manometer',
+    subItems: [{ id: 'manometer', labelKey: 'pdf.wizard.subItems.manometer', radioField: '22' }],
+    commentFields: ['Text16.2'],
+  },
+  {
+    id: 'E',
+    labelKey: 'pdf.wizard.sections.measuringRod',
+    subItems: [{ id: 'rod', labelKey: 'pdf.wizard.subItems.measuringRod', radioField: '23' }],
+    commentFields: ['Text16.3'],
+  },
+  {
+    id: 'F',
+    labelKey: 'pdf.wizard.sections.balls',
+    subItems: [
+      {
+        id: 'practiseBalls',
+        labelKey: 'pdf.wizard.subItems.practiseBalls',
+        radioField: '24',
+      },
+      { id: 'matchBalls', labelKey: 'pdf.wizard.subItems.matchBalls', radioField: '25' },
+      {
+        id: 'matchBallsException',
+        labelKey: 'pdf.wizard.subItems.matchBallsException',
+        radioField: '26',
+      },
+    ],
+    commentFields: ['Text16.4'],
+  },
+  {
+    id: 'G',
+    labelKey: 'pdf.wizard.sections.ballRetrievers',
+    subItems: [
+      { id: 'ballRetrievers', labelKey: 'pdf.wizard.subItems.ballRetrievers', radioField: '27' },
+      {
+        id: 'ballRetrieversException',
+        labelKey: 'pdf.wizard.subItems.ballRetrieversException',
+        radioField: '28',
+      },
+    ],
+    commentFields: ['Text16.5'],
+  },
+  {
+    id: 'H',
+    labelKey: 'pdf.wizard.sections.dressHome',
+    subItems: [
+      { id: 'dressHomeColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: '29' },
+      { id: 'dressHomeLibero', labelKey: 'pdf.wizard.subItems.liberoDress', radioField: '30' },
+      {
+        id: 'dressHomeAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
+        radioField: '31',
+      },
+    ],
+    commentFields: ['Text16.6'],
+  },
+  {
+    id: 'I',
+    labelKey: 'pdf.wizard.sections.dressAway',
+    subItems: [
+      { id: 'dressAwayColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: '32' },
+      { id: 'dressAwayLibero', labelKey: 'pdf.wizard.subItems.liberoDress', radioField: '33' },
+      {
+        id: 'dressAwayAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
+        radioField: '34',
+      },
+    ],
+    commentFields: ['Text16.7'],
+  },
+  {
+    id: 'J',
+    labelKey: 'pdf.wizard.sections.eScoresheet',
+    subItems: [
+      { id: 'eScorerOnTime', labelKey: 'pdf.wizard.subItems.eScorerOnTime', radioField: '35' },
+      { id: 'reserveLaptop', labelKey: 'pdf.wizard.subItems.reserveLaptop', radioField: '36' },
+      { id: 'usbStick', labelKey: 'pdf.wizard.subItems.usbStick', radioField: '37' },
+      {
+        id: 'reserveMatchSheet',
+        labelKey: 'pdf.wizard.subItems.reserveMatchSheet',
+        radioField: '38',
+      },
+    ],
+    commentFields: ['Text16.8'],
+  },
+  {
+    id: 'K',
+    labelKey: 'pdf.wizard.sections.tablets',
+    subItems: [
+      { id: 'refereeTablets', labelKey: 'pdf.wizard.subItems.refereeTablets', radioField: '39' },
+    ],
+    commentFields: ['Text16.9'],
+  },
+  {
+    id: 'L',
+    labelKey: 'pdf.wizard.sections.miscellaneous',
+    subItems: [
+      { id: 'misc1', labelKey: 'pdf.wizard.subItems.miscItem1', radioField: '40' },
+      { id: 'misc2', labelKey: 'pdf.wizard.subItems.miscItem2', radioField: '41' },
+    ],
+    commentFields: ['Text16.10', 'Text16.11'],
+  },
+] as const
+
+export function getChecklistSections(leagueCategory: LeagueCategory): readonly ChecklistSection[] {
+  return leagueCategory === 'NLA' ? NLA_CHECKLIST_SECTIONS : NLB_CHECKLIST_SECTIONS
+}
+
+/**
+ * All four signature name text fields at the bottom of the report form.
+ */
+interface SignatureNameFields {
+  firstReferee: string
+  secondReferee: string
+  homeTeam: string
+  awayTeam: string
+}
+
+const NLA_SIGNATURE_NAME_FIELDS: SignatureNameFields = {
+  firstReferee: 'Text19',
+  secondReferee: 'Text20',
+  homeTeam: 'Text21',
+  awayTeam: 'Text22',
+}
+
+const NLB_SIGNATURE_NAME_FIELDS: SignatureNameFields = {
+  firstReferee: 'Text23',
+  secondReferee: 'Text24',
+  homeTeam: 'Text25',
+  awayTeam: 'Text26',
 }
 
 function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMapping {
@@ -341,6 +728,29 @@ const SIGNATURE_POSITIONS: Record<LeagueCategory, SignaturePosition> = {
   NLB: { x: 340, y: 157, width: 130, height: 24 },
 }
 
+/** Signature positions for all four signers (non-conformant workflow). */
+interface AllSignaturePositions {
+  firstReferee: SignaturePosition
+  secondReferee: SignaturePosition
+  homeTeam: SignaturePosition
+  awayTeam: SignaturePosition
+}
+
+const ALL_SIGNATURE_POSITIONS: Record<LeagueCategory, AllSignaturePositions> = {
+  NLA: {
+    firstReferee: { x: 340, y: 104, width: 130, height: 24 },
+    secondReferee: { x: 340, y: 83, width: 130, height: 18 },
+    homeTeam: { x: 340, y: 62, width: 130, height: 18 },
+    awayTeam: { x: 340, y: 41, width: 130, height: 18 },
+  },
+  NLB: {
+    firstReferee: { x: 340, y: 157, width: 130, height: 24 },
+    secondReferee: { x: 340, y: 129, width: 130, height: 18 },
+    homeTeam: { x: 340, y: 101, width: 130, height: 18 },
+    awayTeam: { x: 340, y: 73, width: 130, height: 18 },
+  },
+}
+
 /**
  * Decode a data URL (e.g. from canvas.toDataURL) to raw bytes.
  */
@@ -356,6 +766,7 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
 }
 
 const SIGNATURE_CROP_PADDING = 10
+const SIGNATURE_EMBED_PADDING_PT = 3
 const RGBA_CHANNELS = 4
 const ALPHA_CHANNEL_OFFSET = 3
 
@@ -419,24 +830,22 @@ async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
 }
 
 /**
- * Embed a PNG signature image into a PDF document at the first referee's
- * signature position.
+ * Embed a PNG signature image into a PDF page at the given position.
  */
-async function embedSignature(
+async function embedSignatureAtPosition(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pdfDoc: any,
   signatureDataUrl: string,
-  leagueCategory: LeagueCategory
+  pos: SignaturePosition
 ): Promise<void> {
   const croppedDataUrl = await cropSignatureDataUrl(signatureDataUrl)
   const signatureBytes = dataUrlToBytes(croppedDataUrl)
   const signatureImage = await pdfDoc.embedPng(signatureBytes)
 
   const page = pdfDoc.getPage(0)
-  const pos = SIGNATURE_POSITIONS[leagueCategory]
 
   // Scale the signature to fit within the field with padding
-  const padding = 3
+  const padding = SIGNATURE_EMBED_PADDING_PT
   const maxWidth = pos.width - padding * 2
   const maxHeight = pos.height - padding * 2
   const aspectRatio = signatureImage.width / signatureImage.height
@@ -457,6 +866,19 @@ async function embedSignature(
     width: drawWidth,
     height: drawHeight,
   })
+}
+
+/**
+ * Embed a PNG signature image into a PDF document at the first referee's
+ * signature position.
+ */
+async function embedSignature(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pdfDoc: any,
+  signatureDataUrl: string,
+  leagueCategory: LeagueCategory
+): Promise<void> {
+  await embedSignatureAtPosition(pdfDoc, signatureDataUrl, SIGNATURE_POSITIONS[leagueCategory])
 }
 
 /**
@@ -521,6 +943,7 @@ export async function fillSportsHallReportWizard(
     }
   }
 
+  form.flatten()
   return pdfDoc.save()
 }
 
@@ -533,6 +956,198 @@ export async function generateWizardReportBytes(
   options: WizardReportOptions & { signatureDataUrl: string }
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
   const pdfBytes = await fillSportsHallReportWizard(options)
+  const filename = buildReportFilename(
+    options.leagueCategory,
+    options.language,
+    options.data.startingDateTime,
+    options.data.gameNumber
+  )
+  return { pdfBytes, filename }
+}
+
+// ---------------------------------------------------------------------------
+// Non-conformant report types and fill function
+// ---------------------------------------------------------------------------
+
+/** Which sub-items are flagged as not-OK, keyed by section ID then sub-item ID. */
+export type NonConformantSelections = Record<string, Set<string>>
+
+/** Signature data for the non-conformant workflow (up to 4 signers). */
+export interface NonConformantSignatures {
+  firstReferee?: string
+  secondReferee?: string
+  homeTeamCoach?: { name: string; signature: string }
+  awayTeamCoach?: { name: string; signature: string }
+}
+
+/**
+ * Set all checklist radio groups: OK or not-OK per sub-item.
+ */
+function fillChecklistRadios(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: any,
+  sections: readonly ChecklistSection[],
+  nonConformantSubItems: NonConformantSelections
+): void {
+  for (const section of sections) {
+    const flaggedItems = nonConformantSubItems[section.id]
+    for (const subItem of section.subItems) {
+      const isNotOk = flaggedItems?.has(subItem.id) ?? false
+      const option = isNotOk ? RADIO_NOT_OK_OPTION : RADIO_OK_OPTION
+      try {
+        form.getRadioGroup(subItem.radioField).select(option)
+      } catch (error) {
+        logger.warn(`Could not set radio "${subItem.radioField}" to ${option}:`, error)
+      }
+    }
+  }
+}
+
+/** Font size for comment fields so longer text fits in the narrow PDF cells */
+const COMMENT_FIELD_FONT_SIZE = 6
+
+/**
+ * Fill per-section comments into their respective PDF comment fields.
+ */
+function fillNonConformantComments(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: any,
+  sections: readonly ChecklistSection[],
+  nonConformantSubItems: NonConformantSelections,
+  sectionComments: Record<string, string>
+): void {
+  for (const section of sections) {
+    if (!nonConformantSubItems[section.id]?.size) continue
+    const comment = sectionComments[section.id]?.trim()
+    if (!comment) continue
+    const commentField = section.commentFields[0]
+    if (!commentField) continue
+    try {
+      const field = form.getTextField(commentField)
+      field.setFontSize(COMMENT_FIELD_FONT_SIZE)
+      field.setText(comment)
+    } catch (error) {
+      logger.warn(`Could not set comment field "${commentField}":`, error)
+    }
+  }
+}
+
+/**
+ * Embed up to 4 signatures at their designated positions.
+ */
+async function embedAllSignatures(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  pdfDoc: any,
+  positions: AllSignaturePositions,
+  signatures: NonConformantSignatures
+): Promise<void> {
+  const entries: Array<[string | undefined, SignaturePosition]> = [
+    [signatures.firstReferee, positions.firstReferee],
+    [signatures.secondReferee, positions.secondReferee],
+    [signatures.homeTeamCoach?.signature, positions.homeTeam],
+    [signatures.awayTeamCoach?.signature, positions.awayTeam],
+  ]
+
+  for (const [dataUrl, position] of entries) {
+    if (!dataUrl) continue
+    try {
+      await embedSignatureAtPosition(pdfDoc, dataUrl, position)
+    } catch (error) {
+      logger.warn('Could not embed signature:', error)
+    }
+  }
+}
+
+export interface NonConformantReportOptions {
+  data: SportsHallReportData
+  leagueCategory: LeagueCategory
+  language: Language
+  nonConformantSubItems: NonConformantSelections
+  sectionComments: Record<string, string>
+  jerseyAdvertising?: JerseyAdvertisingOptions
+  signatures?: NonConformantSignatures
+}
+
+/**
+ * Fill the sports hall report for the non-conformant workflow.
+ */
+export async function fillNonConformantReport(
+  options: NonConformantReportOptions & { flatten?: boolean }
+): Promise<Uint8Array> {
+  const {
+    data,
+    leagueCategory,
+    language,
+    nonConformantSubItems,
+    sectionComments,
+    jerseyAdvertising = { homeTeam: true, awayTeam: true },
+    signatures,
+  } = options
+  const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
+  const mapping = getFieldMapping(leagueCategory)
+  const wizardMapping = getWizardFieldMapping(leagueCategory)
+  const sections = getChecklistSections(leagueCategory)
+  const signatureNameFields =
+    leagueCategory === 'NLA' ? NLA_SIGNATURE_NAME_FIELDS : NLB_SIGNATURE_NAME_FIELDS
+
+  fillBaseGameInfo(form, data, mapping)
+  fillChecklistRadios(form, sections, nonConformantSubItems)
+  fillNonConformantComments(form, sections, nonConformantSubItems, sectionComments)
+
+  // Set advertising radio fields (overrides checklist values for these specific fields)
+  const adEntries: Array<{ field: string; hasAd: boolean }> = [
+    { field: wizardMapping.advertisingHomeTeam, hasAd: jerseyAdvertising.homeTeam },
+    { field: wizardMapping.advertisingAwayTeam, hasAd: jerseyAdvertising.awayTeam },
+  ]
+  for (const { field, hasAd } of adEntries) {
+    try {
+      form.getRadioGroup(field).select(hasAd ? RADIO_OK_OPTION : RADIO_NOT_OK_OPTION)
+    } catch (error) {
+      logger.warn(`Could not set advertising "${field}":`, error)
+    }
+  }
+
+  if (signatures?.homeTeamCoach?.name) {
+    trySetTextField(form, signatureNameFields.homeTeam, signatures.homeTeamCoach.name)
+  }
+  if (signatures?.awayTeamCoach?.name) {
+    trySetTextField(form, signatureNameFields.awayTeam, signatures.awayTeamCoach.name)
+  }
+
+  if (signatures) {
+    await embedAllSignatures(pdfDoc, ALL_SIGNATURE_POSITIONS[leagueCategory], signatures)
+  }
+
+  if (options.flatten !== false) {
+    form.flatten()
+  }
+  return pdfDoc.save()
+}
+
+/**
+ * Generate a non-conformant report preview (no signatures) for review.
+ */
+export async function generateNonConformantPreviewBytes(
+  options: Omit<NonConformantReportOptions, 'signatures'>
+): Promise<{ pdfBytes: Uint8Array; filename: string }> {
+  const pdfBytes = await fillNonConformantReport({ ...options, flatten: false })
+  const filename = buildReportFilename(
+    options.leagueCategory,
+    options.language,
+    options.data.startingDateTime,
+    options.data.gameNumber
+  )
+  return { pdfBytes, filename }
+}
+
+/**
+ * Generate the final non-conformant report with all signatures embedded.
+ * The form is flattened for download to ensure uniform text rendering.
+ */
+export async function generateNonConformantReportBytes(
+  options: NonConformantReportOptions & { signatures: NonConformantSignatures }
+): Promise<{ pdfBytes: Uint8Array; filename: string }> {
+  const pdfBytes = await fillNonConformantReport({ ...options, flatten: true })
   const filename = buildReportFilename(
     options.leagueCategory,
     options.language,
