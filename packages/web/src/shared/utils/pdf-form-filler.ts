@@ -292,22 +292,34 @@ export async function generateAndDownloadSportsHallReport(
 interface WizardFieldMapping {
   /** Checkbox field name for "Tous les points sont en ordre" / "Alle Punkte in Ordnung" */
   allPointsInOrderCheckbox: string
-  /** Radio group field names for "Werbung auf Spielerkleidung" (Ja/Nein) — left unchecked for manual verification */
-  advertisingRadioGroups: readonly string[]
+  /** Radio group field name for home team "Werbung auf Spielerkleidung" (Ja/Nein) */
+  advertisingHomeTeam: string
+  /** Radio group field name for away team "Werbung auf Spielerkleidung" (Ja/Nein) */
+  advertisingAwayTeam: string
 }
 
 const NLA_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen8',
-  advertisingRadioGroups: ['Gruppe430', 'Gruppe434'],
+  advertisingHomeTeam: 'Gruppe430',
+  advertisingAwayTeam: 'Gruppe434',
 }
 
 const NLB_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen17',
-  advertisingRadioGroups: ['31', '34'],
+  advertisingHomeTeam: '31',
+  advertisingAwayTeam: '34',
 }
 
 /** OK option value used by all radio groups in the PDF templates */
 const RADIO_OK_OPTION = 'Auswahl3'
+
+/** Not-OK option value used by advertising radio groups in the PDF templates */
+const RADIO_NOT_OK_OPTION = 'Auswahl4'
+
+export interface JerseyAdvertisingOptions {
+  homeTeam: boolean
+  awayTeam: boolean
+}
 
 function getWizardFieldMapping(leagueCategory: LeagueCategory): WizardFieldMapping {
   return leagueCategory === 'NLA' ? NLA_WIZARD_FIELDS : NLB_WIZARD_FIELDS
@@ -456,12 +468,24 @@ async function embedSignature(
  * When a signatureDataUrl is provided, the first referee's signature is
  * embedded at the designated position on the PDF.
  */
-export async function fillSportsHallReportWizard(
-  data: SportsHallReportData,
-  leagueCategory: LeagueCategory,
-  language: Language,
+export interface WizardReportOptions {
+  data: SportsHallReportData
+  leagueCategory: LeagueCategory
+  language: Language
   signatureDataUrl?: string
+  jerseyAdvertising?: JerseyAdvertisingOptions
+}
+
+export async function fillSportsHallReportWizard(
+  options: WizardReportOptions
 ): Promise<Uint8Array> {
+  const {
+    data,
+    leagueCategory,
+    language,
+    signatureDataUrl,
+    jerseyAdvertising = { homeTeam: true, awayTeam: true },
+  } = options
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const wizardMapping = getWizardFieldMapping(leagueCategory)
@@ -475,12 +499,16 @@ export async function fillSportsHallReportWizard(
     logger.warn(`Could not check "${wizardMapping.allPointsInOrderCheckbox}":`, error)
   }
 
-  // Set advertising "Werbung auf Spielerkleidung" to Ja for both teams
-  for (const adField of wizardMapping.advertisingRadioGroups) {
+  // Set advertising "Werbung auf Spielerkleidung" per team
+  const adEntries: Array<{ field: string; hasAd: boolean }> = [
+    { field: wizardMapping.advertisingHomeTeam, hasAd: jerseyAdvertising.homeTeam },
+    { field: wizardMapping.advertisingAwayTeam, hasAd: jerseyAdvertising.awayTeam },
+  ]
+  for (const { field, hasAd } of adEntries) {
     try {
-      form.getRadioGroup(adField).select(RADIO_OK_OPTION)
+      form.getRadioGroup(field).select(hasAd ? RADIO_OK_OPTION : RADIO_NOT_OK_OPTION)
     } catch (error) {
-      logger.warn(`Could not set advertising "${adField}" to Ja:`, error)
+      logger.warn(`Could not set advertising "${field}":`, error)
     }
   }
 
@@ -502,22 +530,14 @@ export async function fillSportsHallReportWizard(
  * for use with the Web Share API or print dialog.
  */
 export async function generateWizardReportBytes(
-  data: SportsHallReportData,
-  leagueCategory: LeagueCategory,
-  language: Language,
-  signatureDataUrl: string
+  options: WizardReportOptions & { signatureDataUrl: string }
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
-  const pdfBytes = await fillSportsHallReportWizard(
-    data,
-    leagueCategory,
-    language,
-    signatureDataUrl
-  )
+  const pdfBytes = await fillSportsHallReportWizard(options)
   const filename = buildReportFilename(
-    leagueCategory,
-    language,
-    data.startingDateTime,
-    data.gameNumber
+    options.leagueCategory,
+    options.language,
+    options.data.startingDateTime,
+    options.data.gameNumber
   )
   return { pdfBytes, filename }
 }

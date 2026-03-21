@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { Button } from '@/shared/components/Button'
-import { FileText, CheckCircle } from '@/shared/components/icons'
+import { FileText, CheckCircle, XCircle } from '@/shared/components/icons'
 import { Modal } from '@/shared/components/Modal'
 import { ModalFooter } from '@/shared/components/ModalFooter'
 import { ModalHeader } from '@/shared/components/ModalHeader'
@@ -10,7 +10,12 @@ import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
-import type { Language, LeagueCategory, SportsHallReportData } from '@/shared/utils/pdf-form-filler'
+import type {
+  JerseyAdvertisingOptions,
+  Language,
+  LeagueCategory,
+  SportsHallReportData,
+} from '@/shared/utils/pdf-form-filler'
 
 import { SignatureCanvas } from './SignatureCanvas'
 
@@ -54,11 +59,15 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const [language, setLanguage] = useState<Language>(defaultLanguage)
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showSignature, setShowSignature] = useState(false)
+  const [jerseyAdvertising, setJerseyAdvertising] = useState<JerseyAdvertisingOptions>({
+    homeTeam: true,
+    awayTeam: true,
+  })
 
   // Reset state when modal opens
   useEffect(() => {
@@ -67,6 +76,7 @@ export function SportsHallReportWizardModal({
       setConfirmed(false)
       setIsGenerating(false)
       setShowSignature(false)
+      setJerseyAdvertising({ homeTeam: true, awayTeam: true })
     }
   }, [isOpen, defaultLanguage])
 
@@ -90,12 +100,13 @@ export function SportsHallReportWizardModal({
 
         const { generateWizardReportBytes } = await import('@/shared/utils/pdf-form-filler')
 
-        const { pdfBytes, filename } = await generateWizardReportBytes(
-          info.reportData,
-          info.leagueCategory,
+        const { pdfBytes, filename } = await generateWizardReportBytes({
+          data: info.reportData,
+          leagueCategory: info.leagueCategory,
           language,
-          signatureDataUrl
-        )
+          signatureDataUrl,
+          jerseyAdvertising,
+        })
 
         const { downloadPdf } = await import('@/shared/utils/pdf-form-filler')
         downloadPdf(pdfBytes, filename)
@@ -110,7 +121,7 @@ export function SportsHallReportWizardModal({
         setIsGenerating(false)
       }
     },
-    [assignment, language, onClose, t]
+    [assignment, language, jerseyAdvertising, onClose, t]
   )
 
   const handleSignatureCancel = useCallback(() => {
@@ -223,10 +234,26 @@ export function SportsHallReportWizardModal({
                   />
                 </div>
                 {confirmed && (
-                  <ul className="mt-3 space-y-1.5">
-                    <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
-                    <ConfirmItem label={t('pdf.wizard.advertisingDeclared')} />
-                  </ul>
+                  <div className="mt-3 space-y-2.5">
+                    <div className="space-y-1.5">
+                      <JerseyAdToggle
+                        label={tInterpolate('pdf.wizard.advertisingTeam', { team: homeTeam || '–' })}
+                        checked={jerseyAdvertising.homeTeam}
+                        onChange={() =>
+                          setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
+                        }
+                        disabled={isGenerating}
+                      />
+                      <JerseyAdToggle
+                        label={tInterpolate('pdf.wizard.advertisingTeam', { team: awayTeam || '–' })}
+                        checked={jerseyAdvertising.awayTeam}
+                        onChange={() =>
+                          setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
+                        }
+                        disabled={isGenerating}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -277,11 +304,32 @@ export function SportsHallReportWizardModal({
   )
 }
 
-function ConfirmItem({ label }: { label: string }) {
+function JerseyAdToggle({
+  label,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string
+  checked: boolean
+  onChange: () => void
+  disabled: boolean
+}) {
+  const Icon = checked ? CheckCircle : XCircle
   return (
-    <li className="flex items-center gap-2 text-sm text-success-700 dark:text-success-400">
-      <CheckCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-      <span>{label}</span>
-    </li>
+    <button
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      title={label}
+      className={`flex w-full items-center gap-2 min-w-0 rounded-lg border py-2 px-3 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+        checked
+          ? 'border-success-200 bg-success-50 text-success-700 hover:bg-success-100 dark:border-success-800 dark:bg-success-900/20 dark:text-success-400 dark:hover:bg-success-900/30'
+          : 'border-red-200 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'
+      }`}
+    >
+      <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+      <span className="truncate">{label}</span>
+    </button>
   )
 }

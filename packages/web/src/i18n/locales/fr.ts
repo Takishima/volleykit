@@ -633,8 +633,7 @@ const fr: Translations = {
     wizard: {
       title: 'Rapport de salle',
       confirmLabel: 'Je confirme que tout est en ordre',
-      allCheckpointsOk: 'Tous les points en ordre',
-      advertisingDeclared: 'Publicité sur la tenue déclarée pour les deux équipes',
+      advertisingTeam: 'Publicité — {team}',
 
       generate: 'Générer le rapport',
       downloadPreFilled: 'Télécharger le rapport pré-rempli',
