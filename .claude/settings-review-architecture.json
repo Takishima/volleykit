@@ -1,6 +1,5 @@
 {
   "env": {
-    "CLAUDE_CODE_REVIEW": "true",
     "CLAUDE_CODE_REVIEW_TYPE": "architecture"
   },
   "permissions": {
