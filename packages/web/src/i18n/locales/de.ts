@@ -638,7 +638,6 @@ const de: Translations = {
     wizard: {
       title: 'Hallenrapport',
       confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
-      allCheckpointsOk: 'Alle Punkte in Ordnung',
       advertisingTeam: 'Werbung — {team}',
 
       generate: 'Rapport erstellen',

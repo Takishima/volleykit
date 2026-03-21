@@ -488,7 +488,6 @@ export interface Translations {
     wizard: {
       title: string
       confirmLabel: string
-      allCheckpointsOk: string
       advertisingTeam: string
 
       generate: string

@@ -628,7 +628,6 @@ const it: Translations = {
     wizard: {
       title: 'Rapporto sala sportiva',
       confirmLabel: 'Confermo che tutto è in ordine',
-      allCheckpointsOk: 'Tutti i punti in ordine',
       advertisingTeam: 'Pubblicità — {team}',
 
       generate: 'Genera rapporto',

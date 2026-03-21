@@ -615,7 +615,6 @@ const en: Translations = {
     wizard: {
       title: 'Sports Hall Report',
       confirmLabel: 'I confirm everything is in order',
-      allCheckpointsOk: 'All points in order',
       advertisingTeam: 'Advertising — {team}',
 
       generate: 'Generate Report',

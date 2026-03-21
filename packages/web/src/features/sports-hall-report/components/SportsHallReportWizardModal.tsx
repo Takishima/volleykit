@@ -59,7 +59,7 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const [language, setLanguage] = useState<Language>(defaultLanguage)
   const [confirmed, setConfirmed] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -235,12 +235,9 @@ export function SportsHallReportWizardModal({
                 </div>
                 {confirmed && (
                   <div className="mt-3 space-y-2.5">
-                    <ul className="space-y-1.5">
-                      <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
-                    </ul>
                     <div className="space-y-1.5">
                       <JerseyAdToggle
-                        team={homeTeam || '–'}
+                        label={tInterpolate('pdf.wizard.advertisingTeam', { team: homeTeam || '–' })}
                         checked={jerseyAdvertising.homeTeam}
                         onChange={() =>
                           setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
@@ -248,7 +245,7 @@ export function SportsHallReportWizardModal({
                         disabled={isGenerating}
                       />
                       <JerseyAdToggle
-                        team={awayTeam || '–'}
+                        label={tInterpolate('pdf.wizard.advertisingTeam', { team: awayTeam || '–' })}
                         checked={jerseyAdvertising.awayTeam}
                         onChange={() =>
                           setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
@@ -307,22 +304,13 @@ export function SportsHallReportWizardModal({
   )
 }
 
-function ConfirmItem({ label }: { label: string }) {
-  return (
-    <li className="flex items-center gap-2 text-sm text-success-700 dark:text-success-400">
-      <CheckCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-      <span>{label}</span>
-    </li>
-  )
-}
-
 function JerseyAdToggle({
-  team,
+  label,
   checked,
   onChange,
   disabled,
 }: {
-  team: string
+  label: string
   checked: boolean
   onChange: () => void
   disabled: boolean
@@ -333,7 +321,7 @@ function JerseyAdToggle({
       type="button"
       onClick={onChange}
       disabled={disabled}
-      title={team}
+      title={label}
       className={`flex items-center gap-2 min-w-0 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
         checked
           ? 'text-success-700 dark:text-success-400'
@@ -341,7 +329,7 @@ function JerseyAdToggle({
       }`}
     >
       <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-      <span className="truncate">{team}</span>
+      <span className="truncate">{label}</span>
     </button>
   )
 }
