@@ -53,9 +53,10 @@ PER_PAGE="${GHAPI_PER_PAGE:-100}"
 detect_repo
 detect_tool
 
-# Replace literal OWNER/REPO placeholders in endpoint
-ENDPOINT="${ENDPOINT//OWNER/$OWNER}"
-ENDPOINT="${ENDPOINT//REPO/$REPO}"
+# Replace /OWNER/REPO/ path segment placeholders with detected values.
+# Only matches full path segments to avoid mangling URLs where "OWNER" or
+# "REPO" appear as substrings of real values.
+ENDPOINT=$(echo "$ENDPOINT" | sed "s|/OWNER/REPO/|/${OWNER}/${REPO}/|g;s|/OWNER/REPO?|/${OWNER}/${REPO}?|g;s|/OWNER/REPO$|/${OWNER}/${REPO}|g")
 
 # Append per_page if GET and not already present
 if [[ "$METHOD" == "GET" && "$ENDPOINT" != *per_page* ]]; then
@@ -82,12 +83,12 @@ case "$TOOL" in
   curl)
     API_URL="https://api.github.com/${ENDPOINT}"
     if [[ "$METHOD" == "GET" ]]; then
-      curl -sf \
+      curl -sSf \
         -H "Authorization: Bearer $GITHUB_TOKEN" \
         -H "Accept: application/vnd.github+json" \
         "$API_URL"
     elif [[ -n "$BODY" ]]; then
-      echo "$BODY" | curl -sf \
+      echo "$BODY" | curl -sSf \
         -X "$METHOD" \
         -H "Authorization: Bearer $GITHUB_TOKEN" \
         -H "Accept: application/vnd.github+json" \
@@ -95,7 +96,7 @@ case "$TOOL" in
         "$API_URL" \
         -d @-
     else
-      curl -sf \
+      curl -sSf \
         -X "$METHOD" \
         -H "Authorization: Bearer $GITHUB_TOKEN" \
         -H "Accept: application/vnd.github+json" \
@@ -108,7 +109,7 @@ case "$TOOL" in
       echo "ERROR: No auth available. Only GET requests work without gh or GITHUB_TOKEN." >&2
       exit 1
     fi
-    curl -sf \
+    curl -sSf \
       -H "Accept: application/vnd.github+json" \
       "https://api.github.com/${ENDPOINT}"
     ;;
