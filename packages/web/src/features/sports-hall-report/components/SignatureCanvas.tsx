@@ -172,6 +172,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
           <button
             type="button"
             onClick={() => setPortraitHintDismissed(true)}
+            aria-label={t('common.dismissNotification')}
             className="absolute top-3 left-3 right-3 flex items-center gap-2 rounded-lg bg-gray-100/90 backdrop-blur-sm px-3 py-2 text-gray-500 shadow-sm"
           >
             <RotateCw className="w-5 h-5 flex-shrink-0 animate-pulse" aria-hidden="true" />

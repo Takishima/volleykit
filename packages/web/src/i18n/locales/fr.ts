@@ -635,7 +635,6 @@ const fr: Translations = {
     generating: 'Génération...',
     exportError: 'Échec de la génération du PDF',
     exportErrorNetwork: 'Erreur réseau — veuillez vérifier votre connexion',
-    exportErrorMissingData: 'Données de match manquantes — le rapport ne peut pas être généré',
     sportsHallReport: 'Rapport de salle',
     wizard: {
       title: 'Rapport de salle',
@@ -645,7 +644,6 @@ const fr: Translations = {
 
       generate: 'Générer le rapport',
       downloadPreFilled: 'Télécharger le rapport vierge (sans signature)',
-      advertisingHint: 'Veuillez vérifier le statut publicitaire de chaque équipe',
       reportGenerated: 'Rapport généré avec succès',
 
       signature: {

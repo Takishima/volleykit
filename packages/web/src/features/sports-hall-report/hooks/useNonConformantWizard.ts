@@ -16,17 +16,6 @@ import { extractReportInfo } from '../utils/extractReportInfo'
 
 const log = createLogger('useNonConformantWizard')
 
-function getPdfErrorKey(error: unknown): 'pdf.exportError' | 'pdf.exportErrorNetwork' {
-  if (
-    error instanceof TypeError &&
-    'message' in error &&
-    /fetch|network|load/i.test(error.message)
-  ) {
-    return 'pdf.exportErrorNetwork'
-  }
-  return 'pdf.exportError'
-}
-
 type NonConformantStep = 'sections' | 'subItems' | 'comment' | 'preview' | 'signatures'
 
 const NC_STEPS: NonConformantStep[] = ['sections', 'subItems', 'comment', 'preview', 'signatures']
@@ -50,7 +39,6 @@ export function useNonConformantWizard(
   const [awayCoachName, setAwayCoachName] = useState('')
   const [showAwayCoach, setShowAwayCoach] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
-
 
   const pdf = usePdfGeneration(assignment, language, jerseyAdvertising, onClose)
 

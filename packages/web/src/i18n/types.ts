@@ -489,7 +489,6 @@ export interface Translations {
     generating: string
     exportError: string
     exportErrorNetwork: string
-    exportErrorMissingData: string
     sportsHallReport: string
     wizard: {
       title: string
@@ -499,7 +498,6 @@ export interface Translations {
 
       generate: string
       downloadPreFilled: string
-      advertisingHint: string
       reportGenerated: string
 
       signature: {

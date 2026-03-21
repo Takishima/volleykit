@@ -640,7 +640,6 @@ const de: Translations = {
     generating: 'Wird erstellt...',
     exportError: 'PDF konnte nicht erstellt werden',
     exportErrorNetwork: 'Netzwerkfehler — bitte Verbindung prüfen',
-    exportErrorMissingData: 'Fehlende Spieldaten — Rapport kann nicht erstellt werden',
     sportsHallReport: 'Hallenrapport',
     wizard: {
       title: 'Hallenrapport',
@@ -650,7 +649,6 @@ const de: Translations = {
 
       generate: 'Rapport erstellen',
       downloadPreFilled: 'Leeren Rapport herunterladen (ohne Unterschrift)',
-      advertisingHint: 'Bitte Werbestatus für jedes Team überprüfen',
       reportGenerated: 'Rapport erfolgreich erstellt',
 
       signature: {

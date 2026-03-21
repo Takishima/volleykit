@@ -18,17 +18,6 @@ import { usePdfGeneration } from '../hooks/usePdfGeneration'
 
 const log = createLogger('SportsHallReportWizardModal')
 
-function getPdfErrorKey(error: unknown): 'pdf.exportError' | 'pdf.exportErrorNetwork' {
-  if (
-    error instanceof TypeError &&
-    'message' in error &&
-    /fetch|network|load/i.test(error.message)
-  ) {
-    return 'pdf.exportErrorNetwork'
-  }
-  return 'pdf.exportError'
-}
-
 const MODAL_TITLE_ID = 'sports-hall-report-wizard-title'
 
 type WizardMode = 'happy' | 'non-conformant'
@@ -270,8 +259,11 @@ export function SportsHallReportWizardModal({
           secondRefereeName={secondRefereeName}
           subtitle={subtitle}
           icon={pdfIcon}
-          onClose={onClose}
+          onClose={handleNcClose}
           onBack={handleNcBack}
+          showCloseConfirm={showCloseConfirm}
+          onDismissCloseConfirm={() => setShowCloseConfirm(false)}
+          onConfirmDiscard={handleConfirmDiscard}
         />
       )}
 

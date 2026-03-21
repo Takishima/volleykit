@@ -630,7 +630,6 @@ const it: Translations = {
     generating: 'Generazione...',
     exportError: 'Generazione PDF fallita',
     exportErrorNetwork: 'Errore di rete — verifica la connessione',
-    exportErrorMissingData: 'Dati partita mancanti — il rapporto non può essere generato',
     sportsHallReport: 'Rapporto sala sportiva',
     wizard: {
       title: 'Rapporto sala sportiva',
@@ -640,7 +639,6 @@ const it: Translations = {
 
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto vuoto (senza firma)',
-      advertisingHint: 'Verifica lo stato pubblicitario per ogni squadra',
       reportGenerated: 'Rapporto generato con successo',
 
       signature: {

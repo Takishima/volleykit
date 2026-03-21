@@ -4,6 +4,8 @@ import { AlertTriangle, CheckCircle } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import type { ChecklistSection } from '@/shared/utils/pdf-field-mappings'
 
+const HAPTIC_FEEDBACK_MS = 10
+
 interface SectionSelectorProps {
   sections: readonly ChecklistSection[]
   flaggedSections: Set<string>
@@ -46,8 +48,7 @@ function SectionRow({ section, isFlagged, onToggle }: SectionRowProps) {
   const { t } = useTranslation()
 
   const handleClick = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    navigator.vibrate?.(10)
+    navigator.vibrate?.(HAPTIC_FEEDBACK_MS)
     onToggle(section.id)
   }, [section.id, onToggle])
 
