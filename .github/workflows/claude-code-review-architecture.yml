@@ -1,0 +1,92 @@
+name: Architecture Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review'
+        required: true
+        type: number
+jobs:
+  architecture-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # Need full history to check changed files
+      - name: Check if guidelines or workflow files were modified
+        id: check-skip
+        run: |
+          # For workflow_dispatch, we need to fetch the PR info
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PR_NUMBER="${{ inputs.pr_number }}"
+            # Fetch the PR branch
+            gh pr checkout "$PR_NUMBER" --detach 2>/dev/null || true
+            BASE_REF=$(gh pr view "$PR_NUMBER" --json baseRefName -q '.baseRefName')
+          else
+            BASE_REF="${{ github.base_ref }}"
+          fi
+
+          # Get the list of changed files in this PR
+          CHANGED_FILES=$(git diff --name-only "origin/$BASE_REF"...HEAD 2>/dev/null || echo "")
+
+          # Check for guidelines files
+          if echo "$CHANGED_FILES" | grep -qE "^(CLAUDE\.md|docs/REVIEW_CHECKLIST_ARCHITECTURE\.md|docs/CODE_PATTERNS\.md)$"; then
+            echo "Guidelines files modified - retries disabled"
+            echo "guidelines_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check for workflow files (GitHub security restriction prevents retrying)
+          if echo "$CHANGED_FILES" | grep -qE "^\.github/workflows/.*\.ya?ml$"; then
+            echo "Workflow files modified - retries disabled (GitHub security restriction)"
+            echo "guidelines_changed=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "No special files modified - retries enabled"
+          echo "guidelines_changed=false" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Run Architecture Review
+        id: architecture-review
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Use architecture review-specific settings with hooks that auto-load guidelines
+          # Note: Changes won't take effect until merged (GitHub runs base branch workflow)
+          settings: ".claude/settings-review-architecture.json"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+            EVENT TYPE: ${{ github.event.action }}
+
+            Review this PR following the guidelines in docs/REVIEW_CHECKLIST_ARCHITECTURE.md.
+
+            You are the ARCHITECTURE reviewer. Focus ONLY on code architecture and separation of concerns.
+            Do NOT review naming conventions, accessibility, i18n, or security.
+
+            BEFORE reviewing, check for previous architecture review comments:
+            1. Run `gh pr view ${{ github.event.pull_request.number || inputs.pr_number }} --comments`
+            2. Look for comments with "## Architecture Review" header
+            3. For re-reviews (EVENT TYPE is "synchronize"): acknowledge fixes, flag new issues only
+
+            Post your review using `gh pr comment`. Output plain markdown (not wrapped in code blocks).
+          claude_args: '--model opus'
+          allowed_tools: |
+            Bash(gh issue view:*)
+            Bash(gh search:*)
+            Bash(gh issue list:*)
+            Bash(gh pr comment:*)
+            Bash(gh pr diff:*)
+            Bash(gh pr view:*)
+            Bash(gh pr list:*)
+    outputs:
+      guidelines_changed: ${{ steps.check-skip.outputs.guidelines_changed }}

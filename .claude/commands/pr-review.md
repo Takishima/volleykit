@@ -1,6 +1,6 @@
 # Create PR and Address Reviews
 
-Open a PR for the current branch and address Claude Code Review comments.
+Open a PR for the current branch and address Claude Code Review comments (both code quality and architecture reviews).
 
 ## Prerequisites
 
@@ -58,9 +58,9 @@ EOF
 REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; jq -n --arg title "PR_TITLE_HERE" --arg body "$BODY" "{title: \$title, body: \$body}" | curl -s -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/pulls/PR_NUMBER_HERE" -d @- | jq "{number, html_url}"'
 ```
 
-### Step 4: Wait for Claude Code Review
+### Step 4: Wait for Claude Code Reviews
 
-Inform the user, then wait 1 minute 30 seconds for the review workflow:
+Inform the user that two reviewers will run (Code Quality + Architecture), then wait 1 minute 30 seconds:
 
 ```bash
 sleep 90
@@ -68,23 +68,27 @@ sleep 90
 
 ### Step 5: Fetch Review Comments (with retry)
 
-Fetch the latest review comment from Claude:
+Fetch ALL review comments from Claude (both code quality and architecture reviews):
 
 ```bash
-bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/issues/PR_NUMBER_HERE/comments" | jq "[.[] | select(.user.login == \"claude[bot]\") | {id, created_at, body}] | sort_by(.created_at) | last"'
+bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/issues/PR_NUMBER_HERE/comments" | jq "[.[] | select(.user.login == \"claude[bot]\") | {id, created_at, body}] | sort_by(.created_at)"'
 ```
 
-If no review comment is found (null result) or the comment is older than this PR update, wait 1 more minute and retry:
+Identify the two most recent comments:
+- **Code Quality Review**: contains `## Claude Code Review` header
+- **Architecture Review**: contains `## Architecture Review` header
+
+If fewer than 2 review comments are found or either review is missing, wait 1 more minute and retry:
 
 ```bash
 sleep 60
 ```
 
 ```bash
-bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/issues/PR_NUMBER_HERE/comments" | jq "[.[] | select(.user.login == \"claude[bot]\") | {id, created_at, body}] | sort_by(.created_at) | last"'
+bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]([^/]+)/([^/.]+) ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; elif [[ "$REMOTE" =~ /git/([^/]+)/([^/]+)$ ]]; then OWNER=${BASH_REMATCH[1]}; REPO=${BASH_REMATCH[2]}; fi; curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/$OWNER/$REPO/issues/PR_NUMBER_HERE/comments" | jq "[.[] | select(.user.login == \"claude[bot]\") | {id, created_at, body}] | sort_by(.created_at)"'
 ```
 
-If still no review after retry, inform the user and stop.
+If still missing reviews after retry, proceed with whatever reviews are available. Inform the user about any missing reviews.
 
 ### Step 6: Check CI Status
 
@@ -100,17 +104,23 @@ Record any failed checks (`conclusion: "failure"`) to address in Step 9.
 
 ### Step 7: Parse and Address Review Issues
 
+Address issues from BOTH reviews:
+
+**Code Quality Review** (`## Claude Code Review`):
 From the review comment body, find the `### Issues Found` section.
+
+**Architecture Review** (`## Architecture Review`):
+From the review comment body, find the `### Issues Found` section. Issues are tagged with categories: `[boundary]` `[separation]` `[structure]` `[adapter]` `[organization]`.
 
 Format: `1. **\`file.ts:123\` - Description\*\*`
 
-For each issue:
+For each issue across both reviews:
 
 1. Read the file at the specified line
 2. Understand and implement the fix
 3. Move to next issue
 
-If "No issues found" or "LGTM", skip to Step 9 (or Step 10 if no CI failures).
+If both reviews say "No issues found" or "LGTM", skip to Step 9 (or Step 10 if no CI failures).
 
 ### Step 8: Commit Review Fixes (don't push yet)
 

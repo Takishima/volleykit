@@ -26,6 +26,7 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 | Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                          |
 | API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures                |
 | Reviewing PRs                 | [docs/REVIEW_CHECKLIST.md](docs/REVIEW_CHECKLIST.md)                          |
+| Reviewing PR architecture     | [docs/REVIEW_CHECKLIST_ARCHITECTURE.md](docs/REVIEW_CHECKLIST_ARCHITECTURE.md)|
 | Data storage questions        | [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md)                              |
 
 ## Development Workflow
