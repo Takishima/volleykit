@@ -78,14 +78,19 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo ""
   echo "=== GitHub API Access ==="
   echo "A GitHub token (GITHUB_TOKEN) is available in this environment."
-  echo "IMPORTANT: ALWAYS use the GitHub REST API via curl instead of the gh CLI."
-  echo "The gh CLI is NOT available. Use curl with the GITHUB_TOKEN for all GitHub operations."
-  echo ""
-  echo "CRITICAL: You MUST wrap curl commands in bash -c to access the token:"
-  echo "  bash -c 'curl -s -H \"Authorization: Bearer \$GITHUB_TOKEN\" \\"
-  echo '       -H "Accept: application/vnd.github+json" \'
-  echo "       https://api.github.com/repos/OWNER/REPO/issues'"
-  echo ""
-  echo "Direct curl commands will fail with 401 - always use bash -c wrapper."
+  if command -v gh >/dev/null 2>&1; then
+    echo "gh CLI is available. Prefer 'gh api' for GitHub API calls."
+    echo "Example: gh api repos/OWNER/REPO/issues"
+  else
+    echo "IMPORTANT: ALWAYS use the GitHub REST API via curl instead of the gh CLI."
+    echo "The gh CLI is NOT available. Use curl with the GITHUB_TOKEN for all GitHub operations."
+    echo ""
+    echo "CRITICAL: You MUST wrap curl commands in bash -c to access the token:"
+    echo "  bash -c 'curl -s -H \"Authorization: Bearer \$GITHUB_TOKEN\" \\"
+    echo '       -H "Accept: application/vnd.github+json" \'
+    echo "       https://api.github.com/repos/OWNER/REPO/issues'"
+    echo ""
+    echo "Direct curl commands will fail with 401 - always use bash -c wrapper."
+  fi
   echo "========================="
 fi
