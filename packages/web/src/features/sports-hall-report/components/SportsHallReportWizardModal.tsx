@@ -62,6 +62,9 @@ export function SportsHallReportWizardModal({
     assignment.refereeGame?.activeRefereeConvocationSecondHeadReferee?.indoorAssociationReferee
       ?.indoorReferee?.person?.displayName
 
+  // Close confirmation state for non-conformant mode
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false)
+
   // Non-conformant hook (shares jerseyAdvertising from modal level)
   const nc = useNonConformantWizard(assignment, language, jerseyAdvertising, onClose)
   const { loadSections, reset: resetNc, handleNcBack: ncBack } = nc
@@ -84,6 +87,7 @@ export function SportsHallReportWizardModal({
       setConfirmed(false)
       setIsGeneratingHappy(false)
       setShowSignature(false)
+      setShowCloseConfirm(false)
       setJerseyAdvertising({ homeTeam: true, awayTeam: true })
       setMode('happy')
       resetNc()
@@ -138,6 +142,32 @@ export function SportsHallReportWizardModal({
       setIsGeneratingHappy(false)
     }
   }, [isGeneratingHappy, pdf])
+
+  // ─── Close confirmation for non-conformant mode ───────────────────
+
+  const hasUnsavedNcWork = useCallback(() => {
+    return (
+      nc.flaggedSections.size > 0 ||
+      Object.values(nc.sectionComments).some((c) => c.trim()) ||
+      !!nc.signatures.firstReferee ||
+      !!nc.signatures.secondReferee ||
+      !!nc.signatures.homeTeamCoach?.signature ||
+      !!nc.signatures.awayTeamCoach?.signature
+    )
+  }, [nc.flaggedSections, nc.sectionComments, nc.signatures])
+
+  const handleNcClose = useCallback(() => {
+    if (hasUnsavedNcWork()) {
+      setShowCloseConfirm(true)
+    } else {
+      onClose()
+    }
+  }, [hasUnsavedNcWork, onClose])
+
+  const handleConfirmDiscard = useCallback(() => {
+    setShowCloseConfirm(false)
+    onClose()
+  }, [onClose])
 
   // ─── Mode handlers ─────────────────────────────────────────────────
 
@@ -229,8 +259,11 @@ export function SportsHallReportWizardModal({
           secondRefereeName={secondRefereeName}
           subtitle={subtitle}
           icon={pdfIcon}
-          onClose={onClose}
+          onClose={handleNcClose}
           onBack={handleNcBack}
+          showCloseConfirm={showCloseConfirm}
+          onDismissCloseConfirm={() => setShowCloseConfirm(false)}
+          onConfirmDiscard={handleConfirmDiscard}
         />
       )}
 

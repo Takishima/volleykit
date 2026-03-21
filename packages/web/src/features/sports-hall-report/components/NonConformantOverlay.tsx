@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 
 import { createPortal } from 'react-dom'
 
@@ -22,6 +22,7 @@ import { WizardStepIndicator } from './WizardStepIndicator'
 import type { useNonConformantWizard } from '../hooks/useNonConformantWizard'
 
 const MODAL_TITLE_ID = 'sports-hall-report-wizard-title'
+const DISCARD_DIALOG_TITLE_ID = 'discard-confirm-title'
 
 interface NonConformantOverlayProps {
   nc: ReturnType<typeof useNonConformantWizard>
@@ -38,6 +39,9 @@ interface NonConformantOverlayProps {
   icon: React.ReactNode
   onClose: () => void
   onBack: () => void
+  showCloseConfirm: boolean
+  onDismissCloseConfirm: () => void
+  onConfirmDiscard: () => void
 }
 
 export function NonConformantOverlay({
@@ -55,10 +59,23 @@ export function NonConformantOverlay({
   icon,
   onClose,
   onBack,
+  showCloseConfirm,
+  onDismissCloseConfirm,
+  onConfirmDiscard,
 }: NonConformantOverlayProps) {
   const { t } = useTranslation()
   const touchGuard = useOverlayTouchGuard()
   useBodyScrollLock(true)
+
+  // Dismiss discard dialog on Escape key
+  useEffect(() => {
+    if (!showCloseConfirm) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onDismissCloseConfirm()
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showCloseConfirm, onDismissCloseConfirm])
 
   const { setSectionComments } = nc
 
@@ -154,7 +171,7 @@ export function NonConformantOverlay({
             awayCoachName={nc.awayCoachName}
             onAwayCoachNameChange={nc.setAwayCoachName}
             showAwayCoach={nc.showAwayCoach}
-            onToggleAwayCoach={() => nc.setShowAwayCoach(true)}
+            onToggleAwayCoach={nc.setShowAwayCoach}
           />
         )}
       </div>
@@ -203,6 +220,40 @@ export function NonConformantOverlay({
           )}
         </div>
       </div>
+
+      {/* Discard confirmation dialog */}
+      {showCloseConfirm && (
+        <div
+          className="fixed inset-0 z-70 flex items-center justify-center bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={DISCARD_DIALOG_TITLE_ID}
+        >
+          <div className="mx-4 max-w-sm w-full rounded-xl bg-surface-card dark:bg-surface-card-dark p-5 shadow-lg">
+            <h3
+              id={DISCARD_DIALOG_TITLE_ID}
+              className="text-base font-semibold text-text-primary dark:text-text-primary-dark mb-2"
+            >
+              {t('pdf.wizard.nonConformant.discardTitle')}
+            </h3>
+            <p className="text-sm text-text-secondary dark:text-text-secondary-dark mb-4">
+              {t('pdf.wizard.nonConformant.discardMessage')}
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={onDismissCloseConfirm}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button variant="danger" className="flex-1" onClick={onConfirmDiscard}>
+                {t('pdf.wizard.nonConformant.discard')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   )

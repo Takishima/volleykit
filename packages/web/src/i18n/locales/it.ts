@@ -637,7 +637,7 @@ const it: Translations = {
       advertisingLabel: 'Pubblicità sugli indumenti di gioco',
 
       generate: 'Genera rapporto',
-      downloadPreFilled: 'Scarica il rapporto precompilato',
+      downloadPreFilled: 'Scarica il rapporto vuoto (senza firma)',
       reportGenerated: 'Rapporto generato con successo',
 
       signature: {
@@ -670,6 +670,11 @@ const it: Translations = {
         coachName: 'Nome allenatore',
         coachNamePlaceholder: 'Nome Cognome',
         addCoach: 'Aggiungere allenatore squadra ospite',
+        removeCoach: 'Rimuovere allenatore squadra ospite',
+        reSign: 'Ri-firmare',
+        discardTitle: 'Eliminare le modifiche?',
+        discardMessage: 'Le modifiche non salvate andranno perse.',
+        discard: 'Elimina',
         tapToSign: 'Tocca per firmare',
         downloadFinal: 'Scarica PDF',
         next: 'Avanti',

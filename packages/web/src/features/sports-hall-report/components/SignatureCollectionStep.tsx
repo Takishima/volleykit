@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 
 import { Button } from '@/shared/components/Button'
-import { CheckCircle, Plus } from '@/shared/components/icons'
+import { CheckCircle, Plus, X } from '@/shared/components/icons'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import type { NonConformantSignatures } from '@/shared/utils/pdf-form-filler'
 
@@ -26,7 +26,7 @@ interface SignatureCollectionStepProps {
   awayCoachName: string
   onAwayCoachNameChange: (name: string) => void
   showAwayCoach: boolean
-  onToggleAwayCoach: () => void
+  onToggleAwayCoach: (show: boolean) => void
 }
 
 export function SignatureCollectionStep({
@@ -118,6 +118,29 @@ export function SignatureCollectionStep({
     setActiveSigner(null)
   }, [])
 
+  const handleReSign = useCallback(
+    (role: SignerRole) => {
+      const updated = { ...signatures }
+      switch (role) {
+        case 'firstReferee':
+          delete updated.firstReferee
+          break
+        case 'secondReferee':
+          delete updated.secondReferee
+          break
+        case 'homeTeamCoach':
+          delete updated.homeTeamCoach
+          break
+        case 'awayTeamCoach':
+          delete updated.awayTeamCoach
+          break
+      }
+      onSignaturesChange(updated)
+      setActiveSigner(role)
+    },
+    [signatures, onSignaturesChange]
+  )
+
   return (
     <>
       <div className="space-y-3">
@@ -136,6 +159,8 @@ export function SignatureCollectionStep({
         <div className="space-y-2">
           {signers.map((signer) => {
             const hasSigned = !!getSignatureDataUrl(signer.role)
+            const coachName = signer.role === 'homeTeamCoach' ? homeCoachName : awayCoachName
+            const isCoachNameEmpty = signer.needsNameInput && !coachName.trim()
 
             return (
               <div
@@ -146,6 +171,23 @@ export function SignatureCollectionStep({
                     : 'border-border-default dark:border-border-default-dark'
                 }`}
               >
+                {/* Name input for coaches — shown above sign button */}
+                {signer.needsNameInput && !hasSigned && (
+                  <div className="mb-2">
+                    <input
+                      type="text"
+                      value={coachName}
+                      onChange={(e) =>
+                        signer.role === 'homeTeamCoach'
+                          ? onHomeCoachNameChange(e.target.value)
+                          : onAwayCoachNameChange(e.target.value)
+                      }
+                      placeholder={t('pdf.wizard.nonConformant.coachNamePlaceholder')}
+                      className="w-full rounded-md border border-border-default dark:border-border-default-dark bg-surface-primary dark:bg-surface-primary-dark text-text-primary dark:text-text-primary-dark text-sm px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-text-muted dark:placeholder:text-text-muted-dark"
+                    />
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {hasSigned ? (
@@ -160,49 +202,44 @@ export function SignatureCollectionStep({
                       {signer.label}
                     </span>
                   </div>
-                  {!hasSigned && (
+                  {hasSigned ? (
+                    <Button
+                      variant="ghost"
+                      className="text-xs px-2 py-1"
+                      onClick={() => handleReSign(signer.role)}
+                    >
+                      {t('pdf.wizard.nonConformant.reSign')}
+                    </Button>
+                  ) : (
                     <Button
                       variant="secondary"
                       className="text-xs px-2 py-1"
                       onClick={() => setActiveSigner(signer.role)}
-                      disabled={
-                        signer.needsNameInput &&
-                        (signer.role === 'homeTeamCoach'
-                          ? !homeCoachName.trim()
-                          : !awayCoachName.trim())
-                      }
+                      disabled={isCoachNameEmpty}
                     >
                       {t('pdf.wizard.nonConformant.tapToSign')}
                     </Button>
                   )}
                 </div>
-
-                {/* Name input for coaches */}
-                {signer.needsNameInput && !hasSigned && (
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      value={signer.role === 'homeTeamCoach' ? homeCoachName : awayCoachName}
-                      onChange={(e) =>
-                        signer.role === 'homeTeamCoach'
-                          ? onHomeCoachNameChange(e.target.value)
-                          : onAwayCoachNameChange(e.target.value)
-                      }
-                      placeholder={t('pdf.wizard.nonConformant.coachNamePlaceholder')}
-                      className="w-full rounded-md border border-border-default dark:border-border-default-dark bg-surface-primary dark:bg-surface-primary-dark text-text-primary dark:text-text-primary-dark text-sm px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-text-muted dark:placeholder:text-text-muted-dark"
-                    />
-                  </div>
-                )}
               </div>
             )
           })}
         </div>
 
-        {/* Add away team coach button */}
-        {!showAwayCoach && (
+        {/* Toggle away team coach */}
+        {showAwayCoach ? (
           <button
             type="button"
-            onClick={onToggleAwayCoach}
+            onClick={() => onToggleAwayCoach(false)}
+            className="flex items-center gap-1.5 text-sm text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark transition-colors"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+            {t('pdf.wizard.nonConformant.removeCoach')}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onToggleAwayCoach(true)}
             className="flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />

@@ -40,8 +40,6 @@ export function useNonConformantWizard(
   const [showAwayCoach, setShowAwayCoach] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
-  const ncStepIndex = NC_STEPS.indexOf(ncStep)
-
   const pdf = usePdfGeneration(assignment, language, jerseyAdvertising, onClose)
 
   const reset = useCallback(() => {
@@ -237,16 +235,24 @@ export function useNonConformantWizard(
     }
   }, [ncStep, flaggedSections, nonConformantSubItems, previewPdfBytes, signatures])
 
-  const ncSteps = useMemo(
-    () => [
+  const showSubItemsStep = multiItemFlaggedSections.length > 0
+
+  const ncSteps = useMemo(() => {
+    const steps = [
       { label: t('pdf.wizard.nonConformant.stepSections') },
-      { label: t('pdf.wizard.nonConformant.selectSubItems') },
+      ...(showSubItemsStep ? [{ label: t('pdf.wizard.nonConformant.selectSubItems') }] : []),
       { label: t('pdf.wizard.nonConformant.stepComment') },
       { label: t('pdf.wizard.nonConformant.stepPreview') },
       { label: t('pdf.wizard.nonConformant.stepSign') },
-    ],
-    [t]
-  )
+    ]
+    return steps
+  }, [t, showSubItemsStep])
+
+  // Map the raw step index to the visible step index (accounting for hidden subItems step)
+  const ncStepIndex = useMemo(() => {
+    const visibleSteps = showSubItemsStep ? NC_STEPS : NC_STEPS.filter((s) => s !== 'subItems')
+    return visibleSteps.indexOf(ncStep)
+  }, [ncStep, showSubItemsStep])
 
   return {
     ncStep,

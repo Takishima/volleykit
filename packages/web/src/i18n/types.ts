@@ -529,6 +529,11 @@ export interface Translations {
         coachName: string
         coachNamePlaceholder: string
         addCoach: string
+        removeCoach: string
+        reSign: string
+        discardTitle: string
+        discardMessage: string
+        discard: string
         tapToSign: string
         downloadFinal: string
         next: string

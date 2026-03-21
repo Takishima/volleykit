@@ -647,7 +647,7 @@ const de: Translations = {
       advertisingLabel: 'Werbung auf Spielerkleidung',
 
       generate: 'Rapport erstellen',
-      downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',
+      downloadPreFilled: 'Leeren Rapport herunterladen (ohne Unterschrift)',
       reportGenerated: 'Rapport erfolgreich erstellt',
 
       signature: {
@@ -680,6 +680,11 @@ const de: Translations = {
         coachName: 'Name Trainer',
         coachNamePlaceholder: 'Vorname Nachname',
         addCoach: 'Trainer Besuchermannschaft hinzufügen',
+        removeCoach: 'Trainer Besuchermannschaft entfernen',
+        reSign: 'Erneut unterschreiben',
+        discardTitle: 'Änderungen verwerfen?',
+        discardMessage: 'Nicht gespeicherte Änderungen gehen verloren.',
+        discard: 'Verwerfen',
         tapToSign: 'Zum Unterschreiben tippen',
         downloadFinal: 'PDF herunterladen',
         next: 'Weiter',

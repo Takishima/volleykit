@@ -624,7 +624,7 @@ const en: Translations = {
       advertisingLabel: 'Advertising on uniform',
 
       generate: 'Generate Report',
-      downloadPreFilled: 'Download pre-filled report instead',
+      downloadPreFilled: 'Download blank report (without signature)',
       reportGenerated: 'Report generated successfully',
 
       signature: {
@@ -657,6 +657,11 @@ const en: Translations = {
         coachName: 'Coach name',
         coachNamePlaceholder: 'First name Last name',
         addCoach: 'Add away team coach',
+        removeCoach: 'Remove away team coach',
+        reSign: 'Re-sign',
+        discardTitle: 'Discard changes?',
+        discardMessage: 'You have unsaved changes that will be lost.',
+        discard: 'Discard',
         tapToSign: 'Tap to sign',
         downloadFinal: 'Download PDF',
         next: 'Next',
