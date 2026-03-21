@@ -567,6 +567,7 @@ export interface Translations {
         warmUpArea: string
         antennas: string
         netTopBand: string
+        netBottomBand: string
         reserveNet: string
         postsNoWire: string
         postsPadding: string
@@ -583,12 +584,13 @@ export interface Translations {
         reserveMatchSheet: string
         refereeTablets: string
         benchTablets: string
-        tabletCharging: string
+        matchKit: string
         scoreboard: string
         scoreboardFunction: string
         ballCount: string
         ballCondition: string
         ballRetrievers: string
+        ballRetrieversException: string
         quickMoppers: string
         hallSpeaker: string
         dressColor: string
@@ -598,6 +600,10 @@ export interface Translations {
         miscItem2: string
         numberPlatesHome: string
         numberPlatesAway: string
+        numberPlates: string
+        practiseBalls: string
+        matchBalls: string
+        matchBallsException: string
       }
     }
   }

@@ -302,13 +302,13 @@ interface WizardFieldMapping {
 const NLA_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen8',
   advertisingHomeTeam: 'Gruppe430',
-  advertisingAwayTeam: 'Gruppe433',
+  advertisingAwayTeam: 'Gruppe434',
 }
 
 const NLB_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen17',
-  advertisingHomeTeam: '33',
-  advertisingAwayTeam: '36',
+  advertisingHomeTeam: '31',
+  advertisingAwayTeam: '34',
 }
 
 /** OK option value used by all radio groups in the PDF templates */
@@ -429,7 +429,6 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     subItems: [
       { id: 'refereeTablets', labelKey: 'pdf.wizard.subItems.refereeTablets', radioField: '19' },
       { id: 'benchTablets', labelKey: 'pdf.wizard.subItems.benchTablets', radioField: '20' },
-      { id: 'tabletCharging', labelKey: 'pdf.wizard.subItems.tabletCharging', radioField: '21' },
     ],
     commentFields: ['Text7.2'],
   },
@@ -437,11 +436,11 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'K',
     labelKey: 'pdf.wizard.sections.scoreboard',
     subItems: [
-      { id: 'scoreboard', labelKey: 'pdf.wizard.subItems.scoreboard', radioField: '22' },
+      { id: 'scoreboard', labelKey: 'pdf.wizard.subItems.scoreboard', radioField: '21' },
       {
         id: 'scoreboardFunction',
         labelKey: 'pdf.wizard.subItems.scoreboardFunction',
-        radioField: '23',
+        radioField: '22',
       },
     ],
     commentFields: ['Text7.3'],
@@ -450,11 +449,11 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'L',
     labelKey: 'pdf.wizard.sections.balls',
     subItems: [
-      { id: 'ballCount', labelKey: 'pdf.wizard.subItems.ballCount', radioField: 'Gruppe424' },
+      { id: 'ballCount', labelKey: 'pdf.wizard.subItems.ballCount', radioField: '23' },
       {
         id: 'ballCondition',
         labelKey: 'pdf.wizard.subItems.ballCondition',
-        radioField: 'Gruppe425',
+        radioField: 'Gruppe424',
       },
     ],
     commentFields: ['Text7.4'],
@@ -466,7 +465,7 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
       {
         id: 'ballRetrievers',
         labelKey: 'pdf.wizard.subItems.ballRetrievers',
-        radioField: 'Gruppe426',
+        radioField: 'Gruppe425',
       },
     ],
     commentFields: ['Text7.5'],
@@ -475,7 +474,7 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'N',
     labelKey: 'pdf.wizard.sections.quickMoppers',
     subItems: [
-      { id: 'quickMoppers', labelKey: 'pdf.wizard.subItems.quickMoppers', radioField: 'Gruppe427' },
+      { id: 'quickMoppers', labelKey: 'pdf.wizard.subItems.quickMoppers', radioField: 'Gruppe426' },
     ],
     commentFields: ['Text7.6'],
   },
@@ -483,7 +482,7 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'O',
     labelKey: 'pdf.wizard.sections.hallSpeaker',
     subItems: [
-      { id: 'hallSpeaker', labelKey: 'pdf.wizard.subItems.hallSpeaker', radioField: 'Gruppe428' },
+      { id: 'hallSpeaker', labelKey: 'pdf.wizard.subItems.hallSpeaker', radioField: 'Gruppe427' },
     ],
     commentFields: ['Text7.7'],
   },
@@ -491,16 +490,16 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'P',
     labelKey: 'pdf.wizard.sections.dressHome',
     subItems: [
-      { id: 'dressHomeColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: 'Gruppe429' },
+      { id: 'dressHomeColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: 'Gruppe428' },
+      {
+        id: 'dressHomeLibero',
+        labelKey: 'pdf.wizard.subItems.liberoDress',
+        radioField: 'Gruppe429',
+      },
       {
         id: 'dressHomeAd',
         labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
         radioField: 'Gruppe430',
-      },
-      {
-        id: 'dressHomeLibero',
-        labelKey: 'pdf.wizard.subItems.liberoDress',
-        radioField: 'Gruppe431',
       },
     ],
     commentFields: ['Text7.8'],
@@ -509,15 +508,20 @@ const NLA_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'Q',
     labelKey: 'pdf.wizard.sections.dressAway',
     subItems: [
-      { id: 'dressAwayColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: 'Gruppe432' },
-      {
-        id: 'dressAwayAd',
-        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
-        radioField: 'Gruppe433',
-      },
+      { id: 'dressAwayColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: 'Gruppe431' },
       {
         id: 'dressAwayLibero',
         labelKey: 'pdf.wizard.subItems.liberoDress',
+        radioField: 'Gruppe432',
+      },
+      {
+        id: 'dressAwayMatchkit',
+        labelKey: 'pdf.wizard.subItems.matchKit',
+        radioField: 'Gruppe433',
+      },
+      {
+        id: 'dressAwayAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
         radioField: 'Gruppe434',
       },
     ],
@@ -541,7 +545,6 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     subItems: [
       { id: 'lines', labelKey: 'pdf.wizard.subItems.boundaryLines', radioField: 'Gruppe16' },
       { id: 'attackLine', labelKey: 'pdf.wizard.subItems.attackLine', radioField: 'Gruppe17' },
-      { id: 'freeZone', labelKey: 'pdf.wizard.subItems.freeZone', radioField: 'Gruppe18' },
     ],
     commentFields: ['Text16.0.0'],
   },
@@ -549,12 +552,13 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'B',
     labelKey: 'pdf.wizard.sections.netEquipment',
     subItems: [
-      { id: 'antennas', labelKey: 'pdf.wizard.subItems.antennas', radioField: 'Gruppe19' },
-      { id: 'netBand', labelKey: 'pdf.wizard.subItems.netTopBand', radioField: 'Gruppe20' },
-      { id: 'postsNoWire', labelKey: 'pdf.wizard.subItems.postsNoWire', radioField: 'Gruppe21' },
-      { id: 'postsPadding', labelKey: 'pdf.wizard.subItems.postsPadding', radioField: '22' },
-      { id: 'reserveNet', labelKey: 'pdf.wizard.subItems.reserveNet', radioField: '23' },
-      { id: 'netHeight', labelKey: 'pdf.wizard.subItems.netHeight', radioField: '24' },
+      { id: 'antennas', labelKey: 'pdf.wizard.subItems.antennas', radioField: 'Gruppe18' },
+      { id: 'netBand', labelKey: 'pdf.wizard.subItems.netTopBand', radioField: 'Gruppe19' },
+      {
+        id: 'netBottomBand',
+        labelKey: 'pdf.wizard.subItems.netBottomBand',
+        radioField: 'Gruppe20',
+      },
     ],
     commentFields: ['Text16.0.1'],
   },
@@ -563,14 +567,9 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     labelKey: 'pdf.wizard.sections.numberPlates',
     subItems: [
       {
-        id: 'numberPlatesHome',
-        labelKey: 'pdf.wizard.subItems.numberPlatesHome',
-        radioField: '25',
-      },
-      {
-        id: 'numberPlatesAway',
-        labelKey: 'pdf.wizard.subItems.numberPlatesAway',
-        radioField: '26',
+        id: 'numberPlates',
+        labelKey: 'pdf.wizard.subItems.numberPlates',
+        radioField: 'Gruppe21',
       },
     ],
     commentFields: ['Text16.1'],
@@ -578,21 +577,30 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
   {
     id: 'D',
     labelKey: 'pdf.wizard.sections.manometer',
-    subItems: [{ id: 'manometer', labelKey: 'pdf.wizard.subItems.manometer', radioField: '27' }],
+    subItems: [{ id: 'manometer', labelKey: 'pdf.wizard.subItems.manometer', radioField: '22' }],
     commentFields: ['Text16.2'],
   },
   {
     id: 'E',
     labelKey: 'pdf.wizard.sections.measuringRod',
-    subItems: [{ id: 'rod', labelKey: 'pdf.wizard.subItems.measuringRod', radioField: '28' }],
+    subItems: [{ id: 'rod', labelKey: 'pdf.wizard.subItems.measuringRod', radioField: '23' }],
     commentFields: ['Text16.3'],
   },
   {
     id: 'F',
     labelKey: 'pdf.wizard.sections.balls',
     subItems: [
-      { id: 'ballCount', labelKey: 'pdf.wizard.subItems.ballCount', radioField: '29' },
-      { id: 'ballCondition', labelKey: 'pdf.wizard.subItems.ballCondition', radioField: '30' },
+      {
+        id: 'practiseBalls',
+        labelKey: 'pdf.wizard.subItems.practiseBalls',
+        radioField: '24',
+      },
+      { id: 'matchBalls', labelKey: 'pdf.wizard.subItems.matchBalls', radioField: '25' },
+      {
+        id: 'matchBallsException',
+        labelKey: 'pdf.wizard.subItems.matchBallsException',
+        radioField: '26',
+      },
     ],
     commentFields: ['Text16.4'],
   },
@@ -600,7 +608,12 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'G',
     labelKey: 'pdf.wizard.sections.ballRetrievers',
     subItems: [
-      { id: 'ballRetrievers', labelKey: 'pdf.wizard.subItems.ballRetrievers', radioField: '31' },
+      { id: 'ballRetrievers', labelKey: 'pdf.wizard.subItems.ballRetrievers', radioField: '27' },
+      {
+        id: 'ballRetrieversException',
+        labelKey: 'pdf.wizard.subItems.ballRetrieversException',
+        radioField: '28',
+      },
     ],
     commentFields: ['Text16.5'],
   },
@@ -608,9 +621,13 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'H',
     labelKey: 'pdf.wizard.sections.dressHome',
     subItems: [
-      { id: 'dressHomeColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: '32' },
-      { id: 'dressHomeAd', labelKey: 'pdf.wizard.subItems.advertisingOnUniform', radioField: '33' },
-      { id: 'dressHomeLibero', labelKey: 'pdf.wizard.subItems.liberoDress', radioField: '34' },
+      { id: 'dressHomeColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: '29' },
+      { id: 'dressHomeLibero', labelKey: 'pdf.wizard.subItems.liberoDress', radioField: '30' },
+      {
+        id: 'dressHomeAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
+        radioField: '31',
+      },
     ],
     commentFields: ['Text16.6'],
   },
@@ -618,9 +635,13 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'I',
     labelKey: 'pdf.wizard.sections.dressAway',
     subItems: [
-      { id: 'dressAwayColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: '35' },
-      { id: 'dressAwayAd', labelKey: 'pdf.wizard.subItems.advertisingOnUniform', radioField: '36' },
-      { id: 'dressAwayLibero', labelKey: 'pdf.wizard.subItems.liberoDress', radioField: '37' },
+      { id: 'dressAwayColor', labelKey: 'pdf.wizard.subItems.dressColor', radioField: '32' },
+      { id: 'dressAwayLibero', labelKey: 'pdf.wizard.subItems.liberoDress', radioField: '33' },
+      {
+        id: 'dressAwayAd',
+        labelKey: 'pdf.wizard.subItems.advertisingOnUniform',
+        radioField: '34',
+      },
     ],
     commentFields: ['Text16.7'],
   },
@@ -628,8 +649,14 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'J',
     labelKey: 'pdf.wizard.sections.eScoresheet',
     subItems: [
-      { id: 'eScorerOnTime', labelKey: 'pdf.wizard.subItems.eScorerOnTime', radioField: '38' },
-      { id: 'reserveLaptop', labelKey: 'pdf.wizard.subItems.reserveLaptop', radioField: '39' },
+      { id: 'eScorerOnTime', labelKey: 'pdf.wizard.subItems.eScorerOnTime', radioField: '35' },
+      { id: 'reserveLaptop', labelKey: 'pdf.wizard.subItems.reserveLaptop', radioField: '36' },
+      { id: 'usbStick', labelKey: 'pdf.wizard.subItems.usbStick', radioField: '37' },
+      {
+        id: 'reserveMatchSheet',
+        labelKey: 'pdf.wizard.subItems.reserveMatchSheet',
+        radioField: '38',
+      },
     ],
     commentFields: ['Text16.8'],
   },
@@ -637,15 +664,17 @@ const NLB_CHECKLIST_SECTIONS: readonly ChecklistSection[] = [
     id: 'K',
     labelKey: 'pdf.wizard.sections.tablets',
     subItems: [
-      { id: 'refereeTablets', labelKey: 'pdf.wizard.subItems.refereeTablets', radioField: '40' },
-      { id: 'benchTablets', labelKey: 'pdf.wizard.subItems.benchTablets', radioField: '41' },
+      { id: 'refereeTablets', labelKey: 'pdf.wizard.subItems.refereeTablets', radioField: '39' },
     ],
     commentFields: ['Text16.9'],
   },
   {
     id: 'L',
     labelKey: 'pdf.wizard.sections.miscellaneous',
-    subItems: [],
+    subItems: [
+      { id: 'misc1', labelKey: 'pdf.wizard.subItems.miscItem1', radioField: '40' },
+      { id: 'misc2', labelKey: 'pdf.wizard.subItems.miscItem2', radioField: '41' },
+    ],
     commentFields: ['Text16.10', 'Text16.11'],
   },
 ] as const
