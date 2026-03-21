@@ -971,6 +971,9 @@ function fillChecklistRadios(
   }
 }
 
+/** Font size for comment fields so longer text fits in the narrow PDF cells */
+const COMMENT_FIELD_FONT_SIZE = 6
+
 /**
  * Fill per-section comments into their respective PDF comment fields.
  */
@@ -986,7 +989,14 @@ function fillNonConformantComments(
     const comment = sectionComments[section.id]?.trim()
     if (!comment) continue
     const commentField = section.commentFields[0]
-    if (commentField) trySetTextField(form, commentField, comment)
+    if (!commentField) continue
+    try {
+      const field = form.getTextField(commentField)
+      field.setFontSize(COMMENT_FIELD_FONT_SIZE)
+      field.setText(comment)
+    } catch (error) {
+      logger.warn(`Could not set comment field "${commentField}":`, error)
+    }
   }
 }
 
