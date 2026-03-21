@@ -302,13 +302,13 @@ interface WizardFieldMapping {
 const NLA_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen8',
   advertisingHomeTeam: 'Gruppe430',
-  advertisingAwayTeam: 'Gruppe434',
+  advertisingAwayTeam: 'Gruppe433',
 }
 
 const NLB_WIZARD_FIELDS: WizardFieldMapping = {
   allPointsInOrderCheckbox: 'Kontrollkästchen17',
-  advertisingHomeTeam: '31',
-  advertisingAwayTeam: '34',
+  advertisingHomeTeam: '33',
+  advertisingAwayTeam: '36',
 }
 
 /** OK option value used by all radio groups in the PDF templates */
@@ -708,13 +708,13 @@ interface AllSignaturePositions {
 
 const ALL_SIGNATURE_POSITIONS: Record<LeagueCategory, AllSignaturePositions> = {
   NLA: {
-    firstReferee: { x: 340, y: 104, width: 130, height: 18 },
+    firstReferee: { x: 340, y: 104, width: 130, height: 24 },
     secondReferee: { x: 340, y: 83, width: 130, height: 18 },
     homeTeam: { x: 340, y: 62, width: 130, height: 18 },
     awayTeam: { x: 340, y: 41, width: 130, height: 18 },
   },
   NLB: {
-    firstReferee: { x: 340, y: 157, width: 130, height: 18 },
+    firstReferee: { x: 340, y: 157, width: 130, height: 24 },
     secondReferee: { x: 340, y: 129, width: 130, height: 18 },
     homeTeam: { x: 340, y: 101, width: 130, height: 18 },
     awayTeam: { x: 340, y: 73, width: 130, height: 18 },
