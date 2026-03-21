@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { Button } from '@/shared/components/Button'
-import { FileText, CheckCircle } from '@/shared/components/icons'
+import { FileText, CheckCircle, XCircle } from '@/shared/components/icons'
 import { Modal } from '@/shared/components/Modal'
 import { ModalFooter } from '@/shared/components/ModalFooter'
 import { ModalHeader } from '@/shared/components/ModalHeader'
@@ -239,26 +239,39 @@ export function SportsHallReportWizardModal({
                       <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
                     </ul>
                     <div className="space-y-2">
-                      <JerseyAdToggle
-                        label={tInterpolate('pdf.wizard.advertisingTeam', {
-                          team: homeTeam || '–',
-                        })}
-                        checked={jerseyAdvertising.homeTeam}
-                        onChange={() =>
-                          setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
-                        }
-                        disabled={isGenerating}
-                      />
-                      <JerseyAdToggle
-                        label={tInterpolate('pdf.wizard.advertisingTeam', {
-                          team: awayTeam || '–',
-                        })}
-                        checked={jerseyAdvertising.awayTeam}
-                        onChange={() =>
-                          setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
-                        }
-                        disabled={isGenerating}
-                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
+                          {t('pdf.wizard.advertisingLabel')}
+                        </span>
+                        <ToggleSwitch
+                          checked={jerseyAdvertising.homeTeam && jerseyAdvertising.awayTeam}
+                          onChange={() => {
+                            const allOk = jerseyAdvertising.homeTeam && jerseyAdvertising.awayTeam
+                            setJerseyAdvertising({ homeTeam: !allOk, awayTeam: !allOk })
+                          }}
+                          label={t('pdf.wizard.advertisingLabel')}
+                          variant="success"
+                          disabled={isGenerating}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <JerseyAdButton
+                          team={homeTeam || '–'}
+                          checked={jerseyAdvertising.homeTeam}
+                          onChange={() =>
+                            setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
+                          }
+                          disabled={isGenerating}
+                        />
+                        <JerseyAdButton
+                          team={awayTeam || '–'}
+                          checked={jerseyAdvertising.awayTeam}
+                          onChange={() =>
+                            setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
+                          }
+                          disabled={isGenerating}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -320,40 +333,32 @@ function ConfirmItem({ label }: { label: string }) {
   )
 }
 
-function JerseyAdToggle({
-  label,
+function JerseyAdButton({
+  team,
   checked,
   onChange,
   disabled,
 }: {
-  label: string
+  team: string
   checked: boolean
   onChange: () => void
   disabled: boolean
 }) {
+  const Icon = checked ? CheckCircle : XCircle
   return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-2 min-w-0">
-        <CheckCircle
-          className={`w-4 h-4 flex-shrink-0 ${checked ? 'text-success-700 dark:text-success-400' : 'text-warning-500 dark:text-warning-400'}`}
-          aria-hidden="true"
-        />
-        <span
-          className={`text-sm truncate ${checked ? 'text-success-700 dark:text-success-400' : 'text-warning-600 dark:text-warning-400'}`}
-          title={label}
-        >
-          {label}
-        </span>
-      </div>
-      <div className="flex-shrink-0">
-        <ToggleSwitch
-          checked={checked}
-          onChange={onChange}
-          label={label}
-          variant="success"
-          disabled={disabled}
-        />
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onChange}
+      disabled={disabled}
+      title={team}
+      className={`flex-1 min-w-0 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+        checked
+          ? 'border-success-500 bg-success-50 text-success-700 dark:bg-success-900/20 dark:text-success-400 dark:border-success-600'
+          : 'border-red-300 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 dark:border-red-600'
+      }`}
+    >
+      <Icon className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+      <span className="truncate">{team}</span>
+    </button>
   )
 }

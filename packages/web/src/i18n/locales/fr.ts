@@ -634,6 +634,7 @@ const fr: Translations = {
       title: 'Rapport de salle',
       confirmLabel: 'Je confirme que tout est en ordre',
       allCheckpointsOk: 'Tous les points en ordre',
+      advertisingLabel: 'Publicité OK',
       advertisingTeam: 'Publicité — {team}',
 
       generate: 'Générer le rapport',
