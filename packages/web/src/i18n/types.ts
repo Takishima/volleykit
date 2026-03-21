@@ -488,7 +488,6 @@ export interface Translations {
     export: string
     generating: string
     exportError: string
-    exportErrorNetwork: string
     sportsHallReport: string
     wizard: {
       title: string

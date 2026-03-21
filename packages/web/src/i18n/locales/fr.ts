@@ -634,7 +634,6 @@ const fr: Translations = {
     export: 'Générer',
     generating: 'Génération...',
     exportError: 'Échec de la génération du PDF',
-    exportErrorNetwork: 'Erreur réseau — veuillez vérifier votre connexion',
     sportsHallReport: 'Rapport de salle',
     wizard: {
       title: 'Rapport de salle',

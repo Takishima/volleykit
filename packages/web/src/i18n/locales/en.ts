@@ -616,7 +616,6 @@ const en: Translations = {
     export: 'Generate',
     generating: 'Generating...',
     exportError: 'Failed to generate PDF',
-    exportErrorNetwork: 'Network error — please check your connection',
     sportsHallReport: 'Sports Hall Report',
     wizard: {
       title: 'Sports Hall Report',

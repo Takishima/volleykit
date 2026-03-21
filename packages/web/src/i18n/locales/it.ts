@@ -629,7 +629,6 @@ const it: Translations = {
     export: 'Genera',
     generating: 'Generazione...',
     exportError: 'Generazione PDF fallita',
-    exportErrorNetwork: 'Errore di rete — verifica la connessione',
     sportsHallReport: 'Rapporto sala sportiva',
     wizard: {
       title: 'Rapporto sala sportiva',

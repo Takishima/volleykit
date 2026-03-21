@@ -639,7 +639,6 @@ const de: Translations = {
     export: 'Erstellen',
     generating: 'Wird erstellt...',
     exportError: 'PDF konnte nicht erstellt werden',
-    exportErrorNetwork: 'Netzwerkfehler — bitte Verbindung prüfen',
     sportsHallReport: 'Hallenrapport',
     wizard: {
       title: 'Hallenrapport',
