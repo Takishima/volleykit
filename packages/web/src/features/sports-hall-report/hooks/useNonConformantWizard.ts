@@ -39,7 +39,7 @@ export function useNonConformantWizard(
   const [checklistSections, setChecklistSections] = useState<readonly ChecklistSection[]>([])
   const [flaggedSections, setFlaggedSections] = useState<Set<string>>(new Set())
   const [nonConformantSubItems, setNonConformantSubItems] = useState<NonConformantSelections>({})
-  const [comment, setComment] = useState('')
+  const [sectionComments, setSectionComments] = useState<Record<string, string>>({})
   const [previewPdfBytes, setPreviewPdfBytes] = useState<Uint8Array | null>(null)
   const [signatures, setSignatures] = useState<NonConformantSignatures>({})
   const [showAwayCoach, setShowAwayCoach] = useState(false)
@@ -51,7 +51,7 @@ export function useNonConformantWizard(
     setNcStep('sections')
     setFlaggedSections(new Set())
     setNonConformantSubItems({})
-    setComment('')
+    setSectionComments({})
     setPreviewPdfBytes(null)
     setSignatures({})
     setShowAwayCoach(false)
@@ -135,7 +135,7 @@ export function useNonConformantWizard(
           leagueCategory: info.leagueCategory,
           language,
           nonConformantSubItems,
-          comment,
+          sectionComments,
         })
         setPreviewPdfBytes(pdfBytes)
       } catch (error) {
@@ -157,7 +157,7 @@ export function useNonConformantWizard(
     assignment,
     language,
     nonConformantSubItems,
-    comment,
+    sectionComments,
     t,
   ])
 
@@ -177,7 +177,7 @@ export function useNonConformantWizard(
         leagueCategory: info.leagueCategory,
         language,
         nonConformantSubItems,
-        comment,
+        sectionComments,
         signatures,
       })
       downloadPdf(pdfBytes, filename)
@@ -190,7 +190,7 @@ export function useNonConformantWizard(
     } finally {
       setIsGenerating(false)
     }
-  }, [isGenerating, assignment, language, nonConformantSubItems, comment, signatures, onClose, t])
+  }, [isGenerating, assignment, language, nonConformantSubItems, sectionComments, signatures, onClose, t])
 
   const canProceed = useMemo(() => {
     switch (ncStep) {
@@ -199,7 +199,7 @@ export function useNonConformantWizard(
       case 'subItems':
         return Object.values(nonConformantSubItems).some((set) => set.size > 0)
       case 'comment':
-        return comment.trim().length > 0
+        return [...flaggedSections].every((id) => sectionComments[id]?.trim())
       case 'preview':
         return !!previewPdfBytes
       case 'signatures': {
@@ -212,7 +212,7 @@ export function useNonConformantWizard(
       default:
         return false
     }
-  }, [ncStep, flaggedSections, nonConformantSubItems, comment, previewPdfBytes, signatures])
+  }, [ncStep, flaggedSections, nonConformantSubItems, sectionComments, previewPdfBytes, signatures])
 
   const ncSteps = useMemo(
     () => [
@@ -232,8 +232,8 @@ export function useNonConformantWizard(
     checklistSections,
     flaggedSections,
     nonConformantSubItems,
-    comment,
-    setComment,
+    sectionComments,
+    setSectionComments,
     previewPdfBytes,
     signatures,
     setSignatures,

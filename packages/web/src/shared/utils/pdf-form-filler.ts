@@ -972,18 +972,22 @@ function fillChecklistRadios(
 }
 
 /**
- * Fill the comment in the first comment field of the first flagged section.
+ * Fill per-section comments into their respective PDF comment fields.
  */
-function fillNonConformantComment(
+function fillNonConformantComments(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: any,
   sections: readonly ChecklistSection[],
   nonConformantSubItems: NonConformantSelections,
-  comment: string
+  sectionComments: Record<string, string>
 ): void {
-  const firstFlagged = sections.find((s) => nonConformantSubItems[s.id]?.size)
-  const commentField = firstFlagged?.commentFields[0]
-  if (commentField) trySetTextField(form, commentField, comment)
+  for (const section of sections) {
+    if (!nonConformantSubItems[section.id]?.size) continue
+    const comment = sectionComments[section.id]?.trim()
+    if (!comment) continue
+    const commentField = section.commentFields[0]
+    if (commentField) trySetTextField(form, commentField, comment)
+  }
 }
 
 /**
@@ -1017,7 +1021,7 @@ export interface NonConformantReportOptions {
   leagueCategory: LeagueCategory
   language: Language
   nonConformantSubItems: NonConformantSelections
-  comment: string
+  sectionComments: Record<string, string>
   signatures?: NonConformantSignatures
 }
 
@@ -1027,7 +1031,7 @@ export interface NonConformantReportOptions {
 export async function fillNonConformantReport(
   options: NonConformantReportOptions
 ): Promise<Uint8Array> {
-  const { data, leagueCategory, language, nonConformantSubItems, comment, signatures } = options
+  const { data, leagueCategory, language, nonConformantSubItems, sectionComments, signatures } = options
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const sections = getChecklistSections(leagueCategory)
@@ -1036,7 +1040,7 @@ export async function fillNonConformantReport(
 
   fillBaseGameInfo(form, data, mapping)
   fillChecklistRadios(form, sections, nonConformantSubItems)
-  fillNonConformantComment(form, sections, nonConformantSubItems, comment)
+  fillNonConformantComments(form, sections, nonConformantSubItems, sectionComments)
 
   if (signatures?.homeTeamCoach?.name) {
     trySetTextField(form, signatureNameFields.homeTeam, signatures.homeTeamCoach.name)

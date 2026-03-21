@@ -640,6 +640,7 @@ const en: Translations = {
         selectSections: 'Select sections with issues',
         selectSubItems: 'Select affected items',
         describeIssues: 'Describe the issues',
+        describeIssuesPerSection: 'Add a comment for each flagged section',
         commentRequired: 'Comment required',
         commentPlaceholder: 'Describe the issues found...',
         issuesFoundIn: 'Issues found in:',

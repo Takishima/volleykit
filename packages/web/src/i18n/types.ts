@@ -512,6 +512,7 @@ export interface Translations {
         selectSections: string
         selectSubItems: string
         describeIssues: string
+        describeIssuesPerSection: string
         commentRequired: string
         commentPlaceholder: string
         issuesFoundIn: string

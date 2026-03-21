@@ -663,6 +663,7 @@ const de: Translations = {
         selectSections: 'Abschnitte mit Problemen auswählen',
         selectSubItems: 'Betroffene Punkte auswählen',
         describeIssues: 'Probleme beschreiben',
+        describeIssuesPerSection: 'Kommentar für jeden beanstandeten Abschnitt hinzufügen',
         commentRequired: 'Kommentar erforderlich',
         commentPlaceholder: 'Beschreiben Sie die festgestellten Mängel...',
         issuesFoundIn: 'Probleme gefunden in:',

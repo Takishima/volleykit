@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 
+import { createPortal } from 'react-dom'
+
 import type { Assignment } from '@/api/client'
 import { Button } from '@/shared/components/Button'
 import { AlertTriangle, FileText, CheckCircle, XCircle } from '@/shared/components/icons'
@@ -83,7 +85,7 @@ export function SportsHallReportWizardModal({
 
   // Non-conformant state (extracted hook)
   const nc = useNonConformantWizard(assignment, language, onClose)
-  const { loadSections, reset: resetNc } = nc
+  const { loadSections, reset: resetNc, setSectionComments } = nc
 
   // Load checklist sections when modal opens
   useEffect(() => {
@@ -118,6 +120,46 @@ export function SportsHallReportWizardModal({
       ?.indoorReferee?.person?.displayName
 
   const isGenerating = mode === 'happy' ? isGeneratingHappy : nc.isGenerating
+
+  // Lock body scroll when non-conformant overlay is open
+  useEffect(() => {
+    if (!isOpen || mode !== 'non-conformant') return
+    const prev = document.body.style.overflow
+    const prevOverscroll = document.body.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+    return () => {
+      document.body.style.overflow = prev
+      document.body.style.overscrollBehavior = prevOverscroll
+    }
+  }, [isOpen, mode])
+
+  // Stop all touch events from propagating through the React tree (same as SignatureCanvas)
+  const stopPropagation = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation()
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.stopPropagation()
+    // Allow touch on interactive elements (inputs, textareas, buttons, scrollable content)
+    const target = e.target as HTMLElement
+    if (
+      target instanceof HTMLCanvasElement ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLInputElement
+    )
+      return
+    // Allow scrolling within scrollable containers
+    if (target.closest('[data-scrollable]')) return
+    e.preventDefault()
+  }, [])
+
+  const handleSectionCommentChange = useCallback(
+    (sectionId: string, value: string) => {
+      setSectionComments((prev) => ({ ...prev, [sectionId]: value }))
+    },
+    [setSectionComments]
+  )
 
   // ─── Happy path handlers ───────────────────────────────────────────
 
@@ -224,55 +266,46 @@ export function SportsHallReportWizardModal({
   const modalTitle =
     mode === 'non-conformant' ? t('pdf.wizard.nonConformant.title') : t('pdf.wizard.title')
 
-  return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        titleId={MODAL_TITLE_ID}
-        size={mode === 'non-conformant' ? 'md' : 'sm'}
-        isLoading={isGenerating}
-      >
-        <ModalHeader
-          title={modalTitle}
-          titleId={MODAL_TITLE_ID}
-          titleSize="lg"
-          icon={pdfIcon}
-          subtitle={subtitle}
-          onClose={onClose}
-        />
-
-        {mode === 'happy' ? (
-          <HappyPathContent
-            language={language}
-            setLanguage={setLanguage}
-            confirmed={confirmed}
-            setConfirmed={setConfirmed}
-            isGenerating={isGeneratingHappy}
-            jerseyAdvertising={jerseyAdvertising}
-            setJerseyAdvertising={setJerseyAdvertising}
-            homeTeam={homeTeam}
-            awayTeam={awayTeam}
-            onGenerate={handleGenerate}
-            onDownloadPreFilled={handleDownloadPreFilled}
-            onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}
-            onClose={onClose}
-          />
-        ) : (
-          <>
-            <WizardStepIndicator steps={nc.ncSteps} currentStep={nc.ncStepIndex} />
-
-            {/* Language selection (always visible in NC mode) */}
-            {nc.ncStep === 'sections' && (
-              <LanguageSelector
-                language={language}
-                setLanguage={setLanguage}
-                disabled={nc.isGenerating}
+  // Non-conformant mode renders as a fullscreen portal overlay
+  const nonConformantOverlay =
+    isOpen && mode === 'non-conformant'
+      ? createPortal(
+          <div
+            className="fixed inset-0 bg-surface-card dark:bg-surface-card-dark flex flex-col touch-none overscroll-none"
+            style={{ zIndex: 60 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={MODAL_TITLE_ID}
+            onTouchStart={stopPropagation}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={stopPropagation}
+          >
+            {/* Header */}
+            <div className="flex-shrink-0 px-4 pt-4 pb-2 safe-area-inset-top">
+              <ModalHeader
+                title={t('pdf.wizard.nonConformant.title')}
+                titleId={MODAL_TITLE_ID}
+                titleSize="lg"
+                icon={pdfIcon}
+                subtitle={subtitle}
+                onClose={onClose}
               />
-            )}
+              <WizardStepIndicator steps={nc.ncSteps} currentStep={nc.ncStepIndex} />
 
-            {/* Step content */}
-            <div className="mb-4 min-h-[200px]">
+              {nc.ncStep === 'sections' && (
+                <LanguageSelector
+                  language={language}
+                  setLanguage={setLanguage}
+                  disabled={nc.isGenerating}
+                />
+              )}
+            </div>
+
+            {/* Scrollable step content */}
+            <div
+              className="flex-1 overflow-y-auto px-4 py-2 touch-auto"
+              data-scrollable
+            >
               {nc.ncStep === 'sections' && (
                 <SectionSelector
                   sections={nc.checklistSections}
@@ -292,8 +325,8 @@ export function SportsHallReportWizardModal({
                 <CommentStep
                   sections={nc.checklistSections}
                   flaggedSections={nc.flaggedSections}
-                  comment={nc.comment}
-                  onCommentChange={nc.setComment}
+                  sectionComments={nc.sectionComments}
+                  onSectionCommentChange={handleSectionCommentChange}
                 />
               )}
               {nc.ncStep === 'preview' && (
@@ -311,50 +344,91 @@ export function SportsHallReportWizardModal({
               )}
             </div>
 
-            <ModalFooter>
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={handleNcBack}
-                disabled={nc.isGenerating}
-              >
-                {t('pdf.wizard.nonConformant.back')}
-              </Button>
-              {nc.ncStep === 'signatures' ? (
+            {/* Footer */}
+            <div className="flex-shrink-0 px-4 pb-4 pt-2 border-t border-border-default dark:border-border-default-dark safe-area-inset-bottom">
+              <div className="flex gap-3">
                 <Button
-                  variant="blue"
+                  variant="secondary"
                   className="flex-1"
-                  onClick={nc.handleNcDownload}
-                  disabled={!nc.canProceed || nc.isGenerating}
+                  onClick={handleNcBack}
+                  disabled={nc.isGenerating}
                 >
-                  {nc.isGenerating ? (
-                    <>
-                      <span
-                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
-                        aria-hidden="true"
-                      />
-                      {t('pdf.generating')}
-                    </>
-                  ) : (
-                    t('pdf.wizard.nonConformant.downloadFinal')
-                  )}
+                  {t('pdf.wizard.nonConformant.back')}
                 </Button>
-              ) : (
-                <Button
-                  variant="blue"
-                  className="flex-1"
-                  onClick={nc.handleNcNext}
-                  disabled={!nc.canProceed || nc.isGenerating}
-                >
-                  {nc.ncStep === 'preview'
-                    ? t('pdf.wizard.nonConformant.confirmAndSign')
-                    : t('pdf.wizard.nonConformant.next')}
-                </Button>
-              )}
-            </ModalFooter>
-          </>
-        )}
+                {nc.ncStep === 'signatures' ? (
+                  <Button
+                    variant="blue"
+                    className="flex-1"
+                    onClick={nc.handleNcDownload}
+                    disabled={!nc.canProceed || nc.isGenerating}
+                  >
+                    {nc.isGenerating ? (
+                      <>
+                        <span
+                          className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                          aria-hidden="true"
+                        />
+                        {t('pdf.generating')}
+                      </>
+                    ) : (
+                      t('pdf.wizard.nonConformant.downloadFinal')
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="blue"
+                    className="flex-1"
+                    onClick={nc.handleNcNext}
+                    disabled={!nc.canProceed || nc.isGenerating}
+                  >
+                    {nc.ncStep === 'preview'
+                      ? t('pdf.wizard.nonConformant.confirmAndSign')
+                      : t('pdf.wizard.nonConformant.next')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null
+
+  return (
+    <>
+      <Modal
+        isOpen={isOpen && mode === 'happy'}
+        onClose={onClose}
+        titleId={MODAL_TITLE_ID}
+        size="sm"
+        isLoading={isGenerating}
+      >
+        <ModalHeader
+          title={modalTitle}
+          titleId={MODAL_TITLE_ID}
+          titleSize="lg"
+          icon={pdfIcon}
+          subtitle={subtitle}
+          onClose={onClose}
+        />
+
+        <HappyPathContent
+          language={language}
+          setLanguage={setLanguage}
+          confirmed={confirmed}
+          setConfirmed={setConfirmed}
+          isGenerating={isGeneratingHappy}
+          jerseyAdvertising={jerseyAdvertising}
+          setJerseyAdvertising={setJerseyAdvertising}
+          homeTeam={homeTeam}
+          awayTeam={awayTeam}
+          onGenerate={handleGenerate}
+          onDownloadPreFilled={handleDownloadPreFilled}
+          onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}
+          onClose={onClose}
+        />
       </Modal>
+
+      {nonConformantOverlay}
 
       {showSignature && (
         <SignatureCanvas onComplete={handleSignatureComplete} onCancel={handleSignatureCancel} />

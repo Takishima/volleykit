@@ -653,6 +653,7 @@ const it: Translations = {
         selectSections: 'Selezionare le sezioni con problemi',
         selectSubItems: 'Selezionare i punti interessati',
         describeIssues: 'Descrivere i problemi',
+        describeIssuesPerSection: 'Aggiungere un commento per ogni sezione segnalata',
         commentRequired: 'Commento obbligatorio',
         commentPlaceholder: 'Descrivere i problemi riscontrati...',
         issuesFoundIn: 'Problemi trovati in:',
