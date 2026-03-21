@@ -70,8 +70,14 @@ bash -c 'curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: applicatio
 
 #### POST/PATCH/PUT request
 
+**IMPORTANT**: Always use heredoc for multiline body content. Never use inline `\n` escapes in jq args.
+
 ```bash
-bash -c 'jq -n --arg title "TITLE" --arg body "BODY" "{title: \$title, body: \$body}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" -d @- | jq .'
+bash -c 'BODY=$(cat <<'\''EOF'\''
+BODY_CONTENT_HERE
+EOF
+)
+jq -n --arg title "TITLE" --arg body "$BODY" "{title: \$title, body: \$body}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" -d @- | jq .'
 ```
 
 ## Common Operations Reference
