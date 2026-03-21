@@ -7,7 +7,7 @@ import { Modal } from '@/shared/components/Modal'
 import { ModalFooter } from '@/shared/components/ModalFooter'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { Language } from '@/shared/utils/pdf-form-filler'
+import type { Language } from '@/shared/utils/pdf-report-data'
 
 const MODAL_TITLE_ID = 'pdf-lang-title'
 

@@ -2,16 +2,16 @@ import { useState, useCallback, useMemo } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { useTranslation } from '@/shared/hooks/useTranslation'
-import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
+import type { ChecklistSection } from '@/shared/utils/pdf-field-mappings'
 import type {
   JerseyAdvertisingOptions,
   Language,
   NonConformantSelections,
   NonConformantSignatures,
-  ChecklistSection,
 } from '@/shared/utils/pdf-form-filler'
 
+import { usePdfGeneration } from './usePdfGeneration'
 import { extractReportInfo } from '../utils/extractReportInfo'
 
 const log = createLogger('useNonConformantWizard')
@@ -23,6 +23,7 @@ const NC_STEPS: NonConformantStep[] = ['sections', 'subItems', 'comment', 'previ
 export function useNonConformantWizard(
   assignment: Assignment,
   language: Language,
+  jerseyAdvertising: JerseyAdvertisingOptions,
   onClose: () => void
 ) {
   const { t } = useTranslation()
@@ -34,14 +35,14 @@ export function useNonConformantWizard(
   const [sectionComments, setSectionComments] = useState<Record<string, string>>({})
   const [previewPdfBytes, setPreviewPdfBytes] = useState<Uint8Array | null>(null)
   const [signatures, setSignatures] = useState<NonConformantSignatures>({})
-  const [jerseyAdvertising, setJerseyAdvertising] = useState<JerseyAdvertisingOptions>({
-    homeTeam: true,
-    awayTeam: true,
-  })
+  const [homeCoachName, setHomeCoachName] = useState('')
+  const [awayCoachName, setAwayCoachName] = useState('')
   const [showAwayCoach, setShowAwayCoach] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
   const ncStepIndex = NC_STEPS.indexOf(ncStep)
+
+  const pdf = usePdfGeneration(assignment, language, jerseyAdvertising, onClose)
 
   const reset = useCallback(() => {
     setNcStep('sections')
@@ -50,7 +51,8 @@ export function useNonConformantWizard(
     setSectionComments({})
     setPreviewPdfBytes(null)
     setSignatures({})
-    setJerseyAdvertising({ homeTeam: true, awayTeam: true })
+    setHomeCoachName('')
+    setAwayCoachName('')
     setShowAwayCoach(false)
     setIsGenerating(false)
   }, [])
@@ -58,7 +60,7 @@ export function useNonConformantWizard(
   const loadSections = useCallback(async () => {
     const info = await extractReportInfo(assignment)
     if (!info) return
-    const { getChecklistSections } = await import('@/shared/utils/pdf-form-filler')
+    const { getChecklistSections } = await import('@/shared/utils/pdf-field-mappings')
     setChecklistSections(getChecklistSections(info.leagueCategory))
   }, [assignment])
 
@@ -88,10 +90,7 @@ export function useNonConformantWizard(
 
   // Sections that have multiple sub-items and need manual selection
   const multiItemFlaggedSections = useMemo(
-    () =>
-      checklistSections.filter(
-        (s) => flaggedSections.has(s.id) && s.subItems.length > 1
-      ),
+    () => checklistSections.filter((s) => flaggedSections.has(s.id) && s.subItems.length > 1),
     [checklistSections, flaggedSections]
   )
 
@@ -120,7 +119,11 @@ export function useNonConformantWizard(
           const section = checklistSections.find((s) => s.id === sectionId)
           if (!section) continue
           // Auto-select all sub-items for single-item sections or when no manual selection exists
-          if (section.subItems.length === 1 || !updated[sectionId] || updated[sectionId].size === 0) {
+          if (
+            section.subItems.length === 1 ||
+            !updated[sectionId] ||
+            updated[sectionId].size === 0
+          ) {
             updated[sectionId] = new Set(section.subItems.map((si) => si.id))
           }
         }
@@ -141,24 +144,15 @@ export function useNonConformantWizard(
     if (NC_STEPS[nextIdx] === 'preview') {
       setIsGenerating(true)
       try {
-        const info = await extractReportInfo(assignment)
-        if (!info) {
-          toast.error(t('pdf.exportError'))
-          return
-        }
-        const { generateNonConformantPreviewBytes } = await import('@/shared/utils/pdf-form-filler')
-        const { pdfBytes } = await generateNonConformantPreviewBytes({
-          data: info.reportData,
-          leagueCategory: info.leagueCategory,
-          language,
+        const pdfBytes = await pdf.generateNonConformantPreview({
           nonConformantSubItems,
           sectionComments,
           jerseyAdvertising,
         })
+        if (!pdfBytes) return
         setPreviewPdfBytes(pdfBytes)
       } catch (error) {
         log.error('Preview generation failed:', error)
-        toast.error(t('pdf.exportError'))
         return
       } finally {
         setIsGenerating(false)
@@ -174,54 +168,51 @@ export function useNonConformantWizard(
     flaggedSections,
     checklistSections,
     multiItemFlaggedSections,
-    assignment,
-    language,
     nonConformantSubItems,
     sectionComments,
     jerseyAdvertising,
-    t,
+    pdf,
   ])
 
   const handleNcDownload = useCallback(async () => {
     if (isGenerating) return
     setIsGenerating(true)
     try {
-      const info = await extractReportInfo(assignment)
-      if (!info) {
-        toast.error(t('pdf.exportError'))
-        return
+      // Bake coach names into signatures at download time
+      const finalSignatures: NonConformantSignatures = { ...signatures }
+      if (finalSignatures.homeTeamCoach) {
+        finalSignatures.homeTeamCoach = {
+          ...finalSignatures.homeTeamCoach,
+          name: homeCoachName,
+        }
       }
-      const { generateNonConformantReportBytes, downloadPdf } =
-        await import('@/shared/utils/pdf-form-filler')
-      const { pdfBytes, filename } = await generateNonConformantReportBytes({
-        data: info.reportData,
-        leagueCategory: info.leagueCategory,
-        language,
+      if (finalSignatures.awayTeamCoach) {
+        finalSignatures.awayTeamCoach = {
+          ...finalSignatures.awayTeamCoach,
+          name: awayCoachName,
+        }
+      }
+
+      await pdf.generateNonConformantFinal({
         nonConformantSubItems,
         sectionComments,
         jerseyAdvertising,
-        signatures,
+        signatures: finalSignatures,
       })
-      downloadPdf(pdfBytes, filename)
-      log.debug('Generated non-conformant PDF report for:', assignment.__identity)
-      toast.success(t('pdf.wizard.reportGenerated'))
-      onClose()
     } catch (error) {
       log.error('Non-conformant PDF generation failed:', error)
-      toast.error(t('pdf.exportError'))
     } finally {
       setIsGenerating(false)
     }
   }, [
     isGenerating,
-    assignment,
-    language,
     nonConformantSubItems,
     sectionComments,
     jerseyAdvertising,
     signatures,
-    onClose,
-    t,
+    homeCoachName,
+    awayCoachName,
+    pdf,
   ])
 
   const canProceed = useMemo(() => {
@@ -266,11 +257,13 @@ export function useNonConformantWizard(
     nonConformantSubItems,
     sectionComments,
     setSectionComments,
-    jerseyAdvertising,
-    setJerseyAdvertising,
     previewPdfBytes,
     signatures,
     setSignatures,
+    homeCoachName,
+    setHomeCoachName,
+    awayCoachName,
+    setAwayCoachName,
     showAwayCoach,
     setShowAwayCoach,
     isGenerating,
