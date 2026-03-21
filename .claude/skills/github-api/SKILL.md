@@ -1,5 +1,7 @@
 ---
+name: github-api
 description: Interact with the GitHub REST API for issues, PRs, comments, checks, labels, and other GitHub operations.
+argument-hint: "[operation, e.g. 'list open PRs', 'get issue #42']"
 ---
 
 # GitHub API Skill
