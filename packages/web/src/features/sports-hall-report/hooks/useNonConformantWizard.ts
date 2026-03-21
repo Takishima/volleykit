@@ -11,22 +11,13 @@ import type {
   ChecklistSection,
 } from '@/shared/utils/pdf-form-filler'
 
+import { extractReportInfo } from '../utils/extractReportInfo'
+
 const log = createLogger('useNonConformantWizard')
 
 type NonConformantStep = 'sections' | 'subItems' | 'comment' | 'preview' | 'signatures'
 
 const NC_STEPS: NonConformantStep[] = ['sections', 'subItems', 'comment', 'preview', 'signatures']
-
-async function extractReportInfo(assignment: Assignment) {
-  const { extractSportsHallReportData, getLeagueCategoryFromAssignment } =
-    await import('@/shared/utils/pdf-form-filler')
-
-  const reportData = extractSportsHallReportData(assignment)
-  const leagueCategory = getLeagueCategoryFromAssignment(assignment)
-
-  if (!reportData || !leagueCategory) return null
-  return { reportData, leagueCategory }
-}
 
 export function useNonConformantWizard(
   assignment: Assignment,

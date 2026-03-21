@@ -13,12 +13,7 @@ import { useTranslation } from '@/shared/hooks/useTranslation'
 import { useSettingsStore } from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
-import type {
-  JerseyAdvertisingOptions,
-  Language,
-  LeagueCategory,
-  SportsHallReportData,
-} from '@/shared/utils/pdf-form-filler'
+import type { JerseyAdvertisingOptions, Language } from '@/shared/utils/pdf-form-filler'
 
 import { CommentStep } from './CommentStep'
 import { PdfPreview } from './PdfPreview'
@@ -28,11 +23,14 @@ import { SignatureCollectionStep } from './SignatureCollectionStep'
 import { SubItemSelector } from './SubItemSelector'
 import { WizardStepIndicator } from './WizardStepIndicator'
 import { useNonConformantWizard } from '../hooks/useNonConformantWizard'
+import { extractReportInfo } from '../utils/extractReportInfo'
 
 const log = createLogger('SportsHallReportWizardModal')
 
 const MODAL_TITLE_ID = 'sports-hall-report-wizard-title'
 
+// Language names are intentionally hardcoded as self-names (endonyms) so that
+// each language is always displayed in its own script regardless of app locale.
 const LANGUAGES: ReadonlyArray<{ code: Language; name: string }> = [
   { code: 'de', name: 'Deutsch' },
   { code: 'fr', name: 'Français' },
@@ -45,20 +43,6 @@ interface SportsHallReportWizardModalProps {
   isOpen: boolean
   onClose: () => void
   defaultLanguage: Language
-}
-
-async function extractReportInfo(assignment: Assignment): Promise<{
-  reportData: SportsHallReportData
-  leagueCategory: LeagueCategory
-} | null> {
-  const { extractSportsHallReportData, getLeagueCategoryFromAssignment } =
-    await import('@/shared/utils/pdf-form-filler')
-
-  const reportData = extractSportsHallReportData(assignment)
-  const leagueCategory = getLeagueCategoryFromAssignment(assignment)
-
-  if (!reportData || !leagueCategory) return null
-  return { reportData, leagueCategory }
 }
 
 export function SportsHallReportWizardModal({
@@ -271,8 +255,7 @@ export function SportsHallReportWizardModal({
     isOpen && mode === 'non-conformant'
       ? createPortal(
           <div
-            className="fixed inset-0 bg-surface-card dark:bg-surface-card-dark flex flex-col touch-none overscroll-none"
-            style={{ zIndex: 60 }}
+            className="fixed inset-0 z-60 bg-surface-card dark:bg-surface-card-dark flex flex-col touch-none overscroll-none"
             role="dialog"
             aria-modal="true"
             aria-labelledby={MODAL_TITLE_ID}
@@ -414,10 +397,7 @@ export function SportsHallReportWizardModal({
           confirmed={confirmed}
           setConfirmed={setConfirmed}
           isGenerating={isGeneratingHappy}
-          jerseyAdvertising={jerseyAdvertising}
-          setJerseyAdvertising={setJerseyAdvertising}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
+          jerseyAd={{ jerseyAdvertising, setJerseyAdvertising, homeTeam, awayTeam }}
           onGenerate={handleGenerate}
           onDownloadPreFilled={handleDownloadPreFilled}
           onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}
@@ -509,16 +489,20 @@ function JerseyAdToggle({
   )
 }
 
+interface JerseyAdProps {
+  jerseyAdvertising: JerseyAdvertisingOptions
+  setJerseyAdvertising: React.Dispatch<React.SetStateAction<JerseyAdvertisingOptions>>
+  homeTeam: string
+  awayTeam: string
+}
+
 interface HappyPathContentProps {
   language: Language
   setLanguage: (lang: Language) => void
   confirmed: boolean
   setConfirmed: (fn: (prev: boolean) => boolean) => void
   isGenerating: boolean
-  jerseyAdvertising: JerseyAdvertisingOptions
-  setJerseyAdvertising: React.Dispatch<React.SetStateAction<JerseyAdvertisingOptions>>
-  homeTeam: string
-  awayTeam: string
+  jerseyAd: JerseyAdProps
   onGenerate: () => void
   onDownloadPreFilled: () => void
   onReportIssue?: () => void
@@ -531,10 +515,7 @@ function HappyPathContent({
   confirmed,
   setConfirmed,
   isGenerating,
-  jerseyAdvertising,
-  setJerseyAdvertising,
-  homeTeam,
-  awayTeam,
+  jerseyAd,
   onGenerate,
   onDownloadPreFilled,
   onReportIssue,
@@ -573,18 +554,28 @@ function HappyPathContent({
                 <div className="mt-3 space-y-2.5">
                   <div className="space-y-1.5">
                     <JerseyAdToggle
-                      label={tInterpolate('pdf.wizard.advertisingTeam', { team: homeTeam || '–' })}
-                      checked={jerseyAdvertising.homeTeam}
+                      label={tInterpolate('pdf.wizard.advertisingTeam', {
+                        team: jerseyAd.homeTeam || '–',
+                      })}
+                      checked={jerseyAd.jerseyAdvertising.homeTeam}
                       onChange={() =>
-                        setJerseyAdvertising((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
+                        jerseyAd.setJerseyAdvertising((prev) => ({
+                          ...prev,
+                          homeTeam: !prev.homeTeam,
+                        }))
                       }
                       disabled={isGenerating}
                     />
                     <JerseyAdToggle
-                      label={tInterpolate('pdf.wizard.advertisingTeam', { team: awayTeam || '–' })}
-                      checked={jerseyAdvertising.awayTeam}
+                      label={tInterpolate('pdf.wizard.advertisingTeam', {
+                        team: jerseyAd.awayTeam || '–',
+                      })}
+                      checked={jerseyAd.jerseyAdvertising.awayTeam}
                       onChange={() =>
-                        setJerseyAdvertising((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
+                        jerseyAd.setJerseyAdvertising((prev) => ({
+                          ...prev,
+                          awayTeam: !prev.awayTeam,
+                        }))
                       }
                       disabled={isGenerating}
                     />

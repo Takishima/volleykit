@@ -231,7 +231,7 @@ export async function fillSportsHallReportForm(
 
   fillBaseGameInfo(form, data, mapping)
 
-  form.flatten()
+  // Do not flatten: referees download this form to fill remaining fields themselves
   return pdfDoc.save()
 }
 
@@ -766,6 +766,7 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
 }
 
 const SIGNATURE_CROP_PADDING = 10
+const SIGNATURE_EMBED_PADDING_PT = 3
 const RGBA_CHANNELS = 4
 const ALPHA_CHANNEL_OFFSET = 3
 
@@ -844,7 +845,7 @@ async function embedSignatureAtPosition(
   const page = pdfDoc.getPage(0)
 
   // Scale the signature to fit within the field with padding
-  const padding = 3
+  const padding = SIGNATURE_EMBED_PADDING_PT
   const maxWidth = pos.width - padding * 2
   const maxHeight = pos.height - padding * 2
   const aspectRatio = signatureImage.width / signatureImage.height
@@ -1070,7 +1071,7 @@ export interface NonConformantReportOptions {
  * Fill the sports hall report for the non-conformant workflow.
  */
 export async function fillNonConformantReport(
-  options: NonConformantReportOptions
+  options: NonConformantReportOptions & { flatten?: boolean }
 ): Promise<Uint8Array> {
   const { data, leagueCategory, language, nonConformantSubItems, sectionComments, signatures } =
     options
@@ -1095,7 +1096,9 @@ export async function fillNonConformantReport(
     await embedAllSignatures(pdfDoc, ALL_SIGNATURE_POSITIONS[leagueCategory], signatures)
   }
 
-  form.flatten()
+  if (options.flatten !== false) {
+    form.flatten()
+  }
   return pdfDoc.save()
 }
 
@@ -1105,7 +1108,7 @@ export async function fillNonConformantReport(
 export async function generateNonConformantPreviewBytes(
   options: Omit<NonConformantReportOptions, 'signatures'>
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
-  const pdfBytes = await fillNonConformantReport(options)
+  const pdfBytes = await fillNonConformantReport({ ...options, flatten: false })
   const filename = buildReportFilename(
     options.leagueCategory,
     options.language,
@@ -1117,9 +1120,17 @@ export async function generateNonConformantPreviewBytes(
 
 /**
  * Generate the final non-conformant report with all signatures embedded.
+ * The form is flattened for download to ensure uniform text rendering.
  */
 export async function generateNonConformantReportBytes(
   options: NonConformantReportOptions & { signatures: NonConformantSignatures }
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
-  return generateNonConformantPreviewBytes(options)
+  const pdfBytes = await fillNonConformantReport({ ...options, flatten: true })
+  const filename = buildReportFilename(
+    options.leagueCategory,
+    options.language,
+    options.data.startingDateTime,
+    options.data.gameNumber
+  )
+  return { pdfBytes, filename }
 }
