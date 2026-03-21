@@ -159,8 +159,7 @@ export function SignatureCollectionStep({
         <div className="space-y-2">
           {signers.map((signer) => {
             const hasSigned = !!getSignatureDataUrl(signer.role)
-            const coachName =
-              signer.role === 'homeTeamCoach' ? homeCoachName : awayCoachName
+            const coachName = signer.role === 'homeTeamCoach' ? homeCoachName : awayCoachName
             const isCoachNameEmpty = signer.needsNameInput && !coachName.trim()
 
             return (

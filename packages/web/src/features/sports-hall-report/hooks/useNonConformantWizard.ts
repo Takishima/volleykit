@@ -17,7 +17,11 @@ import { extractReportInfo } from '../utils/extractReportInfo'
 const log = createLogger('useNonConformantWizard')
 
 function getPdfErrorKey(error: unknown): 'pdf.exportError' | 'pdf.exportErrorNetwork' {
-  if (error instanceof TypeError && 'message' in error && /fetch|network|load/i.test(error.message)) {
+  if (
+    error instanceof TypeError &&
+    'message' in error &&
+    /fetch|network|load/i.test(error.message)
+  ) {
     return 'pdf.exportErrorNetwork'
   }
   return 'pdf.exportError'
@@ -248,9 +252,7 @@ export function useNonConformantWizard(
   const ncSteps = useMemo(() => {
     const steps = [
       { label: t('pdf.wizard.nonConformant.stepSections') },
-      ...(showSubItemsStep
-        ? [{ label: t('pdf.wizard.nonConformant.selectSubItems') }]
-        : []),
+      ...(showSubItemsStep ? [{ label: t('pdf.wizard.nonConformant.selectSubItems') }] : []),
       { label: t('pdf.wizard.nonConformant.stepComment') },
       { label: t('pdf.wizard.nonConformant.stepPreview') },
       { label: t('pdf.wizard.nonConformant.stepSign') },
@@ -260,9 +262,7 @@ export function useNonConformantWizard(
 
   // Map the raw step index to the visible step index (accounting for hidden subItems step)
   const ncStepIndex = useMemo(() => {
-    const visibleSteps = showSubItemsStep
-      ? NC_STEPS
-      : NC_STEPS.filter((s) => s !== 'subItems')
+    const visibleSteps = showSubItemsStep ? NC_STEPS : NC_STEPS.filter((s) => s !== 'subItems')
     return visibleSteps.indexOf(ncStep)
   }, [ncStep, showSubItemsStep])
 

@@ -19,7 +19,11 @@ import { usePdfGeneration } from '../hooks/usePdfGeneration'
 const log = createLogger('SportsHallReportWizardModal')
 
 function getPdfErrorKey(error: unknown): 'pdf.exportError' | 'pdf.exportErrorNetwork' {
-  if (error instanceof TypeError && 'message' in error && /fetch|network|load/i.test(error.message)) {
+  if (
+    error instanceof TypeError &&
+    'message' in error &&
+    /fetch|network|load/i.test(error.message)
+  ) {
     return 'pdf.exportErrorNetwork'
   }
   return 'pdf.exportError'
