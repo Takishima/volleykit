@@ -302,10 +302,7 @@ export function SportsHallReportWizardModal({
             </div>
 
             {/* Scrollable step content */}
-            <div
-              className="flex-1 overflow-y-auto px-4 py-2 touch-auto"
-              data-scrollable
-            >
+            <div className="flex-1 overflow-y-auto px-4 py-2 touch-auto" data-scrollable>
               {nc.ncStep === 'sections' && (
                 <SectionSelector
                   sections={nc.checklistSections}

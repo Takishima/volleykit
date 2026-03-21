@@ -1031,7 +1031,8 @@ export interface NonConformantReportOptions {
 export async function fillNonConformantReport(
   options: NonConformantReportOptions
 ): Promise<Uint8Array> {
-  const { data, leagueCategory, language, nonConformantSubItems, sectionComments, signatures } = options
+  const { data, leagueCategory, language, nonConformantSubItems, sectionComments, signatures } =
+    options
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const sections = getChecklistSections(leagueCategory)

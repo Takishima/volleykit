@@ -190,7 +190,16 @@ export function useNonConformantWizard(
     } finally {
       setIsGenerating(false)
     }
-  }, [isGenerating, assignment, language, nonConformantSubItems, sectionComments, signatures, onClose, t])
+  }, [
+    isGenerating,
+    assignment,
+    language,
+    nonConformantSubItems,
+    sectionComments,
+    signatures,
+    onClose,
+    t,
+  ])
 
   const canProceed = useMemo(() => {
     switch (ncStep) {
