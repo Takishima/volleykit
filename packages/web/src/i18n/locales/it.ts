@@ -629,6 +629,8 @@ const it: Translations = {
     export: 'Genera',
     generating: 'Generazione...',
     exportError: 'Generazione PDF fallita',
+    exportErrorNetwork: 'Errore di rete — verifica la connessione',
+    exportErrorMissingData: 'Dati partita mancanti — il rapporto non può essere generato',
     sportsHallReport: 'Rapporto sala sportiva',
     wizard: {
       title: 'Rapporto sala sportiva',
@@ -637,7 +639,8 @@ const it: Translations = {
       advertisingLabel: 'Pubblicità sugli indumenti di gioco',
 
       generate: 'Genera rapporto',
-      downloadPreFilled: 'Scarica il rapporto precompilato',
+      downloadPreFilled: 'Scarica il rapporto vuoto (senza firma)',
+      advertisingHint: 'Verifica lo stato pubblicitario per ogni squadra',
       reportGenerated: 'Rapporto generato con successo',
 
       signature: {
@@ -670,6 +673,11 @@ const it: Translations = {
         coachName: 'Nome allenatore',
         coachNamePlaceholder: 'Nome Cognome',
         addCoach: 'Aggiungere allenatore squadra ospite',
+        removeCoach: 'Rimuovere allenatore squadra ospite',
+        reSign: 'Ri-firmare',
+        discardTitle: 'Eliminare le modifiche?',
+        discardMessage: 'Le modifiche non salvate andranno perse.',
+        discard: 'Elimina',
         tapToSign: 'Tocca per firmare',
         downloadFinal: 'Scarica PDF',
         next: 'Avanti',

@@ -616,6 +616,8 @@ const en: Translations = {
     export: 'Generate',
     generating: 'Generating...',
     exportError: 'Failed to generate PDF',
+    exportErrorNetwork: 'Network error — please check your connection',
+    exportErrorMissingData: 'Missing game data — report cannot be generated',
     sportsHallReport: 'Sports Hall Report',
     wizard: {
       title: 'Sports Hall Report',
@@ -624,7 +626,8 @@ const en: Translations = {
       advertisingLabel: 'Advertising on uniform',
 
       generate: 'Generate Report',
-      downloadPreFilled: 'Download pre-filled report instead',
+      downloadPreFilled: 'Download blank report (without signature)',
+      advertisingHint: 'Please verify advertising status for each team',
       reportGenerated: 'Report generated successfully',
 
       signature: {
@@ -657,6 +660,11 @@ const en: Translations = {
         coachName: 'Coach name',
         coachNamePlaceholder: 'First name Last name',
         addCoach: 'Add away team coach',
+        removeCoach: 'Remove away team coach',
+        reSign: 'Re-sign',
+        discardTitle: 'Discard changes?',
+        discardMessage: 'You have unsaved changes that will be lost.',
+        discard: 'Discard',
         tapToSign: 'Tap to sign',
         downloadFinal: 'Download PDF',
         next: 'Next',

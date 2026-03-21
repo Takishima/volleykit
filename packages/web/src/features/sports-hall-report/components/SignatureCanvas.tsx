@@ -36,16 +36,15 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
   useBodyScrollLock(true)
   const touchGuard = useOverlayTouchGuard()
 
-  // Track orientation changes and enable/disable the pad accordingly
+  const [portraitHintDismissed, setPortraitHintDismissed] = useState(false)
+
+  // Track orientation changes
   useEffect(() => {
     const mql = window.matchMedia('(orientation: portrait)')
     const handler = (e: MediaQueryListEvent) => {
       setIsPortrait(e.matches)
-      if (e.matches) {
-        padRef.current?.off()
-      } else {
-        padRef.current?.on()
-      }
+      // Reset hint dismissal when rotating back to portrait
+      if (e.matches) setPortraitHintDismissed(false)
     }
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
@@ -100,11 +99,6 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
 
     padRef.current = pad
     resizeCanvas()
-
-    // Disable drawing when starting in portrait
-    if (window.matchMedia('(orientation: portrait)').matches) {
-      pad.off()
-    }
 
     window.addEventListener('resize', resizeCanvas)
     return () => {
@@ -173,16 +167,19 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
           </div>
         )}
 
-        {/* Portrait orientation hint — blocks drawing when device is in portrait */}
-        {isPortrait && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-3 text-gray-500">
-              <RotateCw className="w-10 h-10 animate-pulse" aria-hidden="true" />
-              <p className="text-sm font-medium text-center px-8">
-                {t('pdf.wizard.signature.rotateLandscape')}
-              </p>
-            </div>
-          </div>
+        {/* Portrait orientation hint — dismissible suggestion banner */}
+        {isPortrait && !portraitHintDismissed && (
+          <button
+            type="button"
+            onClick={() => setPortraitHintDismissed(true)}
+            className="absolute top-3 left-3 right-3 flex items-center gap-2 rounded-lg bg-gray-100/90 backdrop-blur-sm px-3 py-2 text-gray-500 shadow-sm"
+          >
+            <RotateCw className="w-5 h-5 flex-shrink-0 animate-pulse" aria-hidden="true" />
+            <p className="text-xs font-medium flex-1 text-left">
+              {t('pdf.wizard.signature.rotateLandscape')}
+            </p>
+            <X className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          </button>
         )}
       </div>
     </div>,

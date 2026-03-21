@@ -639,6 +639,8 @@ const de: Translations = {
     export: 'Erstellen',
     generating: 'Wird erstellt...',
     exportError: 'PDF konnte nicht erstellt werden',
+    exportErrorNetwork: 'Netzwerkfehler — bitte Verbindung prüfen',
+    exportErrorMissingData: 'Fehlende Spieldaten — Rapport kann nicht erstellt werden',
     sportsHallReport: 'Hallenrapport',
     wizard: {
       title: 'Hallenrapport',
@@ -647,7 +649,8 @@ const de: Translations = {
       advertisingLabel: 'Werbung auf Spielerkleidung',
 
       generate: 'Rapport erstellen',
-      downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',
+      downloadPreFilled: 'Leeren Rapport herunterladen (ohne Unterschrift)',
+      advertisingHint: 'Bitte Werbestatus für jedes Team überprüfen',
       reportGenerated: 'Rapport erfolgreich erstellt',
 
       signature: {
@@ -680,6 +683,11 @@ const de: Translations = {
         coachName: 'Name Trainer',
         coachNamePlaceholder: 'Vorname Nachname',
         addCoach: 'Trainer Besuchermannschaft hinzufügen',
+        removeCoach: 'Trainer Besuchermannschaft entfernen',
+        reSign: 'Erneut unterschreiben',
+        discardTitle: 'Änderungen verwerfen?',
+        discardMessage: 'Nicht gespeicherte Änderungen gehen verloren.',
+        discard: 'Verwerfen',
         tapToSign: 'Zum Unterschreiben tippen',
         downloadFinal: 'PDF herunterladen',
         next: 'Weiter',

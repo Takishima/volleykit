@@ -22,7 +22,7 @@ export function SectionSelector({
       <p className="text-sm text-text-secondary dark:text-text-secondary-dark mb-3">
         {t('pdf.wizard.nonConformant.selectSections')}
       </p>
-      <div className="max-h-[340px] overflow-y-auto rounded-lg border border-border-default dark:border-border-default-dark divide-y divide-border-default dark:divide-border-default-dark">
+      <div className="max-h-[min(340px,50vh)] overflow-y-auto rounded-lg border border-border-default dark:border-border-default-dark divide-y divide-border-default dark:divide-border-default-dark">
         {sections.map((section) => (
           <SectionRow
             key={section.id}
@@ -46,6 +46,8 @@ function SectionRow({ section, isFlagged, onToggle }: SectionRowProps) {
   const { t } = useTranslation()
 
   const handleClick = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    navigator.vibrate?.(10)
     onToggle(section.id)
   }, [section.id, onToggle])
 
@@ -53,7 +55,7 @@ function SectionRow({ section, isFlagged, onToggle }: SectionRowProps) {
     <button
       type="button"
       onClick={handleClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
+      className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-all duration-150 active:scale-[0.98] ${
         isFlagged
           ? 'bg-warning-50 dark:bg-warning-900/20'
           : 'hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
