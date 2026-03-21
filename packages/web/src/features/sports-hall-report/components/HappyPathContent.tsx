@@ -9,17 +9,21 @@ import type { Language } from '@/shared/utils/pdf-report-data'
 import { JerseyAdvertisingSection } from './JerseyAdvertisingSection'
 import { LanguageSelector } from './LanguageSelector'
 
+export interface JerseyAdProps {
+  jerseyAdvertising: JerseyAdvertisingOptions
+  onToggleHome: () => void
+  onToggleAway: () => void
+  homeTeam: string
+  awayTeam: string
+}
+
 interface HappyPathContentProps {
   language: Language
   setLanguage: (lang: Language) => void
   confirmed: boolean
   setConfirmed: (fn: (prev: boolean) => boolean) => void
   isGenerating: boolean
-  jerseyAdvertising: JerseyAdvertisingOptions
-  onToggleHomeAd: () => void
-  onToggleAwayAd: () => void
-  homeTeam: string
-  awayTeam: string
+  jerseyAd: JerseyAdProps
   onGenerate: () => void
   onDownloadPreFilled: () => void
   onReportIssue?: () => void
@@ -32,11 +36,7 @@ export function HappyPathContent({
   confirmed,
   setConfirmed,
   isGenerating,
-  jerseyAdvertising,
-  onToggleHomeAd,
-  onToggleAwayAd,
-  homeTeam,
-  awayTeam,
+  jerseyAd,
   onGenerate,
   onDownloadPreFilled,
   onReportIssue,
@@ -74,11 +74,11 @@ export function HappyPathContent({
               {confirmed && (
                 <div className="mt-3">
                   <JerseyAdvertisingSection
-                    jerseyAdvertising={jerseyAdvertising}
-                    onToggleHome={onToggleHomeAd}
-                    onToggleAway={onToggleAwayAd}
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
+                    jerseyAdvertising={jerseyAd.jerseyAdvertising}
+                    onToggleHome={jerseyAd.onToggleHome}
+                    onToggleAway={jerseyAd.onToggleAway}
+                    homeTeam={jerseyAd.homeTeam}
+                    awayTeam={jerseyAd.awayTeam}
                     disabled={isGenerating}
                   />
                 </div>

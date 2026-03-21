@@ -8,27 +8,27 @@ import type {
   JerseyAdvertisingOptions,
   Language,
   NonConformantReportOptions,
+  NonConformantSignatures,
 } from '@/shared/utils/pdf-form-filler'
 
 import { extractReportInfo } from '../utils/extractReportInfo'
 
 const log = createLogger('usePdfGeneration')
 
+type NonConformantBaseOptions = Pick<
+  NonConformantReportOptions,
+  'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'
+>
+
+type NonConformantFinalOptions = NonConformantBaseOptions & {
+  signatures: NonConformantSignatures
+}
+
 interface PdfGenerationActions {
   generateHappyPath: (signatureDataUrl: string) => Promise<void>
   downloadPreFilled: () => Promise<void>
-  generateNonConformantPreview: (
-    options: Pick<
-      NonConformantReportOptions,
-      'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'
-    >
-  ) => Promise<Uint8Array | null>
-  generateNonConformantFinal: (
-    options: Pick<
-      NonConformantReportOptions,
-      'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising' | 'signatures'
-    >
-  ) => Promise<void>
+  generateNonConformantPreview: (options: NonConformantBaseOptions) => Promise<Uint8Array | null>
+  generateNonConformantFinal: (options: NonConformantFinalOptions) => Promise<void>
 }
 
 export function usePdfGeneration(
@@ -77,12 +77,7 @@ export function usePdfGeneration(
   }, [assignment, language, onSuccess, t])
 
   const generateNonConformantPreview = useCallback(
-    async (
-      options: Pick<
-        NonConformantReportOptions,
-        'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'
-      >
-    ): Promise<Uint8Array | null> => {
+    async (options: NonConformantBaseOptions): Promise<Uint8Array | null> => {
       const info = await extractReportInfo(assignment)
       if (!info) {
         toast.error(t('pdf.exportError'))
@@ -101,12 +96,7 @@ export function usePdfGeneration(
   )
 
   const generateNonConformantFinal = useCallback(
-    async (
-      options: Pick<
-        NonConformantReportOptions,
-        'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising' | 'signatures'
-      >
-    ) => {
+    async (options: NonConformantFinalOptions) => {
       const info = await extractReportInfo(assignment)
       if (!info) {
         toast.error(t('pdf.exportError'))
@@ -119,7 +109,7 @@ export function usePdfGeneration(
         leagueCategory: info.leagueCategory,
         language,
         ...options,
-        signatures: options.signatures!,
+        signatures: options.signatures,
       })
       downloadPdf(pdfBytes, filename)
       log.debug('Generated non-conformant PDF report for:', assignment.__identity)

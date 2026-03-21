@@ -201,11 +201,13 @@ export function SportsHallReportWizardModal({
           confirmed={confirmed}
           setConfirmed={setConfirmed}
           isGenerating={isGeneratingHappy}
-          jerseyAdvertising={jerseyAdvertising}
-          onToggleHomeAd={handleToggleHomeAd}
-          onToggleAwayAd={handleToggleAwayAd}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
+          jerseyAd={{
+            jerseyAdvertising,
+            onToggleHome: handleToggleHomeAd,
+            onToggleAway: handleToggleAwayAd,
+            homeTeam,
+            awayTeam,
+          }}
           onGenerate={handleGenerate}
           onDownloadPreFilled={handleDownloadPreFilled}
           onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}

@@ -149,8 +149,8 @@ export function useNonConformantWizard(
           sectionComments,
           jerseyAdvertising,
         })
-        setPreviewPdfBytes(pdfBytes)
         if (!pdfBytes) return
+        setPreviewPdfBytes(pdfBytes)
       } catch (error) {
         log.error('Preview generation failed:', error)
         return

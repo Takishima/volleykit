@@ -89,7 +89,7 @@ export function extractSportsHallReportData(assignment: Assignment): SportsHallR
   }
 
   // Debug logging for troubleshooting PDF generation
-  logger.debug('[pdf-form-filler] Extracted report data:', reportData)
+  logger.debug('[pdf-report-data] Extracted report data:', reportData)
 
   return reportData
 }

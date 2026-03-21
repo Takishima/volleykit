@@ -8,6 +8,7 @@ import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
 import { useOverlayTouchGuard } from '@/shared/hooks/useOverlayTouchGuard'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import type { JerseyAdvertisingOptions } from '@/shared/utils/pdf-form-filler'
+import type { Language } from '@/shared/utils/pdf-report-data'
 
 import { CommentStep } from './CommentStep'
 import { JerseyAdvertisingSection } from './JerseyAdvertisingSection'
@@ -24,8 +25,8 @@ const MODAL_TITLE_ID = 'sports-hall-report-wizard-title'
 
 interface NonConformantOverlayProps {
   nc: ReturnType<typeof useNonConformantWizard>
-  language: import('@/shared/utils/pdf-report-data').Language
-  setLanguage: (lang: import('@/shared/utils/pdf-report-data').Language) => void
+  language: Language
+  setLanguage: (lang: Language) => void
   jerseyAdvertising: JerseyAdvertisingOptions
   onToggleHomeAd: () => void
   onToggleAwayAd: () => void
