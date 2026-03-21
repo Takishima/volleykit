@@ -4,7 +4,11 @@ import type { Assignment } from '@/api/client'
 import { useTranslation } from '@/shared/hooks/useTranslation'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
-import type { JerseyAdvertisingOptions, Language, NonConformantReportOptions } from '@/shared/utils/pdf-form-filler'
+import type {
+  JerseyAdvertisingOptions,
+  Language,
+  NonConformantReportOptions,
+} from '@/shared/utils/pdf-form-filler'
 
 import { extractReportInfo } from '../utils/extractReportInfo'
 
@@ -14,7 +18,10 @@ interface PdfGenerationActions {
   generateHappyPath: (signatureDataUrl: string) => Promise<void>
   downloadPreFilled: () => Promise<void>
   generateNonConformantPreview: (
-    options: Pick<NonConformantReportOptions, 'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'>
+    options: Pick<
+      NonConformantReportOptions,
+      'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'
+    >
   ) => Promise<Uint8Array | null>
   generateNonConformantFinal: (
     options: Pick<
@@ -71,7 +78,10 @@ export function usePdfGeneration(
 
   const generateNonConformantPreview = useCallback(
     async (
-      options: Pick<NonConformantReportOptions, 'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'>
+      options: Pick<
+        NonConformantReportOptions,
+        'nonConformantSubItems' | 'sectionComments' | 'jerseyAdvertising'
+      >
     ): Promise<Uint8Array | null> => {
       const info = await extractReportInfo(assignment)
       if (!info) {
@@ -119,5 +129,10 @@ export function usePdfGeneration(
     [assignment, language, onSuccess, t]
   )
 
-  return { generateHappyPath, downloadPreFilled, generateNonConformantPreview, generateNonConformantFinal }
+  return {
+    generateHappyPath,
+    downloadPreFilled,
+    generateNonConformantPreview,
+    generateNonConformantFinal,
+  }
 }

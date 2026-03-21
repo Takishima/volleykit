@@ -770,8 +770,7 @@ describe('pdf-form-filler', () => {
         describe(`${leagueCategory} ${language}`, () => {
           it('generates valid PDF bytes with all sections non-conformant', async () => {
             mockFetchForPdf(leagueCategory, language)
-            const { nonConformantSubItems, sectionComments } =
-              buildAllNonConformant(leagueCategory)
+            const { nonConformantSubItems, sectionComments } = buildAllNonConformant(leagueCategory)
 
             const pdfBytes = await fillNonConformantReport({
               data: baseReportData,
@@ -787,8 +786,7 @@ describe('pdf-form-filler', () => {
 
           it('flattens the form so PDF viewers cannot re-render fields', async () => {
             mockFetchForPdf(leagueCategory, language)
-            const { nonConformantSubItems, sectionComments } =
-              buildAllNonConformant(leagueCategory)
+            const { nonConformantSubItems, sectionComments } = buildAllNonConformant(leagueCategory)
 
             const pdfBytes = await fillNonConformantReport({
               data: baseReportData,
@@ -806,8 +804,7 @@ describe('pdf-form-filler', () => {
 
           it('sets all radio buttons to non-conformant and fills all comment fields', async () => {
             const sections = getChecklistSections(leagueCategory)
-            const { nonConformantSubItems, sectionComments } =
-              buildAllNonConformant(leagueCategory)
+            const { nonConformantSubItems, sectionComments } = buildAllNonConformant(leagueCategory)
 
             // Load the PDF template and fill it WITHOUT flattening to verify field values
             const templateBytes = loadPdfTemplate(leagueCategory, language)

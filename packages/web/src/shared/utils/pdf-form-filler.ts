@@ -94,8 +94,12 @@ function trySetTextField(form: any, fieldName: string, value: string | undefined
 /**
  * Fills the basic game info fields (teams, date, hall, referees, gender) in a PDF form.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fillBaseGameInfo(form: any, data: SportsHallReportData, mapping: ReturnType<typeof getFieldMapping>): void {
+function fillBaseGameInfo(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form: any,
+  data: SportsHallReportData,
+  mapping: ReturnType<typeof getFieldMapping>
+): void {
   trySetTextField(form, mapping.gameNumber, data.gameNumber)
   trySetTextField(form, mapping.homeTeam, data.homeTeam)
   trySetTextField(form, mapping.awayTeam, data.awayTeam)

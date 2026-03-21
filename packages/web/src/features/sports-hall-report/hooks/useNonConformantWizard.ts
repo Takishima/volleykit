@@ -90,10 +90,7 @@ export function useNonConformantWizard(
 
   // Sections that have multiple sub-items and need manual selection
   const multiItemFlaggedSections = useMemo(
-    () =>
-      checklistSections.filter(
-        (s) => flaggedSections.has(s.id) && s.subItems.length > 1
-      ),
+    () => checklistSections.filter((s) => flaggedSections.has(s.id) && s.subItems.length > 1),
     [checklistSections, flaggedSections]
   )
 
@@ -122,7 +119,11 @@ export function useNonConformantWizard(
           const section = checklistSections.find((s) => s.id === sectionId)
           if (!section) continue
           // Auto-select all sub-items for single-item sections or when no manual selection exists
-          if (section.subItems.length === 1 || !updated[sectionId] || updated[sectionId].size === 0) {
+          if (
+            section.subItems.length === 1 ||
+            !updated[sectionId] ||
+            updated[sectionId].size === 0
+          ) {
             updated[sectionId] = new Set(section.subItems.map((si) => si.id))
           }
         }
