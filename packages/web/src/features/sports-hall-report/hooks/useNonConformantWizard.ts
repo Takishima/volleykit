@@ -119,10 +119,8 @@ export function useNonConformantWizard(
         for (const sectionId of flaggedSections) {
           const section = checklistSections.find((s) => s.id === sectionId)
           if (!section) continue
-          if (section.subItems.length === 1) {
-            // Single-item section: always auto-select the only sub-item
-            updated[sectionId] = new Set(section.subItems.map((si) => si.id))
-          } else if (!updated[sectionId] || updated[sectionId].size === 0) {
+          // Auto-select all sub-items for single-item sections or when no manual selection exists
+          if (section.subItems.length === 1 || !updated[sectionId] || updated[sectionId].size === 0) {
             updated[sectionId] = new Set(section.subItems.map((si) => si.id))
           }
         }
