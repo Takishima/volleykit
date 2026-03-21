@@ -238,22 +238,7 @@ export function SportsHallReportWizardModal({
                     <ul className="space-y-1.5">
                       <ConfirmItem label={t('pdf.wizard.allCheckpointsOk')} />
                     </ul>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm text-text-secondary dark:text-text-secondary-dark">
-                          {t('pdf.wizard.advertisingLabel')}
-                        </span>
-                        <ToggleSwitch
-                          checked={jerseyAdvertising.homeTeam && jerseyAdvertising.awayTeam}
-                          onChange={() => {
-                            const allOk = jerseyAdvertising.homeTeam && jerseyAdvertising.awayTeam
-                            setJerseyAdvertising({ homeTeam: !allOk, awayTeam: !allOk })
-                          }}
-                          label={t('pdf.wizard.advertisingLabel')}
-                          variant="success"
-                          disabled={isGenerating}
-                        />
-                      </div>
+                    <div className="space-y-1.5">
                       <JerseyAdToggle
                         team={homeTeam || '–'}
                         checked={jerseyAdvertising.homeTeam}
