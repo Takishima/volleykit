@@ -5,6 +5,7 @@ import { useTranslation } from '@/shared/hooks/useTranslation'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
 import type {
+  JerseyAdvertisingOptions,
   Language,
   NonConformantSelections,
   NonConformantSignatures,
@@ -33,6 +34,10 @@ export function useNonConformantWizard(
   const [sectionComments, setSectionComments] = useState<Record<string, string>>({})
   const [previewPdfBytes, setPreviewPdfBytes] = useState<Uint8Array | null>(null)
   const [signatures, setSignatures] = useState<NonConformantSignatures>({})
+  const [jerseyAdvertising, setJerseyAdvertising] = useState<JerseyAdvertisingOptions>({
+    homeTeam: true,
+    awayTeam: true,
+  })
   const [showAwayCoach, setShowAwayCoach] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -45,6 +50,7 @@ export function useNonConformantWizard(
     setSectionComments({})
     setPreviewPdfBytes(null)
     setSignatures({})
+    setJerseyAdvertising({ homeTeam: true, awayTeam: true })
     setShowAwayCoach(false)
     setIsGenerating(false)
   }, [])
@@ -80,27 +86,44 @@ export function useNonConformantWizard(
     })
   }, [])
 
+  // Sections that have multiple sub-items and need manual selection
+  const multiItemFlaggedSections = useMemo(
+    () =>
+      checklistSections.filter(
+        (s) => flaggedSections.has(s.id) && s.subItems.length > 1
+      ),
+    [checklistSections, flaggedSections]
+  )
+
   const handleNcBack = useCallback((): 'exit' | void => {
     const idx = NC_STEPS.indexOf(ncStep)
     if (idx <= 0) {
       return 'exit'
     }
+    // Skip subItems step when going back if all flagged sections are single-item
+    if (ncStep === 'comment' && multiItemFlaggedSections.length === 0) {
+      setNcStep('sections')
+      return
+    }
     setNcStep(NC_STEPS[idx - 1]!)
-  }, [ncStep])
+  }, [ncStep, multiItemFlaggedSections])
 
   const handleNcNext = useCallback(async () => {
     if (isGenerating) return
-    const idx = NC_STEPS.indexOf(ncStep)
+    let nextIdx = NC_STEPS.indexOf(ncStep) + 1
 
     if (ncStep === 'sections') {
+      // Auto-select sub-items for single-item sections, preserve manual selections for multi-item
       setNonConformantSubItems((prev) => {
         const updated = { ...prev }
         for (const sectionId of flaggedSections) {
-          if (!updated[sectionId] || updated[sectionId].size === 0) {
-            const section = checklistSections.find((s) => s.id === sectionId)
-            if (section) {
-              updated[sectionId] = new Set(section.subItems.map((si) => si.id))
-            }
+          const section = checklistSections.find((s) => s.id === sectionId)
+          if (!section) continue
+          if (section.subItems.length === 1) {
+            // Single-item section: always auto-select the only sub-item
+            updated[sectionId] = new Set(section.subItems.map((si) => si.id))
+          } else if (!updated[sectionId] || updated[sectionId].size === 0) {
+            updated[sectionId] = new Set(section.subItems.map((si) => si.id))
           }
         }
         for (const key of Object.keys(updated)) {
@@ -110,9 +133,14 @@ export function useNonConformantWizard(
         }
         return updated
       })
+
+      // Skip subItems step if all flagged sections are single-item
+      if (multiItemFlaggedSections.length === 0) {
+        nextIdx = NC_STEPS.indexOf('comment')
+      }
     }
 
-    if (NC_STEPS[idx + 1] === 'preview') {
+    if (NC_STEPS[nextIdx] === 'preview') {
       setIsGenerating(true)
       try {
         const info = await extractReportInfo(assignment)
@@ -127,6 +155,7 @@ export function useNonConformantWizard(
           language,
           nonConformantSubItems,
           sectionComments,
+          jerseyAdvertising,
         })
         setPreviewPdfBytes(pdfBytes)
       } catch (error) {
@@ -138,18 +167,20 @@ export function useNonConformantWizard(
       }
     }
 
-    if (idx < NC_STEPS.length - 1) {
-      setNcStep(NC_STEPS[idx + 1]!)
+    if (nextIdx < NC_STEPS.length) {
+      setNcStep(NC_STEPS[nextIdx]!)
     }
   }, [
     isGenerating,
     ncStep,
     flaggedSections,
     checklistSections,
+    multiItemFlaggedSections,
     assignment,
     language,
     nonConformantSubItems,
     sectionComments,
+    jerseyAdvertising,
     t,
   ])
 
@@ -170,6 +201,7 @@ export function useNonConformantWizard(
         language,
         nonConformantSubItems,
         sectionComments,
+        jerseyAdvertising,
         signatures,
       })
       downloadPdf(pdfBytes, filename)
@@ -188,6 +220,7 @@ export function useNonConformantWizard(
     language,
     nonConformantSubItems,
     sectionComments,
+    jerseyAdvertising,
     signatures,
     onClose,
     t,
@@ -200,7 +233,7 @@ export function useNonConformantWizard(
       case 'subItems':
         return Object.values(nonConformantSubItems).some((set) => set.size > 0)
       case 'comment':
-        return [...flaggedSections].every((id) => sectionComments[id]?.trim())
+        return true
       case 'preview':
         return !!previewPdfBytes
       case 'signatures': {
@@ -213,7 +246,7 @@ export function useNonConformantWizard(
       default:
         return false
     }
-  }, [ncStep, flaggedSections, nonConformantSubItems, sectionComments, previewPdfBytes, signatures])
+  }, [ncStep, flaggedSections, nonConformantSubItems, previewPdfBytes, signatures])
 
   const ncSteps = useMemo(
     () => [
@@ -235,6 +268,8 @@ export function useNonConformantWizard(
     nonConformantSubItems,
     sectionComments,
     setSectionComments,
+    jerseyAdvertising,
+    setJerseyAdvertising,
     previewPdfBytes,
     signatures,
     setSignatures,

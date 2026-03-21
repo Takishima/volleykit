@@ -493,6 +493,7 @@ export interface Translations {
       title: string
       confirmLabel: string
       advertisingTeam: string
+      advertisingLabel: string
 
       generate: string
       downloadPreFilled: string

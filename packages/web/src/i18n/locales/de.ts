@@ -644,6 +644,7 @@ const de: Translations = {
       title: 'Hallenrapport',
       confirmLabel: 'Ich bestätige, dass alles in Ordnung ist',
       advertisingTeam: 'Werbung — {team}',
+      advertisingLabel: 'Werbung auf Spielerkleidung',
 
       generate: 'Rapport erstellen',
       downloadPreFilled: 'Vorausgefüllten Rapport herunterladen',

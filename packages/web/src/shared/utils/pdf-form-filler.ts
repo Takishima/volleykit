@@ -1064,6 +1064,7 @@ export interface NonConformantReportOptions {
   language: Language
   nonConformantSubItems: NonConformantSelections
   sectionComments: Record<string, string>
+  jerseyAdvertising?: JerseyAdvertisingOptions
   signatures?: NonConformantSignatures
 }
 
@@ -1073,10 +1074,18 @@ export interface NonConformantReportOptions {
 export async function fillNonConformantReport(
   options: NonConformantReportOptions & { flatten?: boolean }
 ): Promise<Uint8Array> {
-  const { data, leagueCategory, language, nonConformantSubItems, sectionComments, signatures } =
-    options
+  const {
+    data,
+    leagueCategory,
+    language,
+    nonConformantSubItems,
+    sectionComments,
+    jerseyAdvertising = { homeTeam: true, awayTeam: true },
+    signatures,
+  } = options
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
+  const wizardMapping = getWizardFieldMapping(leagueCategory)
   const sections = getChecklistSections(leagueCategory)
   const signatureNameFields =
     leagueCategory === 'NLA' ? NLA_SIGNATURE_NAME_FIELDS : NLB_SIGNATURE_NAME_FIELDS
@@ -1084,6 +1093,19 @@ export async function fillNonConformantReport(
   fillBaseGameInfo(form, data, mapping)
   fillChecklistRadios(form, sections, nonConformantSubItems)
   fillNonConformantComments(form, sections, nonConformantSubItems, sectionComments)
+
+  // Set advertising radio fields (overrides checklist values for these specific fields)
+  const adEntries: Array<{ field: string; hasAd: boolean }> = [
+    { field: wizardMapping.advertisingHomeTeam, hasAd: jerseyAdvertising.homeTeam },
+    { field: wizardMapping.advertisingAwayTeam, hasAd: jerseyAdvertising.awayTeam },
+  ]
+  for (const { field, hasAd } of adEntries) {
+    try {
+      form.getRadioGroup(field).select(hasAd ? RADIO_OK_OPTION : RADIO_NOT_OK_OPTION)
+    } catch (error) {
+      logger.warn(`Could not set advertising "${field}":`, error)
+    }
+  }
 
   if (signatures?.homeTeamCoach?.name) {
     trySetTextField(form, signatureNameFields.homeTeam, signatures.homeTeamCoach.name)

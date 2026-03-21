@@ -51,7 +51,7 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const isNonConformantEnabled = useSettingsStore((s) => s.isNonConformantEnabled)
 
   // Shared state
@@ -69,7 +69,8 @@ export function SportsHallReportWizardModal({
 
   // Non-conformant state (extracted hook)
   const nc = useNonConformantWizard(assignment, language, onClose)
-  const { loadSections, reset: resetNc, setSectionComments } = nc
+  const { loadSections, reset: resetNc, setSectionComments, setJerseyAdvertising: setNcJerseyAd } =
+    nc
 
   // Load checklist sections when modal opens
   useEffect(() => {
@@ -287,11 +288,40 @@ export function SportsHallReportWizardModal({
             {/* Scrollable step content */}
             <div className="flex-1 overflow-y-auto px-4 py-2 touch-auto" data-scrollable>
               {nc.ncStep === 'sections' && (
-                <SectionSelector
-                  sections={nc.checklistSections}
-                  flaggedSections={nc.flaggedSections}
-                  onToggleSection={nc.handleToggleSection}
-                />
+                <>
+                  <SectionSelector
+                    sections={nc.checklistSections}
+                    flaggedSections={nc.flaggedSections}
+                    onToggleSection={nc.handleToggleSection}
+                  />
+
+                  {/* Advertising question — same as happy path */}
+                  <div className="mt-4 space-y-1.5">
+                    <p className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
+                      {t('pdf.wizard.advertisingLabel')}
+                    </p>
+                    <JerseyAdToggle
+                      label={tInterpolate('pdf.wizard.advertisingTeam', {
+                        team: homeTeam || '–',
+                      })}
+                      checked={nc.jerseyAdvertising.homeTeam}
+                      onChange={() =>
+                        setNcJerseyAd((prev) => ({ ...prev, homeTeam: !prev.homeTeam }))
+                      }
+                      disabled={nc.isGenerating}
+                    />
+                    <JerseyAdToggle
+                      label={tInterpolate('pdf.wizard.advertisingTeam', {
+                        team: awayTeam || '–',
+                      })}
+                      checked={nc.jerseyAdvertising.awayTeam}
+                      onChange={() =>
+                        setNcJerseyAd((prev) => ({ ...prev, awayTeam: !prev.awayTeam }))
+                      }
+                      disabled={nc.isGenerating}
+                    />
+                  </div>
+                </>
               )}
               {nc.ncStep === 'subItems' && (
                 <SubItemSelector

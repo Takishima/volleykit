@@ -634,6 +634,7 @@ const it: Translations = {
       title: 'Rapporto sala sportiva',
       confirmLabel: 'Confermo che tutto è in ordine',
       advertisingTeam: 'Pubblicità — {team}',
+      advertisingLabel: 'Pubblicità sugli indumenti di gioco',
 
       generate: 'Genera rapporto',
       downloadPreFilled: 'Scarica il rapporto precompilato',

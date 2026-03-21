@@ -27,7 +27,6 @@ export function CommentStep({
 
       {flaggedSectionList.map((section) => {
         const comment = sectionComments[section.id] ?? ''
-        const isEmpty = comment.trim().length === 0
 
         return (
           <div
@@ -54,11 +53,6 @@ export function CommentStep({
                 rows={3}
                 className="w-full rounded-lg border border-border-default dark:border-border-default-dark bg-surface-primary dark:bg-surface-primary-dark text-text-primary dark:text-text-primary-dark text-sm px-3 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-text-muted dark:placeholder:text-text-muted-dark"
               />
-              {isEmpty && (
-                <p className="text-xs text-error-500 mt-1">
-                  {t('pdf.wizard.nonConformant.commentRequired')}
-                </p>
-              )}
             </div>
           </div>
         )

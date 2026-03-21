@@ -621,6 +621,7 @@ const en: Translations = {
       title: 'Sports Hall Report',
       confirmLabel: 'I confirm everything is in order',
       advertisingTeam: 'Advertising — {team}',
+      advertisingLabel: 'Advertising on uniform',
 
       generate: 'Generate Report',
       downloadPreFilled: 'Download pre-filled report instead',

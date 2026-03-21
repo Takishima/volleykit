@@ -19,7 +19,10 @@ export function SubItemSelector({
 }: SubItemSelectorProps) {
   const { t } = useTranslation()
 
-  const flaggedSectionList = sections.filter((s) => flaggedSections.has(s.id))
+  // Only show sections with multiple sub-items; single-item sections are auto-selected
+  const flaggedSectionList = sections.filter(
+    (s) => flaggedSections.has(s.id) && s.subItems.length > 1
+  )
 
   return (
     <div className="space-y-4">
