@@ -226,9 +226,7 @@ export function useNonConformantWizard(
       case 'signatures': {
         const hasFirstRef = !!signatures.firstReferee
         const hasSecondRef = !!signatures.secondReferee
-        const hasCoach =
-          !!signatures.homeTeamCoach?.signature || !!signatures.awayTeamCoach?.signature
-        return hasFirstRef && hasSecondRef && hasCoach
+        return hasFirstRef && hasSecondRef
       }
       default:
         return false

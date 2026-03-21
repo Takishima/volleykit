@@ -667,6 +667,7 @@ const it: Translations = {
         homeCoachLabel: 'Allenatore squadra di casa',
         awayCoachLabel: 'Allenatore squadra ospite',
         signAs: 'Firma come',
+        coachOptional: 'facoltativo',
         coachName: 'Nome allenatore',
         coachNamePlaceholder: 'Nome Cognome',
         addCoach: 'Aggiungere allenatore squadra ospite',

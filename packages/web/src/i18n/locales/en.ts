@@ -654,6 +654,7 @@ const en: Translations = {
         homeCoachLabel: 'Home team coach',
         awayCoachLabel: 'Away team coach',
         signAs: 'Sign as',
+        coachOptional: 'optional',
         coachName: 'Coach name',
         coachNamePlaceholder: 'First name Last name',
         addCoach: 'Add away team coach',

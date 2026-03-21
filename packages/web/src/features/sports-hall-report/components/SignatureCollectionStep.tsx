@@ -60,7 +60,7 @@ export function SignatureCollectionStep({
     },
     {
       role: 'homeTeamCoach',
-      label: t('pdf.wizard.nonConformant.homeCoachLabel'),
+      label: `${t('pdf.wizard.nonConformant.homeCoachLabel')} (${t('pdf.wizard.nonConformant.coachOptional')})`,
       needsNameInput: true,
     },
   ]
@@ -68,7 +68,7 @@ export function SignatureCollectionStep({
   if (showAwayCoach) {
     signers.push({
       role: 'awayTeamCoach',
-      label: t('pdf.wizard.nonConformant.awayCoachLabel'),
+      label: `${t('pdf.wizard.nonConformant.awayCoachLabel')} (${t('pdf.wizard.nonConformant.coachOptional')})`,
       needsNameInput: true,
     })
   }
@@ -86,8 +86,9 @@ export function SignatureCollectionStep({
     }
   }
 
-  const completedCount = signers.filter((s) => getSignatureDataUrl(s.role)).length
-  const totalRequired = signers.length
+  const requiredSigners = signers.filter((s) => !s.needsNameInput)
+  const completedCount = requiredSigners.filter((s) => getSignatureDataUrl(s.role)).length
+  const totalRequired = requiredSigners.length
 
   const handleSignatureComplete = useCallback(
     (dataUrl: string) => {
