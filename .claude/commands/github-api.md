@@ -1,6 +1,6 @@
 # GitHub API Skill
 
-Interact with the GitHub REST API using curl. Use this skill for any GitHub operations (issues, PRs, comments, checks, labels, etc.).
+Interact with the GitHub REST API. Use this skill for any GitHub operations (issues, PRs, comments, checks, labels, etc.).
 
 ## User Input
 
@@ -26,33 +26,77 @@ bash -c 'REMOTE=$(git remote get-url origin 2>/dev/null); if [[ "$REMOTE" =~ git
 
 Store the `owner` and `repo` values for subsequent API calls.
 
-### Step 2: Check Token
+### Step 2: Detect API Method
 
 ```bash
-bash -c 'if [ -n "$GITHUB_TOKEN" ]; then echo "TOKEN=available"; else echo "TOKEN=missing (read-only public access only)"; fi'
+command -v gh >/dev/null 2>&1 && echo "METHOD=gh" || echo "METHOD=curl"
 ```
 
-## API Call Pattern
+Use `gh api` when available (GitHub Actions, local dev with gh installed). Fall back to `curl` with `$GITHUB_TOKEN` (Claude Code web).
+
+## API Call Patterns
+
+### Using `gh api` (preferred when available)
+
+#### GET request
+
+```bash
+gh api repos/OWNER/REPO/ENDPOINT
+```
+
+#### POST/PATCH/PUT request
+
+```bash
+gh api repos/OWNER/REPO/ENDPOINT -X POST --input <(jq -n --arg title "TITLE" --arg body "BODY" '{title: $title, body: $body}')
+```
+
+For multiline body content, use a heredoc variable:
+
+```bash
+BODY=$(cat <<'EOF'
+Line 1
+Line 2
+EOF
+)
+gh api repos/OWNER/REPO/ENDPOINT -X POST --input <(jq -n --arg title "TITLE" --arg body "$BODY" '{title: $title, body: $body}')
+```
+
+#### Pagination
+
+```bash
+gh api --paginate repos/OWNER/REPO/issues
+```
+
+### Using `curl` (fallback when `gh` is unavailable)
 
 **CRITICAL**: All curl commands MUST be wrapped in `bash -c` to access `$GITHUB_TOKEN`. Direct curl will fail with 401.
 
-### Authenticated request template
+#### GET request
 
 ```bash
 bash -c 'curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" | jq .'
 ```
 
-### POST/PATCH/PUT template
+#### POST/PATCH/PUT request
 
-**IMPORTANT**: Always use heredoc for multiline body content. Never use inline `\n` escapes in jq args.
+```bash
+bash -c 'jq -n --arg title "TITLE" --arg body "BODY" "{title: \$title, body: \$body}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" -d @- | jq .'
+```
+
+For multiline body content, use a heredoc variable inside `bash -c`:
 
 ```bash
 bash -c 'BODY=$(cat <<'\''EOF'\''
-BODY_CONTENT_HERE
+Line 1
+Line 2
 EOF
 )
 jq -n --arg title "TITLE" --arg body "$BODY" "{title: \$title, body: \$body}" | curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/OWNER/REPO/ENDPOINT" -d @- | jq .'
 ```
+
+#### Pagination
+
+Add `?per_page=100&page=N` for large result sets.
 
 ## Common Operations Reference
 
@@ -105,11 +149,11 @@ Use these as templates. Replace `OWNER`, `REPO`, and parameters as needed.
 
 Based on the user input:
 
-1. Run **Step 1** and **Step 2** to detect repo and token
+1. Run **Step 1** and **Step 2** to detect repo and API method
 2. Determine the appropriate API endpoint and method from the reference above
-3. Construct and execute the curl command using the authenticated template
+3. Construct and execute the command using the detected method (`gh api` or `curl`)
 4. Parse the response with `jq` to show relevant fields
-5. If the response is paginated (has `Link` header), inform the user
+5. For paginated results: use `gh api --paginate` or `?per_page=100&page=N` (curl)
 
 ## Tips
 
@@ -117,7 +161,6 @@ Based on the user input:
 - Filter by user: `jq '[.[] | select(.user.login == "USERNAME")]'`
 - Get current branch: `git rev-parse --abbrev-ref HEAD`
 - Get current SHA: `git rev-parse HEAD`
-- Pagination: add `?per_page=100&page=N` for large result sets
 
 ## Output
 

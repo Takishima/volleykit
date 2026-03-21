@@ -78,6 +78,10 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
   echo ""
   echo "=== GitHub API Access ==="
   echo "GITHUB_TOKEN is available. Use /github-api skill for GitHub REST API operations."
-  echo "CRITICAL: Always wrap curl in bash -c to access the token. The gh CLI is NOT available."
+  if command -v gh >/dev/null 2>&1; then
+    echo "gh CLI is available. Prefer 'gh api' for GitHub API calls."
+  else
+    echo "gh CLI is NOT available. Use 'bash -c' with curl to access \$GITHUB_TOKEN."
+  fi
   echo "========================="
 fi
