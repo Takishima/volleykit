@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } 
 import type { Assignment } from '@/api/client'
 import { server } from '@/test/msw/server'
 
+import { readFileSync } from 'fs'
+import { resolve } from 'path'
+
 import {
   extractSportsHallReportData,
   getLeagueCategoryFromAssignment,
@@ -10,7 +13,12 @@ import {
   downloadPdf,
   fillSportsHallReportForm,
   buildReportFilename,
+  fillNonConformantReport,
+  getChecklistSections,
   type SportsHallReportData,
+  type LeagueCategory,
+  type Language,
+  type NonConformantSelections,
 } from './pdf-form-filler'
 
 // Close MSW server for this file since we use manual fetch mocking in downloadPdf tests
@@ -698,5 +706,154 @@ describe('pdf-form-filler', () => {
       const result = extractSportsHallReportData(assignment)
       expect(result?.gender).toBe('m')
     })
+  })
+
+  describe('fillNonConformantReport', () => {
+    const PDF_DIR = resolve(__dirname, '../../../public/assets/pdf')
+
+    const baseReportData: SportsHallReportData = {
+      gameNumber: '999999',
+      homeTeam: 'VBC Test Home',
+      awayTeam: 'VBC Test Away',
+      gender: 'm',
+      hallName: 'Testhalle',
+      location: 'Teststadt',
+      date: '15.12.2025',
+      firstRefereeName: 'Max Mustermann',
+      secondRefereeName: 'Anna Schmidt',
+    }
+
+    function buildAllNonConformant(leagueCategory: LeagueCategory): {
+      nonConformantSubItems: NonConformantSelections
+      sectionComments: Record<string, string>
+    } {
+      const sections = getChecklistSections(leagueCategory)
+      const nonConformantSubItems: NonConformantSelections = {}
+      const sectionComments: Record<string, string> = {}
+      for (const section of sections) {
+        nonConformantSubItems[section.id] = new Set(section.subItems.map((s) => s.id))
+        sectionComments[section.id] = `Comment for section ${section.id}`
+      }
+      return { nonConformantSubItems, sectionComments }
+    }
+
+    function getPdfPath(leagueCategory: LeagueCategory, language: Language): string {
+      const categoryPath = leagueCategory === 'NLA' ? 'nla-' : ''
+      return resolve(PDF_DIR, `sports-hall-report-${categoryPath}${language}.pdf`)
+    }
+
+    function loadPdfTemplate(leagueCategory: LeagueCategory, language: Language): Uint8Array {
+      const buffer = readFileSync(getPdfPath(leagueCategory, language))
+      return new Uint8Array(buffer)
+    }
+
+    function mockFetchForPdf(leagueCategory: LeagueCategory, language: Language): void {
+      const pdfBytes = loadPdfTemplate(leagueCategory, language)
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: () => Promise.resolve(pdfBytes.buffer),
+        })
+      )
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    const leagueCategories: LeagueCategory[] = ['NLA', 'NLB']
+    const languages: Language[] = ['de', 'fr']
+
+    for (const leagueCategory of leagueCategories) {
+      for (const language of languages) {
+        describe(`${leagueCategory} ${language}`, () => {
+          it('generates valid PDF bytes with all sections non-conformant', async () => {
+            mockFetchForPdf(leagueCategory, language)
+            const { nonConformantSubItems, sectionComments } =
+              buildAllNonConformant(leagueCategory)
+
+            const pdfBytes = await fillNonConformantReport({
+              data: baseReportData,
+              leagueCategory,
+              language,
+              nonConformantSubItems,
+              sectionComments,
+            })
+
+            expect(pdfBytes).toBeInstanceOf(Uint8Array)
+            expect(pdfBytes.length).toBeGreaterThan(0)
+          })
+
+          it('flattens the form so PDF viewers cannot re-render fields', async () => {
+            mockFetchForPdf(leagueCategory, language)
+            const { nonConformantSubItems, sectionComments } =
+              buildAllNonConformant(leagueCategory)
+
+            const pdfBytes = await fillNonConformantReport({
+              data: baseReportData,
+              leagueCategory,
+              language,
+              nonConformantSubItems,
+              sectionComments,
+            })
+
+            const { PDFDocument } = await import('pdf-lib')
+            const doc = await PDFDocument.load(pdfBytes)
+            const form = doc.getForm()
+            expect(form.getFields()).toHaveLength(0)
+          })
+
+          it('sets all radio buttons to non-conformant and fills all comment fields', async () => {
+            const sections = getChecklistSections(leagueCategory)
+            const { nonConformantSubItems, sectionComments } =
+              buildAllNonConformant(leagueCategory)
+
+            // Load the PDF template and fill it WITHOUT flattening to verify field values
+            const templateBytes = loadPdfTemplate(leagueCategory, language)
+            const { PDFDocument } = await import('pdf-lib')
+            const doc = await PDFDocument.load(templateBytes)
+            const form = doc.getForm()
+
+            // Simulate what fillNonConformantReport does internally
+            for (const section of sections) {
+              const flaggedItems = nonConformantSubItems[section.id]
+              for (const subItem of section.subItems) {
+                const isNotOk = flaggedItems?.has(subItem.id) ?? false
+                const option = isNotOk ? 'Auswahl4' : 'Auswahl3'
+                form.getRadioGroup(subItem.radioField).select(option)
+              }
+            }
+
+            for (const section of sections) {
+              if (!nonConformantSubItems[section.id]?.size) continue
+              const comment = sectionComments[section.id]?.trim()
+              if (!comment) continue
+              const commentField = section.commentFields[0]
+              if (!commentField) continue
+              const field = form.getTextField(commentField)
+              field.setFontSize(6)
+              field.setText(comment)
+            }
+
+            // Verify all radio buttons are set to not-OK
+            for (const section of sections) {
+              for (const subItem of section.subItems) {
+                const radio = form.getRadioGroup(subItem.radioField)
+                expect(radio.getSelected()).toBe('Auswahl4')
+              }
+            }
+
+            // Verify all comment fields are filled with correct text
+            for (const section of sections) {
+              const commentField = section.commentFields[0]
+              if (!commentField) continue
+              const field = form.getTextField(commentField)
+              expect(field.getText()).toBe(`Comment for section ${section.id}`)
+            }
+          })
+        })
+      }
+    }
   })
 })

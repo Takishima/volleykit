@@ -231,6 +231,7 @@ export async function fillSportsHallReportForm(
 
   fillBaseGameInfo(form, data, mapping)
 
+  form.flatten()
   return pdfDoc.save()
 }
 
@@ -941,6 +942,7 @@ export async function fillSportsHallReportWizard(
     }
   }
 
+  form.flatten()
   return pdfDoc.save()
 }
 
@@ -1093,6 +1095,7 @@ export async function fillNonConformantReport(
     await embedAllSignatures(pdfDoc, ALL_SIGNATURE_POSITIONS[leagueCategory], signatures)
   }
 
+  form.flatten()
   return pdfDoc.save()
 }
 
