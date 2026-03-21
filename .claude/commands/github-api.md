@@ -1,3 +1,7 @@
+---
+description: Interact with the GitHub REST API for issues, PRs, comments, checks, labels, and other GitHub operations.
+---
+
 # GitHub API Skill
 
 Interact with the GitHub REST API. Use this skill for any GitHub operations (issues, PRs, comments, checks, labels, etc.).
