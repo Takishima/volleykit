@@ -569,6 +569,11 @@ const en: Translations = {
         'Scan scoresheets to auto-fill player rosters during game validation',
       ocrValidationEnabled: 'OCR validation is enabled',
       ocrValidationDisabled: 'OCR validation is disabled',
+      nonConformant: 'Hall report: Issue reporting',
+      nonConformantDescription:
+        'Enable workflow for reporting non-conformant items in the sports hall report',
+      nonConformantEnabled: 'Issue reporting is enabled',
+      nonConformantDisabled: 'Issue reporting is disabled',
     },
   },
   pwa: {

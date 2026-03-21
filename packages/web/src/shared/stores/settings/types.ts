@@ -208,6 +208,10 @@ export interface SettingsState {
   isOCREnabled: boolean
   setOCREnabled: (enabled: boolean) => void
 
+  // Non-conformant sports hall report workflow (experimental)
+  isNonConformantEnabled: boolean
+  setNonConformantEnabled: (enabled: boolean) => void
+
   // Validation reference mode (how scoresheet photo is displayed during validation)
   validationReferenceMode: ValidationReferenceMode
   setValidationReferenceMode: (mode: ValidationReferenceMode) => void

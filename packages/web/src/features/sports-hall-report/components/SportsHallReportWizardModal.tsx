@@ -8,6 +8,7 @@ import { ModalFooter } from '@/shared/components/ModalFooter'
 import { ModalHeader } from '@/shared/components/ModalHeader'
 import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
 import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useSettingsStore } from '@/shared/stores/settings'
 import { toast } from '@/shared/stores/toast'
 import { createLogger } from '@/shared/utils/logger'
 import type {
@@ -65,6 +66,7 @@ export function SportsHallReportWizardModal({
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
   const { t } = useTranslation()
+  const isNonConformantEnabled = useSettingsStore((s) => s.isNonConformantEnabled)
 
   // Shared state
   const [language, setLanguage] = useState<Language>(defaultLanguage)
@@ -253,7 +255,7 @@ export function SportsHallReportWizardModal({
             awayTeam={awayTeam}
             onGenerate={handleGenerate}
             onDownloadPreFilled={handleDownloadPreFilled}
-            onReportIssue={handleEnterNonConformant}
+            onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}
             onClose={onClose}
           />
         ) : (
@@ -448,7 +450,7 @@ interface HappyPathContentProps {
   awayTeam: string
   onGenerate: () => void
   onDownloadPreFilled: () => void
-  onReportIssue: () => void
+  onReportIssue?: () => void
   onClose: () => void
 }
 
@@ -523,18 +525,20 @@ function HappyPathContent({
         </div>
       </div>
 
-      {/* Report issue link */}
-      <div className="mb-3">
-        <button
-          type="button"
-          onClick={onReportIssue}
-          disabled={isGenerating}
-          className="flex items-center gap-1.5 text-sm text-warning-600 dark:text-warning-400 hover:text-warning-700 dark:hover:text-warning-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <AlertTriangle className="w-4 h-4" aria-hidden="true" />
-          {t('pdf.wizard.nonConformant.reportIssue')}
-        </button>
-      </div>
+      {/* Report issue link (only when non-conformant workflow is enabled) */}
+      {onReportIssue && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={onReportIssue}
+            disabled={isGenerating}
+            className="flex items-center gap-1.5 text-sm text-warning-600 dark:text-warning-400 hover:text-warning-700 dark:hover:text-warning-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+            {t('pdf.wizard.nonConformant.reportIssue')}
+          </button>
+        </div>
+      )}
 
       {/* Download pre-filled fallback */}
       <div className="mb-5">

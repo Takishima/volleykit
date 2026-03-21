@@ -22,9 +22,15 @@ interface AppInfoSectionProps {
 function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const { t, locale } = useTranslation()
   const { needRefresh, isChecking, lastChecked, checkError, checkForUpdate, updateApp } = usePWA()
-  const { isOCREnabled, setOCREnabled } = useSettingsStore(
-    useShallow((s) => ({ isOCREnabled: s.isOCREnabled, setOCREnabled: s.setOCREnabled }))
-  )
+  const { isOCREnabled, setOCREnabled, isNonConformantEnabled, setNonConformantEnabled } =
+    useSettingsStore(
+      useShallow((s) => ({
+        isOCREnabled: s.isOCREnabled,
+        setOCREnabled: s.setOCREnabled,
+        isNonConformantEnabled: s.isNonConformantEnabled,
+        setNonConformantEnabled: s.setNonConformantEnabled,
+      }))
+    )
   const isStandalone = usePwaStandalone()
 
   const platform = isStandalone ? 'PWA' : 'Web'
@@ -32,6 +38,10 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const handleToggleOCR = useCallback(() => {
     setOCREnabled(!isOCREnabled)
   }, [isOCREnabled, setOCREnabled])
+
+  const handleToggleNonConformant = useCallback(() => {
+    setNonConformantEnabled(!isNonConformantEnabled)
+  }, [isNonConformantEnabled, setNonConformantEnabled])
 
   const formatLastChecked = useCallback(
     (date: Date) => {
@@ -122,60 +132,73 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
         </>
       )}
 
-      {/* Experimental features (features.ocr / features.ocrPoc) */}
-      {(features.ocr || features.ocrPoc) && (
-        <>
-          <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
-          <div className="space-y-4">
-            <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
-              {t('settings.experimental.title')}
+      {/* Experimental features */}
+      <div className="border-t border-border-subtle dark:border-border-subtle-dark" />
+      <div className="space-y-4">
+        <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+          {t('settings.experimental.title')}
+        </div>
+        <p className="text-sm text-text-muted dark:text-text-muted-dark">
+          {t('settings.experimental.description')}
+        </p>
+
+        {/* Non-conformant sports hall report toggle */}
+        <SettingsItem
+          label={t('settings.experimental.nonConformant')}
+          description={t('settings.experimental.nonConformantDescription')}
+          status={
+            isNonConformantEnabled
+              ? t('settings.experimental.nonConformantEnabled')
+              : t('settings.experimental.nonConformantDisabled')
+          }
+        >
+          <ToggleSwitch
+            checked={isNonConformantEnabled}
+            onChange={handleToggleNonConformant}
+            label={t('settings.experimental.nonConformant')}
+          />
+        </SettingsItem>
+
+        {/* OCR POC standalone app link (features.ocrPoc) */}
+        {features.ocrPoc && (
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="font-medium text-text-primary dark:text-text-primary-dark text-sm">
+                {t('settings.experimental.ocrPoc')}
+              </p>
+              <p className="text-xs text-text-muted dark:text-text-muted-dark">
+                {t('settings.experimental.ocrPocDescription')}
+              </p>
             </div>
-            <p className="text-sm text-text-muted dark:text-text-muted-dark">
-              {t('settings.experimental.description')}
-            </p>
-
-            {/* OCR POC standalone app link (features.ocrPoc) */}
-            {features.ocrPoc && (
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="font-medium text-text-primary dark:text-text-primary-dark text-sm">
-                    {t('settings.experimental.ocrPoc')}
-                  </p>
-                  <p className="text-xs text-text-muted dark:text-text-muted-dark">
-                    {t('settings.experimental.ocrPocDescription')}
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() => window.open(OCR_POC_URL, '_blank', 'noopener,noreferrer')}
-                  aria-label={t('settings.experimental.openOcrPoc')}
-                >
-                  {t('settings.experimental.openOcrPoc')}
-                </Button>
-              </div>
-            )}
-
-            {/* OCR Validation Toggle (features.ocr) */}
-            {features.ocr && (
-              <SettingsItem
-                label={t('settings.experimental.ocrValidation')}
-                description={t('settings.experimental.ocrValidationDescription')}
-                status={
-                  isOCREnabled
-                    ? t('settings.experimental.ocrValidationEnabled')
-                    : t('settings.experimental.ocrValidationDisabled')
-                }
-              >
-                <ToggleSwitch
-                  checked={isOCREnabled}
-                  onChange={handleToggleOCR}
-                  label={t('settings.experimental.ocrValidation')}
-                />
-              </SettingsItem>
-            )}
+            <Button
+              variant="secondary"
+              onClick={() => window.open(OCR_POC_URL, '_blank', 'noopener,noreferrer')}
+              aria-label={t('settings.experimental.openOcrPoc')}
+            >
+              {t('settings.experimental.openOcrPoc')}
+            </Button>
           </div>
-        </>
-      )}
+        )}
+
+        {/* OCR Validation Toggle (features.ocr) */}
+        {features.ocr && (
+          <SettingsItem
+            label={t('settings.experimental.ocrValidation')}
+            description={t('settings.experimental.ocrValidationDescription')}
+            status={
+              isOCREnabled
+                ? t('settings.experimental.ocrValidationEnabled')
+                : t('settings.experimental.ocrValidationDisabled')
+            }
+          >
+            <ToggleSwitch
+              checked={isOCREnabled}
+              onChange={handleToggleOCR}
+              label={t('settings.experimental.ocrValidation')}
+            />
+          </SettingsItem>
+        )}
+      </div>
 
       {/* Official website and disclaimer */}
       <div className="border-t border-border-subtle dark:border-border-subtle-dark pt-3">
