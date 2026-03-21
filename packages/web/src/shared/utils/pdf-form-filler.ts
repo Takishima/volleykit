@@ -1012,17 +1012,22 @@ async function embedAllSignatures(
   }
 }
 
+export interface NonConformantReportOptions {
+  data: SportsHallReportData
+  leagueCategory: LeagueCategory
+  language: Language
+  nonConformantSubItems: NonConformantSelections
+  comment: string
+  signatures?: NonConformantSignatures
+}
+
 /**
  * Fill the sports hall report for the non-conformant workflow.
  */
 export async function fillNonConformantReport(
-  data: SportsHallReportData,
-  leagueCategory: LeagueCategory,
-  language: Language,
-  nonConformantSubItems: NonConformantSelections,
-  comment: string,
-  signatures?: NonConformantSignatures
+  options: NonConformantReportOptions
 ): Promise<Uint8Array> {
+  const { data, leagueCategory, language, nonConformantSubItems, comment, signatures } = options
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const sections = getChecklistSections(leagueCategory)
@@ -1051,24 +1056,14 @@ export async function fillNonConformantReport(
  * Generate a non-conformant report preview (no signatures) for review.
  */
 export async function generateNonConformantPreviewBytes(
-  data: SportsHallReportData,
-  leagueCategory: LeagueCategory,
-  language: Language,
-  nonConformantSubItems: NonConformantSelections,
-  comment: string
+  options: Omit<NonConformantReportOptions, 'signatures'>
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
-  const pdfBytes = await fillNonConformantReport(
-    data,
-    leagueCategory,
-    language,
-    nonConformantSubItems,
-    comment
-  )
+  const pdfBytes = await fillNonConformantReport(options)
   const filename = buildReportFilename(
-    leagueCategory,
-    language,
-    data.startingDateTime,
-    data.gameNumber
+    options.leagueCategory,
+    options.language,
+    options.data.startingDateTime,
+    options.data.gameNumber
   )
   return { pdfBytes, filename }
 }
@@ -1077,26 +1072,7 @@ export async function generateNonConformantPreviewBytes(
  * Generate the final non-conformant report with all signatures embedded.
  */
 export async function generateNonConformantReportBytes(
-  data: SportsHallReportData,
-  leagueCategory: LeagueCategory,
-  language: Language,
-  nonConformantSubItems: NonConformantSelections,
-  comment: string,
-  signatures: NonConformantSignatures
+  options: NonConformantReportOptions & { signatures: NonConformantSignatures }
 ): Promise<{ pdfBytes: Uint8Array; filename: string }> {
-  const pdfBytes = await fillNonConformantReport(
-    data,
-    leagueCategory,
-    language,
-    nonConformantSubItems,
-    comment,
-    signatures
-  )
-  const filename = buildReportFilename(
-    leagueCategory,
-    language,
-    data.startingDateTime,
-    data.gameNumber
-  )
-  return { pdfBytes, filename }
+  return generateNonConformantPreviewBytes(options)
 }

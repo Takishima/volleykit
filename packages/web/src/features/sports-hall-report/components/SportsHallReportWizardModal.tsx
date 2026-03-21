@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { Button } from '@/shared/components/Button'
@@ -15,9 +15,6 @@ import type {
   Language,
   LeagueCategory,
   SportsHallReportData,
-  NonConformantSelections,
-  NonConformantSignatures,
-  ChecklistSection,
 } from '@/shared/utils/pdf-form-filler'
 
 import { CommentStep } from './CommentStep'
@@ -27,6 +24,7 @@ import { SignatureCanvas } from './SignatureCanvas'
 import { SignatureCollectionStep } from './SignatureCollectionStep'
 import { SubItemSelector } from './SubItemSelector'
 import { WizardStepIndicator } from './WizardStepIndicator'
+import { useNonConformantWizard } from '../hooks/useNonConformantWizard'
 
 const log = createLogger('SportsHallReportWizardModal')
 
@@ -38,9 +36,6 @@ const LANGUAGES: ReadonlyArray<{ code: Language; name: string }> = [
 ]
 
 type WizardMode = 'happy' | 'non-conformant'
-type NonConformantStep = 'sections' | 'subItems' | 'comment' | 'preview' | 'signatures'
-
-const NC_STEPS: NonConformantStep[] = ['sections', 'subItems', 'comment', 'preview', 'signatures']
 
 interface SportsHallReportWizardModalProps {
   assignment: Assignment
@@ -69,63 +64,45 @@ export function SportsHallReportWizardModal({
   onClose,
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
-  const { t, tInterpolate } = useTranslation()
+  const { t } = useTranslation()
 
   // Shared state
   const [language, setLanguage] = useState<Language>(defaultLanguage)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [mode, setMode] = useState<WizardMode>('happy')
 
   // Happy path state
   const [confirmed, setConfirmed] = useState(false)
   const [showSignature, setShowSignature] = useState(false)
+  const [isGeneratingHappy, setIsGeneratingHappy] = useState(false)
   const [jerseyAdvertising, setJerseyAdvertising] = useState<JerseyAdvertisingOptions>({
     homeTeam: true,
     awayTeam: true,
   })
 
-  // Non-conformant state
-  const [ncStep, setNcStep] = useState<NonConformantStep>('sections')
-  const [checklistSections, setChecklistSections] = useState<readonly ChecklistSection[]>([])
-  const [flaggedSections, setFlaggedSections] = useState<Set<string>>(new Set())
-  const [nonConformantSubItems, setNonConformantSubItems] = useState<NonConformantSelections>({})
-  const [comment, setComment] = useState('')
-  const [previewPdfBytes, setPreviewPdfBytes] = useState<Uint8Array | null>(null)
-  const [signatures, setSignatures] = useState<NonConformantSignatures>({})
-  const [showAwayCoach, setShowAwayCoach] = useState(false)
+  // Non-conformant state (extracted hook)
+  const nc = useNonConformantWizard(assignment, language, onClose)
+  const { loadSections, reset: resetNc } = nc
 
   // Load checklist sections when modal opens
   useEffect(() => {
     if (!isOpen) return
-
-    async function loadSections() {
-      const info = await extractReportInfo(assignment)
-      if (!info) return
-      const { getChecklistSections } = await import('@/shared/utils/pdf-form-filler')
-      setChecklistSections(getChecklistSections(info.leagueCategory))
-    }
-
-    void loadSections()
-  }, [isOpen, assignment])
+    loadSections().catch((error: unknown) => {
+      log.error('Failed to load checklist sections:', error)
+    })
+  }, [isOpen, loadSections])
 
   // Reset all state when modal opens
   useEffect(() => {
     if (isOpen) {
       setLanguage(defaultLanguage)
       setConfirmed(false)
-      setIsGenerating(false)
+      setIsGeneratingHappy(false)
       setShowSignature(false)
       setJerseyAdvertising({ homeTeam: true, awayTeam: true })
       setMode('happy')
-      setNcStep('sections')
-      setFlaggedSections(new Set())
-      setNonConformantSubItems({})
-      setComment('')
-      setPreviewPdfBytes(null)
-      setSignatures({})
-      setShowAwayCoach(false)
+      resetNc()
     }
-  }, [isOpen, defaultLanguage])
+  }, [isOpen, defaultLanguage, resetNc])
 
   // Derived
   const homeTeam = assignment.refereeGame?.game?.encounter?.teamHome?.name ?? ''
@@ -138,6 +115,8 @@ export function SportsHallReportWizardModal({
     assignment.refereeGame?.activeRefereeConvocationSecondHeadReferee?.indoorAssociationReferee
       ?.indoorReferee?.person?.displayName
 
+  const isGenerating = mode === 'happy' ? isGeneratingHappy : nc.isGenerating
+
   // ─── Happy path handlers ───────────────────────────────────────────
 
   const handleGenerate = useCallback(() => {
@@ -148,7 +127,7 @@ export function SportsHallReportWizardModal({
   const handleSignatureComplete = useCallback(
     async (signatureDataUrl: string) => {
       setShowSignature(false)
-      setIsGenerating(true)
+      setIsGeneratingHappy(true)
       try {
         const info = await extractReportInfo(assignment)
         if (!info) {
@@ -173,7 +152,7 @@ export function SportsHallReportWizardModal({
         log.error('PDF generation failed:', error)
         toast.error(t('pdf.exportError'))
       } finally {
-        setIsGenerating(false)
+        setIsGeneratingHappy(false)
       }
     },
     [assignment, language, jerseyAdvertising, onClose, t]
@@ -184,8 +163,8 @@ export function SportsHallReportWizardModal({
   }, [])
 
   const handleDownloadPreFilled = useCallback(async () => {
-    if (isGenerating) return
-    setIsGenerating(true)
+    if (isGeneratingHappy) return
+    setIsGeneratingHappy(true)
     try {
       const info = await extractReportInfo(assignment)
       if (!info) {
@@ -200,186 +179,24 @@ export function SportsHallReportWizardModal({
       log.error('PDF generation failed:', error)
       toast.error(t('pdf.exportError'))
     } finally {
-      setIsGenerating(false)
+      setIsGeneratingHappy(false)
     }
-  }, [isGenerating, assignment, language, onClose, t])
+  }, [isGeneratingHappy, assignment, language, onClose, t])
 
-  // ─── Non-conformant handlers ───────────────────────────────────────
-
-  const handleToggleSection = useCallback((sectionId: string) => {
-    setFlaggedSections((prev) => {
-      const next = new Set(prev)
-      if (next.has(sectionId)) {
-        next.delete(sectionId)
-      } else {
-        next.add(sectionId)
-      }
-      return next
-    })
-  }, [])
-
-  const handleToggleSubItem = useCallback((sectionId: string, subItemId: string) => {
-    setNonConformantSubItems((prev) => {
-      const sectionSet = new Set(prev[sectionId])
-      if (sectionSet.has(subItemId)) {
-        sectionSet.delete(subItemId)
-      } else {
-        sectionSet.add(subItemId)
-      }
-      return { ...prev, [sectionId]: sectionSet }
-    })
-  }, [])
+  // ─── Mode handlers ─────────────────────────────────────────────────
 
   const handleEnterNonConformant = useCallback(() => {
     setMode('non-conformant')
-    setNcStep('sections')
-  }, [])
+    resetNc()
+  }, [resetNc])
 
+  const { handleNcBack: ncBack } = nc
   const handleNcBack = useCallback(() => {
-    const idx = NC_STEPS.indexOf(ncStep)
-    if (idx <= 0) {
+    const result = ncBack()
+    if (result === 'exit') {
       setMode('happy')
-    } else {
-      setNcStep(NC_STEPS[idx - 1]!)
     }
-  }, [ncStep])
-
-  const handleNcNext = useCallback(async () => {
-    const idx = NC_STEPS.indexOf(ncStep)
-
-    // When moving from sections to subItems, auto-flag all sub-items in flagged sections
-    if (ncStep === 'sections') {
-      // Pre-populate: for each flagged section, if no sub-items are explicitly selected yet,
-      // flag all of them (user can then un-flag the ones that are OK)
-      setNonConformantSubItems((prev) => {
-        const updated = { ...prev }
-        for (const sectionId of flaggedSections) {
-          if (!updated[sectionId] || updated[sectionId].size === 0) {
-            const section = checklistSections.find((s) => s.id === sectionId)
-            if (section) {
-              updated[sectionId] = new Set(section.subItems.map((si) => si.id))
-            }
-          }
-        }
-        // Remove sub-items for sections that are no longer flagged
-        for (const key of Object.keys(updated)) {
-          if (!flaggedSections.has(key)) {
-            delete updated[key]
-          }
-        }
-        return updated
-      })
-    }
-
-    // When entering preview step, generate the preview PDF
-    if (NC_STEPS[idx + 1] === 'preview') {
-      setIsGenerating(true)
-      try {
-        const info = await extractReportInfo(assignment)
-        if (!info) {
-          toast.error(t('pdf.exportError'))
-          return
-        }
-        const { generateNonConformantPreviewBytes } = await import('@/shared/utils/pdf-form-filler')
-        const { pdfBytes } = await generateNonConformantPreviewBytes(
-          info.reportData,
-          info.leagueCategory,
-          language,
-          nonConformantSubItems,
-          comment
-        )
-        setPreviewPdfBytes(pdfBytes)
-      } catch (error) {
-        log.error('Preview generation failed:', error)
-        toast.error(t('pdf.exportError'))
-      } finally {
-        setIsGenerating(false)
-      }
-    }
-
-    if (idx < NC_STEPS.length - 1) {
-      setNcStep(NC_STEPS[idx + 1]!)
-    }
-  }, [
-    ncStep,
-    flaggedSections,
-    checklistSections,
-    assignment,
-    language,
-    nonConformantSubItems,
-    comment,
-    t,
-  ])
-
-  const handleNcDownload = useCallback(async () => {
-    setIsGenerating(true)
-    try {
-      const info = await extractReportInfo(assignment)
-      if (!info) {
-        toast.error(t('pdf.exportError'))
-        return
-      }
-      const { generateNonConformantReportBytes, downloadPdf } =
-        await import('@/shared/utils/pdf-form-filler')
-      const { pdfBytes, filename } = await generateNonConformantReportBytes(
-        info.reportData,
-        info.leagueCategory,
-        language,
-        nonConformantSubItems,
-        comment,
-        signatures
-      )
-      downloadPdf(pdfBytes, filename)
-      log.debug('Generated non-conformant PDF report for:', assignment.__identity)
-      toast.success(t('pdf.wizard.reportGenerated'))
-      onClose()
-    } catch (error) {
-      log.error('Non-conformant PDF generation failed:', error)
-      toast.error(t('pdf.exportError'))
-    } finally {
-      setIsGenerating(false)
-    }
-  }, [assignment, language, nonConformantSubItems, comment, signatures, onClose, t])
-
-  // ─── Non-conformant step validation ────────────────────────────────
-
-  const ncStepIndex = NC_STEPS.indexOf(ncStep)
-
-  const canProceed = useMemo(() => {
-    switch (ncStep) {
-      case 'sections':
-        return flaggedSections.size > 0
-      case 'subItems': {
-        // At least one sub-item must be flagged across all flagged sections
-        return Object.values(nonConformantSubItems).some((set) => set.size > 0)
-      }
-      case 'comment':
-        return comment.trim().length > 0
-      case 'preview':
-        return !!previewPdfBytes
-      case 'signatures': {
-        // Need at least 1st referee + 2nd referee + 1 coach
-        const hasFirstRef = !!signatures.firstReferee
-        const hasSecondRef = !!signatures.secondReferee
-        const hasCoach =
-          !!signatures.homeTeamCoach?.signature || !!signatures.awayTeamCoach?.signature
-        return hasFirstRef && hasSecondRef && hasCoach
-      }
-      default:
-        return false
-    }
-  }, [ncStep, flaggedSections, nonConformantSubItems, comment, previewPdfBytes, signatures])
-
-  const ncSteps = useMemo(
-    () => [
-      { label: t('pdf.wizard.nonConformant.stepSections') },
-      { label: t('pdf.wizard.nonConformant.selectSubItems') },
-      { label: t('pdf.wizard.nonConformant.stepComment') },
-      { label: t('pdf.wizard.nonConformant.stepPreview') },
-      { label: t('pdf.wizard.nonConformant.stepSign') },
-    ],
-    [t]
-  )
+  }, [ncBack])
 
   // ─── Render ────────────────────────────────────────────────────────
 
@@ -429,7 +246,7 @@ export function SportsHallReportWizardModal({
             setLanguage={setLanguage}
             confirmed={confirmed}
             setConfirmed={setConfirmed}
-            isGenerating={isGenerating}
+            isGenerating={isGeneratingHappy}
             jerseyAdvertising={jerseyAdvertising}
             setJerseyAdvertising={setJerseyAdvertising}
             homeTeam={homeTeam}
@@ -441,53 +258,53 @@ export function SportsHallReportWizardModal({
           />
         ) : (
           <>
-            <WizardStepIndicator steps={ncSteps} currentStep={ncStepIndex} />
+            <WizardStepIndicator steps={nc.ncSteps} currentStep={nc.ncStepIndex} />
 
             {/* Language selection (always visible in NC mode) */}
-            {ncStep === 'sections' && (
+            {nc.ncStep === 'sections' && (
               <LanguageSelector
                 language={language}
                 setLanguage={setLanguage}
-                disabled={isGenerating}
+                disabled={nc.isGenerating}
               />
             )}
 
             {/* Step content */}
             <div className="mb-4 min-h-[200px]">
-              {ncStep === 'sections' && (
+              {nc.ncStep === 'sections' && (
                 <SectionSelector
-                  sections={checklistSections}
-                  flaggedSections={flaggedSections}
-                  onToggleSection={handleToggleSection}
+                  sections={nc.checklistSections}
+                  flaggedSections={nc.flaggedSections}
+                  onToggleSection={nc.handleToggleSection}
                 />
               )}
-              {ncStep === 'subItems' && (
+              {nc.ncStep === 'subItems' && (
                 <SubItemSelector
-                  sections={checklistSections}
-                  flaggedSections={flaggedSections}
-                  nonConformantSubItems={nonConformantSubItems}
-                  onToggleSubItem={handleToggleSubItem}
+                  sections={nc.checklistSections}
+                  flaggedSections={nc.flaggedSections}
+                  nonConformantSubItems={nc.nonConformantSubItems}
+                  onToggleSubItem={nc.handleToggleSubItem}
                 />
               )}
-              {ncStep === 'comment' && (
+              {nc.ncStep === 'comment' && (
                 <CommentStep
-                  sections={checklistSections}
-                  flaggedSections={flaggedSections}
-                  comment={comment}
-                  onCommentChange={setComment}
+                  sections={nc.checklistSections}
+                  flaggedSections={nc.flaggedSections}
+                  comment={nc.comment}
+                  onCommentChange={nc.setComment}
                 />
               )}
-              {ncStep === 'preview' && (
-                <PdfPreview pdfBytes={previewPdfBytes} isLoading={isGenerating} />
+              {nc.ncStep === 'preview' && (
+                <PdfPreview pdfBytes={nc.previewPdfBytes} isLoading={nc.isGenerating} />
               )}
-              {ncStep === 'signatures' && (
+              {nc.ncStep === 'signatures' && (
                 <SignatureCollectionStep
                   firstRefereeName={firstRefereeName}
                   secondRefereeName={secondRefereeName}
-                  signatures={signatures}
-                  onSignaturesChange={setSignatures}
-                  showAwayCoach={showAwayCoach}
-                  onToggleAwayCoach={() => setShowAwayCoach(true)}
+                  signatures={nc.signatures}
+                  onSignaturesChange={nc.setSignatures}
+                  showAwayCoach={nc.showAwayCoach}
+                  onToggleAwayCoach={() => nc.setShowAwayCoach(true)}
                 />
               )}
             </div>
@@ -497,18 +314,18 @@ export function SportsHallReportWizardModal({
                 variant="secondary"
                 className="flex-1"
                 onClick={handleNcBack}
-                disabled={isGenerating}
+                disabled={nc.isGenerating}
               >
                 {t('pdf.wizard.nonConformant.back')}
               </Button>
-              {ncStep === 'signatures' ? (
+              {nc.ncStep === 'signatures' ? (
                 <Button
                   variant="blue"
                   className="flex-1"
-                  onClick={handleNcDownload}
-                  disabled={!canProceed || isGenerating}
+                  onClick={nc.handleNcDownload}
+                  disabled={!nc.canProceed || nc.isGenerating}
                 >
-                  {isGenerating ? (
+                  {nc.isGenerating ? (
                     <>
                       <span
                         className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
@@ -524,10 +341,10 @@ export function SportsHallReportWizardModal({
                 <Button
                   variant="blue"
                   className="flex-1"
-                  onClick={handleNcNext}
-                  disabled={!canProceed || isGenerating}
+                  onClick={nc.handleNcNext}
+                  disabled={!nc.canProceed || nc.isGenerating}
                 >
-                  {ncStep === 'preview'
+                  {nc.ncStep === 'preview'
                     ? t('pdf.wizard.nonConformant.confirmAndSign')
                     : t('pdf.wizard.nonConformant.next')}
                 </Button>
@@ -757,4 +574,3 @@ function HappyPathContent({
     </>
   )
 }
-

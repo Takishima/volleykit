@@ -33,7 +33,7 @@ export function SignatureCollectionStep({
   showAwayCoach,
   onToggleAwayCoach,
 }: SignatureCollectionStepProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const [activeSigner, setActiveSigner] = useState<SignerRole | null>(null)
   const [homeCoachName, setHomeCoachName] = useState(signatures.homeTeamCoach?.name ?? '')
   const [awayCoachName, setAwayCoachName] = useState(signatures.awayTeamCoach?.name ?? '')
@@ -41,21 +41,19 @@ export function SignatureCollectionStep({
   const signers: SignerInfo[] = [
     {
       role: 'firstReferee',
-      label:
-        `1. ${t('pdf.wizard.signature.title').split('—')[0]?.trim() ?? ''}: ${firstRefereeName ?? ''}`.trim(),
+      label: `${t('pdf.wizard.nonConformant.firstRefereeLabel')}: ${firstRefereeName ?? ''}`.trim(),
       name: firstRefereeName,
       needsNameInput: false,
     },
     {
       role: 'secondReferee',
-      label:
-        `2. ${t('pdf.wizard.signature.title').split('—')[0]?.trim() ?? ''}: ${secondRefereeName ?? ''}`.trim(),
+      label: `${t('pdf.wizard.nonConformant.secondRefereeLabel')}: ${secondRefereeName ?? ''}`.trim(),
       name: secondRefereeName,
       needsNameInput: false,
     },
     {
       role: 'homeTeamCoach',
-      label: t('pdf.wizard.sections.dressHome').replace('Dress ', '').replace('Tenue ', ''),
+      label: t('pdf.wizard.nonConformant.homeCoachLabel'),
       needsNameInput: true,
     },
   ]
@@ -63,7 +61,7 @@ export function SignatureCollectionStep({
   if (showAwayCoach) {
     signers.push({
       role: 'awayTeamCoach',
-      label: t('pdf.wizard.sections.dressAway').replace('Dress ', '').replace('Tenue ', ''),
+      label: t('pdf.wizard.nonConformant.awayCoachLabel'),
       needsNameInput: true,
     })
   }
@@ -121,9 +119,7 @@ export function SignatureCollectionStep({
             {t('pdf.wizard.nonConformant.signaturesTitle')}
           </p>
           <span className="text-xs text-text-muted dark:text-text-muted-dark">
-            {t('pdf.wizard.nonConformant.signaturesProgress')
-              .replace('{count}', String(completedCount))
-              .replace('{total}', String(totalRequired))}
+            {tInterpolate('pdf.wizard.nonConformant.signaturesProgress', { count: completedCount, total: totalRequired })}
           </span>
         </div>
 

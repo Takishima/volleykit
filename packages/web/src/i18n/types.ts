@@ -515,6 +515,10 @@ export interface Translations {
         confirmAndSign: string
         signaturesTitle: string
         signaturesProgress: string
+        firstRefereeLabel: string
+        secondRefereeLabel: string
+        homeCoachLabel: string
+        awayCoachLabel: string
         signAs: string
         coachName: string
         coachNamePlaceholder: string
