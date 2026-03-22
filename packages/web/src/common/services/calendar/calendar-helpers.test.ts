@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
+import type { CalendarAssignment } from '@/common/services/calendar/ical/types'
 
 vi.mock('@/api/constants', () => ({
   API_BASE_URL: 'https://api.example.com',

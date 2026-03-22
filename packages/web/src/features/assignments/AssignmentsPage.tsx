@@ -6,6 +6,7 @@ import { PullToRefresh } from '@/common/components/PullToRefresh'
 import { SwipeableCard } from '@/common/components/SwipeableCard'
 import { WeekSeparator } from '@/common/components/WeekSeparator'
 import { useTranslation } from '@/common/hooks/useTranslation'
+import { mapCalendarAssignmentToAssignment } from '@/common/services/calendar/calendar-helpers'
 import { AssignmentCard } from '@/features/assignments/components/AssignmentCard'
 import { OnCallCard } from '@/features/referee-backup/components/OnCallCard'
 
@@ -15,7 +16,6 @@ import {
   type DisplayItem,
   type CalendarAssignment,
 } from './hooks/useAssignmentsPageLogic'
-import { mapCalendarAssignmentToAssignment } from './utils/calendar-helpers'
 
 const SportsHallReportWizardModal = lazy(() =>
   import('@/features/sports-hall-report').then((m) => ({

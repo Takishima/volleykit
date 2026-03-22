@@ -15,10 +15,8 @@
 import type { Assignment } from '@/api/client'
 import { API_BASE_URL } from '@/api/constants'
 import { HttpStatus } from '@/common/utils/constants'
-// iCal types live in assignments but are consumed here for calendar mode mapping.
-// Moving the entire iCal subsystem is tracked as a follow-up refactor.
-// eslint-disable-next-line no-restricted-imports
-import type { CalendarAssignment, RefereeRole, Gender } from '@/features/assignments/api/ical/types'
+
+import type { CalendarAssignment, RefereeRole, Gender } from './ical/types'
 
 /**
  * Maps iCal Gender type to API gender format.

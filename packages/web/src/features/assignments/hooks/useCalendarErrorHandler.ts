@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react'
 
 import { useTranslation } from '@/common/hooks/useTranslation'
+import { CalendarNotFoundError } from '@/common/services/calendar/calendar-api'
 import { useAuthStore } from '@/common/stores/auth'
 import { toast } from '@/common/stores/toast'
 import { classifyError } from '@/common/utils/error-helpers'
-import { CalendarNotFoundError } from '@/features/assignments/api/calendar-api'
 import type { CalendarErrorType } from '@/features/assignments/components/CalendarErrorModal'
 
 interface CalendarErrorState {

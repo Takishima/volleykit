@@ -55,13 +55,8 @@ import type {
 } from '@/api/client'
 import type { components } from '@/api/schema'
 import { useAuthStore } from '@/common/stores/auth'
-// Calendar-api lives in assignments but is consumed here as the data source for calendar mode.
-// Moving the entire iCal subsystem is tracked as a follow-up refactor.
-// eslint-disable-next-line no-restricted-imports
-import {
-  fetchCalendarAssignments,
-  type CalendarAssignment,
-} from '@/features/assignments/api/calendar-api'
+
+import { fetchCalendarAssignments, type CalendarAssignment } from './calendar-api'
 
 /**
  * Error thrown when an operation is not supported in calendar mode.

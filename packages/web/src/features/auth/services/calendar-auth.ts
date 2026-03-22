@@ -7,9 +7,9 @@
  * 3. Creating synthetic occupations for transport settings
  */
 
+import { fetchCalendarAssignments } from '@/common/services/calendar/calendar-api'
 import type { Occupation, AuthState } from '@/common/stores/auth'
 import { logger } from '@/common/utils/logger'
-import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
 
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/

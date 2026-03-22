@@ -16,10 +16,10 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { fetchCalendarAssignments } from '@/common/services/calendar/calendar-api'
+import type { CalendarAssignment } from '@/common/services/calendar/ical/types'
 import { useAuthStore } from '@/common/stores/auth'
 import { generateDemoCalendarAssignments } from '@/common/stores/demo-generators'
-import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
-import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
 import {
   detectConflicts,
   createSmartConflictEvaluator,

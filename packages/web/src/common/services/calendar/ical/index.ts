@@ -7,7 +7,7 @@
  *
  * @example
  * ```typescript
- * import { parseCalendarFeed, type CalendarAssignment } from '@/features/assignments/api/ical';
+ * import { parseCalendarFeed, type CalendarAssignment } from '@/common/services/calendar/ical';
  *
  * const response = await fetch(icalUrl);
  * const icsContent = await response.text();
@@ -18,7 +18,7 @@
  *   .map(r => r.assignment);
  * ```
  *
- * @module features/assignments/api/ical
+ * @module common/services/calendar/ical
  */
 
 // Types
