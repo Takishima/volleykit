@@ -7,7 +7,7 @@ import { useTour } from '@/common/hooks/useTour'
 import { useAuthStore } from '@/common/stores/auth'
 import { groupByWeek } from '@/common/utils/date-helpers'
 import { TOUR_DUMMY_ASSIGNMENT } from '@/features/assignments/assignments'
-import { isAssignmentCompensationEditable } from '@/features/compensations'
+import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-helpers'
 import { useMyOnCallAssignments, type OnCallAssignment } from '@/features/referee-backup'
 import type { SwipeConfig } from '@/types/swipe'
 
