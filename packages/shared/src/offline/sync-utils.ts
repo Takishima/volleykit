@@ -5,7 +5,7 @@
  * No platform-specific dependencies (no IndexedDB, no browser APIs).
  */
 
-import type { ActionSyncResult, SyncResult, OfflineAction, ActionStatus } from './types'
+import type { SyncResult, OfflineAction } from './types'
 import { MAX_RETRY_COUNT, RETRY_DELAY_BASE_MS } from './action-types'
 
 /**

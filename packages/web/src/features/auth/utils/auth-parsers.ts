@@ -11,6 +11,7 @@ import {
   extractLoginFormFields,
   extractCsrfTokenFromPage,
   isDashboardHtmlContent,
+  analyzeAuthResponseHtml,
   type LoginFormFields,
 } from '@volleykit/shared/auth'
 
@@ -25,24 +26,6 @@ export { extractLoginFormFields, extractCsrfTokenFromPage, isDashboardHtmlConten
  * The API redirects to this path after successful authentication.
  */
 const DASHBOARD_URL_PATTERN = '/sportmanager.volleyball/main/dashboard'
-
-/**
- * HTML patterns that indicate authentication failure.
- * The Vuetify snackbar uses these color attributes for error messages.
- */
-const AUTH_ERROR_INDICATORS = ['color="error"', "color='error'"] as const
-
-/**
- * HTML patterns that indicate Two-Factor Authentication is required.
- * These patterns match the Neos Flow TFA input page.
- */
-const TFA_PAGE_INDICATORS = [
-  'secondFactorToken',
-  'SecondFactor',
-  'TwoFactorAuthentication',
-  'totp',
-  'TOTP',
-] as const
 
 /** Maximum characters to include in diagnostic HTML preview logs */
 const DIAGNOSTIC_PREVIEW_LENGTH = 500
@@ -159,14 +142,12 @@ function analyzeLoginResponseHtml(
     // wasRedirected or isDashboardContent but no CSRF token - fall through to error checks
   }
 
-  // Check for authentication errors (Vuetify snackbar)
-  const hasAuthError = AUTH_ERROR_INDICATORS.some((indicator) => html.includes(indicator))
+  // Check for authentication errors and TFA (delegated to shared)
+  const { hasAuthError, hasTfaPage } = analyzeAuthResponseHtml(html)
   if (hasAuthError) {
     return { success: false, error: 'Invalid username or password' }
   }
 
-  // Check for Two-Factor Authentication page
-  const hasTfaPage = TFA_PAGE_INDICATORS.some((indicator) => html.includes(indicator))
   if (hasTfaPage) {
     logger.info('TFA page detected - user has two-factor authentication enabled')
     return {

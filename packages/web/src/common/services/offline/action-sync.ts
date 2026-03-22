@@ -18,8 +18,11 @@ import {
   sleep,
   emptySyncResult,
   sortActionsByCreatedAt,
+  MAX_RETRY_COUNT,
+  type ActionSyncResult,
+  type SyncResult,
 } from '@volleykit/shared/offline'
-import { MAX_RETRY_COUNT } from '@volleykit/shared/offline'
+
 
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -33,7 +36,6 @@ import {
 } from './action-store'
 
 import type { OfflineAction } from './action-types'
-import type { ActionSyncResult, SyncResult } from '@volleykit/shared/offline'
 import type { QueryClient } from '@tanstack/react-query'
 
 // Re-export types for existing consumers

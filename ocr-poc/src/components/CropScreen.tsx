@@ -7,7 +7,7 @@
 
 import { useMemo } from 'react'
 
-import { ImageCropEditor } from '@/features/validation/components/ImageCropEditor'
+import { ImageCropEditor } from '@/features/validation/ocr/components/ImageCropEditor'
 import { useAppStore } from '@/stores/appStore'
 
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
