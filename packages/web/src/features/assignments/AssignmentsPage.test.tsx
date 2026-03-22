@@ -47,8 +47,10 @@ vi.mock('./hooks/useAssignments')
 vi.mock('./hooks/useCalendarAssignments')
 vi.mock('@/common/hooks/useTour', () => mockUseTour)
 vi.mock('@/common/stores/auth')
-vi.mock('@/features/referee-backup', () => ({
+vi.mock('@/features/referee-backup/hooks/useMyOnCallAssignments', () => ({
   useMyOnCallAssignments: () => ({ data: [], isLoading: false, error: null }),
+}))
+vi.mock('@/features/referee-backup/components/OnCallCard', () => ({
   OnCallCard: () => null,
 }))
 vi.mock('@/common/hooks/useTranslation', () => ({

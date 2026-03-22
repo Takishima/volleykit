@@ -8,7 +8,10 @@ import { useAuthStore } from '@/common/stores/auth'
 import { groupByWeek } from '@/common/utils/date-helpers'
 import { TOUR_DUMMY_ASSIGNMENT } from '@/features/assignments/assignments'
 import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-helpers'
-import { useMyOnCallAssignments, type OnCallAssignment } from '@/features/referee-backup'
+import {
+  useMyOnCallAssignments,
+  type OnCallAssignment,
+} from '@/features/referee-backup/hooks/useMyOnCallAssignments'
 import type { SwipeConfig } from '@/types/swipe'
 
 import { useAssignmentActions } from './useAssignmentActions'
