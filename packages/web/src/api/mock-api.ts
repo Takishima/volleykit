@@ -21,6 +21,7 @@ import {
 } from './validation'
 
 import type {
+  ApiClient,
   SearchConfiguration,
   PropertyFilter,
   PropertyOrdering,
@@ -846,7 +847,7 @@ export const mockApi = {
       totalItemsCount: 0,
     }
   },
-}
+} satisfies ApiClient
 
 /**
  * Helper to simulate network delay for more realistic demo behavior.

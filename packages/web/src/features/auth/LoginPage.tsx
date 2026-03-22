@@ -1,331 +1,45 @@
-import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
-
-import { useNavigate } from 'react-router-dom'
-import { useShallow } from 'zustand/react/shallow'
-
 import { Button } from '@/common/components/Button'
 import { Volleyball } from '@/common/components/icons'
 import { LanguageSwitcher } from '@/common/components/LanguageSwitcher'
-import { useTranslation } from '@/common/hooks/useTranslation'
-import {
-  extractCalendarCode,
-  validateCalendarCode,
-} from '@/common/services/calendar/calendar-helpers'
-import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from '@/common/stores/auth'
-import { useDemoStore } from '@/common/stores/demo'
 import { getHelpSiteUrl } from '@/common/utils/constants'
-import { usePWA } from '@/contexts/PWAContext'
 import { LoginErrorWithUpdateHint } from '@/features/auth/components/LoginErrorWithUpdateHint'
 import { LoginUpdateBanner } from '@/features/auth/components/LoginUpdateBanner'
+
+import { useLoginPageLogic } from './hooks/useLoginPageLogic'
 
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === 'true'
 
-/** Interval for lockout countdown timer (1 second in milliseconds) */
-const LOCKOUT_COUNTDOWN_INTERVAL_MS = 1000
-
-type LoginMode = 'full' | 'calendar'
-
 export function LoginPage() {
-  const navigate = useNavigate()
   const {
-    login,
-    loginWithCalendar,
-    status,
-    error,
-    lockedUntil,
-    setDemoAuthenticated,
-    clearStaleSession,
-  } = useAuthStore(
-    useShallow((state) => ({
-      login: state.login,
-      loginWithCalendar: state.loginWithCalendar,
-      status: state.status,
-      error: state.error,
-      lockedUntil: state.lockedUntil,
-      setDemoAuthenticated: state.setDemoAuthenticated,
-      clearStaleSession: state.clearStaleSession,
-    }))
-  )
-  const initializeDemoData = useDemoStore((state) => state.initializeDemoData)
-  const { t } = useTranslation()
-  const { needRefresh, updateApp, checkForUpdate, isChecking: isCheckingForUpdate } = usePWA()
-
-  // Track if we've checked for updates after a login failure
-  // This helps show the update hint to users on iOS PWA where service worker
-  // update detection is unreliable
-  const [checkedForUpdateAfterError, setCheckedForUpdateAfterError] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
-
-  const [loginMode, setLoginMode] = useState<LoginMode>('calendar')
-  const [username, setUsername] = useState('')
-  const [calendarInput, setCalendarInput] = useState('')
-  const [calendarError, setCalendarError] = useState<string | null>(null)
-  const [isValidatingCalendar, setIsValidatingCalendar] = useState(false)
-  const [lockoutCountdown, setLockoutCountdown] = useState<number | null>(null)
-  // Use ref for password to minimize memory exposure (avoids re-renders with password in state)
-  const passwordRef = useRef<HTMLInputElement>(null)
-  // Form ref for manual validation trigger (needed since button is type="button")
-  const formRef = useRef<HTMLFormElement>(null)
-  const calendarFormRef = useRef<HTMLFormElement>(null)
-  // Ref to prevent race condition with double submission
-  // State updates are async, so we need a synchronous guard
-  const isSubmittingRef = useRef(false)
-  // AbortController ref for cancelling calendar validation on unmount
-  const calendarValidationAbortRef = useRef<AbortController | null>(null)
-
-  const isLoading = status === 'loading' || isValidatingCalendar
-
-  const handleDemoLogin = useCallback(() => {
-    // Initialize with SV (Swiss Volley national) association as default
-    // User can switch to other associations via the occupation dropdown
-    initializeDemoData('SV')
-    setDemoAuthenticated()
-    navigate('/')
-  }, [initializeDemoData, setDemoAuthenticated, navigate])
-
-  // In demo-only mode (PR previews), calendar mode is allowed but full login is not
-  // No auto-redirect - let users choose between calendar mode and demo mode
-
-  // Cleanup: abort any pending calendar validation on unmount
-  useEffect(() => {
-    return () => {
-      calendarValidationAbortRef.current?.abort()
-    }
-  }, [])
-
-  // Clear stale session data on mount and when app resumes from suspension.
-  // On iOS PWA, cached CSRF tokens can become stale and cause "invalid credentials"
-  // errors even with correct username/password. This also handles the case where
-  // the app was suspended and resumed - the component doesn't remount, but the
-  // visibilitychange/pageshow events fire.
-  useEffect(() => {
-    // Clear on mount
-    clearStaleSession()
-
-    // Also clear when app resumes from background (iOS PWA suspension)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        clearStaleSession()
-      }
-    }
-
-    // pageshow event is more reliable on iOS Safari PWA for detecting
-    // app resume from suspension. The persisted property indicates if
-    // the page was restored from bfcache (back-forward cache).
-    const handlePageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) {
-        clearStaleSession()
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('pageshow', handlePageShow)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('pageshow', handlePageShow)
-    }
-  }, [clearStaleSession])
-
-  // Countdown timer for lockout - ticks every second until lockout expires
-  useEffect(() => {
-    if (!lockedUntil || lockedUntil <= 0) {
-      setLockoutCountdown(null)
-      return
-    }
-
-    setLockoutCountdown(lockedUntil)
-
-    const interval = setInterval(() => {
-      setLockoutCountdown((prev) => {
-        if (!prev || prev <= 1) {
-          clearInterval(interval)
-          return null
-        }
-        return prev - 1
-      })
-    }, LOCKOUT_COUNTDOWN_INTERVAL_MS)
-
-    return () => clearInterval(interval)
-  }, [lockedUntil])
-
-  // Check for updates when login fails - helps detect updates on iOS PWA
-  // where service worker update detection is unreliable
-  useEffect(() => {
-    const hasError = error || calendarError
-    if (hasError && !checkedForUpdateAfterError && !needRefresh) {
-      setCheckedForUpdateAfterError(true)
-      // Trigger update check - if an update is found, needRefresh will become true
-      checkForUpdate()
-    }
-    // Reset when error clears (user trying again)
-    if (!hasError) {
-      setCheckedForUpdateAfterError(false)
-    }
-  }, [error, calendarError, checkedForUpdateAfterError, needRefresh, checkForUpdate])
-
-  // Handle update button click
-  const handleUpdate = useCallback(async () => {
-    if (isUpdating) return
-    setIsUpdating(true)
-    try {
-      await updateApp()
-    } finally {
-      // Note: updateApp() typically reloads, so this may not execute
-      setIsUpdating(false)
-    }
-  }, [isUpdating, updateApp])
-
-  // Determine if login should be disabled due to lockout
-  const isLockedOut = lockoutCountdown !== null && lockoutCountdown > 0
-
-  function handleCalendarInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setCalendarInput(e.target.value)
-    // Clear error when user starts typing
-    if (calendarError) {
-      setCalendarError(null)
-    }
-  }
-
-  async function handleSubmit(e: FormEvent) {
-    // Prevent native form submission - critical for iOS autofill compatibility
-    // iOS Safari's password autofill can trigger native form submission,
-    // bypassing React's event handling in some cases
-    e.preventDefault()
-    e.stopPropagation()
-    await performLogin()
-  }
-
-  async function performLogin() {
-    // Use ref for synchronous double-submit prevention (state updates are async)
-    if (isSubmittingRef.current || isLoading) return
-
-    // Trigger HTML5 form validation (needed since button is type="button")
-    // reportValidity() shows validation messages and returns false if invalid
-    if (formRef.current && !formRef.current.reportValidity()) {
-      return
-    }
-
-    isSubmittingRef.current = true
-
-    try {
-      const password = passwordRef.current?.value || ''
-      const success = await login(username, password)
-      if (success) {
-        // Clear password field after successful login
-        if (passwordRef.current) {
-          passwordRef.current.value = ''
-        }
-        navigate('/')
-      }
-    } finally {
-      isSubmittingRef.current = false
-    }
-  }
-
-  async function handleCalendarSubmit(e: FormEvent) {
-    e.preventDefault()
-    e.stopPropagation()
-    await performCalendarLogin()
-  }
-
-  async function performCalendarLogin() {
-    if (isSubmittingRef.current || isLoading) return
-
-    if (calendarFormRef.current && !calendarFormRef.current.reportValidity()) {
-      return
-    }
-
-    // Extract calendar code from input (could be URL or just code)
-    const code = extractCalendarCode(calendarInput)
-    if (!code) {
-      setCalendarError('auth.invalidCalendarCode')
-      return
-    }
-
-    // Abort any previous validation request
-    calendarValidationAbortRef.current?.abort()
-    const abortController = new AbortController()
-    calendarValidationAbortRef.current = abortController
-
-    isSubmittingRef.current = true
-    setIsValidatingCalendar(true)
-    setCalendarError(null)
-
-    try {
-      // Validate the calendar code by checking the API
-      const result = await validateCalendarCode(code, abortController.signal)
-
-      // Don't update state if the request was aborted (component unmounted)
-      if (abortController.signal.aborted) {
-        return
-      }
-
-      if (!result.valid) {
-        setCalendarError(result.error ?? 'auth.calendarValidationFailed')
-        return
-      }
-
-      // Login with the validated calendar code
-      await loginWithCalendar(code)
-      navigate('/')
-    } catch (error) {
-      // Ignore AbortError - component was unmounted or new request started
-      if (error instanceof Error && error.name === 'AbortError') {
-        return
-      }
-      setCalendarError('auth.calendarValidationFailed')
-    } finally {
-      isSubmittingRef.current = false
-      // Only update state if this controller wasn't aborted
-      if (!abortController.signal.aborted) {
-        setIsValidatingCalendar(false)
-      }
-    }
-  }
-
-  // Handle Enter key on password field to trigger login
-  // This provides keyboard submit without relying on form submission
-  function handlePasswordKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && !isLoading) {
-      e.preventDefault()
-      performLogin()
-    }
-  }
-
-  function handleCalendarInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && !isLoading) {
-      e.preventDefault()
-      performCalendarLogin()
-    }
-  }
-
-  // Get translated error message
-  function getErrorMessage(errorKey: string): string {
-    if (errorKey === NO_REFEREE_ROLE_ERROR_KEY) {
-      return t('auth.noRefereeRole')
-    }
-    if (errorKey === 'auth.invalidCalendarCode') {
-      return t('auth.invalidCalendarCode')
-    }
-    if (errorKey === 'auth.calendarNotFound') {
-      return t('auth.calendarNotFound')
-    }
-    if (errorKey === 'auth.calendarValidationFailed') {
-      return t('auth.calendarValidationFailed')
-    }
-    // Handle lockout error with countdown
-    if (isLockedOut && lockoutCountdown) {
-      return `${t('auth.accountLocked')} - ${t('auth.lockoutRemainingTime')} ${lockoutCountdown} ${t('auth.lockoutSeconds')}`
-    }
-    return errorKey
-  }
-
-  // In demo-only mode (PR previews), we show the login form but only with
-  // Calendar mode and Demo options - Full Login is hidden for security
-  // (full login would require real credentials)
-
-  const displayError = loginMode === 'calendar' ? calendarError : error
+    loginMode,
+    setLoginMode,
+    username,
+    setUsername,
+    calendarInput,
+    isLoading,
+    isLockedOut,
+    isUpdating,
+    isCheckingForUpdate,
+    checkedForUpdateAfterError,
+    needRefresh,
+    displayError,
+    passwordRef,
+    formRef,
+    calendarFormRef,
+    handleSubmit,
+    handleCalendarSubmit,
+    performLogin,
+    performCalendarLogin,
+    handleDemoLogin,
+    handleUpdate,
+    handleCalendarInputChange,
+    handlePasswordKeyDown,
+    handleCalendarInputKeyDown,
+    getErrorMessage,
+    updateApp,
+    t,
+  } = useLoginPageLogic()
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-surface-page dark:bg-surface-page-dark px-4">

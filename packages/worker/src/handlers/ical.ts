@@ -1,6 +1,6 @@
 import type { Env } from '../types'
 import { corsHeaders, securityHeaders } from '../middleware'
-import { extractICalCode, getUserAgent, isValidICalCode } from '../utils'
+import { errorResponse, extractICalCode, getUserAgent, isValidICalCode } from '../utils'
 
 /**
  * Handle iCal proxy route: GET/HEAD /iCal/referee/:code
@@ -20,10 +20,10 @@ export async function handleICal(
 
   // Only allow GET and HEAD requests for iCal
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return new Response('Method Not Allowed', {
+    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
       status: 405,
       headers: {
-        'Content-Type': 'text/plain',
+        'Content-Type': 'application/json',
         Allow: 'GET, HEAD',
         ...corsHeaders(origin),
         ...securityHeaders(),
@@ -33,14 +33,7 @@ export async function handleICal(
 
   // Validate code format (6 alphanumeric characters)
   if (!isValidICalCode(iCalCode)) {
-    return new Response('Bad Request: Invalid calendar code format', {
-      status: 400,
-      headers: {
-        'Content-Type': 'text/plain',
-        ...corsHeaders(origin),
-        ...securityHeaders(),
-      },
-    })
+    return errorResponse(400, 'Bad Request: Invalid calendar code format', origin)
   }
 
   // Proxy to volleymanager iCal endpoint
@@ -60,27 +53,13 @@ export async function handleICal(
 
     // Pass through 404 if not found
     if (iCalResponse.status === 404) {
-      return new Response('Not Found: Calendar not found', {
-        status: 404,
-        headers: {
-          'Content-Type': 'text/plain',
-          ...corsHeaders(origin),
-          ...securityHeaders(),
-        },
-      })
+      return errorResponse(404, 'Not Found: Calendar not found', origin)
     }
 
     // Handle other error responses from upstream
     if (!iCalResponse.ok) {
       console.error('iCal upstream error:', iCalResponse.status, iCalResponse.statusText)
-      return new Response('Bad Gateway: Upstream error', {
-        status: 502,
-        headers: {
-          'Content-Type': 'text/plain',
-          ...corsHeaders(origin),
-          ...securityHeaders(),
-        },
-      })
+      return errorResponse(502, 'Bad Gateway: Upstream error', origin)
     }
 
     // Return the iCal data with proper headers
@@ -97,13 +76,6 @@ export async function handleICal(
     })
   } catch (error) {
     console.error('iCal proxy error:', error)
-    return new Response('Bad Gateway: Unable to reach calendar service', {
-      status: 502,
-      headers: {
-        'Content-Type': 'text/plain',
-        ...corsHeaders(origin),
-        ...securityHeaders(),
-      },
-    })
+    return errorResponse(502, 'Bad Gateway: Unable to reach calendar service', origin)
   }
 }

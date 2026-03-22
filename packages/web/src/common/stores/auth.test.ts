@@ -54,6 +54,30 @@ vi.mock('@/api/client', () => ({
   },
 }))
 
+// Re-register auth actions with the mocked modules.
+// The setup file already registered with real modules, but this test mocks @/api/client,
+// so we need to re-register to pick up the mocked implementations.
+import { registerAuthActions } from '@/common/stores/auth-actions-registry'
+import { performCalendarLogin } from '@/features/auth/services/calendar-auth'
+import { hasMultipleAssociations } from '@/features/auth/utils/active-party-parser'
+import {
+  performApiLogin,
+  performApiLogout,
+  performApiSessionCheck,
+  SESSION_CHECK_GRACE_PERIOD_MS,
+} from '@/features/auth/utils/api-auth-flow'
+import { filterRefereeOccupations } from '@/features/auth/utils/parseOccupations'
+
+registerAuthActions({
+  performLogin: performApiLogin,
+  performLogout: performApiLogout,
+  performSessionCheck: performApiSessionCheck,
+  performCalendarLogin,
+  filterRefereeOccupations,
+  hasMultipleAssociations,
+  sessionCheckGracePeriodMs: SESSION_CHECK_GRACE_PERIOD_MS,
+})
+
 // Mock fetch
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)

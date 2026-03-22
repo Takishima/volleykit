@@ -7,7 +7,7 @@
  */
 
 import { setCsrfToken } from '@/api/session'
-import type { AttributeValue } from '@/features/auth/utils/active-party-parser'
+import type { AttributeValue } from '@/common/types/active-party'
 
 import type { AuthState, DataSource, UserProfile } from './auth'
 
