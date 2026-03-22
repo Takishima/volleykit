@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { addDays, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
+import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -9,8 +9,6 @@ import { assignmentListOptions, assignmentDetailOptions } from '@/api/queryOptio
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_DATE_RANGE_DAYS,
-  THIS_WEEK_DAYS,
-  NEXT_MONTH_DAYS,
   VALIDATION_CLOSED_STALE_TIME_MS,
   fetchAllAssignmentPages,
   parseDateOrFallback,
@@ -24,6 +22,10 @@ import type { ValidatedGameData } from '@/common/stores/demo/types'
 import { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
 
 import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
+import { getDateRangeForPeriod, type DatePeriod } from '../utils/date-range'
+
+// Re-export for backwards compatibility
+export { getDateRangeForPeriod, type DatePeriod } from '../utils/date-range'
 
 // Re-export calendar assignments hook for calendar mode
 export { useCalendarAssignments } from './useCalendarAssignments'
@@ -33,47 +35,6 @@ export type { CalendarAssignment } from './useCalendarAssignments'
 // Using `|| []` creates a new array reference on each render, while this constant
 // provides referential stability when data.items is nullish.
 const EMPTY_ASSIGNMENTS: Assignment[] = []
-
-// Date period presets
-export type DatePeriod = 'upcoming' | 'past' | 'thisWeek' | 'nextMonth' | 'custom'
-
-export function getDateRangeForPeriod(
-  period: DatePeriod,
-  customRange?: { from: Date; to: Date }
-): { from: string; to: string } {
-  const now = new Date()
-
-  switch (period) {
-    case 'upcoming':
-      return {
-        from: startOfDay(now).toISOString(),
-        to: endOfDay(addDays(now, DEFAULT_DATE_RANGE_DAYS)).toISOString(),
-      }
-    case 'past':
-      return {
-        from: startOfDay(subDays(now, DEFAULT_DATE_RANGE_DAYS)).toISOString(),
-        to: endOfDay(subDays(now, 1)).toISOString(),
-      }
-    case 'thisWeek':
-      return {
-        from: startOfDay(now).toISOString(),
-        to: endOfDay(addDays(now, THIS_WEEK_DAYS)).toISOString(),
-      }
-    case 'nextMonth':
-      return {
-        from: startOfDay(now).toISOString(),
-        to: endOfDay(addDays(now, NEXT_MONTH_DAYS)).toISOString(),
-      }
-    case 'custom':
-      if (customRange) {
-        return {
-          from: startOfDay(customRange.from).toISOString(),
-          to: endOfDay(customRange.to).toISOString(),
-        }
-      }
-      return getDateRangeForPeriod('upcoming')
-  }
-}
 
 /**
  * Helper to filter assignments by validation closed status.
