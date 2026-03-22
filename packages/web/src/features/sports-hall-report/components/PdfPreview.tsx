@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 
+import { ExternalLink } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface PdfPreviewProps {
@@ -23,9 +24,21 @@ export function PdfPreview({ pdfBytes, isLoading }: PdfPreviewProps) {
     }
   }, [blobUrl])
 
+  const handleOpenInNewTab = useCallback(() => {
+    if (blobUrl) window.open(blobUrl, '_blank')
+  }, [blobUrl])
+
+  const handleDownloadFallback = useCallback(() => {
+    if (!blobUrl) return
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = 'sports-hall-report-preview.pdf'
+    a.click()
+  }, [blobUrl])
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[400px] rounded-lg border border-border-default dark:border-border-default-dark">
+      <div className="flex items-center justify-center h-[50vh] min-h-[300px] rounded-lg border border-border-default dark:border-border-default-dark">
         <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark">
           <span
             className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
@@ -41,16 +54,33 @@ export function PdfPreview({ pdfBytes, isLoading }: PdfPreviewProps) {
 
   return (
     <div className="space-y-2">
-      <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
-        {t('pdf.wizard.nonConformant.previewTitle')}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
+          {t('pdf.wizard.nonConformant.previewTitle')}
+        </p>
+        <button
+          type="button"
+          onClick={handleOpenInNewTab}
+          className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+        >
+          <ExternalLink className="w-3 h-3" aria-hidden="true" />
+          {t('pdf.wizard.nonConformant.openInNewTab')}
+        </button>
+      </div>
       <div className="rounded-lg border border-border-default dark:border-border-default-dark overflow-hidden">
         <iframe
           src={blobUrl}
           title={t('pdf.wizard.nonConformant.previewTitle')}
-          className="w-full h-[400px]"
+          className="w-full h-[50vh] min-h-[300px]"
         />
       </div>
+      <button
+        type="button"
+        onClick={handleDownloadFallback}
+        className="text-xs text-text-muted dark:text-text-muted-dark underline underline-offset-2 hover:text-text-secondary dark:hover:text-text-secondary-dark transition-colors"
+      >
+        {t('pdf.wizard.nonConformant.downloadToView')}
+      </button>
     </div>
   )
 }

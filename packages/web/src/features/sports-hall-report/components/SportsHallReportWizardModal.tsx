@@ -47,7 +47,6 @@ export function SportsHallReportWizardModal({
   })
 
   // Happy path state
-  const [confirmed, setConfirmed] = useState(false)
   const [showSignature, setShowSignature] = useState(false)
   const [isGeneratingHappy, setIsGeneratingHappy] = useState(false)
 
@@ -84,7 +83,6 @@ export function SportsHallReportWizardModal({
   useEffect(() => {
     if (isOpen) {
       setLanguage(defaultLanguage)
-      setConfirmed(false)
       setIsGeneratingHappy(false)
       setShowSignature(false)
       setShowCloseConfirm(false)
@@ -108,9 +106,8 @@ export function SportsHallReportWizardModal({
   // ─── Happy path handlers ───────────────────────────────────────────
 
   const handleGenerate = useCallback(() => {
-    if (!confirmed) return
     setShowSignature(true)
-  }, [confirmed])
+  }, [])
 
   const handleSignatureComplete = useCallback(
     async (signatureDataUrl: string) => {
@@ -228,8 +225,6 @@ export function SportsHallReportWizardModal({
         <HappyPathContent
           language={language}
           setLanguage={setLanguage}
-          confirmed={confirmed}
-          setConfirmed={setConfirmed}
           isGenerating={isGeneratingHappy}
           jerseyAd={{
             jerseyAdvertising,
@@ -241,7 +236,6 @@ export function SportsHallReportWizardModal({
           onGenerate={handleGenerate}
           onDownloadPreFilled={handleDownloadPreFilled}
           onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}
-          onClose={onClose}
         />
       </Modal>
 
@@ -250,11 +244,6 @@ export function SportsHallReportWizardModal({
           nc={nc}
           language={language}
           setLanguage={setLanguage}
-          jerseyAdvertising={jerseyAdvertising}
-          onToggleHomeAd={handleToggleHomeAd}
-          onToggleAwayAd={handleToggleAwayAd}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
           firstRefereeName={firstRefereeName}
           secondRefereeName={secondRefereeName}
           subtitle={subtitle}

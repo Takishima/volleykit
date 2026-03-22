@@ -647,6 +647,7 @@ const de: Translations = {
       advertisingLabel: 'Werbung auf Spielerkleidung',
 
       generate: 'Rapport erstellen',
+      everythingOk: 'Alles in Ordnung',
       downloadPreFilled: 'Leeren Rapport herunterladen (ohne Unterschrift)',
       reportGenerated: 'Rapport erfolgreich erstellt',
 
@@ -683,8 +684,13 @@ const de: Translations = {
         addCoach: 'Trainer Besuchermannschaft hinzufügen',
         removeCoach: 'Trainer Besuchermannschaft entfernen',
         reSign: 'Erneut unterschreiben',
+        flaggedCount: '{count} von {total} beanstandet',
+        openInNewTab: 'In neuem Tab öffnen',
+        downloadToView: 'Herunterladen zum Ansehen',
         discardTitle: 'Änderungen verwerfen?',
         discardMessage: 'Nicht gespeicherte Änderungen gehen verloren.',
+        discardMessageDetailed:
+          'Sie haben {sections} Abschnitte beanstandet und {comments} Kommentare hinzugefügt. Alle Änderungen gehen verloren.',
         discard: 'Verwerfen',
         tapToSign: 'Zum Unterschreiben tippen',
         downloadFinal: 'PDF herunterladen',

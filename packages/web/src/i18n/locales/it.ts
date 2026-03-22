@@ -637,6 +637,7 @@ const it: Translations = {
       advertisingLabel: 'Pubblicità sugli indumenti di gioco',
 
       generate: 'Genera rapporto',
+      everythingOk: 'Tutto in ordine',
       downloadPreFilled: 'Scarica il rapporto vuoto (senza firma)',
       reportGenerated: 'Rapporto generato con successo',
 
@@ -673,8 +674,13 @@ const it: Translations = {
         addCoach: 'Aggiungere allenatore squadra ospite',
         removeCoach: 'Rimuovere allenatore squadra ospite',
         reSign: 'Ri-firmare',
+        flaggedCount: '{count} di {total} segnalate',
+        openInNewTab: 'Apri in una nuova scheda',
+        downloadToView: 'Scarica per visualizzare',
         discardTitle: 'Eliminare le modifiche?',
         discardMessage: 'Le modifiche non salvate andranno perse.',
+        discardMessageDetailed:
+          'Hai segnalato {sections} sezioni e aggiunto {comments} commenti. Tutte le modifiche andranno perse.',
         discard: 'Elimina',
         tapToSign: 'Tocca per firmare',
         downloadFinal: 'Scarica PDF',

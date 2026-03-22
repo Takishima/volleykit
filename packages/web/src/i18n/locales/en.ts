@@ -624,6 +624,7 @@ const en: Translations = {
       advertisingLabel: 'Advertising on uniform',
 
       generate: 'Generate Report',
+      everythingOk: 'Everything OK',
       downloadPreFilled: 'Download blank report (without signature)',
       reportGenerated: 'Report generated successfully',
 
@@ -660,8 +661,13 @@ const en: Translations = {
         addCoach: 'Add away team coach',
         removeCoach: 'Remove away team coach',
         reSign: 'Re-sign',
+        flaggedCount: '{count} of {total} flagged',
+        openInNewTab: 'Open in new tab',
+        downloadToView: 'Download to view',
         discardTitle: 'Discard changes?',
         discardMessage: 'You have unsaved changes that will be lost.',
+        discardMessageDetailed:
+          'You have flagged {sections} sections and added {comments} comments. All changes will be lost.',
         discard: 'Discard',
         tapToSign: 'Tap to sign',
         downloadFinal: 'Download PDF',

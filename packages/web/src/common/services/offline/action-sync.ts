@@ -23,7 +23,6 @@ import {
   type SyncResult,
 } from '@volleykit/shared/offline'
 
-
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { createLogger } from '@/common/utils/logger'

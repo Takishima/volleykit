@@ -172,8 +172,8 @@ export function SignatureCollectionStep({
                     : 'border-border-default dark:border-border-default-dark'
                 }`}
               >
-                {/* Name input for coaches — shown above sign button */}
-                {signer.needsNameInput && !hasSigned && (
+                {/* Name input for coaches — always editable */}
+                {signer.needsNameInput && (
                   <div className="mb-2">
                     <input
                       type="text"
@@ -222,6 +222,17 @@ export function SignatureCollectionStep({
                     </Button>
                   )}
                 </div>
+
+                {/* Signature thumbnail preview */}
+                {hasSigned && (
+                  <div className="mt-2 rounded border border-border-default dark:border-border-default-dark bg-white p-1">
+                    <img
+                      src={getSignatureDataUrl(signer.role)}
+                      alt={t('pdf.wizard.signature.title')}
+                      className="h-10 w-auto mx-auto object-contain"
+                    />
+                  </div>
+                )}
               </div>
             )
           })}

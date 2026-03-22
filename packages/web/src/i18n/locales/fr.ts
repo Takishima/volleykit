@@ -642,6 +642,7 @@ const fr: Translations = {
       advertisingLabel: 'Publicité sur les vêtements de jeu',
 
       generate: 'Générer le rapport',
+      everythingOk: 'Tout est en ordre',
       downloadPreFilled: 'Télécharger le rapport vierge (sans signature)',
       reportGenerated: 'Rapport généré avec succès',
 
@@ -678,8 +679,13 @@ const fr: Translations = {
         addCoach: 'Ajouter entraîneur équipe visiteurs',
         removeCoach: 'Retirer entraîneur équipe visiteurs',
         reSign: 'Re-signer',
+        flaggedCount: '{count} sur {total} signalées',
+        openInNewTab: 'Ouvrir dans un nouvel onglet',
+        downloadToView: 'Télécharger pour voir',
         discardTitle: 'Abandonner les modifications ?',
         discardMessage: 'Les modifications non enregistrées seront perdues.',
+        discardMessageDetailed:
+          'Vous avez signalé {sections} sections et ajouté {comments} commentaires. Toutes les modifications seront perdues.',
         discard: 'Abandonner',
         tapToSign: 'Appuyez pour signer',
         downloadFinal: 'Télécharger le PDF',
