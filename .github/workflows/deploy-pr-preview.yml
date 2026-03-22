@@ -53,17 +53,17 @@ jobs:
             eslint-${{ runner.os }}-
       - name: Lint
         run: pnpm run lint --cache --cache-location .eslintcache
-      - name: Test
-        run: pnpm test
-      # Cache Vite/Vitest build artifacts per branch (Vitest stores cache in .vite/vitest)
-      - name: Cache Vite build
+      # Cache Vite/Vitest artifacts per branch (Vitest stores cache in .vite/vitest)
+      - name: Cache Vite
         uses: actions/cache@v5
         with:
           path: packages/web/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx', 'packages/web/vite.config.ts') }}
+          key: vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-${{ github.head_ref }}-
             vite-${{ runner.os }}-
+      - name: Test
+        run: pnpm test
       - name: Build for PR Preview
         run: pnpm run build
         env:
