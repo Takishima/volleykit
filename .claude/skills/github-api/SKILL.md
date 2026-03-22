@@ -15,6 +15,7 @@ $ARGUMENTS
 ```
 
 Interpret the user input as a GitHub API operation request. Examples:
+
 - `list open PRs` → list open pull requests
 - `get issue #42` → fetch issue details
 - `create issue "title" "body"` → create a new issue
@@ -33,6 +34,7 @@ bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh METHOD ENDPOINT [JSON_BODY]'
 ```
 
 The script:
+
 - Auto-detects `OWNER`/`REPO` from git remote (or use literal `OWNER`/`REPO` in endpoints and they get replaced)
 - Prefers `gh api` when available, falls back to `curl` with `$GITHUB_TOKEN`
 - Appends `per_page=100` to GET requests automatically
@@ -77,46 +79,46 @@ ${CLAUDE_SKILL_DIR}/scripts/ghapi.sh POST /repos/OWNER/REPO/issues/42/comments "
 
 ### Pull Requests
 
-| Operation | Method | Endpoint |
-|-----------|--------|----------|
-| List open PRs | GET | `/repos/OWNER/REPO/pulls?state=open` |
-| Get PR | GET | `/repos/OWNER/REPO/pulls/NUMBER` |
-| Create PR | POST | `/repos/OWNER/REPO/pulls` (body: title, body, head, base) |
-| Update PR | PATCH | `/repos/OWNER/REPO/pulls/NUMBER` |
-| List PR files | GET | `/repos/OWNER/REPO/pulls/NUMBER/files` |
-| List PR reviews | GET | `/repos/OWNER/REPO/pulls/NUMBER/reviews` |
-| List PR comments | GET | `/repos/OWNER/REPO/pulls/NUMBER/comments` |
-| Check if PR exists for branch | GET | `/repos/OWNER/REPO/pulls?head=OWNER:BRANCH&state=open` |
+| Operation                     | Method | Endpoint                                                  |
+| ----------------------------- | ------ | --------------------------------------------------------- |
+| List open PRs                 | GET    | `/repos/OWNER/REPO/pulls?state=open`                      |
+| Get PR                        | GET    | `/repos/OWNER/REPO/pulls/NUMBER`                          |
+| Create PR                     | POST   | `/repos/OWNER/REPO/pulls` (body: title, body, head, base) |
+| Update PR                     | PATCH  | `/repos/OWNER/REPO/pulls/NUMBER`                          |
+| List PR files                 | GET    | `/repos/OWNER/REPO/pulls/NUMBER/files`                    |
+| List PR reviews               | GET    | `/repos/OWNER/REPO/pulls/NUMBER/reviews`                  |
+| List PR comments              | GET    | `/repos/OWNER/REPO/pulls/NUMBER/comments`                 |
+| Check if PR exists for branch | GET    | `/repos/OWNER/REPO/pulls?head=OWNER:BRANCH&state=open`    |
 
 ### Issues
 
-| Operation | Method | Endpoint |
-|-----------|--------|----------|
-| List issues | GET | `/repos/OWNER/REPO/issues?state=open` |
-| Get issue | GET | `/repos/OWNER/REPO/issues/NUMBER` |
-| Create issue | POST | `/repos/OWNER/REPO/issues` (body: title, body, labels, assignees) |
-| Update issue | PATCH | `/repos/OWNER/REPO/issues/NUMBER` |
-| Add comment | POST | `/repos/OWNER/REPO/issues/NUMBER/comments` (body: body) |
-| List comments | GET | `/repos/OWNER/REPO/issues/NUMBER/comments` |
-| Add labels | POST | `/repos/OWNER/REPO/issues/NUMBER/labels` (body: labels array) |
+| Operation     | Method | Endpoint                                                          |
+| ------------- | ------ | ----------------------------------------------------------------- |
+| List issues   | GET    | `/repos/OWNER/REPO/issues?state=open`                             |
+| Get issue     | GET    | `/repos/OWNER/REPO/issues/NUMBER`                                 |
+| Create issue  | POST   | `/repos/OWNER/REPO/issues` (body: title, body, labels, assignees) |
+| Update issue  | PATCH  | `/repos/OWNER/REPO/issues/NUMBER`                                 |
+| Add comment   | POST   | `/repos/OWNER/REPO/issues/NUMBER/comments` (body: body)           |
+| List comments | GET    | `/repos/OWNER/REPO/issues/NUMBER/comments`                        |
+| Add labels    | POST   | `/repos/OWNER/REPO/issues/NUMBER/labels` (body: labels array)     |
 
 ### CI / Checks
 
-| Operation | Method | Endpoint |
-|-----------|--------|----------|
-| Check runs for commit | GET | `/repos/OWNER/REPO/commits/SHA/check-runs` |
-| Check runs for PR | GET | `/repos/OWNER/REPO/commits/SHA/check-runs` (get SHA from PR head) |
-| Combined status | GET | `/repos/OWNER/REPO/commits/SHA/status` |
+| Operation             | Method | Endpoint                                                          |
+| --------------------- | ------ | ----------------------------------------------------------------- |
+| Check runs for commit | GET    | `/repos/OWNER/REPO/commits/SHA/check-runs`                        |
+| Check runs for PR     | GET    | `/repos/OWNER/REPO/commits/SHA/check-runs` (get SHA from PR head) |
+| Combined status       | GET    | `/repos/OWNER/REPO/commits/SHA/status`                            |
 
 ### Repository
 
-| Operation | Method | Endpoint |
-|-----------|--------|----------|
-| Get repo | GET | `/repos/OWNER/REPO` |
-| List branches | GET | `/repos/OWNER/REPO/branches` |
-| List releases | GET | `/repos/OWNER/REPO/releases` |
-| List workflows | GET | `/repos/OWNER/REPO/actions/workflows` |
-| List workflow runs | GET | `/repos/OWNER/REPO/actions/runs` |
+| Operation          | Method | Endpoint                              |
+| ------------------ | ------ | ------------------------------------- |
+| Get repo           | GET    | `/repos/OWNER/REPO`                   |
+| List branches      | GET    | `/repos/OWNER/REPO/branches`          |
+| List releases      | GET    | `/repos/OWNER/REPO/releases`          |
+| List workflows     | GET    | `/repos/OWNER/REPO/actions/workflows` |
+| List workflow runs | GET    | `/repos/OWNER/REPO/actions/runs`      |
 
 ## Execution
 

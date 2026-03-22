@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle } from '@/shared/components/icons'
+import { CheckCircle, XCircle } from '@/common/components/icons'
 
 interface JerseyAdToggleProps {
   label: string

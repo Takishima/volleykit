@@ -4,10 +4,10 @@ import { parseISO, compareAsc, compareDesc } from 'date-fns'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { CompensationRecord } from '@/api/client'
+import { useTour } from '@/common/hooks/useTour'
+import { useAuthStore } from '@/common/stores/auth'
+import { groupByWeek, getSeasonDateRange } from '@/common/utils/date-helpers'
 import { TOUR_DUMMY_COMPENSATION } from '@/features/compensations/compensations'
-import { useTour } from '@/shared/hooks/useTour'
-import { useAuthStore } from '@/shared/stores/auth'
-import { groupByWeek, getSeasonDateRange } from '@/shared/utils/date-helpers'
 import type { SwipeConfig } from '@/types/swipe'
 
 import { useCompensationActions } from './useCompensationActions'

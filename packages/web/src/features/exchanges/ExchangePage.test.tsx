@@ -3,9 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
 import * as exchangeHooks from './hooks/useExchanges'
-import * as authStore from '@/shared/stores/auth'
-import * as demoStore from '@/shared/stores/demo'
-import * as settingsStore from '@/shared/stores/settings'
+import * as authStore from '@/common/stores/auth'
+import * as demoStore from '@/common/stores/demo'
+import * as settingsStore from '@/common/stores/settings'
 
 import { ExchangePage } from './ExchangePage'
 
@@ -26,10 +26,10 @@ const mockUseTour = vi.hoisted(() => ({
 }))
 
 vi.mock('./hooks/useExchanges')
-vi.mock('@/shared/stores/auth')
-vi.mock('@/shared/stores/demo')
-vi.mock('@/shared/stores/settings')
-vi.mock('@/shared/hooks/useTour', () => mockUseTour)
+vi.mock('@/common/stores/auth')
+vi.mock('@/common/stores/demo')
+vi.mock('@/common/stores/settings')
+vi.mock('@/common/hooks/useTour', () => mockUseTour)
 vi.mock('@/features/assignments/hooks/useCalendarConflicts', () => ({
   useCalendarConflicts: () => ({
     conflicts: new Map(),
@@ -44,13 +44,13 @@ vi.mock('@/features/assignments/utils/conflict-detection', () => ({
   hasMinimumGapFromAssignments: () => true,
   DEFAULT_SAME_LOCATION_DISTANCE_KM: 5,
 }))
-vi.mock('@/shared/hooks/useActiveAssociation', () => ({
+vi.mock('@/common/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
-vi.mock('@/shared/hooks/useTravelTime', () => ({
+vi.mock('@/common/hooks/useTravelTime', () => ({
   useTravelTimeAvailable: () => false,
 }))
-vi.mock('@/shared/hooks/useTravelTimeFilter', () => ({
+vi.mock('@/common/hooks/useTravelTimeFilter', () => ({
   useTravelTimeFilter: () => ({
     exchangesWithTravelTime: null,
     filteredExchanges: null,
@@ -59,7 +59,7 @@ vi.mock('@/shared/hooks/useTravelTimeFilter', () => ({
     isAvailable: false,
   }),
 }))
-vi.mock('@/shared/hooks/useExchangeActions', () => ({
+vi.mock('@/common/hooks/useExchangeActions', () => ({
   useExchangeActions: () => ({
     takeOverModal: {
       isOpen: false,

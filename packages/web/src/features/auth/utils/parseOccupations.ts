@@ -9,7 +9,7 @@
  * which are used to set the associationCode on occupations.
  */
 import type { components } from '@/api/schema'
-import type { Occupation } from '@/shared/stores/auth'
+import type { Occupation } from '@/common/stores/auth'
 
 import {
   isInflatedObject,

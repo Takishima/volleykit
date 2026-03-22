@@ -2,12 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import * as authStore from '@/shared/stores/auth'
+import * as authStore from '@/common/stores/auth'
 
 import { CalendarErrorHandler } from './CalendarErrorHandler'
 
 // Mock dependencies
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn(),
 }))
 

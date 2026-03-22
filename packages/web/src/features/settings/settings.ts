@@ -1,4 +1,4 @@
-import type { TourDefinition } from '@/shared/components/tour/definitions/types'
+import type { TourDefinition } from '@/common/components/tour/definitions/types'
 
 export const settingsTour: TourDefinition = {
   id: 'settings',

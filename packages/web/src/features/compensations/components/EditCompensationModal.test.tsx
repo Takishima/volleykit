@@ -5,9 +5,9 @@ import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 import type { CompensationRecord, Assignment } from '@/api/client'
 import { getApiClient } from '@/api/client'
 import * as compensationHooks from '../hooks/useCompensations'
-import { COMPENSATION_LOOKUP_LIMIT } from '@/shared/hooks/usePaginatedQuery'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
+import { COMPENSATION_LOOKUP_LIMIT } from '@/common/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
 
 import { EditCompensationModal } from './EditCompensationModal'
 
@@ -15,11 +15,11 @@ vi.mock('@/api/client', () => ({
   getApiClient: vi.fn(),
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn(),
 }))
 
-vi.mock('@/shared/stores/demo', () => ({
+vi.mock('@/common/stores/demo', () => ({
   useDemoStore: vi.fn(),
 }))
 

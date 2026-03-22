@@ -5,9 +5,9 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiClient } from '@/api/client'
 import { gameDetailOptions } from '@/api/queryOptions'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import type { RosterPanelModifications } from '@/features/validation/components/RosterVerificationPanel'
-import { useAuthStore } from '@/shared/stores/auth'
-import type { PendingScorerData } from '@/shared/stores/demo'
+import { useAuthStore } from '@/common/stores/auth'
+import type { PendingScorerData } from '@/common/stores/demo'
+import type { RosterPanelModifications } from '@/features/validation/roster/components/RosterVerificationPanel'
 
 import {
   type ValidationState,
@@ -31,7 +31,7 @@ export type {
 } from './types'
 
 // Re-export for consumers of this hook
-export type { PendingScorerData as PendingScorerInfo } from '@/shared/stores/demo'
+export type { PendingScorerData as PendingScorerInfo } from '@/common/stores/demo'
 
 /**
  * Hook to manage validation state across all panels in the ValidateGameModal.

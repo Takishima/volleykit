@@ -35,7 +35,7 @@ import { scoreNameMatch } from './search-utils'
 
 import { getCsrfToken } from './form-serialization'
 
-import { BYTES_PER_KB } from '@/shared/utils/constants'
+import { BYTES_PER_KB } from '@/common/utils/constants'
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
 import { apiRequest, apiRequestFormData, apiRequestVoid } from './transport'
 import {

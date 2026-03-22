@@ -25,7 +25,7 @@
  * - Prefer specific error messages over generic validation errors
  */
 
-import { logger } from '@/shared/utils/logger'
+import { logger } from '@/common/utils/logger'
 
 import type { ZodLikeSchema } from '@volleykit/shared/api'
 

@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 
 import type { GameExchange } from '@/api/client'
-import { Check, X } from '@/shared/components/icons'
+import { Check, X } from '@/common/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 // Pre-created icon elements to avoid recreating on each function call

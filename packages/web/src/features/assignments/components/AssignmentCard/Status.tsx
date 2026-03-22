@@ -1,5 +1,5 @@
-import { Badge } from '@/shared/components/Badge'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Badge } from '@/common/components/Badge'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { useAssignmentCardContext } from './context'
 

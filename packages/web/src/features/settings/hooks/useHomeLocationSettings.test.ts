@@ -7,41 +7,41 @@ import { getGeolocationErrorMessage, useHomeLocationSettings } from './useHomeLo
 type AnyFunction = (...args: any[]) => any
 
 // Mock dependencies
-vi.mock('@/shared/stores/settings', () => ({
+vi.mock('@/common/stores/settings', () => ({
   useSettingsStore: vi.fn(),
 }))
 
-vi.mock('@/shared/hooks/useGeolocation', () => ({
+vi.mock('@/common/hooks/useGeolocation', () => ({
   useGeolocation: vi.fn(),
 }))
 
-vi.mock('@/shared/hooks/useCombinedGeocode', () => ({
+vi.mock('@/common/hooks/useCombinedGeocode', () => ({
   useCombinedGeocode: vi.fn(),
 }))
 
-vi.mock('@/shared/hooks/useDebouncedValue', () => ({
+vi.mock('@/common/hooks/useDebouncedValue', () => ({
   useDebouncedValue: vi.fn((value: string) => value),
 }))
 
 const mockT = vi.fn((key: string) => key)
 
 async function getSettingsStore() {
-  const { useSettingsStore } = await import('@/shared/stores/settings')
+  const { useSettingsStore } = await import('@/common/stores/settings')
   return useSettingsStore
 }
 
 async function getGeolocation() {
-  const { useGeolocation } = await import('@/shared/hooks/useGeolocation')
+  const { useGeolocation } = await import('@/common/hooks/useGeolocation')
   return useGeolocation
 }
 
 async function getGeocode() {
-  const { useCombinedGeocode } = await import('@/shared/hooks/useCombinedGeocode')
+  const { useCombinedGeocode } = await import('@/common/hooks/useCombinedGeocode')
   return useCombinedGeocode
 }
 
 async function getDebouncedValue() {
-  const { useDebouncedValue } = await import('@/shared/hooks/useDebouncedValue')
+  const { useDebouncedValue } = await import('@/common/hooks/useDebouncedValue')
   return useDebouncedValue
 }
 

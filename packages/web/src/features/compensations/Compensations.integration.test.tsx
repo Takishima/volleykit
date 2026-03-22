@@ -5,9 +5,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { mockApi } from '@/api/mock-api'
 import { setLocale } from '@/i18n'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import { useToastStore } from '@/shared/stores/toast'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import { useToastStore } from '@/common/stores/toast'
 
 import { CompensationsPage } from './CompensationsPage'
 

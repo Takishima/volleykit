@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react'
 import { format, parseISO } from 'date-fns'
 
 import type { GameExchange } from '@/api/client'
-import { ExpandableCard } from '@/shared/components/ExpandableCard'
+import { ExpandableCard } from '@/common/components/ExpandableCard'
 import {
   MapPin,
   MaleIcon,
@@ -13,17 +13,17 @@ import {
   TrainFront,
   Loader2,
   User,
-} from '@/shared/components/icons'
-import { TravelTimeBadge } from '@/shared/components/TravelTimeBadge'
-import { features } from '@/shared/config/features'
-import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
-import { useDateLocale } from '@/shared/hooks/useDateFormat'
-import { useSbbUrl } from '@/shared/hooks/useSbbUrl'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useSettingsStore } from '@/shared/stores/settings'
-import { extractCoordinates } from '@/shared/utils/geo-location'
-import { buildMapsUrls } from '@/shared/utils/maps-url'
-import { getPositionLabel } from '@/shared/utils/position-labels'
+} from '@/common/components/icons'
+import { TravelTimeBadge } from '@/common/components/TravelTimeBadge'
+import { features } from '@/common/config/features'
+import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useDateLocale } from '@/common/hooks/useDateFormat'
+import { useSbbUrl } from '@/common/hooks/useSbbUrl'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useSettingsStore } from '@/common/stores/settings'
+import { extractCoordinates } from '@/common/utils/geo-location'
+import { buildMapsUrls } from '@/common/utils/maps-url'
+import { getPositionLabel } from '@/common/utils/position-labels'
 
 type RoleLabelKey =
   | 'positions.head-one'

@@ -1,13 +1,13 @@
 import { renderHook } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import type { DataSource } from '@/shared/stores/auth'
+import type { DataSource } from '@/common/stores/auth'
 
 import { useCalendarTheme } from './useCalendarTheme'
 
 let mockDataSource: DataSource = 'api'
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: (selector: (state: { dataSource: DataSource }) => boolean) =>
     selector({ dataSource: mockDataSource }),
 }))

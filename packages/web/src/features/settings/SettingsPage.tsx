@@ -1,13 +1,13 @@
 import { useShallow } from 'zustand/react/shallow'
 
-import { Button } from '@/shared/components/Button'
-import { SlidersHorizontal, MapPin, Info, Lock, AlertTriangle } from '@/shared/components/icons'
-import { features } from '@/shared/config/features'
-import { useTour } from '@/shared/hooks/useTour'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import { useSettingsStore } from '@/shared/stores/settings'
+import { Button } from '@/common/components/Button'
+import { SlidersHorizontal, MapPin, Info, Lock, AlertTriangle } from '@/common/components/icons'
+import { features } from '@/common/config/features'
+import { useTour } from '@/common/hooks/useTour'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import { useSettingsStore } from '@/common/stores/settings'
 
 import {
   ProfileSection,

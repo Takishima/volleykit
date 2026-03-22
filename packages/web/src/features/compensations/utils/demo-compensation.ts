@@ -3,7 +3,7 @@
  * Provides rate calculations and expense formatting for demo mode.
  */
 
-import { formatDistanceKm, metresToKilometres } from '@/shared/utils/distance'
+import { formatDistanceKm, metresToKilometres } from '@/common/utils/distance'
 
 // Compensation rates per association type (CHF)
 // SV (national) has higher rates than regional associations

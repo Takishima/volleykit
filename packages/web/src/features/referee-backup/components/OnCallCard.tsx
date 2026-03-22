@@ -1,8 +1,8 @@
 import { memo } from 'react'
 
-import { Card, CardContent } from '@/shared/components/Card'
-import { useDateFormat } from '@/shared/hooks/useDateFormat'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Card, CardContent } from '@/common/components/Card'
+import { useDateFormat } from '@/common/hooks/useDateFormat'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import type { OnCallAssignment } from '../hooks/useMyOnCallAssignments'
 

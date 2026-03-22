@@ -3,6 +3,13 @@ import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
+import { Button } from '@/common/components/Button'
+import { Volleyball } from '@/common/components/icons'
+import { LanguageSwitcher } from '@/common/components/LanguageSwitcher'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import { getHelpSiteUrl } from '@/common/utils/constants'
 import { usePWA } from '@/contexts/PWAContext'
 import {
   extractCalendarCode,
@@ -10,13 +17,6 @@ import {
 } from '@/features/assignments/utils/calendar-helpers'
 import { LoginErrorWithUpdateHint } from '@/features/auth/components/LoginErrorWithUpdateHint'
 import { LoginUpdateBanner } from '@/features/auth/components/LoginUpdateBanner'
-import { Button } from '@/shared/components/Button'
-import { Volleyball } from '@/shared/components/icons'
-import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import { getHelpSiteUrl } from '@/shared/utils/constants'
 
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === 'true'

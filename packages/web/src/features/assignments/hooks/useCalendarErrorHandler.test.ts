@@ -2,23 +2,23 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { CalendarNotFoundError } from '@/features/assignments/api/calendar-api'
-import * as authStore from '@/shared/stores/auth'
-import * as toastStore from '@/shared/stores/toast'
+import * as authStore from '@/common/stores/auth'
+import * as toastStore from '@/common/stores/toast'
 
 import { useCalendarErrorHandler } from './useCalendarErrorHandler'
 
 // Mock dependencies
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn(),
 }))
 
-vi.mock('@/shared/stores/toast', () => ({
+vi.mock('@/common/stores/toast', () => ({
   toast: {
     error: vi.fn(),
   },
 }))
 
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),

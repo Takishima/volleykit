@@ -13,7 +13,7 @@ import type {
   RosterModifications,
   CoachModifications,
   CoachRole,
-} from '@/features/validation/hooks/useNominationList'
+} from '@/features/validation/roster/hooks/useNominationList'
 
 /** Minimum number of players required for a valid roster */
 export const MIN_PLAYERS_REQUIRED = 6

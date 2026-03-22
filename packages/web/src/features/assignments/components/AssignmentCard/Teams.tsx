@@ -1,5 +1,5 @@
-import { MaleIcon, FemaleIcon } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { MaleIcon, FemaleIcon } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { useAssignmentCardContext } from './context'
 

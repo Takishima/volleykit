@@ -32,8 +32,8 @@ import {
   COMPENSATIONS_STALE_TIME_MS,
   SETTINGS_STALE_TIME_MS,
   SEASON_STALE_TIME_MS,
-} from '@/shared/hooks/usePaginatedQuery'
-import { MS_PER_MINUTE } from '@/shared/utils/constants'
+} from '@/common/hooks/usePaginatedQuery'
+import { MS_PER_MINUTE } from '@/common/utils/constants'
 
 // ── Assignments ──────────────────────────────────────────────────────
 

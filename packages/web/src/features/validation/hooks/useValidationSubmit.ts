@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { logger } from '@/shared/utils/logger'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { logger } from '@/common/utils/logger'
 
 /** Duration to show success toast before auto-dismissing */
 const SUCCESS_TOAST_DURATION_MS = 3000

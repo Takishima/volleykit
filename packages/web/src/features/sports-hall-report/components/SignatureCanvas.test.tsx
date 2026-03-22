@@ -30,7 +30,7 @@ vi.mock('signature_pad', () => {
 })
 
 // Mock useTranslation
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {

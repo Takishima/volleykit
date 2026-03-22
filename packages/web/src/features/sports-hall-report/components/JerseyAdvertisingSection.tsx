@@ -1,5 +1,5 @@
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { JerseyAdvertisingOptions } from '@/shared/utils/pdf-form-filler'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import type { JerseyAdvertisingOptions } from '@/common/utils/pdf-form-filler'
 
 import { JerseyAdToggle } from './JerseyAdToggle'
 

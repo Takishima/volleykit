@@ -70,7 +70,7 @@ Write a script that processes one field at a time:
 import { readFileSync, writeFileSync } from 'fs'
 import { PDFDocument } from 'pdf-lib'
 
-const [,, pdfPath, fieldName, outputPath] = process.argv
+const [, , pdfPath, fieldName, outputPath] = process.argv
 const bytes = readFileSync(pdfPath)
 const doc = await PDFDocument.load(bytes)
 const form = doc.getForm()
@@ -138,8 +138,10 @@ async function getRadioPositions(pdfPath, label) {
   let prevY = null
   for (const { name, y, height } of positions) {
     const gap = prevY !== null ? (prevY - y).toFixed(1) : '-'
-    const marker = prevY !== null && (prevY - y) > 17 ? ' ← SECTION BREAK' : ''
-    console.log(`  ${name.padEnd(15)} y=${y.toFixed(1).padStart(6)}  h=${height.toFixed(1)}  gap=${String(gap).padStart(5)}${marker}`)
+    const marker = prevY !== null && prevY - y > 17 ? ' ← SECTION BREAK' : ''
+    console.log(
+      `  ${name.padEnd(15)} y=${y.toFixed(1).padStart(6)}  h=${height.toFixed(1)}  gap=${String(gap).padStart(5)}${marker}`
+    )
     prevY = y
   }
 }
@@ -173,15 +175,20 @@ async function markSignatureArea(pdfPath, outputPath, label) {
   const candidates = [
     { label: '1st ref', x: 340, y: 100, w: 130, h: 24, color: rgb(1, 0, 0) },
     { label: '2nd ref', x: 340, y: 76, w: 130, h: 18, color: rgb(0, 1, 0) },
-    { label: 'home',    x: 340, y: 55, w: 130, h: 18, color: rgb(0, 0, 1) },
-    { label: 'away',    x: 340, y: 34, w: 130, h: 18, color: rgb(1, 0, 1) },
+    { label: 'home', x: 340, y: 55, w: 130, h: 18, color: rgb(0, 0, 1) },
+    { label: 'away', x: 340, y: 34, w: 130, h: 18, color: rgb(1, 0, 1) },
   ]
 
   for (const c of candidates) {
     page.drawRectangle({
-      x: c.x, y: c.y, width: c.w, height: c.h,
-      borderColor: c.color, borderWidth: 2,
-      opacity: 0.3, color: c.color,
+      x: c.x,
+      y: c.y,
+      width: c.w,
+      height: c.h,
+      borderColor: c.color,
+      borderWidth: 2,
+      opacity: 0.3,
+      color: c.color,
     })
     console.log(`  ${c.label}: x=${c.x} y=${c.y} w=${c.w} h=${c.h}`)
   }
@@ -193,11 +200,13 @@ async function markSignatureArea(pdfPath, outputPath, label) {
 
 await markSignatureArea(
   'packages/web/public/assets/pdf/sports-hall-report-nla-de.pdf',
-  '/tmp/sig-nla.pdf', 'NLA'
+  '/tmp/sig-nla.pdf',
+  'NLA'
 )
 await markSignatureArea(
   'packages/web/public/assets/pdf/sports-hall-report-de.pdf',
-  '/tmp/sig-nlb.pdf', 'NLB'
+  '/tmp/sig-nlb.pdf',
+  'NLB'
 )
 ```
 
@@ -209,6 +218,7 @@ pdftoppm -png -r 300 /tmp/sig-nlb.pdf /tmp/sig-nlb
 ```
 
 Adjust coordinates until the colored rectangles align perfectly with the signature area on the PDF. The signature boxes should:
+
 - Not overlap each other
 - Fit within the designated signature area at the bottom of the page
 - The 1st referee box should be the topmost and tallest (height: 24)
@@ -224,6 +234,7 @@ After establishing all mappings, update `packages/web/src/shared/utils/pdf-form-
 4. **`ALL_SIGNATURE_POSITIONS`** — Non-conformant (4 signers) positions, where 1st ref y must match happy path
 
 Also update translations if sections/sub-items changed:
+
 - `packages/web/src/i18n/locales/{de,en,fr,it}.ts` — section and subItem labels
 - `packages/web/src/i18n/types.ts` — type definitions for new keys
 

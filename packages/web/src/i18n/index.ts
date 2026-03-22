@@ -9,7 +9,7 @@
  *   const label = t('assignments.title');
  */
 
-import { logger } from '@/shared/utils/logger'
+import { logger } from '@/common/utils/logger'
 
 import en from './locales/en'
 

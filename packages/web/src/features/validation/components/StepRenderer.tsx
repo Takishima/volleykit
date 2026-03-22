@@ -1,14 +1,19 @@
 import { useCallback } from 'react'
 
 import type { Assignment, NominationList } from '@/api/client'
+import { Lock } from '@/common/components/icons'
+import { ModalErrorBoundary } from '@/common/components/ModalErrorBoundary'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
-import { Lock } from '@/shared/components/icons'
-import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
-import { HomeRosterPanel, AwayRosterPanel, ScorerPanel, ScoresheetPanel } from '.'
-import { ReferenceImageViewer } from './ReferenceImageViewer'
+import {
+  HomeRosterPanel,
+  AwayRosterPanel,
+  ScorerPanel,
+  ScoresheetPanel,
+  ReferenceImageViewer,
+} from '.'
 
 interface LoadingState {
   isLoading: boolean

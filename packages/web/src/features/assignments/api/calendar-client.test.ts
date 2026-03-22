@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 import * as calendarApiModule from './calendar-api'
 import {
@@ -17,7 +17,7 @@ vi.mock('./calendar-api', () => ({
 }))
 
 // Mock the auth store
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: {
     getState: vi.fn(),
   },

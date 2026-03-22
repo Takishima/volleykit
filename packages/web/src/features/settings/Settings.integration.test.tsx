@@ -5,15 +5,15 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { setLocale } from '@/i18n'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
 import {
   useSettingsStore,
   DEMO_HOME_LOCATION,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-} from '@/shared/stores/settings'
-import { useToastStore } from '@/shared/stores/toast'
+} from '@/common/stores/settings'
+import { useToastStore } from '@/common/stores/toast'
 
 import { SettingsPage } from './SettingsPage'
 

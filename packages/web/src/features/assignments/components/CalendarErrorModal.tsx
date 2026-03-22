@@ -1,9 +1,9 @@
-import { Button } from '@/shared/components/Button'
-import { AlertTriangle } from '@/shared/components/icons'
-import { Modal } from '@/shared/components/Modal'
-import { ModalFooter } from '@/shared/components/ModalFooter'
-import { ModalHeader } from '@/shared/components/ModalHeader'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Button } from '@/common/components/Button'
+import { AlertTriangle } from '@/common/components/icons'
+import { Modal } from '@/common/components/Modal'
+import { ModalFooter } from '@/common/components/ModalFooter'
+import { ModalHeader } from '@/common/components/ModalHeader'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 /**
  * Type of calendar error to display appropriate message.

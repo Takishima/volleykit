@@ -1,5 +1,5 @@
-import { ChevronDown, ChevronUp } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { ChevronDown, ChevronUp } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface CollapsibleSectionProps {
   title: string

@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 import { CalendarErrorModal } from './CalendarErrorModal'
 import { useCalendarErrorHandler } from '../hooks/useCalendarErrorHandler'

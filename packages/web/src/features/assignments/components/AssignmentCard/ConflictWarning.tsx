@@ -1,9 +1,9 @@
 import { AlertTriangle } from 'lucide-react'
 
+import { useDateFormat } from '@/common/hooks/useDateFormat'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { AssignmentConflict } from '@/features/assignments/utils/conflict-detection'
 import { parseGap } from '@/features/assignments/utils/conflict-detection'
-import { useDateFormat } from '@/shared/hooks/useDateFormat'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 /**
  * Formats a gap using translations.

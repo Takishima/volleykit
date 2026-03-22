@@ -28,6 +28,7 @@
       /* PoC and web-app path aliases */
       "@/*": ["./src/*"],
       "@/shared/*": ["./src/shared/*"],
+      "@/common/*": ["./src/shared/*"],
       "@/features/*": ["../packages/web/src/features/*"],
       "@volleykit/ocr/*": ["../packages/web/src/features/ocr/*"],
       "@volleykit/validation/*": ["../packages/web/src/features/validation/*"]

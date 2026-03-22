@@ -7,10 +7,10 @@ import { useEffect, useRef } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 
+import { useAuthStore } from '@/common/stores/auth'
+import { logger } from '@/common/utils/logger'
+import { isAuthError } from '@/common/utils/query-error-utils'
 import { queryClient } from '@/queryClientConfig'
-import { useAuthStore } from '@/shared/stores/auth'
-import { logger } from '@/shared/utils/logger'
-import { isAuthError } from '@/shared/utils/query-error-utils'
 
 export function QueryErrorHandler({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()

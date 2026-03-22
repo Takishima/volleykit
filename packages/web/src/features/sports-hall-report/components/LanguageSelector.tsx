@@ -1,5 +1,5 @@
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { Language } from '@/shared/utils/pdf-report-data'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import type { Language } from '@/common/utils/pdf-report-data'
 
 // Language names are intentionally hardcoded as self-names (endonyms) so that
 // each language is always displayed in its own script regardless of app locale.

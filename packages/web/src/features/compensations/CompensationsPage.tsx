@@ -1,12 +1,12 @@
 import { lazy, Suspense, Fragment } from 'react'
 
+import { LoadingState, ErrorState, EmptyState } from '@/common/components/LoadingSpinner'
+import { PullToRefresh } from '@/common/components/PullToRefresh'
+import { SwipeableCard } from '@/common/components/SwipeableCard'
+import { Tabs, TabPanel } from '@/common/components/Tabs'
+import { WeekSeparator } from '@/common/components/WeekSeparator'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import { CompensationCard } from '@/features/compensations/components/CompensationCard'
-import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
-import { PullToRefresh } from '@/shared/components/PullToRefresh'
-import { SwipeableCard } from '@/shared/components/SwipeableCard'
-import { Tabs, TabPanel } from '@/shared/components/Tabs'
-import { WeekSeparator } from '@/shared/components/WeekSeparator'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { useCompensationsPageLogic } from './hooks/useCompensationsPageLogic'
 

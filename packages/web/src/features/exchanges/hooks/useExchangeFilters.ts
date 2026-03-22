@@ -3,17 +3,17 @@ import { useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
+import { features } from '@/common/config/features'
+import { useTravelTimeFilter } from '@/common/hooks/useTravelTimeFilter'
+import { useDemoStore } from '@/common/stores/demo'
+import { useSettingsStore } from '@/common/stores/settings'
+import { calculateCarDistanceKm } from '@/common/utils/distance'
+import { extractCoordinates } from '@/common/utils/geo-location'
 import {
   useCalendarConflicts,
   hasMinimumGapFromAssignments,
   DEFAULT_SAME_LOCATION_DISTANCE_KM,
 } from '@/features/assignments'
-import { features } from '@/shared/config/features'
-import { useTravelTimeFilter } from '@/shared/hooks/useTravelTimeFilter'
-import { useDemoStore } from '@/shared/stores/demo'
-import { useSettingsStore } from '@/shared/stores/settings'
-import { calculateCarDistanceKm } from '@/shared/utils/distance'
-import { extractCoordinates } from '@/shared/utils/geo-location'
 
 import type { ExchangeStatus } from './useExchanges'
 

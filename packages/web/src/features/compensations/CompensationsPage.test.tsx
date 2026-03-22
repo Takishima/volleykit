@@ -23,8 +23,8 @@ const mockUseTour = vi.hoisted(() => ({
 }))
 
 vi.mock('./hooks/useCompensations')
-vi.mock('@/shared/hooks/useTour', () => mockUseTour)
-vi.mock('@/shared/hooks/useCompensationActions', () => ({
+vi.mock('@/common/hooks/useTour', () => mockUseTour)
+vi.mock('@/common/hooks/useCompensationActions', () => ({
   useCompensationActions: () => ({
     editCompensationModal: {
       isOpen: false,

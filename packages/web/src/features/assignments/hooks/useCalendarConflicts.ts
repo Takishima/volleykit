@@ -16,6 +16,8 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { useAuthStore } from '@/common/stores/auth'
+import { generateDemoCalendarAssignments } from '@/common/stores/demo-generators'
 import { fetchCalendarAssignments } from '@/features/assignments/api/calendar-api'
 import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
 import {
@@ -26,8 +28,6 @@ import {
   type ConflictEvaluator,
   type SmartConflictOptions,
 } from '@/features/assignments/utils/conflict-detection'
-import { useAuthStore } from '@/shared/stores/auth'
-import { generateDemoCalendarAssignments } from '@/shared/stores/demo-generators'
 
 // Re-export types for convenience
 export type { ConflictMap, AssignmentConflict, ConflictEvaluator, SmartConflictOptions }

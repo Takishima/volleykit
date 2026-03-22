@@ -1,7 +1,7 @@
-import { Button } from '@/shared/components/Button'
-import { ModalFooter } from '@/shared/components/ModalFooter'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { DECIMAL_INPUT_PATTERN } from '@/shared/utils/distance'
+import { Button } from '@/common/components/Button'
+import { ModalFooter } from '@/common/components/ModalFooter'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { DECIMAL_INPUT_PATTERN } from '@/common/utils/distance'
 
 import type { CompensationFormState } from '../hooks/useCompensationForm'
 

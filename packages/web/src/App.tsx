@@ -5,6 +5,17 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
+import { ErrorBoundary } from '@/common/components/ErrorBoundary'
+import { AppShell } from '@/common/components/layout/AppShell'
+import { LoadingState } from '@/common/components/LoadingSpinner'
+import { PageErrorBoundary } from '@/common/components/PageErrorBoundary'
+import { ReloadPrompt } from '@/common/components/ReloadPrompt'
+import { ToastContainer } from '@/common/components/Toast'
+import { features } from '@/common/config/features'
+import { usePreloadLocales } from '@/common/hooks/usePreloadLocales'
+import { useViewportZoom } from '@/common/hooks/useViewportZoom'
+// features.offline — IndexedDB persistence (delete this import when removing offline feature)
+import { persistOptions } from '@/common/services/offline'
 import { PWAProvider } from '@/contexts/PWAContext'
 import { CalendarErrorHandler } from '@/features/assignments/components/CalendarErrorHandler'
 import { useCalendarTheme } from '@/features/assignments/hooks/useCalendarTheme'
@@ -12,17 +23,6 @@ import { useAuthSync } from '@/hooks/useAuthSync'
 import { queryClient } from '@/queryClientConfig'
 import { QueryErrorHandler } from '@/QueryErrorHandler'
 import { ProtectedRoute, PublicRoute } from '@/RouteGuards'
-import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
-import { AppShell } from '@/shared/components/layout/AppShell'
-import { LoadingState } from '@/shared/components/LoadingSpinner'
-import { PageErrorBoundary } from '@/shared/components/PageErrorBoundary'
-import { ReloadPrompt } from '@/shared/components/ReloadPrompt'
-import { ToastContainer } from '@/shared/components/Toast'
-import { features } from '@/shared/config/features'
-import { usePreloadLocales } from '@/shared/hooks/usePreloadLocales'
-import { useViewportZoom } from '@/shared/hooks/useViewportZoom'
-// features.offline — IndexedDB persistence (delete this import when removing offline feature)
-import { persistOptions } from '@/shared/services/offline'
 
 // Lazy load pages to reduce initial bundle size
 // Each page becomes a separate chunk that loads on-demand
@@ -46,7 +46,7 @@ const SettingsPage = lazy(() =>
 
 // Lazy load TourProvider since it's only needed for first-time users (features.helpTours)
 const TourProvider = features.helpTours
-  ? lazy(() => import('@/shared/components/tour').then((m) => ({ default: m.TourProvider })))
+  ? lazy(() => import('@/common/components/tour').then((m) => ({ default: m.TourProvider })))
   : ({ children }: { children: React.ReactNode }) => <>{children}</>
 
 // features.offline — Use PersistQueryClientProvider for IndexedDB cache persistence, or plain QueryClientProvider

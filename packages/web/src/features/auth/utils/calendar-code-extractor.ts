@@ -10,7 +10,7 @@
  */
 
 import { API_BASE_URL } from '@/api/constants'
-import { logger } from '@/shared/utils/logger'
+import { logger } from '@/common/utils/logger'
 
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/

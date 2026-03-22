@@ -2,9 +2,9 @@ import { type ReactNode, useCallback, useId } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
-import { Card } from '@/shared/components/Card'
-import { ExpandArrow } from '@/shared/components/ExpandArrow'
-import { useSettingsStore } from '@/shared/stores/settings'
+import { Card } from '@/common/components/Card'
+import { ExpandArrow } from '@/common/components/ExpandArrow'
+import { useSettingsStore } from '@/common/stores/settings'
 
 interface SettingsGroupProps {
   /** Unique key for persisting expansion state */

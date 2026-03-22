@@ -7,14 +7,14 @@
 
 import { QueryClient } from '@tanstack/react-query'
 
-import { ASSIGNMENTS_STALE_TIME_MS, OFFLINE_GC_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
-import { logger } from '@/shared/utils/logger'
+import { ASSIGNMENTS_STALE_TIME_MS, OFFLINE_GC_TIME_MS } from '@/common/hooks/usePaginatedQuery'
+import { logger } from '@/common/utils/logger'
 import {
   classifyQueryError,
   isRetryableError,
   calculateRetryDelay,
   RETRY_CONFIG,
-} from '@/shared/utils/query-error-utils'
+} from '@/common/utils/query-error-utils'
 
 /**
  * Global error handler for React Query mutations.

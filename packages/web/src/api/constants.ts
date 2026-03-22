@@ -4,7 +4,7 @@
  * and demo modes.
  */
 
-import { BYTES_PER_MB } from '@/shared/utils/constants'
+import { BYTES_PER_MB } from '@/common/utils/constants'
 
 /**
  * Base URL for API requests through the CORS proxy.

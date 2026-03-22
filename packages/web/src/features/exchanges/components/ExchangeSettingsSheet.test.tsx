@@ -6,7 +6,7 @@ import { ExchangeSettingsSheet } from './ExchangeSettingsSheet'
 
 // Mock useSettingsStore - need to handle useShallow wrapper
 const mockSettingsState = vi.fn()
-vi.mock('@/shared/stores/settings', () => ({
+vi.mock('@/common/stores/settings', () => ({
   useSettingsStore: (selector: (state: unknown) => unknown) => {
     // Handle useShallow-wrapped selectors
     const state = mockSettingsState()
@@ -16,7 +16,7 @@ vi.mock('@/shared/stores/settings', () => ({
 }))
 
 // Mock useTranslation hook
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
@@ -38,17 +38,17 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
 
 // Mock useTravelTimeAvailable hook
 const mockUseTravelTimeAvailable = vi.fn()
-vi.mock('@/shared/hooks/useTravelTime', () => ({
+vi.mock('@/common/hooks/useTravelTime', () => ({
   useTravelTimeAvailable: () => mockUseTravelTimeAvailable(),
 }))
 
 // Mock useActiveAssociationCode hook
-vi.mock('@/shared/hooks/useActiveAssociation', () => ({
+vi.mock('@/common/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
 
 // Mock ResponsiveSheet component
-vi.mock('@/shared/components/ResponsiveSheet', () => ({
+vi.mock('@/common/components/ResponsiveSheet', () => ({
   ResponsiveSheet: ({
     isOpen,
     children,

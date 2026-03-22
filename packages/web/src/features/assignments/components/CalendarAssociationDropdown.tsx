@@ -8,8 +8,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-import { ChevronDown } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { ChevronDown } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { ALL_ASSOCIATIONS } from '../hooks/useCalendarAssociationFilter'
 

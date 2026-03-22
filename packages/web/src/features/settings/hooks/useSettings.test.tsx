@@ -24,7 +24,7 @@ vi.mock('@/api/client', async () => {
   }
 })
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector: AnyFunction) =>
     selector({ dataSource: 'api', activeOccupationId: 'occupation-123' })
   ),
@@ -49,7 +49,7 @@ async function setupAuthStore(config: {
   dataSource: 'api' | 'demo' | 'calendar'
   activeOccupationId: string | null
 }) {
-  const { useAuthStore } = await import('@/shared/stores/auth')
+  const { useAuthStore } = await import('@/common/stores/auth')
   vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) => selector(config))
 }
 

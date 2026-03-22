@@ -2,7 +2,7 @@ import { useQuery, useSuspenseQuery, type UseQueryResult } from '@tanstack/react
 
 import { getApiClient, type AssociationSettings, type Season } from '@/api/client'
 import { associationSettingsOptions, activeSeasonOptions } from '@/api/queryOptions'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 /**
  * Hook to fetch association settings.

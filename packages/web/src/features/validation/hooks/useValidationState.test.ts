@@ -6,12 +6,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as apiClient from '@/api/client'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
-import * as authStore from '@/shared/stores/auth'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
+import * as authStore from '@/common/stores/auth'
 
 import { useValidationState } from './useValidationState'
 
-vi.mock('@/shared/stores/auth')
+vi.mock('@/common/stores/auth')
 vi.mock('@/api/client', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/api/client')>()
   return {

@@ -5,9 +5,9 @@ import { MemoryRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { setLocale } from '@/i18n'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import { useToastStore } from '@/shared/stores/toast'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import { useToastStore } from '@/common/stores/toast'
 
 import { LoginPage } from './LoginPage'
 

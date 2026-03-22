@@ -7,11 +7,11 @@ import type { GameExchange } from '@/api/client'
 import { ExchangeCard } from './ExchangeCard'
 
 // Mock dependencies
-vi.mock('@/shared/hooks/useActiveAssociation', () => ({
+vi.mock('@/common/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'SV',
 }))
 
-vi.mock('@/shared/stores/settings', () => ({
+vi.mock('@/common/stores/settings', () => ({
   useSettingsStore: vi.fn((selector) =>
     selector({
       isTransportEnabledForAssociation: () => true,
@@ -19,14 +19,14 @@ vi.mock('@/shared/stores/settings', () => ({
   ),
 }))
 
-vi.mock('@/shared/hooks/useSbbUrl', () => ({
+vi.mock('@/common/hooks/useSbbUrl', () => ({
   useSbbUrl: vi.fn(() => ({
     isLoading: false,
     openSbbConnection: vi.fn(),
   })),
 }))
 
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
@@ -58,7 +58,7 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
   }),
 }))
 
-vi.mock('@/shared/hooks/useDateFormat', () => ({
+vi.mock('@/common/hooks/useDateFormat', () => ({
   useDateLocale: () => undefined, // Use default date-fns locale
 }))
 

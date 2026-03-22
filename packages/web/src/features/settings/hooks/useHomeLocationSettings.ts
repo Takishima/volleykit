@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
+import { useCombinedGeocode } from '@/common/hooks/useCombinedGeocode'
+import { useDebouncedValue } from '@/common/hooks/useDebouncedValue'
+import { useGeolocation } from '@/common/hooks/useGeolocation'
+import { useSettingsStore, type UserLocation } from '@/common/stores/settings'
 import type { TranslationFunction } from '@/i18n'
-import { useCombinedGeocode } from '@/shared/hooks/useCombinedGeocode'
-import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
-import { useGeolocation } from '@/shared/hooks/useGeolocation'
-import { useSettingsStore, type UserLocation } from '@/shared/stores/settings'
 
 const GEOCODE_DEBOUNCE_MS = 500
 const MIN_SEARCH_LENGTH = 3

@@ -18,16 +18,16 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 **IMPORTANT**: You MUST read these files at the specified times:
 
-| When                          | Read                                                                          |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| Before committing             | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits |
-| Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)                      |
-| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                                |
-| Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                          |
-| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures                |
-| Reviewing PRs                 | [docs/REVIEW_CHECKLIST.md](docs/REVIEW_CHECKLIST.md)                          |
-| Reviewing PR architecture     | [docs/REVIEW_CHECKLIST_ARCHITECTURE.md](docs/REVIEW_CHECKLIST_ARCHITECTURE.md)|
-| Data storage questions        | [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md)                              |
+| When                          | Read                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| Before committing             | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits  |
+| Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)                       |
+| Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                                 |
+| Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                           |
+| API integration               | [docs/api/](docs/api/) - OpenAPI spec, endpoint docs, captures                 |
+| Reviewing PRs                 | [docs/REVIEW_CHECKLIST.md](docs/REVIEW_CHECKLIST.md)                           |
+| Reviewing PR architecture     | [docs/REVIEW_CHECKLIST_ARCHITECTURE.md](docs/REVIEW_CHECKLIST_ARCHITECTURE.md) |
+| Data storage questions        | [docs/DATA_RETENTION.md](docs/DATA_RETENTION.md)                               |
 
 ## Development Workflow
 

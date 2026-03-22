@@ -22,6 +22,8 @@ import {
   setCsrfToken,
 } from '@/api/client'
 import { API_BASE_URL } from '@/api/constants'
+import type { AuthState, UserProfile } from '@/common/stores/auth'
+import { logger } from '@/common/utils/logger'
 import {
   extractActivePartyFromHtml,
   type AttributeValue,
@@ -37,8 +39,6 @@ import {
   filterRefereeOccupations,
   parseOccupationsFromActiveParty,
 } from '@/features/auth/utils/parseOccupations'
-import type { AuthState, UserProfile } from '@/shared/stores/auth'
-import { logger } from '@/shared/utils/logger'
 
 const LOGIN_PAGE_URL = `${API_BASE_URL}/login`
 const AUTH_URL = `${API_BASE_URL}/sportmanager.security/authentication/authenticate`

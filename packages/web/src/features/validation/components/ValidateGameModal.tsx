@@ -3,16 +3,16 @@ import { memo, useState, useCallback, useMemo, useRef } from 'react'
 import { getTeamNames } from '@volleykit/shared/utils'
 
 import type { Assignment, IndoorPlayerNomination, NominationList } from '@/api/client'
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
+import { Eye, EyeOff, FileText } from '@/common/components/icons'
+import { Modal } from '@/common/components/Modal'
+import { ModalHeader } from '@/common/components/ModalHeader'
+import { WizardStepContainer } from '@/common/components/WizardStepContainer'
+import { WizardStepIndicator } from '@/common/components/WizardStepIndicator'
+import { features } from '@/common/config/features'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useSettingsStore } from '@/common/stores/settings'
 import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
-import { Eye, EyeOff, FileText } from '@/shared/components/icons'
-import { Modal } from '@/shared/components/Modal'
-import { ModalHeader } from '@/shared/components/ModalHeader'
-import { WizardStepContainer } from '@/shared/components/WizardStepContainer'
-import { WizardStepIndicator } from '@/shared/components/WizardStepIndicator'
-import { features } from '@/shared/config/features'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useSettingsStore } from '@/shared/stores/settings'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
 import {
   UnsavedChangesDialog,
@@ -26,7 +26,7 @@ import {
   OCREntryModal,
 } from '.'
 
-import type { CoachForComparison } from './OCREntryModal'
+import type { CoachForComparison } from '../ocr/components/OCREntryModal'
 
 interface ValidateGameModalProps {
   assignment: Assignment

@@ -1,8 +1,8 @@
 import { memo } from 'react'
 
-import { Button } from '@/shared/components/Button'
-import { MapPin, X, Clock } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Button } from '@/common/components/Button'
+import { MapPin, X, Clock } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import {
   useHomeLocationSettings,

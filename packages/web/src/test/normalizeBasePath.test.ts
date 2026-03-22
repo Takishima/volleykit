@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { normalizeBasePath } from '@/shared/utils/basePath'
+import { normalizeBasePath } from '@/common/utils/basePath'
 
 describe('normalizeBasePath', () => {
   describe('edge cases', () => {

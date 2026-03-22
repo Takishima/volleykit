@@ -1,7 +1,7 @@
 import type {
   TourDefinition,
   TourDummyAssignment,
-} from '@/shared/components/tour/definitions/types'
+} from '@/common/components/tour/definitions/types'
 
 // Tour dummy data configuration
 const TOUR_DAYS_AHEAD = 3

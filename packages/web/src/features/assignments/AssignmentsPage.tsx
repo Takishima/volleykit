@@ -1,13 +1,13 @@
 import { lazy, Suspense, Fragment } from 'react'
 
 import type { Assignment } from '@/api/client'
+import { LoadingState, ErrorState, EmptyState } from '@/common/components/LoadingSpinner'
+import { PullToRefresh } from '@/common/components/PullToRefresh'
+import { SwipeableCard } from '@/common/components/SwipeableCard'
+import { WeekSeparator } from '@/common/components/WeekSeparator'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import { AssignmentCard } from '@/features/assignments/components/AssignmentCard'
 import { OnCallCard } from '@/features/referee-backup'
-import { LoadingState, ErrorState, EmptyState } from '@/shared/components/LoadingSpinner'
-import { PullToRefresh } from '@/shared/components/PullToRefresh'
-import { SwipeableCard } from '@/shared/components/SwipeableCard'
-import { WeekSeparator } from '@/shared/components/WeekSeparator'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import {
   useAssignmentsPageLogic,

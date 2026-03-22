@@ -2,8 +2,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import * as calendarHelpers from '@/features/assignments/utils/calendar-helpers'
-import * as authStore from '@/shared/stores/auth'
-import * as demoStore from '@/shared/stores/demo'
+import * as authStore from '@/common/stores/auth'
+import * as demoStore from '@/common/stores/demo'
 
 import { LoginPage } from './LoginPage'
 
@@ -13,10 +13,10 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }))
 
-vi.mock('@/shared/stores/auth')
-vi.mock('@/shared/stores/demo')
+vi.mock('@/common/stores/auth')
+vi.mock('@/common/stores/demo')
 vi.mock('@/features/assignments/utils/calendar-helpers')
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     locale: 'en',

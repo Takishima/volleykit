@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { Assignment } from '@/api/client'
 import * as assignmentHooks from './hooks/useAssignments'
 import * as calendarHooks from './hooks/useCalendarAssignments'
-import * as authStore from '@/shared/stores/auth'
+import * as authStore from '@/common/stores/auth'
 
 import { AssignmentsPage } from './AssignmentsPage'
 
@@ -45,13 +45,13 @@ const mockUseTour = vi.hoisted(() => ({
 
 vi.mock('./hooks/useAssignments')
 vi.mock('./hooks/useCalendarAssignments')
-vi.mock('@/shared/hooks/useTour', () => mockUseTour)
-vi.mock('@/shared/stores/auth')
+vi.mock('@/common/hooks/useTour', () => mockUseTour)
+vi.mock('@/common/stores/auth')
 vi.mock('@/features/referee-backup', () => ({
   useMyOnCallAssignments: () => ({ data: [], isLoading: false, error: null }),
   OnCallCard: () => null,
 }))
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       // Return readable strings for key assertions

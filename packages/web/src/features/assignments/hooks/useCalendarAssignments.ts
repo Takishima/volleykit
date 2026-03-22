@@ -8,12 +8,12 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
+import { ASSIGNMENTS_STALE_TIME_MS } from '@/common/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/common/stores/auth'
 import {
   fetchCalendarAssignments,
   type CalendarAssignment,
 } from '@/features/assignments/api/calendar-api'
-import { ASSIGNMENTS_STALE_TIME_MS } from '@/shared/hooks/usePaginatedQuery'
-import { useAuthStore } from '@/shared/stores/auth'
 
 // Stable empty array to prevent unnecessary re-renders
 const EMPTY_ASSIGNMENTS: CalendarAssignment[] = []

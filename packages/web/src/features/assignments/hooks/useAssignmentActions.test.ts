@@ -5,11 +5,11 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { Assignment } from '@/api/client'
-import * as authStore from '@/shared/stores/auth'
-import * as demoStore from '@/shared/stores/demo'
-import * as languageStore from '@/shared/stores/language'
-import * as settingsStore from '@/shared/stores/settings'
-import { toast } from '@/shared/stores/toast'
+import * as authStore from '@/common/stores/auth'
+import * as demoStore from '@/common/stores/demo'
+import * as languageStore from '@/common/stores/language'
+import * as settingsStore from '@/common/stores/settings'
+import { toast } from '@/common/stores/toast'
 
 import { useAssignmentActions } from './useAssignmentActions'
 import { MODAL_CLEANUP_DELAY } from '../utils/assignment-helpers'
@@ -30,11 +30,11 @@ function createWrapper() {
   }
 }
 
-vi.mock('@/shared/stores/auth')
-vi.mock('@/shared/stores/demo')
-vi.mock('@/shared/stores/language')
-vi.mock('@/shared/stores/settings')
-vi.mock('@/shared/stores/toast', () => ({
+vi.mock('@/common/stores/auth')
+vi.mock('@/common/stores/demo')
+vi.mock('@/common/stores/language')
+vi.mock('@/common/stores/settings')
+vi.mock('@/common/stores/toast', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock('@/features/exchanges', () => ({
     wasQueued: false,
   }),
 }))
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     language: 'en',

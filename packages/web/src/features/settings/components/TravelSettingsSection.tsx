@@ -1,9 +1,9 @@
 import { memo } from 'react'
 
-import { Badge } from '@/shared/components/Badge'
-import { MapPin, Clock, Info, TrainFront, Navigation } from '@/shared/components/icons'
-import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Badge } from '@/common/components/Badge'
+import { MapPin, Clock, Info, TrainFront, Navigation } from '@/common/components/icons'
+import { ToggleSwitch } from '@/common/components/ToggleSwitch'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { useTransportSettings } from '../hooks/useTransportSettings'
 

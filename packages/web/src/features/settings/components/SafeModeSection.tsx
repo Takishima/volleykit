@@ -1,12 +1,12 @@
 import { useState, useCallback, lazy, Suspense, memo } from 'react'
 
-import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { ToggleSwitch } from '@/common/components/ToggleSwitch'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { SettingsItem } from './SettingsItem'
 
 const SafeModeWarningModal = lazy(() =>
-  import('@/shared/components/SafeModeWarningModal').then((m) => ({
+  import('@/common/components/SafeModeWarningModal').then((m) => ({
     default: m.SafeModeWarningModal,
   }))
 )

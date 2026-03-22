@@ -4,11 +4,11 @@
 
 import type { NominationList } from '@/api/client'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import type { RosterPanelModifications } from '@/features/validation/components/RosterVerificationPanel'
+import type { RosterPanelModifications } from '@/features/validation/roster/components/RosterVerificationPanel'
 import type {
   RosterModifications,
   CoachModifications,
-} from '@/features/validation/hooks/useNominationList'
+} from '@/features/validation/roster/hooks/useNominationList'
 
 /**
  * State for a roster panel (home or away team).

@@ -3,9 +3,9 @@ import { useMemo } from 'react'
 import { addDays, getISOWeek, isWeekend, setHours } from 'date-fns'
 
 import type { RefereeBackupEntry, BackupRefereeAssignment } from '@/api/client'
-import { useAuthStore } from '@/shared/stores/auth'
-import { DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
-import { generateDemoUuid } from '@/shared/utils/demo-uuid'
+import { useAuthStore } from '@/common/stores/auth'
+import { DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
+import { generateDemoUuid } from '@/common/utils/demo-uuid'
 
 import { useRefereeBackups } from './useRefereeBackups'
 

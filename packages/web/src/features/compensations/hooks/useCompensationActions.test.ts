@@ -3,16 +3,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { CompensationRecord } from '@/api/client'
 import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
-import * as authStore from '@/shared/stores/auth'
-import { toast } from '@/shared/stores/toast'
+import * as authStore from '@/common/stores/auth'
+import { toast } from '@/common/stores/toast'
 
 import { useCompensationActions } from './useCompensationActions'
 import * as compensationActionsModule from '../utils/compensation-actions'
 
-vi.mock('@/shared/stores/auth')
+vi.mock('@/common/stores/auth')
 // Auto-mock settings store - still needed indirectly by useSafeMutation's internal useSafeModeGuard
-vi.mock('@/shared/stores/settings')
-vi.mock('@/shared/stores/toast', () => ({
+vi.mock('@/common/stores/settings')
+vi.mock('@/common/stores/toast', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock('@/shared/stores/toast', () => ({
     warning: vi.fn(),
   },
 }))
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     language: 'en',

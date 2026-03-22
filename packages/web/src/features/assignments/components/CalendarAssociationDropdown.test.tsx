@@ -6,7 +6,7 @@ import { CalendarAssociationDropdown } from './CalendarAssociationDropdown'
 import { ALL_ASSOCIATIONS } from '../hooks/useCalendarAssociationFilter'
 
 // Mock the useTranslation hook
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {

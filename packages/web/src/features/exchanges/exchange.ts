@@ -1,4 +1,4 @@
-import type { TourDefinition, TourDummyExchange } from '@/shared/components/tour/definitions/types'
+import type { TourDefinition, TourDummyExchange } from '@/common/components/tour/definitions/types'
 
 // Tour dummy data configuration
 const TOUR_DAYS_AHEAD = 10

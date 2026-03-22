@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface PdfPreviewProps {
   pdfBytes: Uint8Array | null

@@ -9,13 +9,13 @@
 
 import { useEffect } from 'react'
 
-import { queryClient } from '@/queryClientConfig'
-import { features } from '@/shared/config/features'
+import { features } from '@/common/config/features'
 // features.offline — IndexedDB persistence and action queue (delete these imports when removing offline feature)
-import { clearPersistedCache, clearAllActions } from '@/shared/services/offline'
-import { useAuthStore, registerCacheCleanup } from '@/shared/stores/auth'
-import { useSettingsStore } from '@/shared/stores/settings'
-import { logger } from '@/shared/utils/logger'
+import { clearPersistedCache, clearAllActions } from '@/common/services/offline'
+import { useAuthStore, registerCacheCleanup } from '@/common/stores/auth'
+import { useSettingsStore } from '@/common/stores/settings'
+import { logger } from '@/common/utils/logger'
+import { queryClient } from '@/queryClientConfig'
 
 export function useAuthSync() {
   useEffect(() => {
