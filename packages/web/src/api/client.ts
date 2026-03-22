@@ -7,7 +7,7 @@
  */
 /* eslint-disable import-x/order -- Imports are split to manage circular dependencies */
 import { mockApi } from './mock-api'
-import { calendarApi } from '@/features/assignments/api/calendar-client'
+import { calendarApi } from '@/common/services/calendar/calendar-client'
 import { api } from './real-api'
 
 // Re-export all schema types from dedicated types module

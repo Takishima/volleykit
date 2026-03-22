@@ -12,9 +12,13 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { addDays, startOfDay, endOfDay, subDays } from 'date-fns'
 
 import { queryKeys, type SearchConfiguration, type Assignment } from '../api'
+import {
+  DEFAULT_PAGE_SIZE,
+  ASSIGNMENTS_STALE_TIME_MS,
+  ASSIGNMENT_DETAILS_STALE_TIME_MS,
+} from '../api/constants'
 
-/** Default page size for API requests */
-export const DEFAULT_PAGE_SIZE = 50
+export { DEFAULT_PAGE_SIZE, ASSIGNMENTS_STALE_TIME_MS, ASSIGNMENT_DETAILS_STALE_TIME_MS }
 
 /** Default date range in days for fetching assignments */
 export const DEFAULT_DATE_RANGE_DAYS = 365
@@ -24,12 +28,6 @@ export const THIS_WEEK_DAYS = 7
 
 /** Days for "next month" period */
 export const NEXT_MONTH_DAYS = 30
-
-/** Stale time for assignments list (5 minutes) */
-export const ASSIGNMENTS_STALE_TIME_MS = 5 * 60 * 1000
-
-/** Stale time for assignment details (10 minutes - less frequent updates) */
-export const ASSIGNMENT_DETAILS_STALE_TIME_MS = 10 * 60 * 1000
 
 /** Date period presets for assignment filtering */
 export type DatePeriod = 'upcoming' | 'past' | 'thisWeek' | 'nextMonth' | 'custom'

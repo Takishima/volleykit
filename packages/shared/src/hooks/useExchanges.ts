@@ -10,12 +10,9 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys, type SearchConfiguration, type GameExchange } from '../api'
+import { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS } from '../api/constants'
 
-/** Stale time for exchanges list (2 minutes - shorter since exchanges change frequently) */
-export const EXCHANGES_STALE_TIME_MS = 2 * 60 * 1000
-
-/** Default page size for API requests */
-export const DEFAULT_PAGE_SIZE = 50
+export { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS }
 
 /** Exchange status filter options */
 export type ExchangeStatusFilter = 'open' | 'applied' | 'closed' | 'all'
