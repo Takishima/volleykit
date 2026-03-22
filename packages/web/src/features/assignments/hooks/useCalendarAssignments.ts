@@ -9,11 +9,11 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
 import { ASSIGNMENTS_STALE_TIME_MS } from '@/common/hooks/usePaginatedQuery'
-import { useAuthStore } from '@/common/stores/auth'
 import {
   fetchCalendarAssignments,
   type CalendarAssignment,
-} from '@/features/assignments/api/calendar-api'
+} from '@/common/services/calendar/calendar-api'
+import { useAuthStore } from '@/common/stores/auth'
 
 // Stable empty array to prevent unnecessary re-renders
 const EMPTY_ASSIGNMENTS: CalendarAssignment[] = []
@@ -67,4 +67,4 @@ export function useCalendarAssignments(): UseQueryResult<CalendarAssignment[], E
 }
 
 // Re-export types for convenience
-export type { CalendarAssignment } from '@/features/assignments/api/calendar-api'
+export type { CalendarAssignment } from '@/common/services/calendar/calendar-api'

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
+import type { CalendarAssignment } from '@/common/services/calendar/ical/types'
 
 import {
   detectConflicts,

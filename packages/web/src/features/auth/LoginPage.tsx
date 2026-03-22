@@ -7,14 +7,14 @@ import { Button } from '@/common/components/Button'
 import { Volleyball } from '@/common/components/icons'
 import { LanguageSwitcher } from '@/common/components/LanguageSwitcher'
 import { useTranslation } from '@/common/hooks/useTranslation'
+import {
+  extractCalendarCode,
+  validateCalendarCode,
+} from '@/common/services/calendar/calendar-helpers'
 import { useAuthStore, NO_REFEREE_ROLE_ERROR_KEY } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import { getHelpSiteUrl } from '@/common/utils/constants'
 import { usePWA } from '@/contexts/PWAContext'
-import {
-  extractCalendarCode,
-  validateCalendarCode,
-} from '@/features/assignments/utils/calendar-helpers'
 import { LoginErrorWithUpdateHint } from '@/features/auth/components/LoginErrorWithUpdateHint'
 import { LoginUpdateBanner } from '@/features/auth/components/LoginUpdateBanner'
 

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import * as calendarHelpers from '@/features/assignments/utils/calendar-helpers'
+import * as calendarHelpers from '@/common/services/calendar/calendar-helpers'
 import * as authStore from '@/common/stores/auth'
 import * as demoStore from '@/common/stores/demo'
 
@@ -15,7 +15,7 @@ vi.mock('react-router-dom', () => ({
 
 vi.mock('@/common/stores/auth')
 vi.mock('@/common/stores/demo')
-vi.mock('@/features/assignments/utils/calendar-helpers')
+vi.mock('@/common/services/calendar/calendar-helpers')
 vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,

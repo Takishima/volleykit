@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { CalendarNotFoundError } from '@/features/assignments/api/calendar-api'
+import { CalendarNotFoundError } from '@/common/services/calendar/calendar-api'
 import * as authStore from '@/common/stores/auth'
 import * as toastStore from '@/common/stores/toast'
 

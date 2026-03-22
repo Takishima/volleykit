@@ -15,7 +15,8 @@
 import type { Assignment } from '@/api/client'
 import { API_BASE_URL } from '@/api/constants'
 import { HttpStatus } from '@/common/utils/constants'
-import type { CalendarAssignment, RefereeRole, Gender } from '@/features/assignments/api/ical/types'
+
+import type { CalendarAssignment, RefereeRole, Gender } from './ical/types'
 
 /**
  * Maps iCal Gender type to API gender format.

@@ -10,12 +10,9 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys, type SearchConfiguration, type CompensationRecord } from '../api'
+import { DEFAULT_PAGE_SIZE, COMPENSATIONS_STALE_TIME_MS } from '../api/constants'
 
-/** Stale time for compensations list (5 minutes) */
-export const COMPENSATIONS_STALE_TIME_MS = 5 * 60 * 1000
-
-/** Default page size for API requests */
-export const DEFAULT_PAGE_SIZE = 50
+export { DEFAULT_PAGE_SIZE, COMPENSATIONS_STALE_TIME_MS }
 
 /** Compensation status filter options */
 export type CompensationStatus = 'pending' | 'paid' | 'all'
