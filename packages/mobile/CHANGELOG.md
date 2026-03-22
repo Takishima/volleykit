@@ -1,5 +1,11 @@
 # @volleykit/mobile
 
+## 1.27.0
+
+### Patch Changes
+
+- [#1048](https://github.com/Takishima/volleykit/pull/1048) [`e08e8fe`](https://github.com/Takishima/volleykit/commit/e08e8fe1072bded377d23f309a0ece024fa622c1) Thanks [@Takishima](https://github.com/Takishima)! - Fix mobile dependencies to match Expo SDK 55 compatibility requirements
+
 ## 1.25.0
 
 ### Patch Changes
