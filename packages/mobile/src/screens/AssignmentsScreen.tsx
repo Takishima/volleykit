@@ -20,7 +20,7 @@ import { useAssignments } from '@volleykit/shared/hooks'
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
 
 import { useApiClient } from '../contexts'
-import { formatDate } from '../utils'
+import { formatLocalizedDate } from '@volleykit/shared/utils'
 
 import type { MainTabScreenProps } from '../navigation/types'
 
@@ -54,7 +54,7 @@ function getAssignmentDisplay(
   return {
     id: assignment.__identity,
     title: `${homeTeam} vs ${awayTeam}`,
-    date: formatDate(game?.startingDateTime, language),
+    date: formatLocalizedDate(game?.startingDateTime, language),
     venue: game?.hall?.name ?? tbd,
     status: assignment.refereeConvocationStatus,
   }

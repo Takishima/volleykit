@@ -15,7 +15,7 @@ import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
 
 import { COLORS } from '../constants'
 import { useApiClient } from '../contexts'
-import { formatDateTime } from '../utils'
+import { formatLocalizedDateTime } from '@volleykit/shared/utils'
 
 import type { RootStackScreenProps } from '../navigation/types'
 
@@ -62,7 +62,7 @@ function getAssignmentDisplayData(assignment: Assignment, language: string, tbd:
   return {
     homeTeam: game?.teamHome?.name ?? tbd,
     awayTeam: game?.teamAway?.name ?? tbd,
-    dateTime: formatDateTime(game?.startingDateTime, language),
+    dateTime: formatLocalizedDateTime(game?.startingDateTime, language),
     venue: hall?.name ?? tbd,
     address: address?.combinedAddress ?? tbd,
     gameNumber: game?.gameNumber ?? tbd,

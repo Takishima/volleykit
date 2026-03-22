@@ -338,3 +338,66 @@ export function getSeasonDateRange(referenceDate: Date = new Date()): {
 
   return { from: seasonStart, to: seasonEnd }
 }
+
+// ============================================================================
+// Locale-Aware Date Formatting
+// ============================================================================
+
+/**
+ * Swiss locale mapping from i18n language codes to Intl locale identifiers.
+ */
+const SWISS_LOCALE_MAP: Record<string, string> = {
+  de: 'de-CH',
+  en: 'en-GB',
+  fr: 'fr-CH',
+  it: 'it-CH',
+}
+
+/**
+ * Format an ISO date string to a localized date display.
+ * Uses Swiss locale variants (de-CH, fr-CH, it-CH, en-GB).
+ *
+ * @param isoDate - ISO date string or null/undefined
+ * @param language - i18n language code (de, en, fr, it)
+ * @returns Formatted date string (e.g., "15.01.2025") or empty string
+ */
+export function formatLocalizedDate(
+  isoDate: string | null | undefined,
+  language: string = 'de'
+): string {
+  if (!isoDate) return ''
+  const date = new Date(isoDate)
+  if (isNaN(date.getTime())) return ''
+  const locale = SWISS_LOCALE_MAP[language] ?? SWISS_LOCALE_MAP['de']
+  return date.toLocaleDateString(locale, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
+/**
+ * Format an ISO date string to a localized date and time display.
+ * Uses Swiss locale variants (de-CH, fr-CH, it-CH, en-GB).
+ *
+ * @param isoDate - ISO date string or null/undefined
+ * @param language - i18n language code (de, en, fr, it)
+ * @returns Formatted date+time string (e.g., "Mi., 15.01.2025, 19:30") or empty string
+ */
+export function formatLocalizedDateTime(
+  isoDate: string | null | undefined,
+  language: string = 'de'
+): string {
+  if (!isoDate) return ''
+  const date = new Date(isoDate)
+  if (isNaN(date.getTime())) return ''
+  const locale = SWISS_LOCALE_MAP[language] ?? SWISS_LOCALE_MAP['de']
+  return date.toLocaleString(locale, {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
