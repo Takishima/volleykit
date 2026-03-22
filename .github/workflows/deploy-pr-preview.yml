@@ -78,7 +78,7 @@ jobs:
         env:
           VITE_DEMO_MODE_ONLY: 'true'
           VITE_API_PROXY_URL: ${{ vars.VITE_API_PROXY_URL }}
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/
+          VITE_BASE_PATH: /pr-${{ github.event.pull_request.number }}/
           VITE_OJP_API_KEY: ${{ secrets.VITE_OJP_API_KEY }}
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       - name: Add .nojekyll for GitHub Pages
@@ -114,7 +114,7 @@ jobs:
       - name: Build Help Site
         run: pnpm run build
         env:
-          ASTRO_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/help
+          ASTRO_BASE_PATH: /pr-${{ github.event.pull_request.number }}/help
       - name: Upload help-site artifact
         uses: actions/upload-artifact@v7
         with:
@@ -156,7 +156,7 @@ jobs:
       - name: Build OCR POC
         run: pnpm run build
         env:
-          VITE_BASE_PATH: /${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/ocr-poc/
+          VITE_BASE_PATH: /pr-${{ github.event.pull_request.number }}/ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       - name: Upload ocr-poc artifact
         uses: actions/upload-artifact@v7
@@ -225,11 +225,12 @@ jobs:
           publish_dir: deploy
           keep_files: false
           enable_jekyll: false
+          cname: volleykit.ch
       - name: Comment PR with preview link
         uses: actions/github-script@v8
         with:
           script: |
-            const previewUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/`;
+            const previewUrl = `https://volleykit.ch/pr-${{ github.event.pull_request.number }}/`;
             const ocrPocUrl = `${previewUrl}ocr-poc/`;
             const helpUrl = `${previewUrl}help/`;
             const body = `## PR Preview Deployed!\n\n` +
