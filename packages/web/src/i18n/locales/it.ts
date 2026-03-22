@@ -594,6 +594,17 @@ const it: Translations = {
     reloadAriaLabel: "Ricarica l'applicazione per aggiornare all'ultima versione",
     dismissAriaLabel: 'Ignora notifica di aggiornamento',
     closeAriaLabel: 'Chiudi notifica',
+    serviceWorkerUnavailable: 'Modalità offline non disponibile',
+    serviceWorkerUnavailableDescription:
+      "L'accesso offline e gli aggiornamenti automatici non sono disponibili. Questo potrebbe essere dovuto alla navigazione privata o alle impostazioni del browser.",
+  },
+  network: {
+    serverUnreachable:
+      'Impossibile raggiungere il server. Controlla la connessione internet o riprova più tardi.',
+    serviceTemporarilyUnavailable: 'Servizio temporaneamente non disponibile',
+    serviceUnavailableDescription:
+      'Il proxy VolleyKit è attualmente non disponibile. Puoi accedere ai tuoi dati direttamente su VolleyManager.',
+    openVolleyManager: 'Apri VolleyManager',
   },
   offline: {
     youAreOffline: 'Sei offline',

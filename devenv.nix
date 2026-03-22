@@ -60,11 +60,11 @@
     '';
 
     web-build.exec = ''
-      cd packages/web && VITE_BASE_PATH=/volleykit/ pnpm run build
+      cd packages/web && VITE_BASE_PATH=/ pnpm run build
     '';
 
     web-preview.exec = ''
-      cd packages/web && VITE_BASE_PATH=/volleykit/ pnpm run preview
+      cd packages/web && VITE_BASE_PATH=/ pnpm run preview
     '';
 
     web-test.exec = ''
@@ -122,7 +122,7 @@
 
   # Background process for development with production-like base path
   # Run with: devenv up
-  processes.web.exec = "cd packages/web && VITE_BASE_PATH=/volleykit/ pnpm run dev";
+  processes.web.exec = "cd packages/web && VITE_BASE_PATH=/ pnpm run dev";
 
   # Treefmt for code formatting
   treefmt = {

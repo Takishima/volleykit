@@ -3,7 +3,7 @@ import { corsHeaders, securityHeaders } from '../middleware'
 import {
   AUTH_ENDPOINT,
   CAPTURE_SESSION_TOKEN_HEADER,
-  VOLLEYKIT_USER_AGENT,
+  getUserAgent,
   detectSessionIssue,
   hasAuthCredentials,
   isAllowedPath,
@@ -181,7 +181,7 @@ export async function handleProxy(
     }
   }
 
-  proxyRequest.headers.set('User-Agent', VOLLEYKIT_USER_AGENT)
+  proxyRequest.headers.set('User-Agent', getUserAgent(env))
 
   // iOS Safari PWA cookie relay: convert X-Session-Token header to Cookie
   // This bypasses iOS Safari's ITP which blocks third-party cookies in PWA mode

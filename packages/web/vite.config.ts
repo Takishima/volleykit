@@ -460,22 +460,10 @@ export default defineConfig(({ mode }) => {
                   networkTimeoutSeconds: 5,
                 },
               },
-              {
-                // Cache static assets from CDNs (fonts, icons) with StaleWhileRevalidate
-                // These rarely change, so serving stale while revalidating is optimal
-                urlPattern: /^https:\/\/(?:fonts\.googleapis\.com|fonts\.gstatic\.com)\/.*/i,
-                handler: 'StaleWhileRevalidate',
-                options: {
-                  cacheName: 'google-fonts',
-                  expiration: {
-                    maxEntries: 30,
-                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-                  },
-                  cacheableResponse: {
-                    statuses: [0, 200],
-                  },
-                },
-              },
+              // Google Fonts caching rule removed — no external fonts are loaded.
+              // All fonts are system defaults (Tailwind). This eliminates a dependency
+              // on fonts.googleapis.com/fonts.gstatic.com that could be blocked by
+              // firewalls, ad blockers, or DNS filtering.
             ],
           },
           manifest: {

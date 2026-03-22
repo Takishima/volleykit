@@ -599,6 +599,17 @@ const fr: Translations = {
     reloadAriaLabel: "Recharger l'application pour mettre à jour vers la dernière version",
     dismissAriaLabel: 'Ignorer la notification de mise à jour',
     closeAriaLabel: 'Fermer la notification',
+    serviceWorkerUnavailable: 'Mode hors ligne indisponible',
+    serviceWorkerUnavailableDescription:
+      "L'accès hors ligne et les mises à jour automatiques ne sont pas disponibles. Cela peut être dû à la navigation privée ou aux paramètres du navigateur.",
+  },
+  network: {
+    serverUnreachable:
+      'Impossible de joindre le serveur. Vérifiez votre connexion internet ou réessayez plus tard.',
+    serviceTemporarilyUnavailable: 'Service temporairement indisponible',
+    serviceUnavailableDescription:
+      'Le proxy VolleyKit est actuellement indisponible. Vous pouvez accéder à vos données directement sur VolleyManager.',
+    openVolleyManager: 'Ouvrir VolleyManager',
   },
   offline: {
     youAreOffline: 'Vous êtes hors ligne',
