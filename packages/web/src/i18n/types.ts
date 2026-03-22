@@ -496,6 +496,7 @@ export interface Translations {
       advertisingLabel: string
 
       generate: string
+      everythingOk: string
       downloadPreFilled: string
       reportGenerated: string
 
@@ -532,8 +533,13 @@ export interface Translations {
         addCoach: string
         removeCoach: string
         reSign: string
+        flaggedCount: string
+        openInNewTab: string
+        previewFallback: string
+        downloadToView: string
         discardTitle: string
         discardMessage: string
+        discardMessageDetailed: string
         discard: string
         tapToSign: string
         downloadFinal: string

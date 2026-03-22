@@ -7,11 +7,9 @@ import { ModalHeader } from '@/common/components/ModalHeader'
 import { useBodyScrollLock } from '@/common/hooks/useBodyScrollLock'
 import { useOverlayTouchGuard } from '@/common/hooks/useOverlayTouchGuard'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import type { JerseyAdvertisingOptions } from '@/common/utils/pdf-form-filler'
 import type { Language } from '@/common/utils/pdf-report-data'
 
 import { CommentStep } from './CommentStep'
-import { JerseyAdvertisingSection } from './JerseyAdvertisingSection'
 import { LanguageSelector } from './LanguageSelector'
 import { PdfPreview } from './PdfPreview'
 import { SectionSelector } from './SectionSelector'
@@ -28,11 +26,6 @@ interface NonConformantOverlayProps {
   nc: ReturnType<typeof useNonConformantWizard>
   language: Language
   setLanguage: (lang: Language) => void
-  jerseyAdvertising: JerseyAdvertisingOptions
-  onToggleHomeAd: () => void
-  onToggleAwayAd: () => void
-  homeTeam: string
-  awayTeam: string
   firstRefereeName?: string
   secondRefereeName?: string
   subtitle?: string
@@ -48,11 +41,6 @@ export function NonConformantOverlay({
   nc,
   language,
   setLanguage,
-  jerseyAdvertising,
-  onToggleHomeAd,
-  onToggleAwayAd,
-  homeTeam,
-  awayTeam,
   firstRefereeName,
   secondRefereeName,
   subtitle,
@@ -63,7 +51,7 @@ export function NonConformantOverlay({
   onDismissCloseConfirm,
   onConfirmDiscard,
 }: NonConformantOverlayProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const touchGuard = useOverlayTouchGuard()
   useBodyScrollLock(true)
 
@@ -118,28 +106,11 @@ export function NonConformantOverlay({
       {/* Scrollable step content */}
       <div className="flex-1 overflow-y-auto px-4 py-2 touch-auto" data-scrollable>
         {nc.ncStep === 'sections' && (
-          <>
-            <SectionSelector
-              sections={nc.checklistSections}
-              flaggedSections={nc.flaggedSections}
-              onToggleSection={nc.handleToggleSection}
-            />
-
-            {/* Advertising question */}
-            <div className="mt-4">
-              <p className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-1.5">
-                {t('pdf.wizard.advertisingLabel')}
-              </p>
-              <JerseyAdvertisingSection
-                jerseyAdvertising={jerseyAdvertising}
-                onToggleHome={onToggleHomeAd}
-                onToggleAway={onToggleAwayAd}
-                homeTeam={homeTeam}
-                awayTeam={awayTeam}
-                disabled={nc.isGenerating}
-              />
-            </div>
-          </>
+          <SectionSelector
+            sections={nc.checklistSections}
+            flaggedSections={nc.flaggedSections}
+            onToggleSection={nc.handleToggleSection}
+          />
         )}
         {nc.ncStep === 'subItems' && (
           <SubItemSelector
@@ -153,6 +124,7 @@ export function NonConformantOverlay({
           <CommentStep
             sections={nc.checklistSections}
             flaggedSections={nc.flaggedSections}
+            nonConformantSubItems={nc.nonConformantSubItems}
             sectionComments={nc.sectionComments}
             onSectionCommentChange={handleSectionCommentChange}
           />
@@ -237,7 +209,10 @@ export function NonConformantOverlay({
               {t('pdf.wizard.nonConformant.discardTitle')}
             </h3>
             <p className="text-sm text-text-secondary dark:text-text-secondary-dark mb-4">
-              {t('pdf.wizard.nonConformant.discardMessage')}
+              {tInterpolate('pdf.wizard.nonConformant.discardMessageDetailed', {
+                sections: nc.flaggedSections.size,
+                comments: Object.values(nc.sectionComments).filter((c) => c.trim()).length,
+              })}
             </p>
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={onDismissCloseConfirm}>

@@ -18,7 +18,11 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
           const isCurrent = index === currentStep
 
           return (
-            <li key={step.label} className="flex items-center gap-1 flex-1">
+            <li
+              key={step.label}
+              className="flex items-center gap-1 flex-1"
+              {...(isCurrent ? { 'aria-current': 'step' as const } : {})}
+            >
               {index > 0 && (
                 <div
                   className={`h-px flex-1 ${
@@ -28,10 +32,10 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
               )}
               <div className="flex items-center gap-1.5 whitespace-nowrap">
                 {isCompleted ? (
-                  <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" aria-hidden="true" />
+                  <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" aria-hidden="true" />
                 ) : (
                   <span
-                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium flex-shrink-0 ${
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
                       isCurrent
                         ? 'bg-blue-500 text-white'
                         : 'bg-surface-subtle dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark'
@@ -41,7 +45,7 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
                   </span>
                 )}
                 <span
-                  className={`text-xs ${
+                  className={`text-xs hidden sm:inline ${
                     isCurrent
                       ? 'font-medium text-text-primary dark:text-text-primary-dark'
                       : isCompleted

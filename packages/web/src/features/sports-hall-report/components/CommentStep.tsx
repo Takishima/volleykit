@@ -1,10 +1,12 @@
 import { AlertTriangle } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ChecklistSection } from '@/common/utils/pdf-field-mappings'
+import type { NonConformantSelections } from '@/common/utils/pdf-form-filler'
 
 interface CommentStepProps {
   sections: readonly ChecklistSection[]
   flaggedSections: Set<string>
+  nonConformantSubItems: NonConformantSelections
   sectionComments: Record<string, string>
   onSectionCommentChange: (sectionId: string, value: string) => void
 }
@@ -12,6 +14,7 @@ interface CommentStepProps {
 export function CommentStep({
   sections,
   flaggedSections,
+  nonConformantSubItems,
   sectionComments,
   onSectionCommentChange,
 }: CommentStepProps) {
@@ -27,6 +30,10 @@ export function CommentStep({
 
       {flaggedSectionList.map((section) => {
         const comment = sectionComments[section.id] ?? ''
+        const flaggedSubItemIds = nonConformantSubItems[section.id]
+        const flaggedSubItems = flaggedSubItemIds
+          ? section.subItems.filter((si) => flaggedSubItemIds.has(si.id))
+          : []
 
         return (
           <div
@@ -34,14 +41,29 @@ export function CommentStep({
             className="rounded-lg border border-warning-200 dark:border-warning-800 overflow-hidden"
           >
             {/* Section header */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-warning-50 dark:bg-warning-900/20 border-b border-warning-200 dark:border-warning-800">
-              <AlertTriangle
-                className="w-3.5 h-3.5 text-warning-500 flex-shrink-0"
-                aria-hidden="true"
-              />
-              <span className="text-sm font-medium text-warning-700 dark:text-warning-400">
-                {section.id} — {t(section.labelKey)}
-              </span>
+            <div className="px-3 py-2 bg-warning-50 dark:bg-warning-900/20 border-b border-warning-200 dark:border-warning-800">
+              <div className="flex items-center gap-2">
+                <AlertTriangle
+                  className="w-3.5 h-3.5 text-warning-500 flex-shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="text-sm font-medium text-warning-700 dark:text-warning-400">
+                  {section.id} — {t(section.labelKey)}
+                </span>
+              </div>
+              {/* Flagged sub-item chips */}
+              {flaggedSubItems.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5 ml-5.5">
+                  {flaggedSubItems.map((subItem) => (
+                    <span
+                      key={subItem.id}
+                      className="text-xs text-text-muted dark:text-text-muted-dark bg-surface-subtle dark:bg-surface-subtle-dark px-1.5 py-0.5 rounded"
+                    >
+                      {t(subItem.labelKey)}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Comment textarea */}

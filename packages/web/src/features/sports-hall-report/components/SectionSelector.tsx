@@ -17,13 +17,23 @@ export function SectionSelector({
   flaggedSections,
   onToggleSection,
 }: SectionSelectorProps) {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
 
   return (
     <div className="space-y-1.5">
-      <p className="text-sm text-text-secondary dark:text-text-secondary-dark mb-3">
-        {t('pdf.wizard.nonConformant.selectSections')}
-      </p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
+          {t('pdf.wizard.nonConformant.selectSections')}
+        </p>
+        {flaggedSections.size > 0 && (
+          <span className="text-xs font-medium text-warning-600 dark:text-warning-400 bg-warning-50 dark:bg-warning-900/20 px-2 py-0.5 rounded-full">
+            {tInterpolate('pdf.wizard.nonConformant.flaggedCount', {
+              count: flaggedSections.size,
+              total: sections.length,
+            })}
+          </span>
+        )}
+      </div>
       <div className="max-h-[min(340px,50vh)] overflow-y-auto rounded-lg border border-border-default dark:border-border-default-dark divide-y divide-border-default dark:divide-border-default-dark">
         {sections.map((section) => (
           <SectionRow
