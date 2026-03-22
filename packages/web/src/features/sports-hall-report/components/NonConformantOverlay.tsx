@@ -240,11 +240,7 @@ export function NonConformantOverlay({
               {t('pdf.wizard.nonConformant.discardMessage')}
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                className="flex-1"
-                onClick={onDismissCloseConfirm}
-              >
+              <Button variant="secondary" className="flex-1" onClick={onDismissCloseConfirm}>
                 {t('common.cancel')}
               </Button>
               <Button variant="danger" className="flex-1" onClick={onConfirmDiscard}>

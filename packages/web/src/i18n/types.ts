@@ -526,6 +526,7 @@ export interface Translations {
         homeCoachLabel: string
         awayCoachLabel: string
         signAs: string
+        coachOptional: string
         coachName: string
         coachNamePlaceholder: string
         addCoach: string

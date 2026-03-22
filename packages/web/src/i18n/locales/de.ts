@@ -677,6 +677,7 @@ const de: Translations = {
         homeCoachLabel: 'Trainer Heimmannschaft',
         awayCoachLabel: 'Trainer Besuchermannschaft',
         signAs: 'Unterschreiben als',
+        coachOptional: 'optional',
         coachName: 'Name Trainer',
         coachNamePlaceholder: 'Vorname Nachname',
         addCoach: 'Trainer Besuchermannschaft hinzufügen',
