@@ -15,7 +15,7 @@ vi.mock('@/api/client', () => ({
   })),
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
 }))
 
@@ -348,8 +348,8 @@ describe('useScorerSearch', () => {
 describe('useScorerSearch - integration with mock API', () => {
   // Import the real modules for integration testing
   let realGetApiClient: typeof import('@/api/client').getApiClient
-  let realUseAuthStore: typeof import('@/shared/stores/auth').useAuthStore
-  let useDemoStore: typeof import('@/shared/stores/demo').useDemoStore
+  let realUseAuthStore: typeof import('@/common/stores/auth').useAuthStore
+  let useDemoStore: typeof import('@/common/stores/demo').useDemoStore
 
   beforeEach(async () => {
     vi.resetModules()
@@ -360,11 +360,11 @@ describe('useScorerSearch - integration with mock API', () => {
     realGetApiClient = clientModule.getApiClient
 
     const authModule =
-      await vi.importActual<typeof import('@/shared/stores/auth')>('@/shared/stores/auth')
+      await vi.importActual<typeof import('@/common/stores/auth')>('@/common/stores/auth')
     realUseAuthStore = authModule.useAuthStore
 
     const demoModule =
-      await vi.importActual<typeof import('@/shared/stores/demo')>('@/shared/stores/demo')
+      await vi.importActual<typeof import('@/common/stores/demo')>('@/common/stores/demo')
     useDemoStore = demoModule.useDemoStore
 
     // Initialize demo data
@@ -374,7 +374,7 @@ describe('useScorerSearch - integration with mock API', () => {
     const { getApiClient } = await import('@/api/client')
     vi.mocked(getApiClient).mockImplementation((dataSource) => realGetApiClient(dataSource))
 
-    const { useAuthStore } = await import('@/shared/stores/auth')
+    const { useAuthStore } = await import('@/common/stores/auth')
     vi.mocked(useAuthStore).mockImplementation((selector: unknown) => {
       if (typeof selector === 'function') {
         return (selector as (state: { dataSource: string }) => string)({

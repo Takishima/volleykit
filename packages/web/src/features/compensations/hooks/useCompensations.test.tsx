@@ -30,11 +30,11 @@ vi.mock('@/api/client', () => ({
   },
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector: AnyFunction) => selector({ dataSource: 'api' })),
 }))
 
-vi.mock('@/shared/stores/demo', () => ({
+vi.mock('@/common/stores/demo', () => ({
   useDemoStore: vi.fn((selector: AnyFunction) =>
     selector({
       activeAssociationCode: 'TEST',
@@ -603,8 +603,8 @@ describe('useUpdateAssignmentCompensation', () => {
 
   it('uses demo store update in demo mode', async () => {
     const mockDemoUpdate = vi.fn()
-    const { useAuthStore } = await import('@/shared/stores/auth')
-    const { useDemoStore } = await import('@/shared/stores/demo')
+    const { useAuthStore } = await import('@/common/stores/auth')
+    const { useDemoStore } = await import('@/common/stores/demo')
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({ dataSource: 'demo' })
@@ -635,8 +635,8 @@ describe('useUpdateAssignmentCompensation', () => {
 
   it('updates demo store directly in demo mode (no query invalidation)', async () => {
     const mockDemoUpdate = vi.fn()
-    const { useAuthStore } = await import('@/shared/stores/auth')
-    const { useDemoStore } = await import('@/shared/stores/demo')
+    const { useAuthStore } = await import('@/common/stores/auth')
+    const { useDemoStore } = await import('@/common/stores/demo')
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({ dataSource: 'demo' })

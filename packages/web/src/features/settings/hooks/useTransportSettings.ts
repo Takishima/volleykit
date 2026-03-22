@@ -4,9 +4,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
-import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
-import { useTravelTimeAvailable } from '@/shared/hooks/useTravelTime'
-import { clearTravelTimeCache, getTravelTimeCacheStats } from '@/shared/services/transport'
+import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelTimeAvailable } from '@/common/hooks/useTravelTime'
+import { clearTravelTimeCache, getTravelTimeCacheStats } from '@/common/services/transport'
 import {
   useSettingsStore,
   getDefaultArrivalBuffer,
@@ -16,7 +16,7 @@ import {
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
   type DistanceFilter,
   type SbbDestinationType,
-} from '@/shared/stores/settings'
+} from '@/common/stores/settings'
 
 const DEBOUNCE_MS = 300
 

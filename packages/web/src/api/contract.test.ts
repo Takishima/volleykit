@@ -10,7 +10,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest'
 
-import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
+import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
 
 import { mockApi } from './mock-api'
 import {

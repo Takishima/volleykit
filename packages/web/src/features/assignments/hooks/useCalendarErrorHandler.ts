@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react'
 
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import { toast } from '@/common/stores/toast'
+import { classifyError } from '@/common/utils/error-helpers'
 import { CalendarNotFoundError } from '@/features/assignments/api/calendar-api'
 import type { CalendarErrorType } from '@/features/assignments/components/CalendarErrorModal'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { toast } from '@/shared/stores/toast'
-import { classifyError } from '@/shared/utils/error-helpers'
 
 interface CalendarErrorState {
   /** Whether the error modal is open */

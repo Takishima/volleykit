@@ -11,7 +11,7 @@ import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import packageJson from './package.json' with { type: 'json' }
-import { normalizeBasePath } from './src/shared/utils/basePath'
+import { normalizeBasePath } from './src/common/utils/basePath'
 
 // Plugin to exclude Zod v4 locale files from the bundle.
 // Zod v4 includes ~50 locale files for i18n error messages that we don't use.
@@ -539,9 +539,9 @@ export default defineConfig(({ mode }) => {
         // Pure unit tests don't need DOM - run in faster node environment
         // Note: src/api tests use MSW which requires happy-dom for BroadcastChannel
         ['src/i18n/**/*.test.ts', 'node'],
-        ['src/shared/stores/**/*.test.ts', 'node'],
-        ['src/shared/utils/**/*.test.ts', 'node'],
-        ['src/shared/services/**/*.test.ts', 'node'],
+        ['src/common/stores/**/*.test.ts', 'node'],
+        ['src/common/utils/**/*.test.ts', 'node'],
+        ['src/common/services/**/*.test.ts', 'node'],
         ['src/features/**/utils/**/*.test.ts', 'node'],
         ['src/features/**/api/**/*.test.ts', 'node'],
         ['src/test/**/*.test.ts', 'node'],
@@ -567,12 +567,12 @@ export default defineConfig(({ mode }) => {
           '**/*.test.{ts,tsx}',
           '**/types/**',
           // Re-export files (just re-export from @volleykit/shared, no logic to test)
-          'src/shared/utils/date-helpers.ts',
-          'src/shared/utils/error-helpers.ts',
+          'src/common/utils/date-helpers.ts',
+          'src/common/utils/error-helpers.ts',
           // Index files that only re-export (barrel files)
-          'src/shared/services/badge/index.ts',
-          'src/shared/services/transport/index.ts',
-          'src/shared/services/notifications/index.ts',
+          'src/common/services/badge/index.ts',
+          'src/common/services/transport/index.ts',
+          'src/common/services/notifications/index.ts',
         ],
         thresholds: {
           // Prevent coverage regressions - enforce minimum coverage

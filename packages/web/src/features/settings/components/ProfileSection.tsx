@@ -1,13 +1,13 @@
 import { memo, useState, useEffect } from 'react'
 
 import { API_BASE_URL } from '@/api/constants'
-import { Badge } from '@/shared/components/Badge'
-import { Card, CardContent, CardHeader } from '@/shared/components/Card'
-import { Calendar } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import type { UserProfile } from '@/shared/stores/auth'
-import { getOccupationLabelKey } from '@/shared/utils/occupation-labels'
+import { Badge } from '@/common/components/Badge'
+import { Card, CardContent, CardHeader } from '@/common/components/Card'
+import { Calendar } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import type { UserProfile } from '@/common/stores/auth'
+import { getOccupationLabelKey } from '@/common/utils/occupation-labels'
 
 const API_BASE = API_BASE_URL
 

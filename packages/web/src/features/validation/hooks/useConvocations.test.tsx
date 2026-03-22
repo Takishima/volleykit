@@ -6,8 +6,8 @@ import { addDays } from 'date-fns'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import { getApiClient } from '@/api/client'
-import * as authStore from '@/shared/stores/auth'
-import * as demoStore from '@/shared/stores/demo'
+import * as authStore from '@/common/stores/auth'
+import * as demoStore from '@/common/stores/demo'
 
 import {
   useAssignments,
@@ -30,11 +30,11 @@ vi.mock('@/api/client', () => ({
   getApiClient: vi.fn(() => mockApi),
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn(),
 }))
 
-vi.mock('@/shared/stores/demo', () => ({
+vi.mock('@/common/stores/demo', () => ({
   useDemoStore: vi.fn(),
 }))
 

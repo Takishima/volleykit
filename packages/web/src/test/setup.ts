@@ -2,8 +2,8 @@
 import '@testing-library/jest-dom'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 
+import { preloadDateLocales } from '@/common/hooks/useDateFormat'
 import { preloadTranslations } from '@/i18n'
-import { preloadDateLocales } from '@/shared/hooks/useDateFormat'
 
 import { server } from './msw/server'
 

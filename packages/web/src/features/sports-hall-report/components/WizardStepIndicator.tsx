@@ -1,4 +1,4 @@
-import { CheckCircle } from '@/shared/components/icons'
+import { CheckCircle } from '@/common/components/icons'
 
 interface Step {
   label: string

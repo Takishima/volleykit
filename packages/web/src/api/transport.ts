@@ -9,7 +9,7 @@
  * session token capture, error handling, and stale-session detection.
  */
 
-import { HttpStatus } from '@/shared/utils/constants'
+import { HttpStatus } from '@/common/utils/constants'
 
 import { API_BASE_URL } from './constants'
 import { parseErrorResponse } from './error-handling'

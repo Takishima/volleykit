@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { ScoresheetPanel } from './ScoresheetPanel'
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
 }))
 

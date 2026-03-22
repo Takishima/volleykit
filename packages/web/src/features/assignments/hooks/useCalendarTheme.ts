@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 const CALENDAR_MODE_CLASS = 'calendar-mode'
 

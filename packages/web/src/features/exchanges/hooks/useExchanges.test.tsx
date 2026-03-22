@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { ReactNode } from 'react'
 
 import type { GameExchange } from '@/api/client'
-import { DEMO_USER_PERSON_IDENTITY } from '@/shared/stores/demo'
+import { DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
 
 import { useGameExchanges, useApplyForExchange } from './useExchanges'
 
@@ -28,7 +28,7 @@ const mockAuthStore: {
   activeOccupationId: 'occupation-1',
   user: { id: 'user-123' },
 }
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector) => selector(mockAuthStore)),
 }))
 
@@ -36,7 +36,7 @@ vi.mock('@/shared/stores/auth', () => ({
 const mockDemoStore = {
   activeAssociationCode: 'SV',
 }
-vi.mock('@/shared/stores/demo', () => ({
+vi.mock('@/common/stores/demo', () => ({
   useDemoStore: vi.fn((selector) => selector(mockDemoStore)),
   DEMO_USER_PERSON_IDENTITY: 'demo-user-person',
 }))
@@ -53,12 +53,12 @@ vi.mock('@/api/queryKeys', () => ({
 
 // Mock network status - default to online
 let mockIsOnline = true
-vi.mock('@/shared/hooks/useNetworkStatus', () => ({
+vi.mock('@/common/hooks/useNetworkStatus', () => ({
   useNetworkStatus: () => mockIsOnline,
 }))
 
 // Mock action queue store
-vi.mock('@/shared/stores/action-queue', () => ({
+vi.mock('@/common/stores/action-queue', () => ({
   useActionQueueStore: () => ({
     refresh: vi.fn(),
   }),

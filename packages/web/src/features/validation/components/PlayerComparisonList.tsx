@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 
+import { Check, AlertTriangle, XCircle, User } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { PlayerComparisonResult, ComparisonStatus } from '@/features/ocr'
-import { Check, AlertTriangle, XCircle, User } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface PlayerComparisonListProps {
   results: PlayerComparisonResult[]

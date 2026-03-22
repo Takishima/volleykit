@@ -3,12 +3,12 @@ import { memo } from 'react'
 import { format, parseISO } from 'date-fns'
 
 import type { CompensationRecord } from '@/api/client'
-import { ExpandableCard } from '@/shared/components/ExpandableCard'
-import { Lock, MaleIcon, FemaleIcon } from '@/shared/components/icons'
-import { useDateLocale } from '@/shared/hooks/useDateFormat'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { formatDistanceKm } from '@/shared/utils/distance'
-import { getPositionLabel } from '@/shared/utils/position-labels'
+import { ExpandableCard } from '@/common/components/ExpandableCard'
+import { Lock, MaleIcon, FemaleIcon } from '@/common/components/icons'
+import { useDateLocale } from '@/common/hooks/useDateFormat'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { formatDistanceKm } from '@/common/utils/distance'
+import { getPositionLabel } from '@/common/utils/position-labels'
 
 import { isCompensationEditable } from '../utils/compensation-actions'
 

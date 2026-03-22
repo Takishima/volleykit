@@ -1,7 +1,7 @@
-import { Upload, Camera, CheckCircle, FileText, AlertCircle, Info } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { BYTES_PER_KB, BYTES_PER_MB } from '@/shared/utils/constants'
+import { Upload, Camera, CheckCircle, FileText, AlertCircle, Info } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import { BYTES_PER_KB, BYTES_PER_MB } from '@/common/utils/constants'
 
 import { useFileUpload } from '../hooks/useFileUpload'
 import { isImageUrl } from '../utils/scoresheet'

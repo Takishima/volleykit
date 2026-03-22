@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { getApiClient, type PersonSearchFilter } from '@/api/client'
 import { scorerSearchOptions } from '@/api/queryOptions'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 /**
  * Common surname particles that indicate the token is part of a compound

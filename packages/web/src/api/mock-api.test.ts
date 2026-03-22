@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { parseSearchInput } from '@/features/validation/hooks/useScorerSearch'
-import { useDemoStore } from '@/shared/stores/demo'
+import { useDemoStore } from '@/common/stores/demo'
 
 import { mockApi } from './mock-api'
 

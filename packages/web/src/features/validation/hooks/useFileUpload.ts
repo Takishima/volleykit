@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, type RefObject } from 'react'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES } from '@/api/constants'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 const SIMULATED_UPLOAD_DURATION_MS = 1500
 const PROGRESS_INCREMENT_PERCENT = 10

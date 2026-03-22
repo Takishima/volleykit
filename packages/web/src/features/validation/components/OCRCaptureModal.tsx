@@ -1,8 +1,8 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 
+import { Camera, Image, X, AlertCircle } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
-import { Camera, Image, X, AlertCircle } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { ImageCropEditor } from './ImageCropEditor'
 import { ScoresheetGuide } from './ScoresheetGuide'

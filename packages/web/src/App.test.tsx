@@ -3,8 +3,8 @@ import { render, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
 
 // Create hoisted mocks to avoid initialization order issues
 const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
@@ -20,17 +20,17 @@ const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
   return { mockAuthStore, mockSettingsStore }
 })
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: mockAuthStore,
   registerCacheCleanup: vi.fn(() => () => {}), // Returns unsubscribe function
 }))
 
 // Mock the demo store
-vi.mock('@/shared/stores/demo', () => ({
+vi.mock('@/common/stores/demo', () => ({
   useDemoStore: vi.fn(),
 }))
 
-vi.mock('@/shared/stores/settings', () => ({
+vi.mock('@/common/stores/settings', () => ({
   useSettingsStore: mockSettingsStore,
 }))
 
@@ -70,7 +70,7 @@ import {
   classifyQueryError,
   isRetryableError,
   calculateRetryDelay,
-} from '@/shared/utils/query-error-utils'
+} from '@/common/utils/query-error-utils'
 
 import App from './App'
 

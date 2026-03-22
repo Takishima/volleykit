@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react'
 
-import { Button } from '@/shared/components/Button'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Button } from '@/common/components/Button'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 /** Z-index for confirmation dialog (above main modal) */
 const Z_INDEX_CONFIRMATION_DIALOG = 60

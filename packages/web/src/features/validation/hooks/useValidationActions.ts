@@ -5,8 +5,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { GameDetails } from '@/api/client'
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { useAuthStore } from '@/shared/stores/auth'
-import { logger } from '@/shared/utils/logger'
+import { useAuthStore } from '@/common/stores/auth'
+import { logger } from '@/common/utils/logger'
 
 import {
   saveRosterModifications,

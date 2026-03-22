@@ -10,7 +10,7 @@ const mockSetBadge = vi.fn().mockResolvedValue({ success: true })
 const mockClearBadge = vi.fn().mockResolvedValue({ success: true })
 const mockIsSupported = vi.fn(() => true)
 
-vi.mock('@/shared/services/badge', () => ({
+vi.mock('@/common/services/badge', () => ({
   badgeService: {
     isSupported: () => mockIsSupported(),
     setBadge: (count: number) => mockSetBadge(count),

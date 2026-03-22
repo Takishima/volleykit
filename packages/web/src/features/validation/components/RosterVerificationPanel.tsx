@@ -2,6 +2,10 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 
 import type { PossibleNomination, NominationList, Schemas } from '@/api/client'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
+import { UserPlus, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from '@/common/components/icons'
+import { LoadingSpinner } from '@/common/components/LoadingSpinner'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { formatRosterEntries, getMaxLastNameWidth } from '@/common/utils/date-helpers'
 import {
   useNominationList,
   type RosterPlayer,
@@ -10,10 +14,6 @@ import {
   type CoachInfo,
   type CoachModifications,
 } from '@/features/validation/hooks/useNominationList'
-import { UserPlus, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from '@/shared/components/icons'
-import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { formatRosterEntries, getMaxLastNameWidth } from '@/shared/utils/date-helpers'
 
 import { AddCoachSheet } from './AddCoachSheet'
 import { AddPlayerSheet } from './AddPlayerSheet'

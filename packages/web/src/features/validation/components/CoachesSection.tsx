@@ -1,7 +1,7 @@
 import type { Schemas } from '@/api/client'
+import { Trash2, Undo2, UserPlus } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { CoachRole } from '@/features/validation/hooks/useNominationList'
-import { Trash2, Undo2, UserPlus } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 type PersonSummary = Schemas['PersonSummary']
 

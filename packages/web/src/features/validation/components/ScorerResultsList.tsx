@@ -1,8 +1,8 @@
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import { ChevronRight, MaleIcon, FemaleIcon } from '@/shared/components/icons'
-import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { formatDOB } from '@/shared/utils/date-helpers'
+import { ChevronRight, MaleIcon, FemaleIcon } from '@/common/components/icons'
+import { LoadingSpinner } from '@/common/components/LoadingSpinner'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { formatDOB } from '@/common/utils/date-helpers'
 
 interface ScorerResultsListProps {
   results: ValidatedPersonSearchResult[] | undefined

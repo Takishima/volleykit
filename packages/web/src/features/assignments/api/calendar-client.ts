@@ -54,7 +54,7 @@ import type {
   PickExchangeResponse,
 } from '@/api/client'
 import type { components } from '@/api/schema'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 import { fetchCalendarAssignments, type CalendarAssignment } from './calendar-api'
 

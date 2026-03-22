@@ -1,10 +1,10 @@
 import { useRef, useEffect } from 'react'
 
-import type { RosterValidationStatus } from '@/features/validation/utils/roster-validation'
+import { Button } from '@/common/components/Button'
+import { AlertTriangle } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import { MIN_PLAYERS_REQUIRED } from '@/features/validation/utils/roster-validation'
-import { Button } from '@/shared/components/Button'
-import { AlertTriangle } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import type { RosterValidationStatus } from '@/features/validation/utils/roster-validation'
 
 /** Z-index for warning dialog (above main modal) */
 const Z_INDEX_WARNING_DIALOG = 60

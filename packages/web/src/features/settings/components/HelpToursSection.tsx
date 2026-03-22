@@ -2,10 +2,10 @@ import { memo } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
-import { Button } from '@/shared/components/Button'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useTourStore, type TourId } from '@/shared/stores/tour'
-import { getHelpSiteUrl } from '@/shared/utils/constants'
+import { Button } from '@/common/components/Button'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useTourStore, type TourId } from '@/common/stores/tour'
+import { getHelpSiteUrl } from '@/common/utils/constants'
 
 const TOUR_IDS: TourId[] = ['assignments', 'compensations', 'exchange', 'settings']
 

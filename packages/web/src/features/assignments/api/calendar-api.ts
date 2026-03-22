@@ -15,7 +15,7 @@
  */
 
 import { API_BASE_URL } from '@/api/constants'
-import { HttpStatus } from '@/shared/utils/constants'
+import { HttpStatus } from '@/common/utils/constants'
 
 import { parseCalendarFeed, type CalendarAssignment, type ParseResult } from './ical'
 

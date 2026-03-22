@@ -6,7 +6,6 @@ import { addDays, startOfDay, endOfDay, subDays, isWithinInterval } from 'date-f
 import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { assignmentListOptions, assignmentDetailOptions } from '@/api/queryOptions'
-import { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_DATE_RANGE_DAYS,
@@ -18,10 +17,11 @@ import {
   sortByGameDate,
   createDemoQueryResult,
   getGameTimestamp,
-} from '@/shared/hooks/usePaginatedQuery'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import type { ValidatedGameData } from '@/shared/stores/demo/types'
+} from '@/common/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import type { ValidatedGameData } from '@/common/stores/demo/types'
+import { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
 
 import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
 

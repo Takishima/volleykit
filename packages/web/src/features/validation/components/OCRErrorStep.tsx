@@ -1,5 +1,5 @@
-import { AlertCircle, RefreshCw } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { AlertCircle, RefreshCw } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface OCRErrorStepProps {
   errorMessage: string | undefined

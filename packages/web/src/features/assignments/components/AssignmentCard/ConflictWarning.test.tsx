@@ -6,7 +6,7 @@ import type { AssignmentConflict } from '@/features/assignments/utils/conflict-d
 import { ConflictDetails, ConflictIndicator } from './ConflictWarning'
 
 // Mock useTranslation
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
@@ -23,7 +23,7 @@ vi.mock('@/shared/hooks/useTranslation', () => ({
 }))
 
 // Mock useDateFormat
-vi.mock('@/shared/hooks/useDateFormat', () => ({
+vi.mock('@/common/hooks/useDateFormat', () => ({
   useDateFormat: (dateTime: string) => ({
     dateLabel: 'Mon, Jan 15',
     timeLabel: dateTime ? '14:00' : 'Unknown',

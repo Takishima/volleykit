@@ -9,9 +9,9 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 
 import Cropper from 'react-easy-crop'
 
+import { X, Check, RotateCcw, RotateCw, AlertCircle } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
-import { X, Check, RotateCcw, RotateCw, AlertCircle } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { getCroppedImage } from '../utils/image-crop'
 

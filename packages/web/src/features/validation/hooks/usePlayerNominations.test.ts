@@ -6,11 +6,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as apiClient from '@/api/client'
 import type { PossibleNominationsResponse } from '@/api/client'
-import * as authStore from '@/shared/stores/auth'
+import * as authStore from '@/common/stores/auth'
 
 import { usePossiblePlayerNominations } from './usePlayerNominations'
 
-vi.mock('@/shared/stores/auth')
+vi.mock('@/common/stores/auth')
 vi.mock('@/api/client', async (importOriginal) => {
   const original = await importOriginal<typeof import('@/api/client')>()
   return {

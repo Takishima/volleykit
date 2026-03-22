@@ -1,8 +1,8 @@
 import { createElement } from 'react'
 
 import type { Assignment } from '@/api/client'
+import { Wallet, Check, FileText, ArrowLeftRight } from '@/common/components/icons'
 import type { TranslationKey } from '@/i18n'
-import { Wallet, Check, FileText, ArrowLeftRight } from '@/shared/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 // Pre-created icon elements to avoid recreating on each function call

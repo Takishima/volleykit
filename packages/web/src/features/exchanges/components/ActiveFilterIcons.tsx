@@ -1,8 +1,8 @@
 import { memo, useMemo } from 'react'
 
-import { User, MapPin, TrainFront, CalendarX2, Award } from '@/shared/components/icons'
-import { features } from '@/shared/config/features'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { User, MapPin, TrainFront, CalendarX2, Award } from '@/common/components/icons'
+import { features } from '@/common/config/features'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 export interface ActiveFilterIconsProps {
   /** Whether the "hide own" filter is active */

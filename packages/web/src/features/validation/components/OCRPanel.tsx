@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 
+import { Camera, AlertCircle, CheckCircle, RefreshCw } from '@/common/components/icons'
+import { LoadingSpinner } from '@/common/components/LoadingSpinner'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import { useOCRScoresheet, compareRosters } from '@/features/ocr'
 import type { ParsedGameSheet, ParsedTeam, PlayerComparisonResult } from '@/features/ocr'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
-import { Camera, AlertCircle, CheckCircle, RefreshCw } from '@/shared/components/icons'
-import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { OCRCaptureModal } from './OCRCaptureModal'
 import { PlayerComparisonList } from './PlayerComparisonList'

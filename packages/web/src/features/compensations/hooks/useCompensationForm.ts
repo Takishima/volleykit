@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
 
 import type { Assignment, CompensationRecord } from '@/api/client'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { toast } from '@/shared/stores/toast'
-import { kilometresToMetres, parseLocalizedNumber } from '@/shared/utils/distance'
-import { logger } from '@/shared/utils/logger'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { toast } from '@/common/stores/toast'
+import { kilometresToMetres, parseLocalizedNumber } from '@/common/utils/distance'
+import { logger } from '@/common/utils/logger'
 
 import { useCompensationData } from './useCompensationData'
 import {

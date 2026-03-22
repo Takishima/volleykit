@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { Assignment } from '@/api/client'
 import * as useNominationListModule from '@/features/validation/hooks/useNominationList'
 import * as useValidationStateModule from '@/features/validation/hooks/useValidationState'
-import { useSettingsStore } from '@/shared/stores/settings'
+import { useSettingsStore } from '@/common/stores/settings'
 
 import { ValidateGameModal } from './ValidateGameModal'
 
@@ -25,11 +25,11 @@ vi.mock('@/features/validation/hooks/useScorerSearch', () => ({
   }),
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
 }))
 
-vi.mock('@/shared/stores/settings', () => ({
+vi.mock('@/common/stores/settings', () => ({
   useSettingsStore: vi.fn((selector) => {
     const state = {
       isSafeModeEnabled: false,

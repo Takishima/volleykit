@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 
 import type { CompensationRecord } from '@/api/client'
-import { useModalState } from '@/shared/hooks/useModalState'
-import { useSafeMutation } from '@/shared/hooks/useSafeMutation'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { toast } from '@/shared/stores/toast'
+import { useModalState } from '@/common/hooks/useModalState'
+import { useSafeMutation } from '@/common/hooks/useSafeMutation'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import { toast } from '@/common/stores/toast'
 
 import { downloadCompensationPDF } from '../utils/compensation-actions'
 

@@ -7,8 +7,8 @@
  * ensuring demo mode behavior matches production.
  */
 
-import { useDemoStore } from '@/shared/stores/demo'
-import { BYTES_PER_KB } from '@/shared/utils/constants'
+import { useDemoStore } from '@/common/stores/demo'
+import { BYTES_PER_KB } from '@/common/utils/constants'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
 import { scoreNameMatch } from './search-utils'
@@ -814,7 +814,7 @@ export const mockApi = {
     await delay(MOCK_MUTATION_DELAY_MS)
 
     // Import stores dynamically to avoid circular dependencies
-    const { useAuthStore } = await import('@/shared/stores/auth')
+    const { useAuthStore } = await import('@/common/stores/auth')
 
     // Find the occupation by ID to get its association code
     const user = useAuthStore.getState().user

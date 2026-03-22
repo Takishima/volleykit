@@ -31,11 +31,11 @@ vi.mock('@/api/client', () => ({
   },
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector: AnyFunction) => selector({ dataSource: 'api' })),
 }))
 
-vi.mock('@/shared/stores/demo', () => ({
+vi.mock('@/common/stores/demo', () => ({
   useDemoStore: vi.fn((selector: AnyFunction) =>
     selector({
       activeAssociationCode: 'TEST',
@@ -298,8 +298,8 @@ describe('useAssignments', () => {
   it('uses demo association code in query key when in demo mode', async () => {
     // In demo mode, the hook reads directly from the store instead of calling the API.
     // This test verifies that demo mode returns data from the store.
-    const { useAuthStore } = await import('@/shared/stores/auth')
-    const { useDemoStore } = await import('@/shared/stores/demo')
+    const { useAuthStore } = await import('@/common/stores/auth')
+    const { useDemoStore } = await import('@/common/stores/demo')
 
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({ dataSource: 'demo' })
@@ -344,7 +344,7 @@ describe('useUpcomingAssignments', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     // Reset to non-demo mode for API tests
-    const { useAuthStore } = await import('@/shared/stores/auth')
+    const { useAuthStore } = await import('@/common/stores/auth')
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({ dataSource: 'api' })
     )
@@ -386,7 +386,7 @@ describe('usePastAssignments', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     // Reset to non-demo mode for API tests
-    const { useAuthStore } = await import('@/shared/stores/auth')
+    const { useAuthStore } = await import('@/common/stores/auth')
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({ dataSource: 'api' })
     )
@@ -526,7 +526,7 @@ describe('useCalendarAssignments', () => {
   })
 
   it('is disabled when not in calendar mode', async () => {
-    const { useAuthStore } = await import('@/shared/stores/auth')
+    const { useAuthStore } = await import('@/common/stores/auth')
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({
         dataSource: 'api',
@@ -546,7 +546,7 @@ describe('useCalendarAssignments', () => {
   })
 
   it('is disabled when calendar code is missing', async () => {
-    const { useAuthStore } = await import('@/shared/stores/auth')
+    const { useAuthStore } = await import('@/common/stores/auth')
     vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
       selector({
         dataSource: 'calendar',

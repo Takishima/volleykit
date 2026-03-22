@@ -4,7 +4,7 @@
  */
 
 import { captureSessionToken, getSessionHeaders } from '@/api/client'
-import { authLogger as logger } from '@/shared/utils/auth-log-buffer'
+import { authLogger as logger } from '@/common/utils/auth-log-buffer'
 
 /**
  * URL path pattern that indicates successful login redirect to dashboard.

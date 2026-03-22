@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 import type { ValidatedPersonSearchResult } from '@/api/validation'
+import { X, ChevronRight } from '@/common/components/icons'
+import { LoadingSpinner } from '@/common/components/LoadingSpinner'
+import { ResponsiveSheet } from '@/common/components/ResponsiveSheet'
+import { useDebouncedValue } from '@/common/hooks/useDebouncedValue'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { formatDOB } from '@/common/utils/date-helpers'
 import type { CoachRole } from '@/features/validation/hooks/useNominationList'
 import { useScorerSearch, parseSearchInput } from '@/features/validation/hooks/useScorerSearch'
-import { X, ChevronRight } from '@/shared/components/icons'
-import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
-import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
-import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { formatDOB } from '@/shared/utils/date-helpers'
 
 /** Delay before focusing search input to ensure the sheet animation has started */
 const FOCUS_DELAY_MS = 100

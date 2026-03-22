@@ -2,13 +2,13 @@ import { renderHook } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { NominationList } from '@/api/client'
-import * as authStore from '@/shared/stores/auth'
-import * as demoStore from '@/shared/stores/demo'
+import * as authStore from '@/common/stores/auth'
+import * as demoStore from '@/common/stores/demo'
 
 import { useNominationList } from './useNominationList'
 
-vi.mock('@/shared/stores/auth')
-vi.mock('@/shared/stores/demo')
+vi.mock('@/common/stores/auth')
+vi.mock('@/common/stores/demo')
 
 const mockNominationList: NominationList = {
   __identity: 'test-nomlist-1',

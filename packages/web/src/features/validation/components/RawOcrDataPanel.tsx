@@ -1,6 +1,6 @@
+import { ChevronDown, ChevronUp } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ParsedGameSheet, OCRResult } from '@/features/ocr'
-import { ChevronDown, ChevronUp } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { OCRImageOverlay } from './OCRImageOverlay'
 import { RawTeamData } from './RawTeamData'

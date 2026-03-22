@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, memo } from 'react'
 
-import { Button } from '@/shared/components/Button'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Button } from '@/common/components/Button'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 const DEMO_RESET_MESSAGE_DURATION_MS = 3000
 

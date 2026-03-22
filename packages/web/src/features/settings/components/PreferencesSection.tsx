@@ -1,8 +1,8 @@
 import { useCallback, memo } from 'react'
 
-import { LanguageSwitcher } from '@/shared/components/LanguageSwitcher'
-import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { LanguageSwitcher } from '@/common/components/LanguageSwitcher'
+import { ToggleSwitch } from '@/common/components/ToggleSwitch'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { SettingsItem } from './SettingsItem'
 

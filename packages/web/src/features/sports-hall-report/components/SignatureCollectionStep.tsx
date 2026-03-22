@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
 
-import { Button } from '@/shared/components/Button'
-import { CheckCircle, Plus, X } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { NonConformantSignatures } from '@/shared/utils/pdf-form-filler'
+import { Button } from '@/common/components/Button'
+import { CheckCircle, Plus, X } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import type { NonConformantSignatures } from '@/common/utils/pdf-form-filler'
 
 import { SignatureCanvas } from './SignatureCanvas'
 

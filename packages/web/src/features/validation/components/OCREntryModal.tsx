@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 
+import { X } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import {
   useOCRScoresheet,
   compareRosters,
@@ -9,8 +11,6 @@ import {
 import type { ParsedGameSheet, ParsedOfficial, OCRResult } from '@/features/ocr'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
-import { X } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { OCRCaptureModal } from './OCRCaptureModal'
 import { OCRErrorStep } from './OCRErrorStep'

@@ -3,11 +3,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import SignaturePad from 'signature_pad'
 
-import { Button } from '@/shared/components/Button'
-import { RotateCw, Trash2, Check, X } from '@/shared/components/icons'
-import { useBodyScrollLock } from '@/shared/hooks/useBodyScrollLock'
-import { useOverlayTouchGuard } from '@/shared/hooks/useOverlayTouchGuard'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Button } from '@/common/components/Button'
+import { RotateCw, Trash2, Check, X } from '@/common/components/icons'
+import { useBodyScrollLock } from '@/common/hooks/useBodyScrollLock'
+import { useOverlayTouchGuard } from '@/common/hooks/useOverlayTouchGuard'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 /** Z-index above the modal overlay (50) so the signature canvas is on top */
 const SIGNATURE_OVERLAY_Z_INDEX = 60

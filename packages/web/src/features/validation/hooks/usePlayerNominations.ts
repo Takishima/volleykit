@@ -2,7 +2,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { getApiClient, type PossibleNomination } from '@/api/client'
 import { possibleNominationsOptions } from '@/api/queryOptions'
-import { useAuthStore } from '@/shared/stores/auth'
+import { useAuthStore } from '@/common/stores/auth'
 
 interface UsePossiblePlayerNominationsOptions {
   nominationListId: string

@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useMemo } from 'react'
 
+import { Image } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { OCRResult, ParsedGameSheet } from '@/features/ocr'
-import { Image } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface OCRImageOverlayProps {
   imageUrl: string

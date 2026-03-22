@@ -5,9 +5,9 @@ import { startOfDay, endOfDay, addWeeks, format } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type RefereeBackupEntry } from '@/api/client'
 import { refereeBackupListOptions } from '@/api/queryOptions'
-import { DEFAULT_PAGE_SIZE } from '@/shared/hooks/usePaginatedQuery'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
+import { DEFAULT_PAGE_SIZE } from '@/common/hooks/usePaginatedQuery'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
 
 /** Default number of weeks ahead to fetch referee backups */
 const DEFAULT_WEEKS_AHEAD = 2

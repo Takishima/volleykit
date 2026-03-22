@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 
-import { PartyPopper, Stethoscope } from '@/shared/components/icons'
-import { Modal } from '@/shared/components/Modal'
-import { ModalFooter } from '@/shared/components/ModalFooter'
-import { ModalHeader } from '@/shared/components/ModalHeader'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { launchConfetti } from '@/shared/utils/confetti'
+import { PartyPopper, Stethoscope } from '@/common/components/icons'
+import { Modal } from '@/common/components/Modal'
+import { ModalFooter } from '@/common/components/ModalFooter'
+import { ModalHeader } from '@/common/components/ModalHeader'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { launchConfetti } from '@/common/utils/confetti'
 
 /** Duration of confetti animation in milliseconds */
 const CONFETTI_DURATION_MS = 3000

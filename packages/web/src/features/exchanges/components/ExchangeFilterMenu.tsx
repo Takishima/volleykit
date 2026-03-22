@@ -10,13 +10,13 @@ import {
   User,
   CalendarX2,
   Award,
-} from '@/shared/components/icons'
-import { ResponsiveSheet } from '@/shared/components/ResponsiveSheet'
-import { features } from '@/shared/config/features'
-import { useActiveAssociationCode } from '@/shared/hooks/useActiveAssociation'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useSettingsStore } from '@/shared/stores/settings'
-import { formatTravelTime, MINUTES_PER_HOUR } from '@/shared/utils/format-travel-time'
+} from '@/common/components/icons'
+import { ResponsiveSheet } from '@/common/components/ResponsiveSheet'
+import { features } from '@/common/config/features'
+import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useSettingsStore } from '@/common/stores/settings'
+import { formatTravelTime, MINUTES_PER_HOUR } from '@/common/utils/format-travel-time'
 
 /** Distance presets for the slider (in kilometers) */
 // eslint-disable-next-line @typescript-eslint/no-magic-numbers -- intentional UI presets

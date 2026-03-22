@@ -60,28 +60,29 @@ packages/web/src/features/<feature>/
 - **Components**: Rendering only — logic belongs in hooks
 
 Flag when:
+
 - A component contains business logic (>15 lines of non-rendering code)
 - A single hook mixes state management AND API calls AND exceeds ~300 LOC
 - API calls are made directly in components instead of through hooks or TanStack Query
 
 ### Services vs Utils
 
-| Category   | Location      | Characteristics                                      |
-| ---------- | ------------- | ---------------------------------------------------- |
-| Services   | `services/`   | Stateful, side effects, platform APIs, singletons    |
-| Utils      | `utils/`      | Pure functions, no side effects, easily unit-testable |
+| Category | Location    | Characteristics                                       |
+| -------- | ----------- | ----------------------------------------------------- |
+| Services | `services/` | Stateful, side effects, platform APIs, singletons     |
+| Utils    | `utils/`    | Pure functions, no side effects, easily unit-testable |
 
 - Flag utility functions that have side effects or depend on platform APIs
 - Flag service code that could be a pure function (no state, no side effects)
 
 ### State Management Boundaries
 
-| State Type   | Tool           | Location                |
-| ------------ | -------------- | ----------------------- |
-| Server state | TanStack Query | Via shared hooks        |
-| Client state | Zustand        | `shared/stores/`        |
-| Form state   | React state    | Component/hook-local    |
-| URL state    | React Router   | Route params/search     |
+| State Type   | Tool           | Location             |
+| ------------ | -------------- | -------------------- |
+| Server state | TanStack Query | Via shared hooks     |
+| Client state | Zustand        | `shared/stores/`     |
+| Form state   | React state    | Component/hook-local |
+| URL state    | React Router   | Route params/search  |
 
 - Flag server data stored in Zustand (should use TanStack Query)
 - Flag TanStack Query used for purely client-side state
@@ -105,10 +106,10 @@ Flag when:
 
 ### File Size Thresholds
 
-| Threshold | Action                                         |
-| --------- | ---------------------------------------------- |
-| >300 LOC  | Consider splitting — flag if mixing concerns   |
-| >500 LOC  | Must split — flag with extraction suggestions  |
+| Threshold | Action                                        |
+| --------- | --------------------------------------------- |
+| >300 LOC  | Consider splitting — flag if mixing concerns  |
+| >500 LOC  | Must split — flag with extraction suggestions |
 
 ### Circular Dependencies
 

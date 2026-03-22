@@ -7,7 +7,7 @@ import type { ValidatedPersonSearchResult } from '@/api/validation'
 import { ScorerPanel } from './ScorerPanel'
 
 // Mock useTranslation hook
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {

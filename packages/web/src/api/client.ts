@@ -64,10 +64,10 @@ export { api } from './real-api'
 export type ApiClient = typeof api
 
 // Re-export DataSource from auth store for consumers that import from client
-export type { DataSource } from '@/shared/stores/auth'
+export type { DataSource } from '@/common/stores/auth'
 
 // Import for internal use
-import type { DataSource } from '@/shared/stores/auth'
+import type { DataSource } from '@/common/stores/auth'
 
 /**
  * Returns the appropriate API client based on the data source.

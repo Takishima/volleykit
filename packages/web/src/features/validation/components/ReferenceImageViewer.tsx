@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 
-import { X } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { X } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface ReferenceImageViewerProps {
   /** Object URL of the scoresheet reference image */

@@ -51,7 +51,7 @@ vi.mock('@/features/validation/hooks/useScorerSearch', () => ({
   }),
 }))
 
-vi.mock('@/shared/stores/auth', () => ({
+vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
 }))
 

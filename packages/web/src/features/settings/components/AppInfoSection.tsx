@@ -2,13 +2,13 @@ import { useCallback, memo } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
+import { Button } from '@/common/components/Button'
+import { ToggleSwitch } from '@/common/components/ToggleSwitch'
+import { features } from '@/common/config/features'
+import { usePwaStandalone } from '@/common/hooks/usePwaStandalone'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useSettingsStore } from '@/common/stores/settings'
 import { usePWA } from '@/contexts/PWAContext'
-import { Button } from '@/shared/components/Button'
-import { ToggleSwitch } from '@/shared/components/ToggleSwitch'
-import { features } from '@/shared/config/features'
-import { usePwaStandalone } from '@/shared/hooks/usePwaStandalone'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useSettingsStore } from '@/shared/stores/settings'
 
 import { SettingsItem } from './SettingsItem'
 

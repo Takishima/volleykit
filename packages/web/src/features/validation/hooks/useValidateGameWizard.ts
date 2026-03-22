@@ -4,6 +4,10 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import type { Assignment, NominationList } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useWizardNavigation } from '@/common/hooks/useWizardNavigation'
+import { useAuthStore } from '@/common/stores/auth'
+import { useSettingsStore } from '@/common/stores/settings'
 import type { ValidatedGameInfo } from '@/features/validation/hooks/types'
 import { useValidationState } from '@/features/validation/hooks/useValidationState'
 import { useValidationSubmit } from '@/features/validation/hooks/useValidationSubmit'
@@ -20,10 +24,6 @@ import {
   allPreviousRequiredDone,
   firstInvalidRosterStepIndex,
 } from '@/features/validation/utils/wizard-steps'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useWizardNavigation } from '@/shared/hooks/useWizardNavigation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useSettingsStore } from '@/shared/stores/settings'
 
 // Re-export types so existing consumers continue to work
 export type { ValidationStepId, ValidationStep } from '@/features/validation/utils/wizard-steps'

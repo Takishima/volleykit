@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 
 import type { CompensationRecord } from '@/api/client'
-import { Wallet, FileText } from '@/shared/components/icons'
+import { Wallet, FileText } from '@/common/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 import {

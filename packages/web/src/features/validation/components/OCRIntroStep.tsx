@@ -1,6 +1,6 @@
+import { Camera, SkipForward, FileText, PenTool } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
-import { Camera, SkipForward, FileText, PenTool } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface OCRIntroStepProps {
   onStartScan: (type: ScoresheetType) => void

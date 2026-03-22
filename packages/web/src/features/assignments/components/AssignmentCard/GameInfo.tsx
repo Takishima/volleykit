@@ -1,4 +1,4 @@
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { useAssignmentCardContext } from './context'
 

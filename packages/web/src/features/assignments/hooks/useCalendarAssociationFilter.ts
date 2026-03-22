@@ -12,11 +12,11 @@ import { useMemo, useCallback, useEffect } from 'react'
 
 import { useShallow } from 'zustand/react/shallow'
 
+import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/common/stores/calendar-filter'
 import type { CalendarAssignment } from '@/features/assignments/api/calendar-api'
-import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter'
 
 // Re-export for backward compatibility
-export { ALL_ASSOCIATIONS } from '@/shared/stores/calendar-filter'
+export { ALL_ASSOCIATIONS } from '@/common/stores/calendar-filter'
 
 export interface UseCalendarAssociationFilterResult {
   /** List of unique associations found in calendar data */

@@ -11,14 +11,14 @@ import {
 } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { compensationListOptions } from '@/api/queryOptions'
-import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus'
-import { DEFAULT_PAGE_SIZE, COMPENSATION_LOOKUP_LIMIT } from '@/shared/hooks/usePaginatedQuery'
-import { createAction } from '@/shared/services/offline/action-store'
-import { useActionQueueStore } from '@/shared/stores/action-queue'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import type { MutationCallbacks, OfflineMutationResult } from '@/shared/types/mutation'
-import { createLogger } from '@/shared/utils/logger'
+import { useNetworkStatus } from '@/common/hooks/useNetworkStatus'
+import { DEFAULT_PAGE_SIZE, COMPENSATION_LOOKUP_LIMIT } from '@/common/hooks/usePaginatedQuery'
+import { createAction } from '@/common/services/offline/action-store'
+import { useActionQueueStore } from '@/common/stores/action-queue'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import type { MutationCallbacks, OfflineMutationResult } from '@/common/types/mutation'
+import { createLogger } from '@/common/utils/logger'
 
 const log = createLogger('useCompensations')
 

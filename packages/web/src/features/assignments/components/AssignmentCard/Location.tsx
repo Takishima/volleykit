@@ -1,5 +1,5 @@
-import { MapPin, TrainFront, Loader2, Navigation } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { MapPin, TrainFront, Loader2, Navigation } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 import { useAssignmentCardContext } from './context'
 

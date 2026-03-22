@@ -10,8 +10,8 @@
  * that could overlap.
  */
 
+import { calculateDistanceKm, type Coordinates } from '@/common/utils/distance'
 import type { CalendarAssignment } from '@/features/assignments/api/ical/types'
-import { calculateDistanceKm, type Coordinates } from '@/shared/utils/distance'
 
 /** Default minimum gap between assignments to avoid conflict (in minutes) */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60

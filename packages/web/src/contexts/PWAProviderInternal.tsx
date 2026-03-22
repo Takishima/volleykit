@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { API_BASE_URL } from '@/api/constants'
-import { MS_PER_HOUR } from '@/shared/utils/constants'
-import { logger } from '@/shared/utils/logger'
+import { MS_PER_HOUR } from '@/common/utils/constants'
+import { logger } from '@/common/utils/logger'
 
 import { PWAContext, type PWAContextType } from './pwa-context-value'
 

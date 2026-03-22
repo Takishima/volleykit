@@ -1,6 +1,6 @@
+import { CheckCircle } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ParsedGameSheet, OCRResult, PlayerComparisonResult } from '@/features/ocr'
-import { CheckCircle } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import { CollapsibleSection } from './CollapsibleSection'
 import { PlayerComparisonList } from './PlayerComparisonList'

@@ -1,15 +1,15 @@
 import { useCallback } from 'react'
 
 import type { Assignment } from '@/api/client'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { toast } from '@/shared/stores/toast'
-import { createLogger } from '@/shared/utils/logger'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { toast } from '@/common/stores/toast'
+import { createLogger } from '@/common/utils/logger'
 import type {
   JerseyAdvertisingOptions,
   Language,
   NonConformantReportOptions,
   NonConformantSignatures,
-} from '@/shared/utils/pdf-form-filler'
+} from '@/common/utils/pdf-form-filler'
 
 import { extractReportInfo } from '../utils/extractReportInfo'
 
@@ -46,8 +46,8 @@ export function usePdfGeneration(
         toast.error(t('pdf.exportError'))
         return
       }
-      const { generateWizardReportBytes } = await import('@/shared/utils/pdf-form-filler')
-      const { downloadPdf } = await import('@/shared/utils/pdf-download')
+      const { generateWizardReportBytes } = await import('@/common/utils/pdf-form-filler')
+      const { downloadPdf } = await import('@/common/utils/pdf-download')
 
       const { pdfBytes, filename } = await generateWizardReportBytes({
         data: info.reportData,
@@ -70,7 +70,7 @@ export function usePdfGeneration(
       toast.error(t('pdf.exportError'))
       return
     }
-    const { generateAndDownloadSportsHallReport } = await import('@/shared/utils/pdf-form-filler')
+    const { generateAndDownloadSportsHallReport } = await import('@/common/utils/pdf-form-filler')
     await generateAndDownloadSportsHallReport(info.reportData, info.leagueCategory, language)
     toast.success(t('assignments.reportGenerated'))
     onSuccess()
@@ -83,7 +83,7 @@ export function usePdfGeneration(
         toast.error(t('pdf.exportError'))
         return null
       }
-      const { generateNonConformantPreviewBytes } = await import('@/shared/utils/pdf-form-filler')
+      const { generateNonConformantPreviewBytes } = await import('@/common/utils/pdf-form-filler')
       const { pdfBytes } = await generateNonConformantPreviewBytes({
         data: info.reportData,
         leagueCategory: info.leagueCategory,
@@ -102,8 +102,8 @@ export function usePdfGeneration(
         toast.error(t('pdf.exportError'))
         return
       }
-      const { generateNonConformantReportBytes } = await import('@/shared/utils/pdf-form-filler')
-      const { downloadPdf } = await import('@/shared/utils/pdf-download')
+      const { generateNonConformantReportBytes } = await import('@/common/utils/pdf-form-filler')
+      const { downloadPdf } = await import('@/common/utils/pdf-download')
       const { pdfBytes, filename } = await generateNonConformantReportBytes({
         data: info.reportData,
         leagueCategory: info.leagueCategory,

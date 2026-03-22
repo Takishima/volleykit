@@ -1,15 +1,15 @@
 import { useState, useCallback, useMemo } from 'react'
 
 import type { Assignment } from '@/api/client'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { createLogger } from '@/shared/utils/logger'
-import type { ChecklistSection } from '@/shared/utils/pdf-field-mappings'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { createLogger } from '@/common/utils/logger'
+import type { ChecklistSection } from '@/common/utils/pdf-field-mappings'
 import type {
   JerseyAdvertisingOptions,
   Language,
   NonConformantSelections,
   NonConformantSignatures,
-} from '@/shared/utils/pdf-form-filler'
+} from '@/common/utils/pdf-form-filler'
 
 import { usePdfGeneration } from './usePdfGeneration'
 import { extractReportInfo } from '../utils/extractReportInfo'
@@ -58,7 +58,7 @@ export function useNonConformantWizard(
   const loadSections = useCallback(async () => {
     const info = await extractReportInfo(assignment)
     if (!info) return
-    const { getChecklistSections } = await import('@/shared/utils/pdf-field-mappings')
+    const { getChecklistSections } = await import('@/common/utils/pdf-field-mappings')
     setChecklistSections(getChecklistSections(info.leagueCategory))
   }, [assignment])
 

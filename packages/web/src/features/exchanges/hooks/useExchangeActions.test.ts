@@ -4,18 +4,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { GameExchange } from '@/api/client'
 import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
 import * as exchangeHooks from './useExchanges'
-import * as authStore from '@/shared/stores/auth'
-import * as settingsStore from '@/shared/stores/settings'
-import { toast } from '@/shared/stores/toast'
+import * as authStore from '@/common/stores/auth'
+import * as settingsStore from '@/common/stores/settings'
+import { toast } from '@/common/stores/toast'
 
 import { useExchangeActions } from './useExchangeActions'
 
 import type { UseMutationResult } from '@tanstack/react-query'
 
 vi.mock('./useExchanges')
-vi.mock('@/shared/stores/auth')
-vi.mock('@/shared/stores/settings')
-vi.mock('@/shared/stores/toast', () => ({
+vi.mock('@/common/stores/auth')
+vi.mock('@/common/stores/settings')
+vi.mock('@/common/stores/toast', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
@@ -23,7 +23,7 @@ vi.mock('@/shared/stores/toast', () => ({
     warning: vi.fn(),
   },
 }))
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     language: 'en',

@@ -1,5 +1,5 @@
-import { RefreshCw } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { RefreshCw } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface LoginErrorWithUpdateHintProps {
   errorMessage: string

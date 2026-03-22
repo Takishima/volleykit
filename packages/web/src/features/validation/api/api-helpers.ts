@@ -3,12 +3,12 @@
  */
 
 import { getApiClient } from '@/api/client'
+import { createLogger } from '@/common/utils/logger'
 import type {
   RosterModifications,
   CoachModifications,
   CoachRole,
 } from '@/features/validation/hooks/useNominationList'
-import { createLogger } from '@/shared/utils/logger'
 
 const logger = createLogger('ValidationApi')
 

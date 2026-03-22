@@ -4,9 +4,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
-import { Button } from '@/shared/components/Button'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useSettingsStore } from '@/shared/stores/settings'
+import { Button } from '@/common/components/Button'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useSettingsStore } from '@/common/stores/settings'
 
 function DataRetentionSectionComponent() {
   const { t } = useTranslation()

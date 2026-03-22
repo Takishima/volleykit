@@ -10,7 +10,7 @@ import { useTransportSettings } from './useTransportSettings'
 type AnyFunction = (...args: any[]) => any
 
 // Mock dependencies
-vi.mock('@/shared/stores/settings', () => ({
+vi.mock('@/common/stores/settings', () => ({
   useSettingsStore: vi.fn(),
   getDefaultArrivalBuffer: vi.fn(() => 30),
   MIN_ARRIVAL_BUFFER_MINUTES: 15,
@@ -19,15 +19,15 @@ vi.mock('@/shared/stores/settings', () => ({
   DEFAULT_MAX_TRAVEL_TIME_MINUTES: 120,
 }))
 
-vi.mock('@/shared/hooks/useActiveAssociation', () => ({
+vi.mock('@/common/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: vi.fn(),
 }))
 
-vi.mock('@/shared/hooks/useTravelTime', () => ({
+vi.mock('@/common/hooks/useTravelTime', () => ({
   useTravelTimeAvailable: vi.fn(),
 }))
 
-vi.mock('@/shared/services/transport', () => ({
+vi.mock('@/common/services/transport', () => ({
   clearTravelTimeCache: vi.fn(),
   getTravelTimeCacheStats: vi.fn(() => ({ entryCount: 5, oldestEntryAge: null })),
 }))
@@ -45,7 +45,7 @@ function createWrapper() {
 }
 
 async function getSettingsStore() {
-  const { useSettingsStore } = await import('@/shared/stores/settings')
+  const { useSettingsStore } = await import('@/common/stores/settings')
   return useSettingsStore
 }
 
@@ -55,12 +55,12 @@ async function getActiveAssociation() {
 }
 
 async function getTravelTimeAvailable() {
-  const { useTravelTimeAvailable } = await import('@/shared/hooks/useTravelTime')
+  const { useTravelTimeAvailable } = await import('@/common/hooks/useTravelTime')
   return useTravelTimeAvailable
 }
 
 async function getTransportService() {
-  return await import('@/shared/services/transport')
+  return await import('@/common/services/transport')
 }
 
 describe('useTransportSettings', () => {

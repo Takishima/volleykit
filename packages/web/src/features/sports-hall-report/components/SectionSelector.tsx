@@ -1,8 +1,8 @@
 import { useCallback } from 'react'
 
-import { AlertTriangle, CheckCircle } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { ChecklistSection } from '@/shared/utils/pdf-field-mappings'
+import { AlertTriangle, CheckCircle } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import type { ChecklistSection } from '@/common/utils/pdf-field-mappings'
 
 const HAPTIC_FEEDBACK_MS = 10
 

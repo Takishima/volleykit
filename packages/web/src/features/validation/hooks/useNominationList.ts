@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 
 import type { NominationList, IndoorPlayerNomination } from '@/api/client'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
 
 export interface RosterPlayer {
   id: string

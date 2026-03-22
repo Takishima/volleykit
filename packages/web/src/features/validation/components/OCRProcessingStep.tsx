@@ -1,6 +1,6 @@
+import { LoadingSpinner } from '@/common/components/LoadingSpinner'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { OCRProgress } from '@/features/ocr'
-import { LoadingSpinner } from '@/shared/components/LoadingSpinner'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 interface OCRProcessingStepProps {
   progress: OCRProgress | null

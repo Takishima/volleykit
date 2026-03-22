@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 
-import { AlertTriangle, CheckCircle } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import type { ChecklistSection } from '@/shared/utils/pdf-field-mappings'
-import type { NonConformantSelections } from '@/shared/utils/pdf-form-filler'
+import { AlertTriangle, CheckCircle } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import type { ChecklistSection } from '@/common/utils/pdf-field-mappings'
+import type { NonConformantSelections } from '@/common/utils/pdf-form-filler'
 
 interface SubItemSelectorProps {
   sections: readonly ChecklistSection[]

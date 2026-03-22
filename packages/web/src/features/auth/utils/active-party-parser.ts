@@ -8,7 +8,7 @@
 
 import { z } from 'zod'
 
-import { logger } from '@/shared/utils/logger'
+import { logger } from '@/common/utils/logger'
 
 /**
  * Represents an inflated association value with full details.

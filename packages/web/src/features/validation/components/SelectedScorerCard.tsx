@@ -1,7 +1,7 @@
 import type { ValidatedPersonSearchResult } from '@/api/validation'
-import { X } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { formatDOB } from '@/shared/utils/date-helpers'
+import { X } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { formatDOB } from '@/common/utils/date-helpers'
 
 interface SelectedScorerCardProps {
   /** Scorer data from search (may be null in read-only mode) */

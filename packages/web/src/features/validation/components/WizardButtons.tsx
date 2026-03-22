@@ -1,5 +1,5 @@
-import { Button } from '@/shared/components/Button'
-import { useTranslation } from '@/shared/hooks/useTranslation'
+import { Button } from '@/common/components/Button'
+import { useTranslation } from '@/common/hooks/useTranslation'
 
 interface WizardNavigationState {
   isFirstStep: boolean

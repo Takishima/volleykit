@@ -1,7 +1,7 @@
+import { Badge } from '@/common/components/Badge'
+import { Trash2, Undo2 } from '@/common/components/icons'
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
-import { Badge } from '@/shared/components/Badge'
-import { Trash2, Undo2 } from '@/shared/components/icons'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 /** Structured player display data for aligned columns */
 export interface PlayerDisplayData {

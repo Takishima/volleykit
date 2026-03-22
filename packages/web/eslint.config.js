@@ -163,8 +163,8 @@ export default tseslint.config(
   // Shared hooks/utils/components should not import from feature internals.
   // They should import from feature barrel files (index.ts) if needed at all.
   {
-    files: ['src/shared/**/*.{ts,tsx}'],
-    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', 'src/shared/stores/**'],
+    files: ['src/common/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', 'src/common/stores/**'],
     rules: {
       'no-restricted-imports': [
         'warn',

@@ -75,6 +75,7 @@ bash -c 'REMOTE=$(git remote get-url origin); if [[ "$REMOTE" =~ github\.com[:/]
 ```
 
 Identify the two most recent comments:
+
 - **Code Quality Review**: contains `## Claude Code Review` header
 - **Architecture Review**: contains `## Architecture Review` header
 

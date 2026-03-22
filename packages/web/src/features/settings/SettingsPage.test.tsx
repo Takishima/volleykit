@@ -5,21 +5,21 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as pwaContext from '@/contexts/PWAContext'
-import * as authStore from '@/shared/stores/auth'
-import * as settingsStore from '@/shared/stores/settings'
+import * as authStore from '@/common/stores/auth'
+import * as settingsStore from '@/common/stores/settings'
 
 import { SettingsPage } from './SettingsPage'
 
-vi.mock('@/shared/stores/auth')
-vi.mock('@/shared/stores/settings')
+vi.mock('@/common/stores/auth')
+vi.mock('@/common/stores/settings')
 vi.mock('@/contexts/PWAContext')
-vi.mock('@/shared/hooks/useTranslation', () => ({
+vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     locale: 'en',
   }),
 }))
-vi.mock('@/shared/hooks/useTravelTime', () => ({
+vi.mock('@/common/hooks/useTravelTime', () => ({
   useTravelTimeAvailable: () => false,
 }))
 

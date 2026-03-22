@@ -1,14 +1,14 @@
 import { memo, useActionState } from 'react'
 
 import type { GameExchange } from '@/api/client'
-import { Button } from '@/shared/components/Button'
-import { Modal } from '@/shared/components/Modal'
-import { ModalErrorBoundary } from '@/shared/components/ModalErrorBoundary'
-import { ModalFooter } from '@/shared/components/ModalFooter'
-import { ModalHeader } from '@/shared/components/ModalHeader'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { formatDateTime } from '@/shared/utils/date-helpers'
-import { logger } from '@/shared/utils/logger'
+import { Button } from '@/common/components/Button'
+import { Modal } from '@/common/components/Modal'
+import { ModalErrorBoundary } from '@/common/components/ModalErrorBoundary'
+import { ModalFooter } from '@/common/components/ModalFooter'
+import { ModalHeader } from '@/common/components/ModalHeader'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { formatDateTime } from '@/common/utils/date-helpers'
+import { logger } from '@/common/utils/logger'
 
 interface ExchangeConfirmationModalProps {
   exchange: GameExchange

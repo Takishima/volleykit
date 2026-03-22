@@ -4,14 +4,14 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import type { Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
+import { useModalState } from '@/common/hooks/useModalState'
+import { useSafeModeGuard } from '@/common/hooks/useSafeModeGuard'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useDemoStore } from '@/common/stores/demo'
+import { useLanguageStore } from '@/common/stores/language'
+import { toast } from '@/common/stores/toast'
+import { createLogger } from '@/common/utils/logger'
 import { useAddToExchange } from '@/features/exchanges'
-import { useModalState } from '@/shared/hooks/useModalState'
-import { useSafeModeGuard } from '@/shared/hooks/useSafeModeGuard'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useDemoStore } from '@/shared/stores/demo'
-import { useLanguageStore } from '@/shared/stores/language'
-import { toast } from '@/shared/stores/toast'
-import { createLogger } from '@/shared/utils/logger'
 
 import {
   getTeamNames,

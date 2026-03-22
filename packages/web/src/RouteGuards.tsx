@@ -10,15 +10,15 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
-import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
-import { LoadingState } from '@/shared/components/LoadingSpinner'
-import { features } from '@/shared/config/features'
+import { ErrorBoundary } from '@/common/components/ErrorBoundary'
+import { LoadingState } from '@/common/components/LoadingSpinner'
+import { features } from '@/common/config/features'
 // features.offline — Cache warming for offline support (delete this import when removing offline feature)
-import { useCacheWarming } from '@/shared/hooks/useCacheWarming'
-import { useTranslation } from '@/shared/hooks/useTranslation'
-import { useAuthStore } from '@/shared/stores/auth'
-import { useDemoStore } from '@/shared/stores/demo'
-import { logger } from '@/shared/utils/logger'
+import { useCacheWarming } from '@/common/hooks/useCacheWarming'
+import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import { useDemoStore } from '@/common/stores/demo'
+import { logger } from '@/common/utils/logger'
 
 // features.offline — Cache warming no-op when offline is disabled
 const useOfflineCacheWarming: () => void = features.offline ? useCacheWarming : () => {}

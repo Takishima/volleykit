@@ -9,8 +9,8 @@
  * - Manuscript (4:5 portrait): For roster section capture from physical scoresheets
  */
 
+import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
-import { useTranslation } from '@/shared/hooks/useTranslation'
 
 import {
   ELECTRONIC_GUIDE_WIDTH_PERCENT,
