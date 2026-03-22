@@ -53,7 +53,7 @@ function ExchangeConfirmationModalComponent({
   const modalTitleId = `${variant}-exchange-title`
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} titleId={modalTitleId} size="md">
+    <Modal isOpen={isOpen} onClose={onClose} titleId={modalTitleId} size="md" isLoading={isPending}>
       <ModalErrorBoundary modalName="ExchangeConfirmationModal" onClose={onClose}>
         <ModalHeader title={t(titleKey)} titleId={modalTitleId} />
 
