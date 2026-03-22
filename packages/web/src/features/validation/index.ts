@@ -6,4 +6,4 @@ export { useValidateGameWizard } from './hooks/useValidateGameWizard'
 export { useValidationState } from './hooks/useValidationState'
 
 // OCR components (feature-flagged via features.ocr)
-export { OCRPanel } from './components/OCRPanel'
+export { OCRPanel } from './ocr/components/OCRPanel'

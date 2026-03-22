@@ -8,7 +8,10 @@ import { useDebouncedValue } from '@/common/hooks/useDebouncedValue'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { formatDOB } from '@/common/utils/date-helpers'
 import type { CoachRole } from '@/features/validation/roster/hooks/useNominationList'
-import { useScorerSearch, parseSearchInput } from '@/features/validation/scorer/hooks/useScorerSearch'
+import {
+  useScorerSearch,
+  parseSearchInput,
+} from '@/features/validation/scorer/hooks/useScorerSearch'
 
 /** Delay before focusing search input to ensure the sheet animation has started */
 const FOCUS_DELAY_MS = 100

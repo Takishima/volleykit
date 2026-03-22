@@ -11,7 +11,12 @@
 
 import { describe, it, expect } from 'vitest'
 
-import { de as sharedDe, en as sharedEn, fr as sharedFr, it as sharedIt } from '@volleykit/shared/i18n'
+import {
+  de as sharedDe,
+  en as sharedEn,
+  fr as sharedFr,
+  it as sharedIt,
+} from '@volleykit/shared/i18n'
 
 import webDe from '@/i18n/locales/de'
 import webEn from '@/i18n/locales/en'

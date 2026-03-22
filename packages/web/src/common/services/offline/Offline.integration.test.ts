@@ -102,7 +102,7 @@ describe('Offline Action Queue', () => {
         data: { distanceInMetres: 5000 },
       })
       expect(action?.createdAt).toBeGreaterThan(0)
-      expect(action?.id).toMatch(/^\d+-[a-z0-9]+$/)
+      expect(action?.id).toMatch(/^action_\d+_[a-z0-9]+$/)
     })
 
     it('creates actions for different mutation types', async () => {

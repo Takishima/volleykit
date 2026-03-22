@@ -11,6 +11,7 @@ import {
   extractLoginFormFields,
   extractCsrfTokenFromPage,
   isDashboardHtmlContent,
+  type LoginFormFields,
 } from '@volleykit/shared/auth'
 
 import { captureSessionToken, getSessionHeaders } from '@/api/client'

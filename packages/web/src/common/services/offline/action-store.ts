@@ -5,6 +5,7 @@
  * Actions are stored with status tracking and can be queried by status.
  */
 
+import { generateActionId } from '@volleykit/shared/offline'
 import { createLogger } from '@/common/utils/logger'
 
 import { getDB, STORES } from './indexed-db'
@@ -12,20 +13,6 @@ import { getDB, STORES } from './indexed-db'
 import type { OfflineAction, ActionType, ActionPayload, ActionStatus } from './action-types'
 
 const log = createLogger('action-store')
-
-/** Base for random string generation (base36 = 0-9 + a-z) */
-const RANDOM_STRING_BASE = 36
-/** Start index for slicing random string (skip "0.") */
-const RANDOM_STRING_START = 2
-/** End index for slicing random string (9 chars total) */
-const RANDOM_STRING_END = 11
-
-/**
- * Generate a unique ID for an action.
- */
-function generateActionId(): string {
-  return `${Date.now()}-${Math.random().toString(RANDOM_STRING_BASE).slice(RANDOM_STRING_START, RANDOM_STRING_END)}`
-}
 
 /**
  * Create a new action and add it to the queue.

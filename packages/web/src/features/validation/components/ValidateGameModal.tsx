@@ -26,7 +26,7 @@ import {
   OCREntryModal,
 } from '.'
 
-import type { CoachForComparison } from './OCREntryModal'
+import type { CoachForComparison } from '../ocr/components/OCREntryModal'
 
 interface ValidateGameModalProps {
   assignment: Assignment

@@ -6,7 +6,20 @@
  * - Retry logic with exponential backoff
  * - Conflict detection and error handling
  * - Session expiry detection
+ *
+ * Core sync utilities (error detection, retry logic) are delegated to
+ * @volleykit/shared/offline for cross-platform reuse.
  */
+
+import {
+  isSessionExpiredError,
+  isConflictError,
+  getRetryDelay,
+  sleep,
+  emptySyncResult,
+  sortActionsByCreatedAt,
+} from '@volleykit/shared/offline'
+import { MAX_RETRY_COUNT } from '@volleykit/shared/offline'
 
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -18,66 +31,15 @@ import {
   markActionFailed,
   deleteAction,
 } from './action-store'
-import { MAX_RETRY_COUNT, RETRY_DELAY_BASE_MS } from './action-types'
 
 import type { OfflineAction } from './action-types'
+import type { ActionSyncResult, SyncResult } from '@volleykit/shared/offline'
 import type { QueryClient } from '@tanstack/react-query'
 
+// Re-export types for existing consumers
+export type { ActionSyncResult, SyncResult }
+
 const log = createLogger('action-sync')
-
-/**
- * Result of syncing a single action.
- */
-export interface ActionSyncResult {
-  action: OfflineAction
-  success: boolean
-  error?: string
-  requiresReauth?: boolean
-}
-
-/**
- * Result of syncing all pending actions.
- */
-export interface SyncResult {
-  processed: number
-  succeeded: number
-  failed: number
-  requiresReauth: boolean
-  results: ActionSyncResult[]
-}
-
-/**
- * Check if an error indicates session expiry.
- */
-function isSessionExpiredError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase()
-    return (
-      message.includes('unauthorized') ||
-      message.includes('401') ||
-      message.includes('session') ||
-      message.includes('login')
-    )
-  }
-  return false
-}
-
-/**
- * Check if an error indicates a conflict (entity was modified/deleted).
- */
-function isConflictError(error: unknown): boolean {
-  if (error instanceof Error) {
-    const message = error.message.toLowerCase()
-    return (
-      message.includes('not found') ||
-      message.includes('404') ||
-      message.includes('conflict') ||
-      message.includes('409') ||
-      message.includes('already')
-    )
-  }
-  return false
-}
 
 /**
  * Execute a single action against the API.
@@ -185,20 +147,6 @@ async function syncAction(action: OfflineAction): Promise<ActionSyncResult> {
 }
 
 /**
- * Calculate delay for exponential backoff.
- */
-function getRetryDelay(retryCount: number): number {
-  return RETRY_DELAY_BASE_MS * Math.pow(2, retryCount)
-}
-
-/**
- * Sleep for a specified duration.
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-/**
  * Sync all pending actions.
  *
  * Actions are processed sequentially to:
@@ -213,13 +161,7 @@ export async function syncPendingActions(queryClient?: QueryClient): Promise<Syn
 
   if (pending.length === 0) {
     log.debug('No pending actions to sync')
-    return {
-      processed: 0,
-      succeeded: 0,
-      failed: 0,
-      requiresReauth: false,
-      results: [],
-    }
+    return emptySyncResult()
   }
 
   log.info('Starting sync of pending actions:', { count: pending.length })
@@ -229,8 +171,7 @@ export async function syncPendingActions(queryClient?: QueryClient): Promise<Syn
   let failed = 0
   let requiresReauth = false
 
-  // Sort by creation time to preserve ordering
-  const sorted = [...pending].sort((a, b) => a.createdAt - b.createdAt)
+  const sorted = sortActionsByCreatedAt(pending)
 
   for (const action of sorted) {
     // Stop if we hit a session expiry

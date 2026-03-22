@@ -3,7 +3,10 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
 import { useDebouncedValue } from '@/common/hooks/useDebouncedValue'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { useScorerSearch, parseSearchInput } from '@/features/validation/scorer/hooks/useScorerSearch'
+import {
+  useScorerSearch,
+  parseSearchInput,
+} from '@/features/validation/scorer/hooks/useScorerSearch'
 
 import { ScorerResultsList } from './ScorerResultsList'
 import { SelectedScorerCard } from './SelectedScorerCard'
