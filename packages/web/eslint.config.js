@@ -186,6 +186,31 @@ export default tseslint.config(
       ],
     },
   },
+  // Prevent cross-feature barrel imports that defeat lazy-loading code splitting.
+  // Feature code must use direct file paths when importing from other features.
+  // Barrel imports (e.g., '@/features/exchanges') pull in page components,
+  // creating circular module graphs that break iOS Safari PWA standalone mode.
+  // Type-only imports are allowed since they are erased at compile time.
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^@/features/[^/]+$',
+              message:
+                'Cross-feature barrel imports defeat code splitting and break iOS PWA. ' +
+                'Use direct file paths instead (e.g., @/features/X/hooks/useY).',
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Relaxed rules for test files - testing patterns require different constraints
   {
     files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}', 'e2e/**/*.{ts,tsx}'],

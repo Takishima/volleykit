@@ -2,13 +2,11 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 
 import { X } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import {
-  useOCRScoresheet,
-  compareRosters,
-  useEasterEggDetection,
-  EasterEggModal,
-} from '@/features/ocr'
 import type { ParsedGameSheet, ParsedOfficial, OCRResult } from '@/features/ocr'
+import { EasterEggModal } from '@/features/ocr/components/EasterEggModal'
+import { useEasterEggDetection } from '@/features/ocr/hooks/useEasterEggDetection'
+import { useOCRScoresheet } from '@/features/ocr/hooks/useOCRScoresheet'
+import { compareRosters } from '@/features/ocr/utils/roster-comparison'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
 import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 

@@ -11,7 +11,7 @@ import { useDemoStore } from '@/common/stores/demo'
 import { useLanguageStore } from '@/common/stores/language'
 import { toast } from '@/common/stores/toast'
 import { createLogger } from '@/common/utils/logger'
-import { useAddToExchange } from '@/features/exchanges'
+import { useAddToExchange } from '@/features/exchanges/hooks/useExchanges'
 
 import {
   getTeamNames,

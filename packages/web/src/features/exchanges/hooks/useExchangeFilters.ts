@@ -9,11 +9,11 @@ import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
 import { calculateCarDistanceKm } from '@/common/utils/distance'
 import { extractCoordinates } from '@/common/utils/geo-location'
+import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
 import {
-  useCalendarConflicts,
   hasMinimumGapFromAssignments,
   DEFAULT_SAME_LOCATION_DISTANCE_KM,
-} from '@/features/assignments'
+} from '@/features/assignments/utils/conflict-detection'
 
 import type { ExchangeStatus } from './useExchanges'
 

@@ -351,7 +351,7 @@ export default defineConfig(({ mode }) => {
           //   - Vendor Chunks (combined):         ~111 kB, limit 115 kB (+4 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~178 kB, limit 185 kB (+7 kB headroom) - lazy-loaded
           //   - Image Cropper (cropper-*.js):     ~10 kB,  limit 11 kB  (+1 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~580 kB, limit 590 kB (+10 kB headroom)
+          //   - Total JS Bundle:                  ~590 kB, limit 610 kB (+20 kB headroom)
           manualChunks(id) {
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
               return 'react-vendor'

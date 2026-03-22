@@ -45,7 +45,7 @@ vi.mock('@/common/stores/toast', () => ({
 
 // Mock the useAddToExchange mutation hook
 const mockMutateAsync = vi.fn()
-vi.mock('@/features/exchanges', () => ({
+vi.mock('@/features/exchanges/hooks/useExchanges', () => ({
   useAddToExchange: () => ({
     mutate: vi.fn(),
     mutateAsync: mockMutateAsync,

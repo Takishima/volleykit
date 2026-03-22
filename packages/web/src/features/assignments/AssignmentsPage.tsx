@@ -7,7 +7,7 @@ import { SwipeableCard } from '@/common/components/SwipeableCard'
 import { WeekSeparator } from '@/common/components/WeekSeparator'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { AssignmentCard } from '@/features/assignments/components/AssignmentCard'
-import { OnCallCard } from '@/features/referee-backup'
+import { OnCallCard } from '@/features/referee-backup/components/OnCallCard'
 
 import {
   useAssignmentsPageLogic,
