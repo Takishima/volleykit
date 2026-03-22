@@ -69,19 +69,17 @@ jobs:
         uses: actions/cache@v5
         with:
           path: |
-            packages/web/src/api/schema.ts
             packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
       - name: Generate API types
         if: steps.api-cache.outputs.cache-hit != 'true'
         run: pnpm run generate:api
-      # Upload API types as artifact for downstream jobs (both locations)
+      # Upload API types as artifact for downstream jobs
       - name: Upload API types
         uses: actions/upload-artifact@v7
         with:
           name: api-types
           path: |
-            packages/web/src/api/schema.ts
             packages/shared/src/api/schema.ts
           retention-days: 1
   # Security audit - runs independently (doesn't need API types)
