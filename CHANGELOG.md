@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.26.0
+
+### Minor Changes
+
+- [#1030](https://github.com/Takishima/volleykit/pull/1030) [`954110d`](https://github.com/Takishima/volleykit/commit/954110dfcee2ad5f633d5e89ab649eb6e55433fa) Thanks [@Takishima](https://github.com/Takishima)! - Added per-team jersey advertising toggles to the sports hall report wizard
+
+- [#1037](https://github.com/Takishima/volleykit/pull/1037) [`730985f`](https://github.com/Takishima/volleykit/commit/730985f7cef680ca0cb6ad93343f62608bbf3975) Thanks [@Takishima](https://github.com/Takishima)! - Made both coaches signatures optional in the non-conformant sports hall report path
+
+- [#1033](https://github.com/Takishima/volleykit/pull/1033) [`e56a279`](https://github.com/Takishima/volleykit/commit/e56a279c08c318d842a3a27e33296c80e92332b5) Thanks [@Takishima](https://github.com/Takishima)! - Non-conformant workflow: per-section comments, fullscreen overlay with swipe prevention
+
+- [#1041](https://github.com/Takishima/volleykit/pull/1041) [`95d6940`](https://github.com/Takishima/volleykit/commit/95d694026aead02545c04742439b4f403967c4bb) Thanks [@Takishima](https://github.com/Takishima)! - Remove experimental feature gate for non-conformant sports hall report — issue reporting is now always available
+
+- [#1033](https://github.com/Takishima/volleykit/pull/1033) [`e56a279`](https://github.com/Takishima/volleykit/commit/e56a279c08c318d842a3a27e33296c80e92332b5) Thanks [@Takishima](https://github.com/Takishima)! - Add non-conformant workflow for sports hall report: section/sub-item selection, comment entry, PDF preview, multi-signature collection, and PDF generation with non-conformant markings
+
+- [#1036](https://github.com/Takishima/volleykit/pull/1036) [`4311488`](https://github.com/Takishima/volleykit/commit/431148813019a7aa79b67c3deb2861a47976d176) Thanks [@Takishima](https://github.com/Takishima)! - Improved sports hall report UX: redesigned entry screen with clear fork between "Everything OK" and "Report Issues" paths, added flagged section count badge, sub-item context chips in comment step, larger wizard step indicators with responsive labels, signature canvas baseline guide and semantic color tokens, responsive PDF preview with download fallback, richer discard confirmation showing data at risk, and signature thumbnails with always-editable coach names
+
+### Patch Changes
+
+- [#1033](https://github.com/Takishima/volleykit/pull/1033) [`e56a279`](https://github.com/Takishima/volleykit/commit/e56a279c08c318d842a3a27e33296c80e92332b5) Thanks [@Takishima](https://github.com/Takishima)! - Corrected all NLA/NLB sports hall report checkbox-to-section radio field mappings and signature positions by visual PDF verification
+
 ## 1.25.0
 
 ### Minor Changes
