@@ -36,7 +36,8 @@ export function extractLoginFormFields(html: string): LoginFormFields | null {
 
     // Extract referrer fields with defaults
     const getFieldValue = (name: string, defaultValue: string): string => {
-      const escaped = name.replace(/[[\]]/g, '\\$&')
+      // Escape all regex-special characters in field names (e.g., __referrer[@package])
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const regex = new RegExp(`name=["']${escaped}["']\\s+value=["']([^"']*)["']`, 'i')
       const match = html.match(regex)
       return match?.[1] ?? defaultValue
