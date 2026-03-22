@@ -17,6 +17,7 @@ import {
   RADIO_NOT_OK_OPTION,
   RADIO_OK_OPTION,
   SIGNATURE_POSITIONS,
+  type FieldMapping,
   getFieldMapping,
   getPdfChecklistSections,
   getSignatureNameFields,
@@ -88,6 +89,33 @@ function trySetTextField(form: any, fieldName: string, value: string | undefined
     form.getTextField(fieldName).setText(value)
   } catch (error) {
     logger.warn(`Could not set text field "${fieldName}":`, error)
+  }
+}
+
+/**
+ * Auto-sizes header text fields so that flattened output matches the browser's
+ * native form-field rendering.  `setFontSize(0)` tells pdf-lib to scale each
+ * field's text to fit its bounding box — the same behaviour browsers use for
+ * un-flattened form fields.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function autoSizeHeaderFields(form: any, mapping: FieldMapping): void {
+  const headerFields = [
+    mapping.gameNumber,
+    mapping.homeTeam,
+    mapping.awayTeam,
+    mapping.hallName,
+    mapping.location,
+    mapping.date,
+    mapping.firstRefereeName,
+    mapping.secondRefereeName,
+  ]
+  for (const fieldName of headerFields) {
+    try {
+      form.getTextField(fieldName).setFontSize(0)
+    } catch {
+      // Field may not exist in every template variant — skip silently
+    }
   }
 }
 
@@ -442,6 +470,7 @@ export async function fillSportsHallReportWizard(
     }
   }
 
+  autoSizeHeaderFields(form, mapping)
   form.flatten()
   return pdfDoc.save()
 }
@@ -508,6 +537,7 @@ export async function fillNonConformantReport(
   }
 
   if (options.flatten !== false) {
+    autoSizeHeaderFields(form, mapping)
     form.flatten()
   }
   return pdfDoc.save()
