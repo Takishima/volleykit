@@ -4,7 +4,7 @@
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts"],
   "ignore": ["src/types/**/*.d.ts"],
   "ignoreDependencies": ["tailwindcss", "@volleykit/shared"],
-  "ignoreBinaries": ["changeset", "playwright"],
+  "ignoreBinaries": ["changeset"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "duplicates": "off"
