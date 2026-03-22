@@ -78,12 +78,7 @@ export function HappyPathContent({
             {t('pdf.wizard.nonConformant.reportIssue')}
           </Button>
         )}
-        <Button
-          variant="blue"
-          className="flex-1"
-          onClick={onGenerate}
-          disabled={isGenerating}
-        >
+        <Button variant="blue" className="flex-1" onClick={onGenerate} disabled={isGenerating}>
           {isGenerating ? (
             <>
               <span
