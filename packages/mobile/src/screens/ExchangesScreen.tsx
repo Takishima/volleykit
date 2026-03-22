@@ -18,9 +18,9 @@ import {
 import type { GameExchange } from '@volleykit/shared/api'
 import { useExchanges } from '@volleykit/shared/hooks'
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
+import { formatLocalizedDate } from '@volleykit/shared/utils'
 
 import { useApiClient } from '../contexts'
-import { formatLocalizedDate } from '@volleykit/shared/utils'
 
 import type { MainTabScreenProps } from '../navigation/types'
 

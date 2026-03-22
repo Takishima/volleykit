@@ -12,10 +12,10 @@ import { Feather } from '@expo/vector-icons'
 import type { Assignment } from '@volleykit/shared/api'
 import { useAssignmentDetails } from '@volleykit/shared/hooks'
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
+import { formatLocalizedDateTime } from '@volleykit/shared/utils'
 
 import { COLORS } from '../constants'
 import { useApiClient } from '../contexts'
-import { formatLocalizedDateTime } from '@volleykit/shared/utils'
 
 import type { RootStackScreenProps } from '../navigation/types'
 
