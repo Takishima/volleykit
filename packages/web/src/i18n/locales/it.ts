@@ -581,11 +581,6 @@ const it: Translations = {
         'Abilita la scansione OCR dei fogli partita durante la validazione delle partite',
       ocrValidationEnabled: 'Scanner OCR abilitato',
       ocrValidationDisabled: 'Scanner OCR disabilitato',
-      nonConformant: 'Rapporto palestra: Segnalazione problemi',
-      nonConformantDescription:
-        'Attivare il workflow per segnalare i punti non conformi nel rapporto della palestra',
-      nonConformantEnabled: 'Segnalazione problemi abilitata',
-      nonConformantDisabled: 'Segnalazione problemi disabilitata',
     },
   },
   pwa: {

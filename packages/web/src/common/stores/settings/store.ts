@@ -71,7 +71,6 @@ export const useSettingsStore = create<SettingsState>()(
         // Global settings
         isSafeModeEnabled: true,
         isOCREnabled: false,
-        isNonConformantEnabled: false,
         validationReferenceMode: 'quick-compare' as ValidationReferenceMode,
         preventZoom: false,
         settingsGroupExpanded: {},
@@ -110,10 +109,6 @@ export const useSettingsStore = create<SettingsState>()(
 
         setOCREnabled: (enabled: boolean) => {
           set({ isOCREnabled: enabled })
-        },
-
-        setNonConformantEnabled: (enabled: boolean) => {
-          set({ isNonConformantEnabled: enabled })
         },
 
         setValidationReferenceMode: (mode: ValidationReferenceMode) => {
@@ -376,12 +371,11 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 10,
+        version: 11,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
           isOCREnabled: state.isOCREnabled,
-          isNonConformantEnabled: state.isNonConformantEnabled,
           validationReferenceMode: state.validationReferenceMode,
           preventZoom: state.preventZoom,
           settingsGroupExpanded: state.settingsGroupExpanded,
@@ -397,7 +391,6 @@ export const useSettingsStore = create<SettingsState>()(
             | {
                 isSafeModeEnabled?: boolean
                 isOCREnabled?: boolean
-                isNonConformantEnabled?: boolean
                 validationReferenceMode?: ValidationReferenceMode
                 preventZoom?: boolean
                 settingsGroupExpanded?: Record<string, boolean>
@@ -467,8 +460,6 @@ export const useSettingsStore = create<SettingsState>()(
             // Preserve global settings
             isSafeModeEnabled: persistedState?.isSafeModeEnabled ?? current.isSafeModeEnabled,
             isOCREnabled: persistedState?.isOCREnabled ?? current.isOCREnabled,
-            isNonConformantEnabled:
-              persistedState?.isNonConformantEnabled ?? current.isNonConformantEnabled,
             validationReferenceMode:
               persistedState?.validationReferenceMode ?? current.validationReferenceMode,
             preventZoom: persistedState?.preventZoom ?? current.preventZoom,

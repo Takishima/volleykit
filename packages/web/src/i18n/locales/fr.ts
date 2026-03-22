@@ -586,11 +586,6 @@ const fr: Translations = {
         'Activer la numérisation OCR des feuilles de match lors de la validation des matchs',
       ocrValidationEnabled: 'Scanner OCR activé',
       ocrValidationDisabled: 'Scanner OCR désactivé',
-      nonConformant: 'Rapport de salle : Signalement de problèmes',
-      nonConformantDescription:
-        'Activer le workflow pour signaler les points non conformes dans le rapport de salle',
-      nonConformantEnabled: 'Signalement de problèmes activé',
-      nonConformantDisabled: 'Signalement de problèmes désactivé',
     },
   },
   pwa: {
