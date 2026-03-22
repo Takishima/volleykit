@@ -5,7 +5,6 @@ import { AlertTriangle, FileText } from '@/common/components/icons'
 import { Modal } from '@/common/components/Modal'
 import { ModalHeader } from '@/common/components/ModalHeader'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { useSettingsStore } from '@/common/stores/settings'
 import { createLogger } from '@/common/utils/logger'
 import type { JerseyAdvertisingOptions } from '@/common/utils/pdf-form-filler'
 import type { Language } from '@/common/utils/pdf-report-data'
@@ -36,7 +35,6 @@ export function SportsHallReportWizardModal({
   defaultLanguage,
 }: SportsHallReportWizardModalProps) {
   const { t } = useTranslation()
-  const isNonConformantEnabled = useSettingsStore((s) => s.isNonConformantEnabled)
 
   // Shared state
   const [language, setLanguage] = useState<Language>(defaultLanguage)
@@ -235,7 +233,7 @@ export function SportsHallReportWizardModal({
           }}
           onGenerate={handleGenerate}
           onDownloadPreFilled={handleDownloadPreFilled}
-          onReportIssue={isNonConformantEnabled ? handleEnterNonConformant : undefined}
+          onReportIssue={handleEnterNonConformant}
         />
       </Modal>
 

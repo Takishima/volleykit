@@ -590,11 +590,6 @@ const de: Translations = {
         'Spielberichte scannen, um Spielerlisten bei der Spielvalidierung automatisch auszufüllen',
       ocrValidationEnabled: 'OCR-Validierung ist aktiviert',
       ocrValidationDisabled: 'OCR-Validierung ist deaktiviert',
-      nonConformant: 'Hallenrapport: Mängelmeldung',
-      nonConformantDescription:
-        'Workflow zum Melden von nicht-konformen Punkten im Hallenrapport aktivieren',
-      nonConformantEnabled: 'Mängelmeldung ist aktiviert',
-      nonConformantDisabled: 'Mängelmeldung ist deaktiviert',
     },
   },
   pwa: {

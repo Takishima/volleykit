@@ -42,6 +42,9 @@ export const VALIDATION_REFERENCE_MODE_VERSION = 9
 /** Version that added settings group expansion state */
 export const SETTINGS_GROUP_EXPANDED_VERSION = 10
 
+/** Version that removed non-conformant feature gate (now always enabled) */
+export const REMOVE_NON_CONFORMANT_GATE_VERSION = 11
+
 // ============================================================================
 // Migration Type Shapes
 // ============================================================================
@@ -232,6 +235,11 @@ export function runMigrations(persisted: any, version: number): unknown {
     if (!(state as Record<string, unknown>).settingsGroupExpanded) {
       ;(state as Record<string, unknown>).settingsGroupExpanded = {}
     }
+  }
+
+  // v10 → v11: Remove non-conformant feature gate (now always enabled)
+  if (version < REMOVE_NON_CONFORMANT_GATE_VERSION) {
+    delete (state as Record<string, unknown>).isNonConformantEnabled
   }
 
   return state

@@ -442,10 +442,6 @@ export interface Translations {
       ocrValidationDescription: string
       ocrValidationEnabled: string
       ocrValidationDisabled: string
-      nonConformant: string
-      nonConformantDescription: string
-      nonConformantEnabled: string
-      nonConformantDisabled: string
     }
   }
   pwa: {

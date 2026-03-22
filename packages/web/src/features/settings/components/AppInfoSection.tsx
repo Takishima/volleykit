@@ -22,15 +22,12 @@ interface AppInfoSectionProps {
 function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const { t, locale } = useTranslation()
   const { needRefresh, isChecking, lastChecked, checkError, checkForUpdate, updateApp } = usePWA()
-  const { isOCREnabled, setOCREnabled, isNonConformantEnabled, setNonConformantEnabled } =
-    useSettingsStore(
-      useShallow((s) => ({
-        isOCREnabled: s.isOCREnabled,
-        setOCREnabled: s.setOCREnabled,
-        isNonConformantEnabled: s.isNonConformantEnabled,
-        setNonConformantEnabled: s.setNonConformantEnabled,
-      }))
-    )
+  const { isOCREnabled, setOCREnabled } = useSettingsStore(
+    useShallow((s) => ({
+      isOCREnabled: s.isOCREnabled,
+      setOCREnabled: s.setOCREnabled,
+    }))
+  )
   const isStandalone = usePwaStandalone()
 
   const platform = isStandalone ? 'PWA' : 'Web'
@@ -38,10 +35,6 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const handleToggleOCR = useCallback(() => {
     setOCREnabled(!isOCREnabled)
   }, [isOCREnabled, setOCREnabled])
-
-  const handleToggleNonConformant = useCallback(() => {
-    setNonConformantEnabled(!isNonConformantEnabled)
-  }, [isNonConformantEnabled, setNonConformantEnabled])
 
   const formatLastChecked = useCallback(
     (date: Date) => {
@@ -141,23 +134,6 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t('settings.experimental.description')}
         </p>
-
-        {/* Non-conformant sports hall report toggle */}
-        <SettingsItem
-          label={t('settings.experimental.nonConformant')}
-          description={t('settings.experimental.nonConformantDescription')}
-          status={
-            isNonConformantEnabled
-              ? t('settings.experimental.nonConformantEnabled')
-              : t('settings.experimental.nonConformantDisabled')
-          }
-        >
-          <ToggleSwitch
-            checked={isNonConformantEnabled}
-            onChange={handleToggleNonConformant}
-            label={t('settings.experimental.nonConformant')}
-          />
-        </SettingsItem>
 
         {/* OCR POC standalone app link (features.ocrPoc) */}
         {features.ocrPoc && (
