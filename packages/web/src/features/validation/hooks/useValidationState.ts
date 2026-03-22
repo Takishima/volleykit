@@ -7,7 +7,7 @@ import { gameDetailOptions } from '@/api/queryOptions'
 import type { ValidatedPersonSearchResult } from '@/api/validation'
 import { useAuthStore } from '@/common/stores/auth'
 import type { PendingScorerData } from '@/common/stores/demo'
-import type { RosterPanelModifications } from '@/features/validation/components/RosterVerificationPanel'
+import type { RosterPanelModifications } from '@/features/validation/roster/components/RosterVerificationPanel'
 
 import {
   type ValidationState,

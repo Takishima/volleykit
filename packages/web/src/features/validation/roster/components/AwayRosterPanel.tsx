@@ -4,11 +4,11 @@ import type { Assignment, NominationList } from '@/api/client'
 import type {
   RosterModifications,
   CoachModifications,
-} from '@/features/validation/hooks/useNominationList'
+} from '@/features/validation/roster/hooks/useNominationList'
 
 import { RosterVerificationPanel, type RosterPanelModifications } from './RosterVerificationPanel'
 
-interface HomeRosterPanelProps {
+interface AwayRosterPanelProps {
   assignment: Assignment
   onModificationsChange?: (modifications: RosterPanelModifications) => void
   onAddPlayerSheetOpenChange?: (isOpen: boolean) => void
@@ -22,7 +22,7 @@ interface HomeRosterPanelProps {
   prefetchedNominationList?: NominationList | null
 }
 
-export function HomeRosterPanel({
+export function AwayRosterPanel({
   assignment,
   onModificationsChange,
   onAddPlayerSheetOpenChange,
@@ -30,14 +30,14 @@ export function HomeRosterPanel({
   initialModifications,
   initialCoachModifications,
   prefetchedNominationList,
-}: HomeRosterPanelProps) {
-  const { homeTeam } = getTeamNames(assignment)
+}: AwayRosterPanelProps) {
+  const { awayTeam } = getTeamNames(assignment)
   const gameId = assignment.refereeGame?.game?.__identity ?? ''
 
   return (
     <RosterVerificationPanel
-      team="home"
-      teamName={homeTeam}
+      team="away"
+      teamName={awayTeam}
       gameId={gameId}
       onModificationsChange={onModificationsChange}
       onAddPlayerSheetOpenChange={onAddPlayerSheetOpenChange}

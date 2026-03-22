@@ -13,7 +13,7 @@ import { X, Check, RotateCcw, RotateCw, AlertCircle } from '@/common/components/
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
 
-import { getCroppedImage } from '../utils/image-crop'
+import { getCroppedImage } from '../../utils/image-crop'
 
 import type { Area, Point } from 'react-easy-crop'
 

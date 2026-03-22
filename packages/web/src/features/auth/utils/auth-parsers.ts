@@ -12,6 +12,7 @@ import {
   extractCsrfTokenFromPage,
   isDashboardHtmlContent,
 } from '@volleykit/shared/auth'
+
 import { captureSessionToken, getSessionHeaders } from '@/api/client'
 import { authLogger as logger } from '@/common/utils/auth-log-buffer'
 

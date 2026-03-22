@@ -3,7 +3,7 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ParsedGameSheet, OCRResult } from '@/features/ocr'
 
 import { OCRImageOverlay } from './OCRImageOverlay'
-import { RawTeamData } from './RawTeamData'
+import { RawTeamData } from '../../roster/components/RawTeamData'
 
 interface RawOcrDataPanelProps {
   data: ParsedGameSheet

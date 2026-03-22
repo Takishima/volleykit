@@ -5,7 +5,7 @@ import type {
   RosterModifications,
   CoachModifications,
   CoachRole,
-} from '@/features/validation/hooks/useNominationList'
+} from '@/features/validation/roster/hooks/useNominationList'
 
 import { validateRoster, validateBothRosters, MIN_PLAYERS_REQUIRED } from './roster-validation'
 

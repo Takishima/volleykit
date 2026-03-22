@@ -38,7 +38,7 @@ const mockScorers: ValidatedPersonSearchResult[] = [
   },
 ]
 
-vi.mock('@/features/validation/hooks/useScorerSearch', () => ({
+vi.mock('@/features/validation/scorer/hooks/useScorerSearch', () => ({
   useScorerSearch: vi.fn(() => ({
     data: mockScorers,
     isLoading: false,
@@ -310,7 +310,7 @@ describe('ScorerSearchPanel - Loading State', () => {
   })
 
   it('shows loading spinner when search is loading', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -344,7 +344,7 @@ describe('ScorerSearchPanel - Error State', () => {
   })
 
   it('shows error message when search fails', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -380,7 +380,7 @@ describe('ScorerSearchPanel - Empty Results', () => {
   })
 
   it('shows no results message when search returns empty', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: [],
       isLoading: false,
@@ -407,7 +407,7 @@ describe('ScorerSearchPanel - Keyboard Navigation', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: mockScorers,
       isLoading: false,
@@ -611,7 +611,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: mockScorers,
       isLoading: false,
@@ -652,7 +652,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
   })
 
   it('announces singular result count', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: [mockScorers[0]!],
       isLoading: false,
@@ -676,7 +676,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
   })
 
   it('does not announce when loading', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -700,7 +700,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
   })
 
   it('does not announce when error occurs', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -724,7 +724,7 @@ describe('ScorerSearchPanel - Screen Reader Announcements', () => {
   })
 
   it('announces zero results found', async () => {
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: [],
       isLoading: false,
@@ -752,7 +752,7 @@ describe('ScorerSearchPanel - ARIA Attributes', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-    const { useScorerSearch } = await import('@/features/validation/hooks/useScorerSearch')
+    const { useScorerSearch } = await import('@/features/validation/scorer/hooks/useScorerSearch')
     vi.mocked(useScorerSearch).mockReturnValue({
       data: mockScorers,
       isLoading: false,

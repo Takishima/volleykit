@@ -3,8 +3,8 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore } from '@/common/stores/auth'
 import { BYTES_PER_KB, BYTES_PER_MB } from '@/common/utils/constants'
 
+import { isImageUrl } from '../../utils/scoresheet'
 import { useFileUpload } from '../hooks/useFileUpload'
-import { isImageUrl } from '../utils/scoresheet'
 
 interface ScoresheetPanelProps {
   /** Callback when scoresheet state changes */

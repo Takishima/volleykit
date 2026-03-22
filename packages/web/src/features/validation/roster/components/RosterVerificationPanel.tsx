@@ -13,7 +13,7 @@ import {
   type CoachRole,
   type CoachInfo,
   type CoachModifications,
-} from '@/features/validation/hooks/useNominationList'
+} from '@/features/validation/roster/hooks/useNominationList'
 
 import { AddCoachSheet } from './AddCoachSheet'
 import { AddPlayerSheet } from './AddPlayerSheet'

@@ -7,7 +7,7 @@ import { ResponsiveSheet } from '@/common/components/ResponsiveSheet'
 import { useDebouncedValue } from '@/common/hooks/useDebouncedValue'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { formatRosterEntries, getMaxLastNameWidth } from '@/common/utils/date-helpers'
-import { usePossiblePlayerNominations } from '@/features/validation/hooks/usePlayerNominations'
+import { usePossiblePlayerNominations } from '@/features/validation/roster/hooks/usePlayerNominations'
 
 // Delay before focusing search input to ensure the sheet animation has started
 const FOCUS_DELAY_MS = 100

@@ -6,10 +6,10 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import { useOCRScoresheet, compareRosters } from '@/features/ocr'
 import type { ParsedGameSheet, ParsedTeam, PlayerComparisonResult } from '@/features/ocr'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
 import { OCRCaptureModal } from './OCRCaptureModal'
-import { PlayerComparisonList } from './PlayerComparisonList'
+import { PlayerComparisonList } from '../../roster/components/PlayerComparisonList'
 
 type OCRPanelStep = 'capture' | 'processing' | 'results' | 'error'
 

@@ -3,12 +3,12 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { Assignment } from '@/api/client'
-import * as useNominationListModule from '@/features/validation/hooks/useNominationList'
+import * as useNominationListModule from '@/features/validation/roster/hooks/useNominationList'
 
-import { AwayRosterPanel } from './AwayRosterPanel'
-import { HomeRosterPanel } from './HomeRosterPanel'
-import { ScorerPanel } from './ScorerPanel'
-import { ScoresheetPanel } from './ScoresheetPanel'
+import { AwayRosterPanel } from '../roster/components/AwayRosterPanel'
+import { HomeRosterPanel } from '../roster/components/HomeRosterPanel'
+import { ScorerPanel } from '../scorer/components/ScorerPanel'
+import { ScoresheetPanel } from '../ocr/components/ScoresheetPanel'
 
 // Test constants
 const TWO_KILOBYTES = 2 * 1024
@@ -16,7 +16,7 @@ const TWO_MEGABYTES = 2 * 1024 * 1024
 // Time to advance past SIMULATED_UPLOAD_DURATION_MS (1500ms) to complete upload
 const TIMER_ADVANCE_MS = 2000
 
-vi.mock('@/features/validation/hooks/useNominationList')
+vi.mock('@/features/validation/roster/hooks/useNominationList')
 
 function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
   return {
@@ -142,7 +142,7 @@ describe('AwayRosterPanel', () => {
   })
 })
 
-vi.mock('@/features/validation/hooks/useScorerSearch', () => ({
+vi.mock('@/features/validation/scorer/hooks/useScorerSearch', () => ({
   useScorerSearch: vi.fn(() => ({
     data: undefined,
     isLoading: false,

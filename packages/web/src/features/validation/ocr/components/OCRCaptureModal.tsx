@@ -6,7 +6,7 @@ import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
 
 import { ImageCropEditor } from './ImageCropEditor'
 import { ScoresheetGuide } from './ScoresheetGuide'
-import { calculateGuideCropArea, cropCanvasToArea } from '../utils/image-crop'
+import { calculateGuideCropArea, cropCanvasToArea } from '../../utils/image-crop'
 
 const MAX_FILE_SIZE_MB = 10
 const BYTES_PER_KB = 1024

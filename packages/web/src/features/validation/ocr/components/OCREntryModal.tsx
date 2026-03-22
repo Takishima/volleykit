@@ -10,7 +10,7 @@ import {
 } from '@/features/ocr'
 import type { ParsedGameSheet, ParsedOfficial, OCRResult } from '@/features/ocr'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
 import { OCRCaptureModal } from './OCRCaptureModal'
 import { OCRErrorStep } from './OCRErrorStep'

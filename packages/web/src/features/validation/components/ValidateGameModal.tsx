@@ -11,8 +11,8 @@ import { WizardStepIndicator } from '@/common/components/WizardStepIndicator'
 import { features } from '@/common/config/features'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { useSettingsStore } from '@/common/stores/settings'
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
 import { useValidateGameWizard } from '@/features/validation/hooks/useValidateGameWizard'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
 import {
   UnsavedChangesDialog,

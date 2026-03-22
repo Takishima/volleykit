@@ -8,7 +8,7 @@ import type {
   RosterModifications,
   CoachModifications,
   CoachRole,
-} from '@/features/validation/hooks/useNominationList'
+} from '@/features/validation/roster/hooks/useNominationList'
 
 const logger = createLogger('ValidationApi')
 

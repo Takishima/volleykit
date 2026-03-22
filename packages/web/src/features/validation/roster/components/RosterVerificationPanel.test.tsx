@@ -2,12 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import * as useNominationListModule from '@/features/validation/hooks/useNominationList'
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
+import * as useNominationListModule from '@/features/validation/roster/hooks/useNominationList'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
 import { RosterVerificationPanel } from './RosterVerificationPanel'
 
-vi.mock('@/features/validation/hooks/useNominationList')
+vi.mock('@/features/validation/roster/hooks/useNominationList')
 
 const mockPlayers: RosterPlayer[] = [
   {

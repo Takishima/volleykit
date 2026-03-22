@@ -2,9 +2,9 @@ import { CheckCircle } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ParsedGameSheet, OCRResult, PlayerComparisonResult } from '@/features/ocr'
 
-import { CollapsibleSection } from './CollapsibleSection'
-import { PlayerComparisonList } from './PlayerComparisonList'
 import { RawOcrDataPanel } from './RawOcrDataPanel'
+import { CollapsibleSection } from '../../components/CollapsibleSection'
+import { PlayerComparisonList } from '../../roster/components/PlayerComparisonList'
 
 /** Comparison result for a single team */
 export interface TeamComparison {

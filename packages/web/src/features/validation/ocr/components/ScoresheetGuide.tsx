@@ -16,7 +16,7 @@ import {
   ELECTRONIC_GUIDE_WIDTH_PERCENT,
   MANUSCRIPT_GUIDE_WIDTH_PERCENT,
   GUIDE_ASPECT_RATIO,
-} from '../constants/scoresheet-guide'
+} from '../../constants/scoresheet-guide'
 
 interface ScoresheetGuideProps {
   /** Type of scoresheet being captured */

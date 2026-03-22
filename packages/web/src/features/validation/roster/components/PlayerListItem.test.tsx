@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 
-import type { RosterPlayer } from '@/features/validation/hooks/useNominationList'
+import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
 import { PlayerListItem, type PlayerDisplayData } from './PlayerListItem'
 
