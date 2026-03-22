@@ -153,7 +153,7 @@ async function clearAll(): Promise<void> {
   try {
     const allKeys = await AsyncStorage.getAllKeys()
     const cacheKeys = allKeys.filter((key) => key.startsWith('cache_'))
-    await AsyncStorage.removeMany(cacheKeys)
+    await AsyncStorage.multiRemove([...cacheKeys])
   } catch (error) {
     console.error('Failed to clear all cache:', error)
   }
@@ -166,10 +166,10 @@ async function getCacheSize(): Promise<number> {
   try {
     const allKeys = await AsyncStorage.getAllKeys()
     const cacheKeys = allKeys.filter((key) => key.startsWith('cache_'))
-    const items = await AsyncStorage.getMany(cacheKeys)
+    const items = await AsyncStorage.multiGet([...cacheKeys])
 
     let totalSize = 0
-    for (const value of Object.values(items)) {
+    for (const [, value] of items) {
       if (value) {
         totalSize += new Blob([value]).size
       }
