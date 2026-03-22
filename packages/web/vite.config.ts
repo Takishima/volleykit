@@ -429,35 +429,32 @@ export default defineConfig(({ mode }) => {
               {
                 // Cache direct API responses (development/direct access)
                 urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
-                handler: 'NetworkFirst',
+                handler: 'StaleWhileRevalidate',
                 options: {
                   cacheName: 'api-cache',
                   expiration: {
                     maxEntries: 500,
-                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
                   },
                   cacheableResponse: {
                     statuses: [0, 200],
                   },
-                  // Reduced from 10s to 5s for faster offline fallback
-                  networkTimeoutSeconds: 5,
                 },
               },
               {
                 // Cache CORS proxy responses (production)
                 // Uses same strategy as direct API for consistency
                 urlPattern: /^https:\/\/api\.volleykit\.ch\/.*/i,
-                handler: 'NetworkFirst',
+                handler: 'StaleWhileRevalidate',
                 options: {
                   cacheName: 'proxy-api-cache',
                   expiration: {
                     maxEntries: 500,
-                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
                   },
                   cacheableResponse: {
                     statuses: [0, 200],
                   },
-                  networkTimeoutSeconds: 5,
                 },
               },
               // Google Fonts caching rule removed — no external fonts are loaded.

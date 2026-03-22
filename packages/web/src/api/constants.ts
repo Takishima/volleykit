@@ -6,9 +6,15 @@
 
 import { BYTES_PER_MB } from '@/common/utils/constants'
 
+export { getApiBaseUrl } from './proxy-resilience'
+
 /**
  * Base URL for API requests through the CORS proxy.
  * Empty string for relative URLs (local dev or when proxy is not configured).
+ *
+ * Note: For resilient proxy access with failover, use getApiBaseUrl() instead.
+ * This static constant is kept for backward compatibility in contexts where
+ * failover is not needed (e.g., one-off URL construction).
  */
 export const API_BASE_URL = import.meta.env.VITE_API_PROXY_URL || ''
 

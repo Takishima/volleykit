@@ -11,13 +11,13 @@
 
 import { HttpStatus } from '@/common/utils/constants'
 
-import { API_BASE_URL } from './constants'
 import { parseErrorResponse } from './error-handling'
 import { buildFormData } from './form-serialization'
 import { NetworkError, ServiceUnavailableError } from './network-errors'
+import { getApiBaseUrl, reportProxyFailure, reportProxySuccess } from './proxy-resilience'
 import { captureSessionToken, getSessionHeaders, clearSession } from './session'
 
-if (!import.meta.env.DEV && !API_BASE_URL) {
+if (!import.meta.env.DEV && !getApiBaseUrl()) {
   console.warn('VITE_API_PROXY_URL is not configured for production. API calls will fail.')
 }
 
@@ -74,6 +74,27 @@ async function fetchWithNetworkErrorHandling(
 }
 
 /**
+ * Wraps an API call with proxy failover. If the request fails with a network error,
+ * reports the failure and retries once with the rotated proxy URL (if available).
+ */
+async function fetchWithProxyFailover<T>(fn: (baseUrl: string) => Promise<T>): Promise<T> {
+  const baseUrl = getApiBaseUrl()
+  try {
+    const result = await fn(baseUrl)
+    reportProxySuccess()
+    return result
+  } catch (error) {
+    if (error instanceof NetworkError && error.isOnline) {
+      const rotated = reportProxyFailure()
+      if (rotated) {
+        return fn(getApiBaseUrl())
+      }
+    }
+    throw error
+  }
+}
+
+/**
  * Parse a JSON response, detecting stale sessions that return HTML login pages.
  */
 function parseJsonResponse<T>(response: Response, method: string, endpoint: string): Promise<T> {
@@ -120,34 +141,36 @@ export async function apiRequest<T>(
   body?: Record<string, unknown>,
   requestContentType?: string
 ): Promise<T> {
-  let url = `${API_BASE_URL}${endpoint}`
+  return fetchWithProxyFailover(async (baseUrl) => {
+    let url = `${baseUrl}${endpoint}`
 
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-    ...getSessionHeaders(),
-  }
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      ...getSessionHeaders(),
+    }
 
-  if (method === 'GET' && body) {
-    const params = buildFormData(body, { includeCsrfToken: false })
-    url = `${url}?${params.toString()}`
-  }
+    if (method === 'GET' && body) {
+      const params = buildFormData(body, { includeCsrfToken: false })
+      url = `${url}?${params.toString()}`
+    }
 
-  if (method !== 'GET' && body) {
-    headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
-  }
+    if (method !== 'GET' && body) {
+      headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
+    }
 
-  const response = await fetchWithNetworkErrorHandling(url, {
-    method,
-    headers,
-    credentials: 'include',
-    // Explicitly convert URLSearchParams to string to ensure correct serialization
-    // on iOS Safari PWA where passing URLSearchParams with a non-default Content-Type
-    // (e.g. text/plain) may result in an empty or malformed request body.
-    body: method !== 'GET' && body ? buildFormData(body).toString() : undefined,
+    const response = await fetchWithNetworkErrorHandling(url, {
+      method,
+      headers,
+      credentials: 'include',
+      // Explicitly convert URLSearchParams to string to ensure correct serialization
+      // on iOS Safari PWA where passing URLSearchParams with a non-default Content-Type
+      // (e.g. text/plain) may result in an empty or malformed request body.
+      body: method !== 'GET' && body ? buildFormData(body).toString() : undefined,
+    })
+
+    await handleResponse(response, method, endpoint)
+    return parseJsonResponse<T>(response, method, endpoint)
   })
-
-  await handleResponse(response, method, endpoint)
-  return parseJsonResponse<T>(response, method, endpoint)
 }
 
 /**
@@ -161,17 +184,19 @@ export async function apiRequest<T>(
  * @returns Parsed JSON response
  */
 export async function apiRequestFormData<T>(endpoint: string, formData: FormData): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`
+  return fetchWithProxyFailover(async (baseUrl) => {
+    const url = `${baseUrl}${endpoint}`
 
-  const response = await fetchWithNetworkErrorHandling(url, {
-    method: 'POST',
-    credentials: 'include',
-    headers: getSessionHeaders(),
-    body: formData,
+    const response = await fetchWithNetworkErrorHandling(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: getSessionHeaders(),
+      body: formData,
+    })
+
+    await handleResponse(response, 'POST', endpoint)
+    return parseJsonResponse<T>(response, 'POST', endpoint)
   })
-
-  await handleResponse(response, 'POST', endpoint)
-  return parseJsonResponse<T>(response, 'POST', endpoint)
 }
 
 /**
@@ -191,18 +216,20 @@ export async function apiRequestVoid(
   body: string,
   contentType: string = 'application/x-www-form-urlencoded'
 ): Promise<void> {
-  const url = `${API_BASE_URL}${endpoint}`
+  return fetchWithProxyFailover(async (baseUrl) => {
+    const url = `${baseUrl}${endpoint}`
 
-  const response = await fetchWithNetworkErrorHandling(url, {
-    method,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': contentType,
-      ...getSessionHeaders(),
-    },
-    credentials: 'include',
-    body,
+    const response = await fetchWithNetworkErrorHandling(url, {
+      method,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': contentType,
+        ...getSessionHeaders(),
+      },
+      credentials: 'include',
+      body,
+    })
+
+    await handleResponse(response, method, endpoint)
   })
-
-  await handleResponse(response, method, endpoint)
 }
