@@ -56,7 +56,8 @@ function getFeatureNames(): string[] {
 const VALUE_BARREL_IMPORT_PATTERN = /^import\s+\{[^}]+\}\s+from\s+['"]@\/features\/([^/'"]+)['"]/gm
 
 /** Matches type-only barrel imports (safe — erased at compile time) */
-const TYPE_BARREL_IMPORT_PATTERN = /^import\s+type\s+\{[^}]+\}\s+from\s+['"]@\/features\/([^/'"]+)['"]/gm
+const TYPE_BARREL_IMPORT_PATTERN =
+  /^import\s+type\s+\{[^}]+\}\s+from\s+['"]@\/features\/([^/'"]+)['"]/gm
 
 describe('Feature isolation — no cross-feature barrel imports', () => {
   const featureNames = getFeatureNames()
@@ -90,7 +91,10 @@ describe('Feature isolation — no cross-feature barrel imports', () => {
           )
         }
 
-        expect(violations, `Cross-feature barrel imports found in ${relPath}:\n${violations.join('\n')}`).toEqual([])
+        expect(
+          violations,
+          `Cross-feature barrel imports found in ${relPath}:\n${violations.join('\n')}`
+        ).toEqual([])
       })
     }
   }
