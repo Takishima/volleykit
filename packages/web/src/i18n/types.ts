@@ -455,6 +455,14 @@ export interface Translations {
     reloadAriaLabel: string
     dismissAriaLabel: string
     closeAriaLabel: string
+    serviceWorkerUnavailable: string
+    serviceWorkerUnavailableDescription: string
+  }
+  network: {
+    serverUnreachable: string
+    serviceTemporarilyUnavailable: string
+    serviceUnavailableDescription: string
+    openVolleyManager: string
   }
   offline: {
     youAreOffline: string

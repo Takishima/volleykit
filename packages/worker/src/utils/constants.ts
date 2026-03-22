@@ -2,8 +2,18 @@
  * Shared constants and utility functions for the VolleyKit CORS Proxy Worker.
  */
 
-/** Custom User-Agent to identify VolleyKit traffic */
-export const VOLLEYKIT_USER_AGENT = 'VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)'
+/** Default User-Agent to identify VolleyKit traffic.
+ * Can be overridden via the CUSTOM_USER_AGENT env var in wrangler.toml
+ * without a code deploy — useful if the upstream blocks this string. */
+export const DEFAULT_USER_AGENT = 'VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)'
+
+/**
+ * Returns the User-Agent to use for upstream requests.
+ * Prefers the CUSTOM_USER_AGENT env var if set, otherwise falls back to the default.
+ */
+export function getUserAgent(env: { CUSTOM_USER_AGENT?: string }): string {
+  return env.CUSTOM_USER_AGENT || DEFAULT_USER_AGENT
+}
 
 /**
  * Header for iOS Safari PWA session token capture.

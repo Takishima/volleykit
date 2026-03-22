@@ -582,6 +582,17 @@ const en: Translations = {
     reloadAriaLabel: 'Reload application to update to the latest version',
     dismissAriaLabel: 'Dismiss update notification',
     closeAriaLabel: 'Close notification',
+    serviceWorkerUnavailable: 'Offline mode unavailable',
+    serviceWorkerUnavailableDescription:
+      'Offline access and automatic updates are not available. This may be due to private browsing or browser settings.',
+  },
+  network: {
+    serverUnreachable:
+      'Cannot reach the server. Check your internet connection or try again later.',
+    serviceTemporarilyUnavailable: 'Service temporarily unavailable',
+    serviceUnavailableDescription:
+      'The VolleyKit proxy is currently unavailable. You can access your data directly on VolleyManager.',
+    openVolleyManager: 'Open VolleyManager',
   },
   offline: {
     youAreOffline: 'You are offline',

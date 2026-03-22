@@ -1,6 +1,6 @@
 import type { Env } from '../types'
 import { corsHeaders, securityHeaders } from '../middleware'
-import { extractICalCode, isValidICalCode, VOLLEYKIT_USER_AGENT } from '../utils'
+import { extractICalCode, getUserAgent, isValidICalCode } from '../utils'
 
 /**
  * Handle iCal proxy route: GET/HEAD /iCal/referee/:code
@@ -53,7 +53,7 @@ export async function handleICal(
     const iCalResponse = await fetch(iCalTargetUrl, {
       method: 'GET',
       headers: {
-        'User-Agent': VOLLEYKIT_USER_AGENT,
+        'User-Agent': getUserAgent(env),
         Accept: 'text/calendar',
       },
     })

@@ -14,6 +14,7 @@ import { HttpStatus } from '@/common/utils/constants'
 import { API_BASE_URL } from './constants'
 import { parseErrorResponse } from './error-handling'
 import { buildFormData } from './form-serialization'
+import { NetworkError, ServiceUnavailableError } from './network-errors'
 import { captureSessionToken, getSessionHeaders, clearSession } from './session'
 
 if (!import.meta.env.DEV && !API_BASE_URL) {
@@ -40,8 +41,35 @@ async function handleResponse(response: Response, method: string, endpoint: stri
       clearSession()
       throw new Error('Session expired. Please log in again.')
     }
+
+    // 503 Service Unavailable — typically the Worker kill switch is active.
+    // Throw a typed error so the UI can show a specific "service unavailable" message
+    // directing users to volleymanager.volleyball.ch.
+    if (response.status === HttpStatus.SERVICE_UNAVAILABLE) {
+      throw new ServiceUnavailableError()
+    }
+
     const errorMessage = await parseErrorResponse(response)
     throw new Error(`${method} ${endpoint}: ${errorMessage}`)
+  }
+}
+
+/**
+ * Wraps a fetch call to convert network-level TypeError into a typed NetworkError.
+ * Distinguishes "device is offline" from "server is unreachable" for better UX.
+ */
+async function fetchWithNetworkErrorHandling(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  try {
+    return await fetch(input, init)
+  } catch (error) {
+    // TypeError is thrown by fetch() for network failures (DNS, connection refused, etc.)
+    if (error instanceof TypeError) {
+      throw new NetworkError(navigator.onLine)
+    }
+    throw error
   }
 }
 
@@ -108,7 +136,7 @@ export async function apiRequest<T>(
     headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
   }
 
-  const response = await fetch(url, {
+  const response = await fetchWithNetworkErrorHandling(url, {
     method,
     headers,
     credentials: 'include',
@@ -135,7 +163,7 @@ export async function apiRequest<T>(
 export async function apiRequestFormData<T>(endpoint: string, formData: FormData): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
 
-  const response = await fetch(url, {
+  const response = await fetchWithNetworkErrorHandling(url, {
     method: 'POST',
     credentials: 'include',
     headers: getSessionHeaders(),
@@ -165,7 +193,7 @@ export async function apiRequestVoid(
 ): Promise<void> {
   const url = `${API_BASE_URL}${endpoint}`
 
-  const response = await fetch(url, {
+  const response = await fetchWithNetworkErrorHandling(url, {
     method,
     headers: {
       Accept: 'application/json',

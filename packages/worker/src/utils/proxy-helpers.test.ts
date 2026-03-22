@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   CORS_PREFLIGHT_MAX_AGE_SECONDS,
   KILL_SWITCH_RETRY_AFTER_SECONDS,
-  VOLLEYKIT_USER_AGENT,
+  DEFAULT_USER_AGENT,
   checkKillSwitch,
 } from './constants'
 import { isAllowedPath } from './path-validation'
@@ -102,23 +102,23 @@ describe('Rate Limiting', () => {
 describe('User-Agent Header', () => {
   it('sets custom User-Agent for upstream requests', () => {
     // Verify the expected User-Agent string format
-    expect(VOLLEYKIT_USER_AGENT).toBe('VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)')
+    expect(DEFAULT_USER_AGENT).toBe('VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)')
   })
 
   it('User-Agent identifies the app as VolleyKit', () => {
-    expect(VOLLEYKIT_USER_AGENT).toContain('VolleyKit')
+    expect(DEFAULT_USER_AGENT).toContain('VolleyKit')
   })
 
   it('User-Agent includes version number', () => {
-    expect(VOLLEYKIT_USER_AGENT).toMatch(/VolleyKit\/\d+\.\d+/)
+    expect(DEFAULT_USER_AGENT).toMatch(/VolleyKit\/\d+\.\d+/)
   })
 
   it('User-Agent indicates PWA nature', () => {
-    expect(VOLLEYKIT_USER_AGENT).toContain('PWA')
+    expect(DEFAULT_USER_AGENT).toContain('PWA')
   })
 
   it('User-Agent includes contact/project URL', () => {
-    expect(VOLLEYKIT_USER_AGENT).toMatch(/https?:\/\//)
+    expect(DEFAULT_USER_AGENT).toMatch(/https?:\/\//)
   })
 
   // Simulates how the worker modifies request headers
@@ -128,7 +128,7 @@ describe('User-Agent Header', () => {
     headers.delete('Host')
     headers.set('Host', 'volleymanager.volleyball.ch')
     // Worker sets custom User-Agent
-    headers.set('User-Agent', VOLLEYKIT_USER_AGENT)
+    headers.set('User-Agent', DEFAULT_USER_AGENT)
     return headers
   }
 
@@ -139,7 +139,7 @@ describe('User-Agent Header', () => {
 
     const proxyHeaders = prepareProxyHeaders(browserHeaders)
 
-    expect(proxyHeaders.get('User-Agent')).toBe(VOLLEYKIT_USER_AGENT)
+    expect(proxyHeaders.get('User-Agent')).toBe(DEFAULT_USER_AGENT)
     expect(proxyHeaders.get('User-Agent')).not.toContain('Mozilla')
   })
 

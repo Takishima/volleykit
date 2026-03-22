@@ -21,13 +21,24 @@ interface AppInfoSectionProps {
 
 function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
   const { t, locale } = useTranslation()
-  const { needRefresh, isChecking, lastChecked, checkError, checkForUpdate, updateApp } = usePWA()
-  const { isOCREnabled, setOCREnabled } = useSettingsStore(
-    useShallow((s) => ({
-      isOCREnabled: s.isOCREnabled,
-      setOCREnabled: s.setOCREnabled,
-    }))
-  )
+  const {
+    needRefresh,
+    isChecking,
+    lastChecked,
+    checkError,
+    registrationError,
+    checkForUpdate,
+    updateApp,
+  } = usePWA()
+  const { isOCREnabled, setOCREnabled, isNonConformantEnabled, setNonConformantEnabled } =
+    useSettingsStore(
+      useShallow((s) => ({
+        isOCREnabled: s.isOCREnabled,
+        setOCREnabled: s.setOCREnabled,
+        isNonConformantEnabled: s.isNonConformantEnabled,
+        setNonConformantEnabled: s.setNonConformantEnabled,
+      }))
+    )
   const isStandalone = usePwaStandalone()
 
   const platform = isStandalone ? 'PWA' : 'Web'
@@ -87,6 +98,22 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
             <div className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
               {t('settings.updates')}
             </div>
+
+            {/* Service worker unavailable notice */}
+            {registrationError && (
+              <div
+                className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3"
+                role="status"
+              >
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  {t('pwa.serviceWorkerUnavailable')}
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  {t('pwa.serviceWorkerUnavailableDescription')}
+                </p>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div
