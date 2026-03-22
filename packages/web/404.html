@@ -27,12 +27,13 @@
 
         // Check if this is a PR preview path (contains /pr-NUMBER/)
         // Test cases:
-        // - '/volleykit/pr-94/' -> basePath = '/volleykit/pr-94/'
-        // - '/volleykit/pr-94/login' -> basePath = '/volleykit/pr-94/'
+        // - '/pr-94/' -> basePath = '/pr-94/' (custom domain)
+        // - '/pr-94/login' -> basePath = '/pr-94/' (custom domain)
+        // - '/volleykit/pr-94/' -> basePath = '/volleykit/pr-94/' (github.io fallback)
+        // - '/volleykit/pr-94/login' -> basePath = '/volleykit/pr-94/' (github.io fallback)
         // - '/volleykit/some-route' -> basePath = '{{BASE_URL}}'
-        // - '/pr-123/' -> basePath = '/pr-123/' (edge case)
         // - '/volleykit/preview-94/' -> basePath = '{{BASE_URL}}' (not matching pr- pattern)
-        const prMatch = fullPath.match(/^(\/[^/]+\/pr-\d+\/)/);
+        const prMatch = fullPath.match(/^(\/(?:[^/]+\/)?pr-\d+\/)/);
         if (prMatch && prMatch[1]) {
           basePath = prMatch[1];
         }
