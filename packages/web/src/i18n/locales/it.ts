@@ -676,7 +676,6 @@ const it: Translations = {
         reSign: 'Ri-firmare',
         flaggedCount: '{count} di {total} segnalate',
         openInNewTab: 'Apri in una nuova scheda',
-        previewFallback: "L'anteprima non può essere visualizzata",
         downloadToView: 'Scarica per visualizzare',
         discardTitle: 'Eliminare le modifiche?',
         discardMessage: 'Le modifiche non salvate andranno perse.',

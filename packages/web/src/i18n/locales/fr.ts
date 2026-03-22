@@ -681,7 +681,6 @@ const fr: Translations = {
         reSign: 'Re-signer',
         flaggedCount: '{count} sur {total} signalées',
         openInNewTab: 'Ouvrir dans un nouvel onglet',
-        previewFallback: "L'aperçu n'a pas pu être affiché",
         downloadToView: 'Télécharger pour voir',
         discardTitle: 'Abandonner les modifications ?',
         discardMessage: 'Les modifications non enregistrées seront perdues.',

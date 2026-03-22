@@ -535,7 +535,6 @@ export interface Translations {
         reSign: string
         flaggedCount: string
         openInNewTab: string
-        previewFallback: string
         downloadToView: string
         discardTitle: string
         discardMessage: string

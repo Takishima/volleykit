@@ -686,7 +686,6 @@ const de: Translations = {
         reSign: 'Erneut unterschreiben',
         flaggedCount: '{count} von {total} beanstandet',
         openInNewTab: 'In neuem Tab öffnen',
-        previewFallback: 'Vorschau konnte nicht angezeigt werden',
         downloadToView: 'Herunterladen zum Ansehen',
         discardTitle: 'Änderungen verwerfen?',
         discardMessage: 'Nicht gespeicherte Änderungen gehen verloren.',

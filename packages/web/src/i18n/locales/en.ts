@@ -663,7 +663,6 @@ const en: Translations = {
         reSign: 'Re-sign',
         flaggedCount: '{count} of {total} flagged',
         openInNewTab: 'Open in new tab',
-        previewFallback: 'Preview could not be displayed',
         downloadToView: 'Download to view',
         discardTitle: 'Discard changes?',
         discardMessage: 'You have unsaved changes that will be lost.',

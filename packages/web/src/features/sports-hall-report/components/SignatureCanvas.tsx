@@ -159,7 +159,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
         />
 
         {/* Signature baseline guide */}
-        <div className="absolute left-8 right-8 top-[60%] border-b border-gray-200 pointer-events-none" />
+        <div className="absolute left-8 right-8 top-[60%] border-b border-border-default pointer-events-none" />
 
         {/* Center hint text (visible only when canvas is empty) */}
         {isEmpty && !isPortrait && (
