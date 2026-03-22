@@ -35,6 +35,8 @@ export default defineConfig({
       // Most specific aliases first
       // Web-app shared components resolve to PoC stubs (translation, icons)
       { find: '@/shared', replacement: path.resolve(__dirname, './src/shared') },
+      // Web-app common (renamed from shared) resolves to PoC stubs
+      { find: '@/common', replacement: path.resolve(__dirname, './src/shared') },
       // Web-app features resolve to actual web-app code
       { find: '@/features', replacement: path.resolve(__dirname, '../packages/web/src/features') },
       // PoC's own source files (must come after more specific paths)
