@@ -6,46 +6,40 @@
  * provides getApiClient() to select the right one based on the data source.
  */
 /* eslint-disable import-x/order -- Imports are split to manage circular dependencies */
-import type { components } from './schema'
-
 import { mockApi } from './mock-api'
 import { calendarApi } from '@/features/assignments/api/calendar-client'
 import { api } from './real-api'
 
-// Re-export schema types
-export type Schemas = components['schemas']
-export type Assignment = Schemas['Assignment']
-export type CompensationRecord = Schemas['CompensationRecord']
-export type ConvocationCompensationDetailed = Schemas['ConvocationCompensationDetailed']
-export type GameExchange = Schemas['GameExchange']
-export type RefereeGame = Schemas['RefereeGame']
-export type AssociationSettings = Schemas['AssociationSettings']
-export type Season = Schemas['Season']
-export type AssignmentsResponse = Schemas['AssignmentsResponse']
-export type CompensationsResponse = Schemas['CompensationsResponse']
-export type ExchangesResponse = Schemas['ExchangesResponse']
-export type NominationList = Schemas['NominationList']
-export type IndoorPlayerNomination = Schemas['IndoorPlayerNomination']
-export type PossibleNomination = Schemas['PossibleNomination']
-export type PossibleNominationsResponse = Schemas['PossibleNominationsResponse']
-export type NominationListResponse = Schemas['NominationListResponse']
-export type Scoresheet = Schemas['Scoresheet']
-export type ScoresheetValidation = Schemas['ScoresheetValidation']
-export type FileResource = Schemas['FileResource']
-export type GameDetails = Schemas['GameDetails']
-export type PersonSearchResult = Schemas['PersonSearchResult']
-export type PersonSearchResponse = Schemas['PersonSearchResponse']
-export type RefereeBackupEntry = Schemas['RefereeBackupEntry']
-export type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
-export type BackupRefereeAssignment = Schemas['BackupRefereeAssignment']
-export type PickExchangeResponse = Schemas['PickExchangeResponse']
-
-export interface PersonSearchFilter {
-  firstName?: string
-  lastName?: string
-  yearOfBirth?: string
-  associationId?: string
-}
+// Re-export all schema types from dedicated types module
+export type {
+  Schemas,
+  Assignment,
+  CompensationRecord,
+  ConvocationCompensationDetailed,
+  GameExchange,
+  RefereeGame,
+  AssociationSettings,
+  Season,
+  AssignmentsResponse,
+  CompensationsResponse,
+  ExchangesResponse,
+  NominationList,
+  IndoorPlayerNomination,
+  PossibleNomination,
+  PossibleNominationsResponse,
+  NominationListResponse,
+  Scoresheet,
+  ScoresheetValidation,
+  FileResource,
+  GameDetails,
+  PersonSearchResult,
+  PersonSearchResponse,
+  RefereeBackupEntry,
+  RefereeBackupSearchResponse,
+  BackupRefereeAssignment,
+  PickExchangeResponse,
+  PersonSearchFilter,
+} from './types'
 
 // Re-export search types from shared package (single source of truth)
 export type { SearchConfiguration, PropertyFilter, PropertyOrdering } from '@volleykit/shared/api'
