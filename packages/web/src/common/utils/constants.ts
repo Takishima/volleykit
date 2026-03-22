@@ -83,7 +83,7 @@ export const LONG_DISTANCE_KM = 60
  * otherwise intercept the request and serve the web app instead of the help site.
  *
  * Uses window.location.origin + BASE_URL to work correctly in:
- * - Production: https://takishima.github.io/volleykit/help/
+ * - Production: https://volleykit.ch/help/
  * - PR previews: https://takishima.github.io/volleykit/pr-123/help/
  * - Local dev: http://localhost:5173/help/
  *

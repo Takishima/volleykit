@@ -13,7 +13,7 @@
   // IMPORTANT FOR FORKERS: Change ALLOWED_ORIGINS to your own domain!
   // Format: "https://yourusername.github.io" (no trailing slash)
   "vars": {
-    "ALLOWED_ORIGINS": "https://takishima.github.io",
+    "ALLOWED_ORIGINS": "https://takishima.github.io,https://volleykit.ch,https://www.volleykit.ch",
     "TARGET_HOST": "https://volleymanager.volleyball.ch"
   },
 

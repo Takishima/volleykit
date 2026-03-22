@@ -30,15 +30,12 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
     checkForUpdate,
     updateApp,
   } = usePWA()
-  const { isOCREnabled, setOCREnabled, isNonConformantEnabled, setNonConformantEnabled } =
-    useSettingsStore(
-      useShallow((s) => ({
-        isOCREnabled: s.isOCREnabled,
-        setOCREnabled: s.setOCREnabled,
-        isNonConformantEnabled: s.isNonConformantEnabled,
-        setNonConformantEnabled: s.setNonConformantEnabled,
-      }))
-    )
+  const { isOCREnabled, setOCREnabled } = useSettingsStore(
+    useShallow((s) => ({
+      isOCREnabled: s.isOCREnabled,
+      setOCREnabled: s.setOCREnabled,
+    }))
+  )
   const isStandalone = usePwaStandalone()
 
   const platform = isStandalone ? 'PWA' : 'Web'

@@ -47,7 +47,7 @@ compatibility_flags = ["nodejs_compat"]
 #   - Only change if you're proxying to a different backend
 # =============================================================================
 [vars]
-ALLOWED_ORIGINS = "https://takishima.github.io"
+ALLOWED_ORIGINS = "https://takishima.github.io,https://volleykit.ch,https://www.volleykit.ch"
 TARGET_HOST = "https://volleymanager.volleyball.ch"
 # CUSTOM_USER_AGENT: Override the default User-Agent sent to the upstream API.
 # Uncomment and set this if the upstream blocks the default VolleyKit User-Agent.
