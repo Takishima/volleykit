@@ -237,3 +237,4 @@ jobs:
           publish_dir: deploy
           keep_files: false
           enable_jekyll: false
+          cname: volleykit.ch
