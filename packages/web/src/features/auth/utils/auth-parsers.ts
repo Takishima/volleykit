@@ -1,10 +1,22 @@
 /**
  * Authentication HTML parsing utilities.
  * Extracts form fields and tokens from Neos Flow login pages.
+ *
+ * Core parsing functions (extractLoginFormFields, extractCsrfTokenFromPage,
+ * isDashboardHtmlContent) are delegated to @volleykit/shared for cross-platform
+ * consistency. Web-specific functions (iOS PWA handling) remain here.
  */
 
+import {
+  extractLoginFormFields,
+  extractCsrfTokenFromPage,
+  isDashboardHtmlContent,
+} from '@volleykit/shared/auth'
 import { captureSessionToken, getSessionHeaders } from '@/api/client'
 import { authLogger as logger } from '@/common/utils/auth-log-buffer'
+
+// Re-export shared parsing functions for consumers
+export { extractLoginFormFields, extractCsrfTokenFromPage, isDashboardHtmlContent }
 
 /**
  * URL path pattern that indicates successful login redirect to dashboard.
@@ -46,121 +58,8 @@ const HTTP_REDIRECT_MAX = 400
 /** Delay in ms to allow browser to process Set-Cookie headers from redirect response */
 const COOKIE_PROCESSING_DELAY_MS = 100
 
-/**
- * Login form fields extracted from the login page HTML.
- * The Neos Flow framework requires these fields for CSRF protection.
- */
-export interface LoginFormFields {
-  trustedProperties: string
-  referrerPackage: string
-  referrerSubpackage: string
-  referrerController: string
-  referrerAction: string
-  referrerArguments: string
-}
-
-/**
- * Extract required form fields from login page HTML using DOMParser.
- * The Neos Flow framework uses __trustedProperties for CSRF protection
- * and __referrer fields for redirect handling.
- */
-export function extractLoginFormFields(html: string): LoginFormFields | null {
-  try {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(html, 'text/html')
-
-    // Check for parsing errors
-    const parserError = doc.querySelector('parsererror')
-    if (parserError) {
-      logger.error('DOMParser error:', parserError.textContent)
-      return null
-    }
-
-    // Extract all required hidden fields
-    const trustedProperties = doc
-      .querySelector('input[name="__trustedProperties"]')
-      ?.getAttribute('value')
-    const referrerPackage = doc
-      .querySelector('input[name="__referrer[@package]"]')
-      ?.getAttribute('value')
-    const referrerSubpackage = doc
-      .querySelector('input[name="__referrer[@subpackage]"]')
-      ?.getAttribute('value')
-    const referrerController = doc
-      .querySelector('input[name="__referrer[@controller]"]')
-      ?.getAttribute('value')
-    const referrerAction = doc
-      .querySelector('input[name="__referrer[@action]"]')
-      ?.getAttribute('value')
-    const referrerArguments = doc
-      .querySelector('input[name="__referrer[arguments]"]')
-      ?.getAttribute('value')
-
-    // trustedProperties is required for CSRF protection
-    if (!trustedProperties) {
-      logger.error('Missing __trustedProperties field in login form')
-      return null
-    }
-
-    return {
-      trustedProperties,
-      referrerPackage: referrerPackage ?? 'SportManager.Volleyball',
-      referrerSubpackage: referrerSubpackage ?? '',
-      referrerController: referrerController ?? 'Public',
-      referrerAction: referrerAction ?? 'login',
-      referrerArguments: referrerArguments ?? '',
-    }
-  } catch (error) {
-    logger.error('Failed to parse login page HTML:', error)
-    return null
-  }
-}
-
-/**
- * Extract CSRF token from authenticated page HTML.
- * After login, the dashboard HTML contains data-csrf-token attribute
- * which is used as __csrfToken for subsequent API calls.
- */
-export function extractCsrfTokenFromPage(html: string): string | null {
-  try {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(html, 'text/html')
-
-    // The CSRF token is in the <html> tag's data-csrf-token attribute
-    const htmlElement = doc.documentElement
-    const csrfToken = htmlElement?.getAttribute('data-csrf-token')
-
-    if (csrfToken) {
-      return csrfToken
-    }
-
-    logger.warn('Could not find data-csrf-token in page')
-    return null
-  } catch (error) {
-    logger.error('Failed to extract CSRF token from page:', error)
-    return null
-  }
-}
-
-/**
- * Checks if HTML content represents the dashboard page.
- * Used as fallback for iOS PWA standalone mode where response.url
- * may not update after redirects.
- *
- * This checks for dashboard-specific content to reliably detect
- * successful login even when response.url and response.redirected
- * are not properly set (known iOS Safari PWA limitation).
- */
-export function isDashboardHtmlContent(html: string): boolean {
-  // Dashboard pages have CSRF token AND don't have login form
-  const hasCsrfToken = html.includes('data-csrf-token')
-  const hasLoginForm =
-    html.includes('action="/login"') ||
-    (html.includes('id="username"') && html.includes('id="password"'))
-
-  // Must have CSRF token (authenticated page) and NOT be a login page
-  return hasCsrfToken && !hasLoginForm
-}
+// Re-export LoginFormFields type from shared for consumers
+export type { LoginFormFields } from '@volleykit/shared/auth'
 
 /**
  * Result of submitting login credentials.

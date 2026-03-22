@@ -26,14 +26,18 @@ import type { Occupation } from './types'
 export function extractLoginFormFields(html: string): LoginFormFields | null {
   try {
     // Extract trustedProperties (required)
-    const trustedPropsMatch = html.match(/name="__trustedProperties"\s+value="([^"]*)"/)
+    // Support both single and double quotes in HTML attributes
+    const trustedPropsMatch = html.match(
+      /name=["']__trustedProperties["']\s+value=["']([^"']*)["']/
+    )
     if (!trustedPropsMatch?.[1]) {
       return null
     }
 
     // Extract referrer fields with defaults
     const getFieldValue = (name: string, defaultValue: string): string => {
-      const regex = new RegExp(`name="${name}"\\s+value="([^"]*)"`, 'i')
+      const escaped = name.replace(/[[\]]/g, '\\$&')
+      const regex = new RegExp(`name=["']${escaped}["']\\s+value=["']([^"']*)["']`, 'i')
       const match = html.match(regex)
       return match?.[1] ?? defaultValue
     }
@@ -57,7 +61,7 @@ export function extractLoginFormFields(html: string): LoginFormFields | null {
  */
 export function extractCsrfTokenFromPage(html: string): string | null {
   try {
-    const match = html.match(/data-csrf-token="([^"]*)"/)
+    const match = html.match(/data-csrf-token=["']([^"']*)["']/)
     return match?.[1] ?? null
   } catch {
     return null

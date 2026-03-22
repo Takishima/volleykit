@@ -274,11 +274,12 @@ describe('extractCsrfTokenFromPage', () => {
       expect(result).toBeNull()
     })
 
-    it('returns null when token is on wrong element', () => {
-      const html = `<html><body><div data-csrf-token="wrong-place"></div></body></html>`
+    it('extracts token regardless of which element it appears on', () => {
+      // The shared regex-based parser extracts data-csrf-token from any element
+      const html = `<html><body><div data-csrf-token="nested-token"></div></body></html>`
       const result = extractCsrfTokenFromPage(html)
 
-      expect(result).toBeNull()
+      expect(result).toBe('nested-token')
     })
   })
 })

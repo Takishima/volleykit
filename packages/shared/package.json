@@ -22,6 +22,11 @@
       "import": "./src/api/schema.ts",
       "default": "./src/api/schema.ts"
     },
+    "./auth": {
+      "types": "./src/auth/index.ts",
+      "import": "./src/auth/index.ts",
+      "default": "./src/auth/index.ts"
+    },
     "./stores": {
       "types": "./src/stores/index.ts",
       "import": "./src/stores/index.ts",
