@@ -44,11 +44,7 @@ export interface OfflineActionStore {
   /** Get all actions with a given status */
   getActionsByStatus(status: ActionStatus): Promise<OfflineAction[]>
   /** Update an action's status and optional error message */
-  updateActionStatus(
-    id: string,
-    status: ActionStatus,
-    error?: string
-  ): Promise<void>
+  updateActionStatus(id: string, status: ActionStatus, error?: string): Promise<void>
   /** Delete a completed/abandoned action */
   deleteAction(id: string): Promise<void>
   /** Clear all actions from the queue */
