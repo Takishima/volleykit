@@ -2,7 +2,18 @@
 export { CompensationsPage } from './CompensationsPage'
 
 // Hooks
-export { useCompensations } from './hooks/useCompensations'
+export {
+  useCompensations,
+  usePaidCompensations,
+  useUnpaidCompensations,
+  useUpdateCompensation,
+  useUpdateAssignmentCompensation,
+  useBatchUpdateCompensations,
+  COMPENSATION_ERROR_KEYS,
+  type CompensationErrorKey,
+  type CompensationUpdateData,
+  type BatchUpdateResult,
+} from './hooks/useCompensations'
 export { useCompensationActions } from './hooks/useCompensationActions'
 
 // Components
