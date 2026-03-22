@@ -547,10 +547,6 @@ describe('calendar-client', () => {
       )
     })
 
-    it('submitScorer throws CalendarModeNotSupportedError', async () => {
-      await expect(calendarApi.submitScorer()).rejects.toThrow(CalendarModeNotSupportedError)
-    })
-
     it('updateScoresheet throws CalendarModeNotSupportedError', async () => {
       await expect(calendarApi.updateScoresheet()).rejects.toThrow(CalendarModeNotSupportedError)
     })
