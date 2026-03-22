@@ -5,6 +5,7 @@ import {
   CAPTURE_SESSION_TOKEN_HEADER,
   getUserAgent,
   detectSessionIssue,
+  errorResponse,
   hasAuthCredentials,
   isAllowedPath,
   isDynamicContent,
@@ -39,26 +40,12 @@ export async function handleProxy(
 ): Promise<Response> {
   // Validate pathname for security (path traversal prevention)
   if (!isPathSafe(url.pathname)) {
-    return new Response('Bad Request: Invalid path', {
-      status: 400,
-      headers: {
-        'Content-Type': 'text/plain',
-        ...corsHeaders(origin),
-        ...securityHeaders(),
-      },
-    })
+    return errorResponse(400, 'Bad Request: Invalid path', origin)
   }
 
   // Only proxy allowed paths
   if (!isAllowedPath(url.pathname)) {
-    return new Response('Not Found: Path not proxied', {
-      status: 404,
-      headers: {
-        'Content-Type': 'text/plain',
-        ...corsHeaders(origin),
-        ...securityHeaders(),
-      },
-    })
+    return errorResponse(404, 'Not Found: Path not proxied', origin)
   }
 
   // Auth lockout check - block auth requests from locked-out IPs
@@ -355,13 +342,6 @@ export async function handleProxy(
     })
   } catch (error) {
     console.error('Proxy error:', error)
-    return new Response('Proxy Error', {
-      status: 502,
-      headers: {
-        'Content-Type': 'text/plain',
-        ...corsHeaders(origin),
-        ...securityHeaders(),
-      },
-    })
+    return errorResponse(502, 'Proxy Error', origin)
   }
 }

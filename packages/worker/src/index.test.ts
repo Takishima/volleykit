@@ -2378,7 +2378,7 @@ describe('Integration: OCR Endpoint', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(405)
-    expect(await response.text()).toBe('Method Not Allowed')
+    expect(await response.json()).toEqual({ error: 'Method Not Allowed' })
     expect(response.headers.get('Allow')).toBe('POST')
   })
 
@@ -2754,7 +2754,7 @@ describe('Integration: OJP Endpoint', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(405)
-    expect(await response.text()).toBe('Method Not Allowed')
+    expect(await response.json()).toEqual({ error: 'Method Not Allowed' })
     expect(response.headers.get('Allow')).toBe('POST')
   })
 
@@ -3344,7 +3344,7 @@ describe('Upstream Error Handling', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(502)
-    expect(await response.text()).toBe('Proxy Error')
+    expect(await response.json()).toEqual({ error: 'Proxy Error' })
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
 
     vi.unstubAllGlobals()
@@ -3365,7 +3365,7 @@ describe('Upstream Error Handling', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(502)
-    expect(await response.text()).toBe('Bad Gateway: Upstream error')
+    expect(await response.json()).toEqual({ error: 'Bad Gateway: Upstream error' })
 
     vi.unstubAllGlobals()
   })
@@ -3385,7 +3385,7 @@ describe('Upstream Error Handling', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(404)
-    expect(await response.text()).toBe('Not Found: Calendar not found')
+    expect(await response.json()).toEqual({ error: 'Not Found: Calendar not found' })
 
     vi.unstubAllGlobals()
   })
@@ -3405,7 +3405,9 @@ describe('Upstream Error Handling', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(502)
-    expect(await response.text()).toBe('Bad Gateway: Unable to reach calendar service')
+    expect(await response.json()).toEqual({
+      error: 'Bad Gateway: Unable to reach calendar service',
+    })
 
     vi.unstubAllGlobals()
   })

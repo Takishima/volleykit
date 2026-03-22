@@ -34,6 +34,7 @@ const SEASON_START_DAY = 1
 const SEASON_END_DAY = 30
 
 import type {
+  ApiClient,
   SearchConfiguration,
   Assignment,
   AssignmentsResponse,
@@ -280,10 +281,6 @@ export const calendarApi = {
     throw new CalendarModeNotSupportedError('Nomination list finalization')
   },
 
-  async submitScorer(): Promise<Scoresheet> {
-    throw new CalendarModeNotSupportedError('Scorer submission')
-  },
-
   async updateScoresheet(): Promise<Scoresheet> {
     throw new CalendarModeNotSupportedError('Scoresheet updates')
   },
@@ -307,4 +304,4 @@ export const calendarApi = {
   async searchRefereeBackups(): Promise<RefereeBackupSearchResponse> {
     throw new CalendarModeNotSupportedError('Referee backups')
   },
-}
+} satisfies ApiClient

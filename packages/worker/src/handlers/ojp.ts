@@ -24,10 +24,10 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
 
   // Only allow POST for OJP
   if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', {
+    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
       status: 405,
       headers: {
-        'Content-Type': 'text/plain',
+        'Content-Type': 'application/json',
         Allow: 'POST',
         ...corsHeaders(origin),
         ...securityHeaders(),

@@ -67,7 +67,7 @@ describe('Integration: proxy handler', () => {
       )
 
       expect(response.status).toBe(400)
-      expect(await response.text()).toBe('Bad Request: Invalid path')
+      expect(await response.json()).toEqual({ error: 'Bad Request: Invalid path' })
     })
   })
 
@@ -79,7 +79,7 @@ describe('Integration: proxy handler', () => {
       const response = await worker.fetch(createRequest('/not-allowed-path'), mockEnv)
 
       expect(response.status).toBe(404)
-      expect(await response.text()).toBe('Not Found: Path not proxied')
+      expect(await response.json()).toEqual({ error: 'Not Found: Path not proxied' })
     })
 
     it('includes CORS and security headers on 404 response', async () => {
@@ -425,7 +425,7 @@ describe('Integration: proxy handler', () => {
       const response = await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
       expect(response.status).toBe(502)
-      expect(await response.text()).toBe('Proxy Error')
+      expect(await response.json()).toEqual({ error: 'Proxy Error' })
     })
   })
 })

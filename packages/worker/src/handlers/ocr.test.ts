@@ -96,7 +96,7 @@ describe('Integration: OCR Endpoint', () => {
     const response = await worker.fetch(request, mockEnv)
 
     expect(response.status).toBe(405)
-    expect(await response.text()).toBe('Method Not Allowed')
+    expect(await response.json()).toEqual({ error: 'Method Not Allowed' })
     expect(response.headers.get('Allow')).toBe('POST')
   })
 

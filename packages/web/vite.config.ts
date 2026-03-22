@@ -534,7 +534,11 @@ export default defineConfig(({ mode }) => {
         ['src/features/**/api/**/*.test.ts', 'node'],
         ['src/test/**/*.test.ts', 'node'],
       ],
-      setupFiles: ['./src/test/polyfills.ts', './src/test/setup.ts'],
+      setupFiles: [
+        './src/test/polyfills.ts',
+        './src/test/setup.ts',
+        './src/test/setup-auth-actions.ts',
+      ],
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
       // Performance: vmThreads is much faster than default forks
       pool: 'vmThreads',

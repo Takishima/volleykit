@@ -2,21 +2,10 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import { clearSession } from '@/api/session'
+import type { AttributeValue, RoleDefinition } from '@/common/types/active-party'
 import { logger } from '@/common/utils/logger'
-import { performCalendarLogin } from '@/features/auth/services/calendar-auth'
-import {
-  hasMultipleAssociations,
-  type AttributeValue,
-  type RoleDefinition,
-} from '@/features/auth/utils/active-party-parser'
-import {
-  performApiLogin,
-  performApiLogout,
-  performApiSessionCheck,
-  filterRefereeOccupations,
-  SESSION_CHECK_GRACE_PERIOD_MS,
-} from '@/features/auth/utils/api-auth-flow'
 
+import { getAuthActions } from './auth-actions-registry'
 import {
   AUTH_STORE_NAME,
   AUTH_STORE_VERSION,
@@ -26,6 +15,11 @@ import {
 } from './auth-persistence'
 import { useDemoStore } from './demo'
 import { useSettingsStore, DEMO_HOME_LOCATION } from './settings'
+
+// Re-export types so existing consumers still work
+export type { AttributeValue, RoleDefinition } from '@/common/types/active-party'
+export type { AuthActions } from './auth-actions-registry'
+export { registerAuthActions } from './auth-actions-registry'
 
 /**
  * Callback function to clear the React Query cache.
@@ -115,8 +109,11 @@ export interface AuthState {
  */
 export const CALENDAR_ASSOCIATION = 'CAL'
 
-// Re-export for consumers that import from auth store
-export { NO_REFEREE_ROLE_ERROR_KEY } from '@/features/auth/utils/api-auth-flow'
+/**
+ * Error key for users without a referee role.
+ * Defined here to avoid importing from features/.
+ */
+export const NO_REFEREE_ROLE_ERROR_KEY = 'auth.noRefereeRole'
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -139,7 +136,8 @@ export const useAuthStore = create<AuthState>()(
       login: async (username: string, password: string): Promise<boolean> => {
         set({ status: 'loading', error: null, lockedUntil: null })
         try {
-          return await performApiLogin(username, password, get, set)
+          const actions = getAuthActions()
+          return await actions.performLogin(username, password, get, set)
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Login failed'
           set({ status: 'error', error: message, lockedUntil: null })
@@ -152,7 +150,8 @@ export const useAuthStore = create<AuthState>()(
 
         // Only call server logout for API mode
         if (currentDataSource === 'api') {
-          await performApiLogout()
+          const actions = getAuthActions()
+          await actions.performLogout()
         }
 
         if (currentDataSource === 'demo') {
@@ -199,8 +198,9 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Skip session check if authentication happened very recently.
+        const actions = getAuthActions()
         const lastAuth = get()._lastAuthTimestamp
-        if (lastAuth && Date.now() - lastAuth < SESSION_CHECK_GRACE_PERIOD_MS) {
+        if (lastAuth && Date.now() - lastAuth < actions.sessionCheckGracePeriodMs) {
           logger.info('Session check: skipping, authenticated recently')
           return true
         }
@@ -224,7 +224,7 @@ export const useAuthStore = create<AuthState>()(
 
         const promise = (async () => {
           try {
-            return await performApiSessionCheck(get, set, signal)
+            return await actions.performSessionCheck(get, set, signal)
           } finally {
             set({ _checkSessionPromise: null })
           }
@@ -260,7 +260,8 @@ export const useAuthStore = create<AuthState>()(
           { id: 'demo-player', type: 'player', clubName: 'VBC Demo' },
         ]
 
-        const demoOccupations = filterRefereeOccupations(rawDemoOccupations)
+        // Filter inline for demo mode to avoid requiring auth actions registration
+        const demoOccupations = rawDemoOccupations.filter((occ) => occ.type === 'referee')
 
         set({
           status: 'authenticated',
@@ -291,7 +292,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hasMultipleAssociations: () => {
-        return hasMultipleAssociations(get().groupedEligibleAttributeValues)
+        const actions = getAuthActions()
+        return actions.hasMultipleAssociations(get().groupedEligibleAttributeValues)
       },
 
       clearStaleSession: () => {
@@ -304,7 +306,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       loginWithCalendar: async (code: string): Promise<void> => {
-        await performCalendarLogin(code, set)
+        const actions = getAuthActions()
+        await actions.performCalendarLogin(code, set)
       },
 
       logoutCalendar: async () => {

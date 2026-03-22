@@ -8,57 +8,19 @@
 
 import { z } from 'zod'
 
+import type {
+  InflatedAssociationValue,
+  AttributeValue,
+  RoleDefinition,
+} from '@/common/types/active-party'
 import { logger } from '@/common/utils/logger'
 
-/**
- * Represents an inflated association value with full details.
- */
-export interface InflatedAssociationValue {
-  __identity?: string // Some inflatedValue objects don't have __identity
-  name?: string
-  shortName?: string
-  /** Association identifier code (e.g., "912000" for SVRZ) */
-  identifier?: string
-  /**
-   * Origin ID to distinguish regional vs national associations.
-   * 0 = national (Swiss Volley), >0 = regional (e.g., 12 for SVRZ)
-   */
-  originId?: number
-}
-
-/**
- * Represents an association that a user is a member of.
- * All fields are optional because the API may return incomplete items.
- * Downstream code (parseOccupationFromActiveParty) filters out items missing required fields.
- */
-export interface AttributeValue {
-  __identity?: string
-  attributeIdentifier?: string
-  roleIdentifier?: string
-  /**
-   * Domain model type - used to distinguish association memberships from boolean flags.
-   * For associations: "SportManager\\Volleyball\\Domain\\Model\\AbstractAssociation"
-   * For player roles: "boolean"
-   */
-  type?: string
-  /** UUID reference to the association entity */
-  value?: string
-  /**
-   * Inflated value containing association details.
-   * Can be an object with association info, or a primitive value (boolean, null, string, number)
-   * for certain attribute types like boolean player flags.
-   */
-  inflatedValue?: InflatedAssociationValue | boolean | null | string | number
-}
-
-/**
- * Definition of a role in the VolleyManager system.
- */
-export interface RoleDefinition {
-  identifier: string
-  name?: string
-  packageKey?: string
-}
+// Re-export types for backward compatibility with existing consumers
+export type {
+  InflatedAssociationValue,
+  AttributeValue,
+  RoleDefinition,
+} from '@/common/types/active-party'
 
 /**
  * The activeParty data embedded in VolleyManager HTML pages.
