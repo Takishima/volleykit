@@ -53,26 +53,17 @@ jobs:
             eslint-${{ runner.os }}-
       - name: Lint
         run: pnpm run lint --cache --cache-location .eslintcache
-      # Cache Vitest results per branch
-      - name: Cache Vitest
-        uses: actions/cache@v5
-        with:
-          path: packages/web/node_modules/.vitest
-          key: vitest-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx', 'packages/web/src/**/*.test.ts', 'packages/web/src/**/*.test.tsx') }}
-          restore-keys: |
-            vitest-${{ runner.os }}-${{ github.head_ref }}-
-            vitest-${{ runner.os }}-
-      - name: Test
-        run: pnpm test
-      # Cache Vite build artifacts per branch
-      - name: Cache Vite build
+      # Cache Vite/Vitest artifacts per branch (Vitest stores cache in .vite/vitest)
+      - name: Cache Vite
         uses: actions/cache@v5
         with:
           path: packages/web/node_modules/.vite
-          key: vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx', 'packages/web/vite.config.ts') }}
+          key: vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-${{ github.head_ref }}-
             vite-${{ runner.os }}-
+      - name: Test
+        run: pnpm test
       - name: Build for PR Preview
         run: pnpm run build
         env:
