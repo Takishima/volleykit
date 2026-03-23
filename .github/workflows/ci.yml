@@ -385,7 +385,7 @@ jobs:
         with:
           node-version: '22'
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
       - name: Install changeset CLI
         run: pnpm add -g @changesets/cli
       - name: Check for changesets
