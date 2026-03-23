@@ -17,15 +17,18 @@ Single source of truth for Claude Code Review. This file is automatically loaded
 | Magic numbers          | `setTimeout(fn, 300)`   | Use named constant `ANIMATION_DURATION_MS` |
 | Array index as key     | `key={index}`           | Use unique identifier `key={item.id}`      |
 | Uncleared intervals    | No cleanup in useEffect | Return cleanup function                    |
-| `isMountedRef` pattern | Outdated (React 16/17)  | Use `AbortController`                      |
-| Functions > 30 lines   | Hard to test/maintain   | Extract to custom hooks                    |
-| > 4 parameters         | Code smell              | Use options object                         |
+| `isMountedRef` pattern          | Outdated (React 16/17)              | Use `AbortController`                      |
+| Functions > 30 lines            | Hard to test/maintain               | Extract to custom hooks                    |
+| > 4 parameters                  | Code smell                          | Use options object                         |
+| Async fn directly in component  | Violates hook extraction guideline  | Extract to a custom hook                   |
 
 ### Accessibility (Required)
 
 - Icon buttons need `aria-label`
 - Modals need `aria-modal`, `aria-labelledby`, keyboard dismiss
 - Dynamic content needs `aria-live` regions
+- `aria-hidden="true"` must **not** be placed on a wrapper that contains the dialog — it hides all descendants from AT. Keep the backdrop and dialog as siblings (see [CODE_PATTERNS.md](CODE_PATTERNS.md#modal-dialogs))
+- Submit buttons in `<form>` elements should use `type="submit"` so that pressing Enter in any field submits the form
 
 ### i18n (4 languages: de/en/fr/it)
 

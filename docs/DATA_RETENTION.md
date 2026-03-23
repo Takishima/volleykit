@@ -16,11 +16,13 @@ This data never leaves your device and is not transmitted to our servers.
 | Language preference                 | Display app in your preferred language   | Until cleared by user |
 | Safe mode setting                   | Prevent accidental actions               | Until cleared by user |
 
-### Travel Time Cache (TanStack Query cache in memory/localStorage)
+### Travel Time Cache (TanStack Query cache in memory/IndexedDB)
 
 | Data                         | Purpose                  | Retention             |
 | ---------------------------- | ------------------------ | --------------------- |
 | Travel times to sports halls | Avoid repeated API calls | 14 days, auto-expires |
+
+**Note**: TanStack Query stores data in memory by default. When the offline feature is enabled (`features.offline`), the cache is also persisted to IndexedDB via `PersistQueryClientProvider`. It is never written to localStorage.
 
 ### Authentication (`volleykit-auth` in localStorage)
 
