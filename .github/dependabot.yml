@@ -17,6 +17,25 @@ updates:
     labels:
       - "dependencies"
       - "javascript"
+    # Expo SDK pins specific versions of these packages.
+    # Do not bump them independently — upgrade via `expo install` when upgrading Expo SDK.
+    ignore:
+      - dependency-name: "@react-native-async-storage/async-storage"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-native-community/netinfo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "react-native-safe-area-context"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native-screens"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/jest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jest-expo"
+        update-types: ["version-update:semver-major"]
     groups:
       # Group all minor/patch updates into a single PR
       all-minor-patch:
