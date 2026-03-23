@@ -21,7 +21,7 @@ import {
   getSessionToken,
   setCsrfToken,
 } from '@/api/client'
-import { API_BASE_URL } from '@/api/constants'
+import { getApiBaseUrl } from '@/api/constants'
 import type { AuthState, UserProfile } from '@/common/stores/auth'
 import { logger } from '@/common/utils/logger'
 import {
@@ -40,9 +40,15 @@ import {
   parseOccupationsFromActiveParty,
 } from '@/features/auth/utils/parseOccupations'
 
-const LOGIN_PAGE_URL = `${API_BASE_URL}/login`
-const AUTH_URL = `${API_BASE_URL}/sportmanager.security/authentication/authenticate`
-const LOGOUT_URL = `${API_BASE_URL}/logout`
+function getLoginPageUrl() {
+  return `${getApiBaseUrl()}/login`
+}
+function getAuthUrl() {
+  return `${getApiBaseUrl()}/sportmanager.security/authentication/authenticate`
+}
+function getLogoutUrl() {
+  return `${getApiBaseUrl()}/logout`
+}
 const SESSION_CHECK_TIMEOUT_MS = 10_000
 /** Grace period after login during which session checks are skipped */
 const SESSION_CHECK_GRACE_PERIOD_MS = 5_000
@@ -61,7 +67,7 @@ export const NO_REFEREE_ROLE_ERROR_KEY = 'auth.noRefereeRole'
  */
 async function rejectNonRefereeUser(set: (state: Partial<AuthState>) => void): Promise<false> {
   try {
-    await fetch(LOGOUT_URL, { credentials: 'include', redirect: 'manual' })
+    await fetch(getLogoutUrl(), { credentials: 'include', redirect: 'manual' })
   } catch {
     // Ignore logout errors - we're rejecting the login anyway
   }
@@ -185,7 +191,7 @@ async function ensureSessionEstablished(): Promise<void> {
     return
   }
 
-  const response = await fetch(`${API_BASE_URL}/sportmanager.volleyball/main/dashboard`, {
+  const response = await fetch(`${getApiBaseUrl()}/sportmanager.volleyball/main/dashboard`, {
     credentials: 'include',
     cache: 'no-store',
     redirect: 'manual',
@@ -214,7 +220,7 @@ async function ensureSessionEstablished(): Promise<void> {
   }
 
   if (!getSessionToken()) {
-    const loginResponse = await fetch(LOGIN_PAGE_URL, {
+    const loginResponse = await fetch(getLoginPageUrl(), {
       credentials: 'include',
       cache: 'no-store',
       headers: getSessionHeaders(),
@@ -233,7 +239,7 @@ async function fetchLoginPageWithSessionHandling(): Promise<Response> {
     await ensureSessionEstablished()
   }
 
-  const response = await fetch(LOGIN_PAGE_URL, {
+  const response = await fetch(getLoginPageUrl(), {
     credentials: 'include',
     cache: 'no-store',
     headers: getSessionHeaders(),
@@ -288,7 +294,7 @@ export async function performApiLogin(
   if (existingCsrfToken) {
     // Already logged in - fetch dashboard to get associations
     const dashboardResponse = await fetch(
-      `${API_BASE_URL}/sportmanager.volleyball/main/dashboard`,
+      `${getApiBaseUrl()}/sportmanager.volleyball/main/dashboard`,
       {
         credentials: 'include',
         cache: 'no-store',
@@ -352,7 +358,7 @@ export async function performApiLogin(
     throw new Error('Could not extract form fields from login page')
   }
 
-  const result = await submitLoginCredentials(AUTH_URL, username, password, formFields)
+  const result = await submitLoginCredentials(getAuthUrl(), username, password, formFields)
 
   if (result.success) {
     return handleSuccessfulLoginResult(result, get, set)
@@ -371,7 +377,7 @@ export async function performApiLogin(
  */
 export async function performApiLogout(): Promise<void> {
   try {
-    await fetch(LOGOUT_URL, {
+    await fetch(getLogoutUrl(), {
       credentials: 'include',
       redirect: 'manual',
     })
@@ -408,7 +414,7 @@ export async function performApiSessionCheck(
       : timeoutController.signal
 
     try {
-      const response = await fetch(`${API_BASE_URL}/sportmanager.volleyball/main/dashboard`, {
+      const response = await fetch(`${getApiBaseUrl()}/sportmanager.volleyball/main/dashboard`, {
         credentials: 'include',
         redirect: 'follow',
         signal: fetchSignal,

@@ -7,10 +7,10 @@
  */
 
 import { captureSessionToken, getSessionHeaders } from '@/api/client'
-import { API_BASE_URL } from '@/api/constants'
+import { getApiBaseUrl } from '@/api/constants'
 
 export async function downloadCompensationPDF(compensationId: string): Promise<void> {
-  const url = `${API_BASE_URL}/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=${encodeURIComponent(compensationId)}`
+  const url = `${getApiBaseUrl()}/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses?refereeConvocation=${encodeURIComponent(compensationId)}`
 
   try {
     const response = await fetch(url, {

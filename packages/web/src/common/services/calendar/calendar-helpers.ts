@@ -13,7 +13,7 @@
  */
 
 import type { Assignment } from '@/api/client'
-import { API_BASE_URL } from '@/api/constants'
+import { getApiBaseUrl } from '@/api/constants'
 import { HttpStatus } from '@/common/utils/constants'
 
 import type { CalendarAssignment, RefereeRole, Gender } from './ical/types'
@@ -318,7 +318,7 @@ export async function validateCalendarCode(
     return { valid: false, error: 'auth.invalidCalendarCode' }
   }
 
-  const calendarUrl = `${API_BASE_URL}/iCal/referee/${code}`
+  const calendarUrl = `${getApiBaseUrl()}/iCal/referee/${code}`
 
   try {
     const response = await fetch(calendarUrl, {

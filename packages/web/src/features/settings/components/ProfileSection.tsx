@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from 'react'
 
-import { API_BASE_URL } from '@/api/constants'
+import { getApiBaseUrl } from '@/api/constants'
 import { Badge } from '@/common/components/Badge'
 import { Card, CardContent, CardHeader } from '@/common/components/Card'
 import { Calendar } from '@/common/components/icons'
@@ -9,7 +9,6 @@ import { useAuthStore } from '@/common/stores/auth'
 import type { UserProfile } from '@/common/stores/auth'
 import { getOccupationLabelKey } from '@/common/utils/occupation-labels'
 
-const API_BASE = API_BASE_URL
 
 interface ProfileSectionProps {
   user: UserProfile
@@ -70,7 +69,7 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
         params.set('propertyRenderConfiguration[6]', 'profilePicture.publicResourceUri')
 
         const response = await fetch(
-          `${API_BASE}/sportmanager.volleyball/api%5Cperson/showWithNestedObjects?${params}`,
+          `${getApiBaseUrl()}/sportmanager.volleyball/api%5Cperson/showWithNestedObjects?${params}`,
           {
             credentials: 'include',
             signal: controller.signal,
@@ -90,7 +89,7 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
               const url = new URL(fullUrl)
               // Extract just the path (e.g., /_Resources/Persistent/<hash>/image.jpg)
               // and prepend our API proxy base URL
-              setProfilePictureUrl(`${API_BASE}${url.pathname}`)
+              setProfilePictureUrl(`${getApiBaseUrl()}${url.pathname}`)
             } catch {
               // If URL parsing fails, use the original URL
               setProfilePictureUrl(fullUrl)

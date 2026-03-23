@@ -422,22 +422,23 @@ export default defineConfig(({ mode }) => {
             ],
             // Runtime caching for API responses
             // Strategy: NetworkFirst with short timeout for fast offline fallback
-            // - 5s timeout ensures responsive UX on slow connections
+            // - 3s timeout ensures responsive UX on slow connections
             // - 500 max entries supports typical user's assignment list + details
             // - 7 day expiration aligns with IndexedDB query cache
             runtimeCaching: [
               {
                 // Cache direct API responses (development/direct access)
                 urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
-                handler: 'StaleWhileRevalidate',
+                handler: 'NetworkFirst',
                 options: {
                   cacheName: 'api-cache',
+                  networkTimeoutSeconds: 3,
                   expiration: {
                     maxEntries: 500,
-                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
                   },
                   cacheableResponse: {
-                    statuses: [0, 200],
+                    statuses: [200],
                   },
                 },
               },
@@ -445,15 +446,16 @@ export default defineConfig(({ mode }) => {
                 // Cache CORS proxy responses (production)
                 // Uses same strategy as direct API for consistency
                 urlPattern: /^https:\/\/api\.volleykit\.ch\/.*/i,
-                handler: 'StaleWhileRevalidate',
+                handler: 'NetworkFirst',
                 options: {
                   cacheName: 'proxy-api-cache',
+                  networkTimeoutSeconds: 3,
                   expiration: {
                     maxEntries: 500,
-                    maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
                   },
                   cacheableResponse: {
-                    statuses: [0, 200],
+                    statuses: [200],
                   },
                 },
               },

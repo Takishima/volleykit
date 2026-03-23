@@ -87,7 +87,9 @@ async function fetchWithProxyFailover<T>(fn: (baseUrl: string) => Promise<T>): P
     if (error instanceof NetworkError && error.isOnline) {
       const rotated = reportProxyFailure()
       if (rotated) {
-        return fn(getApiBaseUrl())
+        const result = await fn(getApiBaseUrl())
+        reportProxySuccess()
+        return result
       }
     }
     throw error

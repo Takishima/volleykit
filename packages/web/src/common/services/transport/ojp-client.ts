@@ -7,7 +7,7 @@
  * Trip extraction and selection helpers are in ./ojp-trip-helpers.ts
  */
 
-import { API_BASE_URL } from '@/api/constants'
+import { getApiBaseUrl } from '@/api/constants'
 
 import {
   selectBestTrip,
@@ -55,8 +55,8 @@ async function loadOjpSdk(): Promise<typeof import('ojp-sdk-next')> {
  * Falls back to the direct endpoint if VITE_OJP_API_KEY is set (legacy/dev).
  */
 function getOjpEndpoint(): string {
-  if (API_BASE_URL) {
-    return `${API_BASE_URL}/ojp`
+  if (getApiBaseUrl()) {
+    return `${getApiBaseUrl()}/ojp`
   }
   return 'https://api.opentransportdata.swiss/ojp20'
 }
@@ -92,7 +92,7 @@ async function waitForRateLimit(): Promise<void> {
  */
 export function isOjpConfigured(): boolean {
   // Production: proxy URL is configured, key lives server-side
-  if (API_BASE_URL) {
+  if (getApiBaseUrl()) {
     return true
   }
   // Development fallback: direct API key

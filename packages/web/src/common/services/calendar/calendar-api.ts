@@ -14,7 +14,7 @@
  * - Network errors: Throws an error that should be handled by the caller
  */
 
-import { API_BASE_URL } from '@/api/constants'
+import { getApiBaseUrl } from '@/api/constants'
 import { HttpStatus } from '@/common/utils/constants'
 
 import { parseCalendarFeed, type CalendarAssignment, type ParseResult } from './ical'
@@ -84,7 +84,7 @@ export async function fetchCalendarAssignments(
 ): Promise<CalendarAssignment[]> {
   validateCodeFormat(code)
 
-  const url = `${API_BASE_URL}/iCal/referee/${code}`
+  const url = `${getApiBaseUrl()}/iCal/referee/${code}`
 
   const response = await fetch(url, {
     method: 'GET',
@@ -156,7 +156,7 @@ function sortByStartTime(assignments: CalendarAssignment[]): CalendarAssignment[
 export async function validateCalendarCode(code: string, signal?: AbortSignal): Promise<boolean> {
   validateCodeFormat(code)
 
-  const url = `${API_BASE_URL}/iCal/referee/${code}`
+  const url = `${getApiBaseUrl()}/iCal/referee/${code}`
 
   try {
     const response = await fetch(url, {

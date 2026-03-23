@@ -10,7 +10,13 @@
 
 const STORAGE_KEY = 'volleykit-active-proxy-url'
 const FAILURE_COUNT_KEY = 'volleykit-proxy-failure-count'
+const ROTATION_TIMESTAMP_KEY = 'volleykit-proxy-rotation-timestamp'
 const MAX_FAILURES_BEFORE_ROTATION = 3
+const TEN_MINUTES = 10
+const SECONDS_PER_MINUTE = 60
+const MS_PER_SECOND = 1000
+/** Try the primary proxy again after 10 minutes on a fallback */
+const PRIMARY_RETRY_TTL_MS = TEN_MINUTES * SECONDS_PER_MINUTE * MS_PER_SECOND
 
 /**
  * Build the ordered list of proxy URLs: primary + fallbacks.
@@ -40,6 +46,18 @@ export function getApiBaseUrl(): string {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored && urls.includes(stored)) {
+      // If we're on a fallback URL, check if TTL has expired to retry primary
+      const primary = urls[0] ?? ''
+      if (stored !== primary) {
+        const rotatedAt = Number(localStorage.getItem(ROTATION_TIMESTAMP_KEY) || '0')
+        if (Date.now() - rotatedAt > PRIMARY_RETRY_TTL_MS) {
+          // TTL expired — try primary again
+          localStorage.setItem(STORAGE_KEY, primary)
+          localStorage.setItem(FAILURE_COUNT_KEY, '0')
+          localStorage.removeItem(ROTATION_TIMESTAMP_KEY)
+          return primary
+        }
+      }
       return stored
     }
   } catch {
@@ -75,6 +93,7 @@ export function reportProxyFailure(): boolean {
     const nextIndex = (currentIndex + 1) % urls.length
     localStorage.setItem(STORAGE_KEY, urls[nextIndex] ?? '')
     localStorage.setItem(FAILURE_COUNT_KEY, '0')
+    localStorage.setItem(ROTATION_TIMESTAMP_KEY, String(Date.now()))
     return true
   } catch {
     // localStorage unavailable
