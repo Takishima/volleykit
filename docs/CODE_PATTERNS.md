@@ -331,13 +331,17 @@ const { data, error, isLoading } = useQuery({
 
 ## React 19 Patterns
 
-The project runs React 19 with the **React Compiler** enabled (via `@vitejs/plugin-react` v6). The compiler automatically memoizes components and hooks, so `React.memo`, `useMemo`, and `useCallback` are less critical for preventing re-renders. However, explicit `useMemo`/`useCallback` remain valid for:
+The project runs React 19 with `@vitejs/plugin-react` v6. The **React Compiler** (`babel-plugin-react-compiler`) is **not yet enabled** — it was not installed when the project was initially set up. Manual memoization therefore still applies:
 
-- Expensive computations that should be clearly marked as intentionally cached
-- Stable references for TanStack Query keys and API call parameters
-- Dependencies passed to `useEffect` that should not trigger re-runs
+- Use `React.memo` for components that re-render often with the same props
+- Use `useMemo` for expensive derived computations
+- Use `useCallback` for stable function references passed to child components or `useEffect`
 
-> **Note**: `React.memo` is not used in this codebase — the React Compiler handles component-level memoization automatically. Do not add `React.memo` wrappers.
+> **Future improvement**: Enable the React Compiler by adding `babel-plugin-react-compiler` and configuring it in `vite.config.ts`:
+> ```ts
+> react({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } })
+> ```
+> Once enabled, the compiler automatically memoizes components and hooks, and most manual `React.memo`/`useMemo`/`useCallback` calls can be removed.
 
 These React 19 hooks are available for adoption alongside existing patterns.
 
@@ -398,6 +402,23 @@ function TabBar({ onTabChange }: Props) {
 ```
 
 > Good candidates for `useTransition`: tab switches that re-filter large lists, search input that triggers expensive rendering, any state update where the current UI should remain interactive during the update.
+
+**`useDeferredValue` — delay expensive derived rendering**
+
+Where `useTransition` wraps a state update, `useDeferredValue` wraps a value. React renders the stale value first (keeping the UI responsive), then re-renders with the deferred value in the background.
+
+```typescript
+import { useDeferredValue } from 'react'
+
+function AssignmentSearch({ query }: { query: string }) {
+  // Renders instantly with the previous query while the new one is still "pending"
+  const deferredQuery = useDeferredValue(query)
+  const filtered = useMemo(() => filterAssignments(all, deferredQuery), [all, deferredQuery])
+  return <AssignmentList items={filtered} />
+}
+```
+
+> Use `useDeferredValue` when you receive a value from a parent you don't control. Use `useTransition` when you own the state update.
 
 **`useOptimistic` — instant UI feedback**
 
