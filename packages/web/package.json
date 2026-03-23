@@ -73,8 +73,8 @@
   ],
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
-    "@tanstack/react-query": "^5.94.5",
-    "@tanstack/react-query-persist-client": "^5.94.5",
+    "@tanstack/react-query": "^5.95.0",
+    "@tanstack/react-query-persist-client": "^5.95.0",
     "@volleykit/shared": "workspace:*",
     "date-fns": "^4.1.0",
     "fuse.js": "^7.1.0",
