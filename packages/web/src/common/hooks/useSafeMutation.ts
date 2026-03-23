@@ -1,4 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
+
+import { useMutation } from '@tanstack/react-query'
 
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { toast } from '@/common/stores/toast'
@@ -45,11 +47,11 @@ interface UseSafeMutationResult<TArg, TResult> {
 }
 
 /**
- * Hook that wraps async mutation functions with common patterns:
+ * Hook that wraps TanStack Query's useMutation with common patterns:
  * - Race condition protection via useRef
- * - Try-catch with logging
  * - Toast notifications for success/error
  * - Optional safe mode guard check
+ * - Visible in React Query DevTools via mutationKey
  *
  * @example
  * const { execute } = useSafeMutation(
@@ -71,7 +73,6 @@ export function useSafeMutation<TArg, TResult = void>(
   const { t } = useTranslation()
   const { guard, isDemoMode } = useSafeModeGuard()
   const isExecutingRef = useRef(false)
-  const [isExecuting, setIsExecuting] = useState(false)
 
   // Destructure options for stable dependency array
   const {
@@ -86,6 +87,26 @@ export function useSafeMutation<TArg, TResult = void>(
 
   // Initialize logger with useMemo for idiomatic lazy initialization
   const log = useMemo(() => createLogger(logContext), [logContext])
+
+  const mutation = useMutation({
+    mutationKey: ['safe-mutation', logContext],
+    mutationFn: async (arg: TArg) => mutationFn(arg, log),
+    onSuccess: (result) => {
+      if (successMessage) {
+        const shouldShowToast = !skipSuccessToastInDemoMode || !isDemoMode
+        if (shouldShowToast) {
+          toast.success(t(successMessage))
+        }
+      }
+      onSuccess?.(result)
+    },
+    onError: (error) => {
+      log.error('Operation failed:', error)
+      toast.error(t(errorMessage))
+      onError?.(error)
+    },
+    retry: false,
+  })
 
   const execute = useCallback(
     async (arg: TArg): Promise<TResult | undefined> => {
@@ -103,45 +124,18 @@ export function useSafeMutation<TArg, TResult = void>(
       }
 
       isExecutingRef.current = true
-      setIsExecuting(true)
 
       try {
-        const result = await mutationFn(arg, log)
-
-        // Success toast (skip in demo mode if configured)
-        if (successMessage) {
-          const shouldShowToast = !skipSuccessToastInDemoMode || !isDemoMode
-          if (shouldShowToast) {
-            toast.success(t(successMessage))
-          }
-        }
-
-        onSuccess?.(result)
-        return result
-      } catch (error) {
-        log.error('Operation failed:', error)
-        toast.error(t(errorMessage))
-        onError?.(error)
+        return await mutation.mutateAsync(arg)
+      } catch {
+        // Error already handled by onError callback
         return undefined
       } finally {
         isExecutingRef.current = false
-        setIsExecuting(false)
       }
     },
-    [
-      safeGuard,
-      guard,
-      log,
-      mutationFn,
-      successMessage,
-      skipSuccessToastInDemoMode,
-      isDemoMode,
-      t,
-      onSuccess,
-      errorMessage,
-      onError,
-    ]
+    [safeGuard, guard, log, mutation]
   )
 
-  return { execute, isExecuting }
+  return { execute, isExecuting: mutation.isPending }
 }

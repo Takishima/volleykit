@@ -2,6 +2,7 @@ import { memo, useActionState } from 'react'
 
 import type { GameExchange } from '@/api/client'
 import { Button } from '@/common/components/Button'
+import { FormSubmitButton } from '@/common/components/FormSubmitButton'
 import { Modal } from '@/common/components/Modal'
 import { ModalErrorBoundary } from '@/common/components/ModalErrorBoundary'
 import { ModalFooter } from '@/common/components/ModalFooter'
@@ -124,15 +125,9 @@ function ExchangeConfirmationModalComponent({
               >
                 {t('common.cancel')}
               </Button>
-              <Button
-                variant={confirmVariant}
-                className="flex-1"
-                type="submit"
-                disabled={isPending}
-                aria-busy={isPending}
-              >
+              <FormSubmitButton variant={confirmVariant} className="flex-1">
                 {isPending ? t('common.loading') : t(buttonKey)}
-              </Button>
+              </FormSubmitButton>
             </ModalFooter>
           </form>
         </div>

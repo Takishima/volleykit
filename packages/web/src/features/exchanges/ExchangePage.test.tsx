@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -77,6 +80,20 @@ vi.mock('@/common/hooks/useExchangeActions', () => ({
     handleRemoveFromExchange: vi.fn(),
   }),
 }))
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+}
+
+function renderWithQueryClient(ui: ReactNode) {
+  const queryClient = createTestQueryClient()
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
 
 function createMockExchange(overrides: Partial<GameExchange> = {}): GameExchange {
   return {
@@ -177,7 +194,7 @@ describe('ExchangePage', () => {
         } as unknown as ReturnType<typeof authStore.useAuthStore.getState>)
       )
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       // Filter menu button should be visible on Open tab
       expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument()
@@ -197,7 +214,7 @@ describe('ExchangePage', () => {
         userRefereeLevelGradationValue: 2,
       })
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       // With hideOwnExchanges enabled by default, filter button should be visible
       // Use getByRole button to find the filter menu button specifically
@@ -218,7 +235,7 @@ describe('ExchangePage', () => {
         userRefereeLevelGradationValue: 2,
       })
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       // Click on "Added by Me" tab
       fireEvent.click(screen.getByText(/added by me/i))
@@ -299,7 +316,7 @@ describe('ExchangePage', () => {
         (selector?: (state: any) => any) => (selector ? selector(stateNoHide) : stateNoHide)
       )
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       // All three exchanges should be visible (use getAllByText since they share team names)
       const exchanges = screen.getAllByText(/Team A vs Team B/i)
@@ -336,7 +353,7 @@ describe('ExchangePage', () => {
         (selector?: (state: any) => any) => (selector ? selector(stateWithFilter) : stateWithFilter)
       )
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       // Should show active filter icons and filter menu button
       expect(screen.getByRole('button', { name: /filters/i })).toBeInTheDocument()
@@ -375,7 +392,7 @@ describe('ExchangePage', () => {
         (selector?: (state: any) => any) => (selector ? selector(stateWithFilter) : stateWithFilter)
       )
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       // Should show filtered empty state message
       expect(screen.getByText(/no exchanges match your filters/i)).toBeInTheDocument()
@@ -384,7 +401,7 @@ describe('ExchangePage', () => {
 
   describe('Tab Navigation', () => {
     it('should default to Open tab', () => {
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       const openTab = screen.getByRole('tab', { name: /^open$/i })
       expect(openTab).toHaveClass('border-primary-500')
@@ -394,7 +411,7 @@ describe('ExchangePage', () => {
     it('should switch to Added by Me tab when clicked', () => {
       vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([]))
 
-      render(<ExchangePage />)
+      renderWithQueryClient(<ExchangePage />)
 
       fireEvent.click(screen.getByText(/added by me/i))
 

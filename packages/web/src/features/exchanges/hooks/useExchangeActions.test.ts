@@ -1,3 +1,6 @@
+import { createElement, type ReactNode } from 'react'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
@@ -11,6 +14,18 @@ import { toast } from '@/common/stores/toast'
 import { useExchangeActions } from './useExchangeActions'
 
 import type { UseMutationResult } from '@tanstack/react-query'
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children)
+  }
+}
 
 vi.mock('./useExchanges')
 vi.mock('@/common/stores/auth')
@@ -96,7 +111,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should initialize with closed modals', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     expect(result.current.takeOverModal.isOpen).toBe(false)
     expect(result.current.takeOverModal.exchange).toBeNull()
@@ -105,7 +120,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should open and close take over modal', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -122,7 +137,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should open and close remove from exchange modal', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.removeFromExchangeModal.open(mockExchange)
@@ -139,7 +154,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should cleanup exchange data after modal close delay', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -163,7 +178,9 @@ describe('useExchangeActions', () => {
   })
 
   it('should cleanup timeout on unmount', () => {
-    const { result, unmount } = renderHook(() => useExchangeActions())
+    const { result, unmount } = renderHook(() => useExchangeActions(), {
+      wrapper: createWrapper(),
+    })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -183,7 +200,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should clear previous timeout when closing multiple times', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.takeOverModal.open(mockExchange)
@@ -218,7 +235,7 @@ describe('useExchangeActions', () => {
     vi.useRealTimers()
     mockApplyMutate.mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleTakeOver(mockExchange)
@@ -232,7 +249,7 @@ describe('useExchangeActions', () => {
     vi.useRealTimers()
     mockApplyMutate.mockRejectedValue(new Error('Network error'))
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleTakeOver(mockExchange)
@@ -246,7 +263,7 @@ describe('useExchangeActions', () => {
     vi.useRealTimers()
     mockRemoveOwnMutate.mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleRemoveFromExchange(mockExchange)
@@ -261,7 +278,7 @@ describe('useExchangeActions', () => {
     vi.useRealTimers()
     mockRemoveOwnMutate.mockRejectedValue(new Error('Network error'))
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleRemoveFromExchange(mockExchange)
@@ -278,7 +295,7 @@ describe('useExchangeActions', () => {
       refereePosition: undefined,
     } as GameExchange
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleRemoveFromExchange(exchangeWithoutConvocation)
@@ -295,7 +312,7 @@ describe('useExchangeActions', () => {
       () => new Promise((resolve) => setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS))
     )
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Try to trigger action twice concurrently
     await act(async () => {
@@ -315,7 +332,7 @@ describe('useExchangeActions', () => {
       () => new Promise((resolve) => setTimeout(resolve, MOCK_ASYNC_OPERATION_DELAY_MS))
     )
 
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Try to trigger action twice concurrently
     await act(async () => {
@@ -330,7 +347,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should handle rapid open/close cycles correctly', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Rapidly toggle modal
     act(() => {
@@ -348,7 +365,7 @@ describe('useExchangeActions', () => {
   })
 
   it('should handle rapid open/close cycles for removeFromExchange modal', () => {
-    const { result } = renderHook(() => useExchangeActions())
+    const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
     // Rapidly toggle modal
     act(() => {
@@ -374,7 +391,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should use mutation for take over in demo mode (routed to mock API)', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
@@ -386,7 +403,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should use mutation for remove from exchange in demo mode (routed to mock API)', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleRemoveFromExchange(mockExchange)
@@ -398,7 +415,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should close modal after demo mode take over', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.takeOverModal.open(mockExchange)
@@ -414,7 +431,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should close modal after demo mode remove from exchange', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.removeFromExchangeModal.open(mockExchange)
@@ -444,7 +461,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should block take over when safe mode is enabled', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
@@ -455,7 +472,7 @@ describe('useExchangeActions', () => {
     })
 
     it('should block remove from exchange when safe mode is enabled', async () => {
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleRemoveFromExchange(mockExchange)
@@ -470,7 +487,7 @@ describe('useExchangeActions', () => {
         selector({ dataSource: 'demo' } as ReturnType<typeof authStore.useAuthStore.getState>)
       )
 
-      const { result } = renderHook(() => useExchangeActions())
+      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
