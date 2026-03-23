@@ -13,6 +13,7 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
