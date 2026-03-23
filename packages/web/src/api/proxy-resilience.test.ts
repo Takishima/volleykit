@@ -59,10 +59,7 @@ describe('proxy-resilience', () => {
     it('stays on fallback within TTL window', async () => {
       localStorage.setItem('volleykit-active-proxy-url', FALLBACK)
       // Set timestamp 5 minutes ago (within 10 min TTL)
-      localStorage.setItem(
-        'volleykit-proxy-rotation-timestamp',
-        String(Date.now() - 5 * 60 * 1000)
-      )
+      localStorage.setItem('volleykit-proxy-rotation-timestamp', String(Date.now() - 5 * 60 * 1000))
       const { getApiBaseUrl } = await loadModule()
       expect(getApiBaseUrl()).toBe(FALLBACK)
     })

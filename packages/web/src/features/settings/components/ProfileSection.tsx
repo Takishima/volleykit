@@ -9,7 +9,6 @@ import { useAuthStore } from '@/common/stores/auth'
 import type { UserProfile } from '@/common/stores/auth'
 import { getOccupationLabelKey } from '@/common/utils/occupation-labels'
 
-
 interface ProfileSectionProps {
   user: UserProfile
 }
