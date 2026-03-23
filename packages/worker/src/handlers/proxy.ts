@@ -148,6 +148,13 @@ export async function handleProxy(
   const targetOrigin = targetHostUrl.origin
   proxyRequest.headers.set('Host', targetHost)
 
+  // Forward the real client IP so upstream session binding works correctly.
+  // Without this, the upstream sees the Cloudflare Worker's egress IP, which
+  // could cause session invalidation if the server ties sessions to IPs.
+  if (clientIP) {
+    proxyRequest.headers.set('X-Forwarded-For', clientIP)
+  }
+
   // Rewrite Origin and Referer to match target host
   // The upstream Neos Flow server validates these for CSRF protection
   proxyRequest.headers.set('Origin', targetOrigin)

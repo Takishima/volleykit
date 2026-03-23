@@ -79,14 +79,6 @@ jobs:
             3. For re-reviews (EVENT TYPE is "synchronize"): acknowledge fixes, flag new issues only
 
             Post your review using `gh pr comment`. Output plain markdown (not wrapped in code blocks).
-          claude_args: '--model opus'
-          allowed_tools: |
-            Bash(gh issue view:*)
-            Bash(gh search:*)
-            Bash(gh issue list:*)
-            Bash(gh pr comment:*)
-            Bash(gh pr diff:*)
-            Bash(gh pr view:*)
-            Bash(gh pr list:*)
+          claude_args: '--model opus --allowedTools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
     outputs:
       guidelines_changed: ${{ steps.check-skip.outputs.guidelines_changed }}
