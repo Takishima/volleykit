@@ -5,7 +5,7 @@ A Progressive Web App (PWA) for Swiss volleyball referee management.
 ## Tech Stack
 
 - React 19 + TypeScript 5.9
-- Vite 7 (build)
+- Vite 8 (build)
 - Tailwind CSS 4 (styling)
 - Zustand 5 (client state)
 - TanStack Query 5 (server state)
@@ -39,10 +39,10 @@ pnpm run test:e2e     # E2E tests (Playwright)
 ```
 src/
 ├── features/         # Feature modules (assignments, auth, compensations, etc.)
-├── shared/           # Shared components, hooks, utils
+├── common/           # Shared components, hooks, utils, stores, services
 ├── api/              # API client and generated types
 ├── i18n/             # Translations (de, en, fr, it)
-└── contexts/         # React contexts
+└── contexts/         # React contexts (PWA)
 e2e/
 ├── pages/            # Page Object Models
 └── *.spec.ts         # E2E test specs

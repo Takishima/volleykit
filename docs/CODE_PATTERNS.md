@@ -330,7 +330,15 @@ const { data, error, isLoading } = useQuery({
 
 ## React 19 Patterns
 
-The project runs React 19. These hooks are available for adoption alongside existing patterns.
+The project runs React 19 with the **React Compiler** enabled (via `@vitejs/plugin-react` v6). The compiler automatically memoizes components and hooks, so `React.memo`, `useMemo`, and `useCallback` are less critical for preventing re-renders. However, explicit `useMemo`/`useCallback` remain valid for:
+
+- Expensive computations that should be clearly marked as intentionally cached
+- Stable references for TanStack Query keys and API call parameters
+- Dependencies passed to `useEffect` that should not trigger re-runs
+
+> **Note**: `React.memo` is not used in this codebase — the React Compiler handles component-level memoization automatically. Do not add `React.memo` wrappers.
+
+These React 19 hooks are available for adoption alongside existing patterns.
 
 **`useOptimistic` — instant UI feedback**
 
