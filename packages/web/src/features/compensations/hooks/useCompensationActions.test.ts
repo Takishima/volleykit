@@ -1,3 +1,6 @@
+import { createElement, type ReactNode } from 'react'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
@@ -8,6 +11,18 @@ import { toast } from '@/common/stores/toast'
 
 import { useCompensationActions } from './useCompensationActions'
 import * as compensationActionsModule from '../utils/compensation-actions'
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children)
+  }
+}
 
 vi.mock('@/common/stores/auth')
 // Auto-mock settings store - still needed indirectly by useSafeMutation's internal useSafeModeGuard
@@ -71,14 +86,14 @@ describe('useCompensationActions', () => {
   })
 
   it('should initialize with closed modal', () => {
-    const { result } = renderHook(() => useCompensationActions())
+    const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
     expect(result.current.editCompensationModal.isOpen).toBe(false)
     expect(result.current.editCompensationModal.compensation).toBeNull()
   })
 
   it('should open and close edit compensation modal', () => {
-    const { result } = renderHook(() => useCompensationActions())
+    const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.editCompensationModal.open(mockCompensation)
@@ -105,7 +120,9 @@ describe('useCompensationActions', () => {
   })
 
   it('should cleanup timeout on unmount', () => {
-    const { result, unmount } = renderHook(() => useCompensationActions())
+    const { result, unmount } = renderHook(() => useCompensationActions(), {
+      wrapper: createWrapper(),
+    })
 
     act(() => {
       result.current.editCompensationModal.open(mockCompensation)
@@ -125,7 +142,7 @@ describe('useCompensationActions', () => {
   })
 
   it('should clear previous timeout when closing multiple times', () => {
-    const { result } = renderHook(() => useCompensationActions())
+    const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
     act(() => {
       result.current.editCompensationModal.open(mockCompensation)
@@ -161,7 +178,7 @@ describe('useCompensationActions', () => {
       .spyOn(compensationActionsModule, 'downloadCompensationPDF')
       .mockResolvedValue(undefined)
 
-    const { result } = renderHook(() => useCompensationActions())
+    const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleGeneratePDF(mockCompensation)
@@ -175,7 +192,7 @@ describe('useCompensationActions', () => {
       new Error('Network error')
     )
 
-    const { result } = renderHook(() => useCompensationActions())
+    const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
     await act(async () => {
       await result.current.handleGeneratePDF(mockCompensation)
@@ -192,7 +209,7 @@ describe('useCompensationActions', () => {
 
     vi.spyOn(compensationActionsModule, 'downloadCompensationPDF').mockReturnValue(downloadPromise)
 
-    const { result } = renderHook(() => useCompensationActions())
+    const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
     // Start first download (don't await yet)
     const promise1 = result.current.handleGeneratePDF(mockCompensation)
@@ -221,7 +238,7 @@ describe('useCompensationActions', () => {
         .spyOn(compensationActionsModule, 'downloadCompensationPDF')
         .mockResolvedValue(undefined)
 
-      const { result } = renderHook(() => useCompensationActions())
+      const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleGeneratePDF(mockCompensation)
@@ -232,7 +249,7 @@ describe('useCompensationActions', () => {
     })
 
     it('should allow editing compensation in demo mode even with safe mode enabled', () => {
-      const { result } = renderHook(() => useCompensationActions())
+      const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.editCompensationModal.open(mockCompensation)
@@ -244,7 +261,7 @@ describe('useCompensationActions', () => {
 
   describe('safe mode guards', () => {
     it('should allow editing compensation when safe mode is enabled', () => {
-      const { result } = renderHook(() => useCompensationActions())
+      const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.editCompensationModal.open(mockCompensation)

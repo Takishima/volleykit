@@ -279,7 +279,8 @@ const [isSubmitting, setIsSubmitting] = useState(false);
   {isSubmitting ? 'Submitting...' : 'Submit'}
 </button>
 
-// Best: useSafeMutation wraps all of this (see packages/web/src/shared/hooks/useSafeMutation.ts)
+// Best: useSafeMutation wraps all of this using TanStack Query's useMutation
+// (see packages/web/src/common/hooks/useSafeMutation.ts)
 const { execute, isExecuting } = useSafeMutation(
   (id: string) => api.deleteItem(id),
   {
@@ -330,7 +331,15 @@ const { data, error, isLoading } = useQuery({
 
 ## React 19 Patterns
 
-The project runs React 19. These hooks are available for adoption alongside existing patterns.
+The project runs React 19 with the **React Compiler** enabled (via `@vitejs/plugin-react` v6). The compiler automatically memoizes components and hooks, so `React.memo`, `useMemo`, and `useCallback` are less critical for preventing re-renders. However, explicit `useMemo`/`useCallback` remain valid for:
+
+- Expensive computations that should be clearly marked as intentionally cached
+- Stable references for TanStack Query keys and API call parameters
+- Dependencies passed to `useEffect` that should not trigger re-runs
+
+> **Note**: `React.memo` is not used in this codebase — the React Compiler handles component-level memoization automatically. Do not add `React.memo` wrappers.
+
+These React 19 hooks are available for adoption alongside existing patterns.
 
 **`useOptimistic` — instant UI feedback**
 
@@ -378,6 +387,35 @@ function LoginForm() {
 ```
 
 > Adopt incrementally — existing TanStack Query mutation patterns remain valid and preferred for server-state operations.
+
+**`useFormStatus` — automatic pending state for submit buttons**
+
+Use `FormSubmitButton` inside forms that use React 19 `action` prop. It reads pending state from the nearest parent `<form>` via `useFormStatus` — no prop drilling needed.
+
+```typescript
+import { useActionState } from 'react'
+import { FormSubmitButton } from '@/common/components/FormSubmitButton'
+
+function ConfirmationModal({ onConfirm, onClose }: Props) {
+  const [, submitAction, isPending] = useActionState(async () => {
+    await onConfirm()
+    onClose()
+    return null
+  }, null)
+
+  return (
+    <form action={submitAction}>
+      <Button variant="secondary" onClick={onClose} disabled={isPending}>
+        Cancel
+      </Button>
+      {/* Reads pending state from parent form — no isPending prop needed */}
+      <FormSubmitButton variant="primary">Confirm</FormSubmitButton>
+    </form>
+  )
+}
+```
+
+> `FormSubmitButton` must be rendered inside a `<form>` that uses the `action` prop (not `onSubmit`). For forms using `onSubmit` with TanStack Query mutations, pass `loading` directly to `Button` instead.
 
 ## Accessibility Patterns
 

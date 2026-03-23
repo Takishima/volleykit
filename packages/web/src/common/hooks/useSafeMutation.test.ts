@@ -1,4 +1,7 @@
-import { renderHook, act } from '@testing-library/react'
+import { createElement, type ReactNode } from 'react'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { TranslationKey } from '@/i18n'
@@ -11,6 +14,18 @@ import { useSafeMutation } from './useSafeMutation'
 // Test translation keys (cast for type safety in tests)
 const TEST_ERROR = 'compensations.pdfDownloadFailed' as TranslationKey
 const TEST_SUCCESS = 'exchange.applySuccess' as TranslationKey
+
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+  return function Wrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children)
+  }
+}
 
 vi.mock('@/common/stores/auth')
 vi.mock('@/common/stores/settings')
@@ -59,12 +74,14 @@ describe('useSafeMutation', () => {
     const mutationFn = vi.fn().mockResolvedValue('result')
     const onSuccess = vi.fn()
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-        onSuccess,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+          onSuccess,
+        }),
+      { wrapper: createWrapper() }
     )
 
     await act(async () => {
@@ -79,12 +96,14 @@ describe('useSafeMutation', () => {
   it('should show success toast when successMessage is provided', async () => {
     const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        successMessage: TEST_SUCCESS,
-        errorMessage: TEST_ERROR,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          successMessage: TEST_SUCCESS,
+          errorMessage: TEST_ERROR,
+        }),
+      { wrapper: createWrapper() }
     )
 
     await act(async () => {
@@ -97,11 +116,13 @@ describe('useSafeMutation', () => {
   it('should not show success toast when successMessage is not provided', async () => {
     const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+        }),
+      { wrapper: createWrapper() }
     )
 
     await act(async () => {
@@ -115,12 +136,14 @@ describe('useSafeMutation', () => {
     const mutationFn = vi.fn().mockRejectedValue(new Error('Network error'))
     const onError = vi.fn()
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-        onError,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+          onError,
+        }),
+      { wrapper: createWrapper() }
     )
 
     await act(async () => {
@@ -140,11 +163,13 @@ describe('useSafeMutation', () => {
 
     const mutationFn = vi.fn().mockReturnValue(firstPromise)
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+        }),
+      { wrapper: createWrapper() }
     )
 
     // Start first execution (don't await)
@@ -166,11 +191,13 @@ describe('useSafeMutation', () => {
   it('should allow new execution after previous completes', async () => {
     const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+        }),
+      { wrapper: createWrapper() }
     )
 
     await act(async () => {
@@ -198,12 +225,14 @@ describe('useSafeMutation', () => {
     it('should block execution when safe mode is enabled', async () => {
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          errorMessage: TEST_ERROR,
-          safeGuard: { context: 'testContext', action: 'test action' },
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            errorMessage: TEST_ERROR,
+            safeGuard: { context: 'testContext', action: 'test action' },
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {
@@ -218,12 +247,14 @@ describe('useSafeMutation', () => {
     it('should allow execution without safeGuard option', async () => {
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          errorMessage: TEST_ERROR,
-          // No safeGuard option
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            errorMessage: TEST_ERROR,
+            // No safeGuard option
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {
@@ -240,12 +271,14 @@ describe('useSafeMutation', () => {
 
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          errorMessage: TEST_ERROR,
-          safeGuard: { context: 'testContext', action: 'test action' },
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            errorMessage: TEST_ERROR,
+            safeGuard: { context: 'testContext', action: 'test action' },
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {
@@ -265,13 +298,15 @@ describe('useSafeMutation', () => {
 
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          successMessage: TEST_SUCCESS,
-          errorMessage: TEST_ERROR,
-          skipSuccessToastInDemoMode: true,
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            successMessage: TEST_SUCCESS,
+            errorMessage: TEST_ERROR,
+            skipSuccessToastInDemoMode: true,
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {
@@ -288,13 +323,15 @@ describe('useSafeMutation', () => {
 
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          successMessage: TEST_SUCCESS,
-          errorMessage: TEST_ERROR,
-          skipSuccessToastInDemoMode: false,
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            successMessage: TEST_SUCCESS,
+            errorMessage: TEST_ERROR,
+            skipSuccessToastInDemoMode: false,
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {
@@ -307,13 +344,15 @@ describe('useSafeMutation', () => {
     it('should show success toast when not in demo mode', async () => {
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          successMessage: TEST_SUCCESS,
-          errorMessage: TEST_ERROR,
-          skipSuccessToastInDemoMode: true,
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            successMessage: TEST_SUCCESS,
+            errorMessage: TEST_ERROR,
+            skipSuccessToastInDemoMode: true,
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {
@@ -330,11 +369,13 @@ describe('useSafeMutation', () => {
       return Promise.resolve(undefined)
     })
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+        }),
+      { wrapper: createWrapper() }
     )
 
     await act(async () => {
@@ -356,11 +397,13 @@ describe('useSafeMutation', () => {
       .mockRejectedValueOnce(new Error('First error'))
       .mockResolvedValueOnce('success')
 
-    const { result } = renderHook(() =>
-      useSafeMutation(mutationFn, {
-        logContext: 'testContext',
-        errorMessage: TEST_ERROR,
-      })
+    const { result } = renderHook(
+      () =>
+        useSafeMutation(mutationFn, {
+          logContext: 'testContext',
+          errorMessage: TEST_ERROR,
+        }),
+      { wrapper: createWrapper() }
     )
 
     // First call fails
@@ -383,11 +426,13 @@ describe('useSafeMutation', () => {
     it('should initially be false', () => {
       const mutationFn = vi.fn().mockResolvedValue(undefined)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          errorMessage: TEST_ERROR,
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            errorMessage: TEST_ERROR,
+          }),
+        { wrapper: createWrapper() }
       )
 
       expect(result.current.isExecuting).toBe(false)
@@ -401,11 +446,13 @@ describe('useSafeMutation', () => {
 
       const mutationFn = vi.fn().mockReturnValue(executionPromise)
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          errorMessage: TEST_ERROR,
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            errorMessage: TEST_ERROR,
+          }),
+        { wrapper: createWrapper() }
       )
 
       // Start execution without awaiting
@@ -414,8 +461,10 @@ describe('useSafeMutation', () => {
         executePromise = result.current.execute('arg')
       })
 
-      // Should be true during execution
-      expect(result.current.isExecuting).toBe(true)
+      // useMutation.isPending updates asynchronously — wait for React to re-render
+      await waitFor(() => {
+        expect(result.current.isExecuting).toBe(true)
+      })
 
       // Resolve and wait for completion
       await act(async () => {
@@ -423,18 +472,22 @@ describe('useSafeMutation', () => {
         await executePromise
       })
 
-      // Should be false after completion
-      expect(result.current.isExecuting).toBe(false)
+      // useMutation.isPending resets asynchronously after mutation completes
+      await waitFor(() => {
+        expect(result.current.isExecuting).toBe(false)
+      })
     })
 
     it('should be false after error', async () => {
       const mutationFn = vi.fn().mockRejectedValue(new Error('Test error'))
 
-      const { result } = renderHook(() =>
-        useSafeMutation(mutationFn, {
-          logContext: 'testContext',
-          errorMessage: TEST_ERROR,
-        })
+      const { result } = renderHook(
+        () =>
+          useSafeMutation(mutationFn, {
+            logContext: 'testContext',
+            errorMessage: TEST_ERROR,
+          }),
+        { wrapper: createWrapper() }
       )
 
       await act(async () => {

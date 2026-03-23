@@ -306,12 +306,14 @@ describe('ExchangeConfirmationModal', () => {
       )
       const confirmButton = screen.getByText('Confirm Take Over')
 
-      // Initially not busy
-      expect(confirmButton).toHaveAttribute('aria-busy', 'false')
+      // Initially not busy — aria-busy is omitted when not loading (via Button component)
+      expect(confirmButton).not.toHaveAttribute('aria-busy', 'true')
 
       // Click and check aria-busy is true
       fireEvent.click(confirmButton)
-      expect(confirmButton).toHaveAttribute('aria-busy', 'true')
+      await waitFor(() => {
+        expect(screen.getByText('Loading...')).toHaveAttribute('aria-busy', 'true')
+      })
     })
 
     it('uses correct button colors for take over variant', () => {

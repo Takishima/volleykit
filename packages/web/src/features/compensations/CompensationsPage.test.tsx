@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react'
+
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -7,6 +10,20 @@ import * as compensationHooks from './hooks/useCompensations'
 import { CompensationsPage } from './CompensationsPage'
 
 import type { UseQueryResult } from '@tanstack/react-query'
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+}
+
+function renderWithQueryClient(ui: ReactNode) {
+  const queryClient = createTestQueryClient()
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+}
 
 // Mock useTour to disable tour mode during tests (see src/test/mocks.ts for shared pattern)
 const mockUseTour = vi.hoisted(() => ({
@@ -95,7 +112,7 @@ describe('CompensationsPage', () => {
 
   describe('Tab Navigation', () => {
     it('should default to Pending (Past) tab', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       const pendingPastTab = screen.getByRole('tab', { name: /pending \(past\)/i })
       expect(pendingPastTab).toHaveClass('border-primary-500')
@@ -103,7 +120,7 @@ describe('CompensationsPage', () => {
     })
 
     it('should switch to Closed tab when clicked', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       fireEvent.click(screen.getByRole('tab', { name: /^closed$/i }))
 
@@ -113,14 +130,14 @@ describe('CompensationsPage', () => {
     })
 
     it('should have proper ARIA attributes on tablist', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       const tablist = screen.getByRole('tablist')
       expect(tablist).toHaveAttribute('aria-label')
     })
 
     it('should support keyboard navigation with arrow keys', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       const pendingPastTab = screen.getByRole('tab', { name: /pending \(past\)/i })
       pendingPastTab.focus()
@@ -153,7 +170,7 @@ describe('CompensationsPage', () => {
         createMockQueryResult(undefined, true)
       )
 
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       expect(screen.getByText(/loading/i)).toBeInTheDocument()
     })
@@ -163,7 +180,7 @@ describe('CompensationsPage', () => {
         createMockQueryResult(undefined, false, new Error('Failed to load'))
       )
 
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
@@ -172,7 +189,7 @@ describe('CompensationsPage', () => {
     it('should show empty state when no compensations', () => {
       vi.mocked(compensationHooks.useCompensations).mockReturnValue(createMockQueryResult([]))
 
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       // Default tab is now Pending (Past), so the empty state is for pending past compensations
       expect(
@@ -186,7 +203,7 @@ describe('CompensationsPage', () => {
         createMockQueryResult([compensation])
       )
 
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       expect(screen.getByText(/Team A vs Team B/i)).toBeInTheDocument()
     })
@@ -194,13 +211,13 @@ describe('CompensationsPage', () => {
 
   describe('Data Fetching', () => {
     it('should call useCompensations with false for Pending (Past) tab (default)', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       expect(compensationHooks.useCompensations).toHaveBeenCalledWith(false)
     })
 
     it('should call useCompensations with true for Closed tab', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       fireEvent.click(screen.getByRole('tab', { name: /^closed$/i }))
 
@@ -208,7 +225,7 @@ describe('CompensationsPage', () => {
     })
 
     it('should call useCompensations with false for Pending (Future) tab', () => {
-      render(<CompensationsPage />)
+      renderWithQueryClient(<CompensationsPage />)
 
       fireEvent.click(screen.getByRole('tab', { name: /pending \(future\)/i }))
 

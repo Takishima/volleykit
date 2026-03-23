@@ -6,7 +6,7 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 | Application    | Location           | Description                                             |
 | -------------- | ------------------ | ------------------------------------------------------- |
-| Web App (PWA)  | `packages/web/`    | React 19 + Vite 7 + Tailwind 4                          |
+| Web App (PWA)  | `packages/web/`    | React 19 + Vite 8 + Tailwind 4                          |
 | Mobile App     | `packages/mobile/` | React Native 0.83 + Expo 55 + NativeWind                |
 | Shared Package | `packages/shared/` | API client, hooks, stores, i18n, offline (~70% sharing) |
 | Help Site      | `help-site/`       | Astro 6 + Pagefind search                               |
