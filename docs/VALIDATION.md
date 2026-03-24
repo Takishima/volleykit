@@ -4,29 +4,42 @@ Read this file before committing changes.
 
 ## Pre-Commit Validation (Claude Code Web Only)
 
-The pre-commit hook (`scripts/pre-commit-validate.sh`) runs automatically in Claude Code web environment (`CLAUDE_CODE_REMOTE=true`). Human developers rely on CI instead.
+Validation uses a two-part system in Claude Code web (`CLAUDE_CODE_REMOTE=true`). Human developers rely on CI instead.
 
-### What the Hook Does
+### How It Works
+
+**Step 1: Run validation** (streaming output — Claude sees results in real-time):
+
+```bash
+CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh
+```
+
+**Step 2: Commit** — the pre-commit hook checks the validation marker and approves instantly.
+
+This replaces the old block-retry-block cycle. Claude gets immediate feedback from each check as it completes.
+
+### What Validation Does
 
 1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
 2. **Detect affected packages** - Determines which packages have changes (web, shared, mobile, worker, help-site)
 3. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-4. **Run checks in PARALLEL** - Per-package validation (format, lint, knip, typecheck, test)
-5. **Run build sequentially** - Build affected packages (shared → web → help-site)
+4. **Run checks in PARALLEL** - Single format check on staged files + per-package lint, typecheck, test
+5. **Build shared** then **web + help-site in parallel** - Build affected packages
 
-Shared package changes also trigger web and mobile validation (downstream consumers).
-
-The commit is **blocked** if any step fails. Fix issues and commit again.
+Shared package changes trigger web validation (always) and mobile validation (only when exported API surface is touched).
 
 ### Checks Per Package
 
-| Package   | format | lint | knip | typecheck  | test | build |
-| --------- | ------ | ---- | ---- | ---------- | ---- | ----- |
-| web       | ✓      | ✓    | ✓    | (in build) | ✓    | ✓     |
-| shared    | ✓      | ✓    | –    | ✓          | ✓    | ✓     |
-| mobile    | ✓      | ✓    | –    | ✓          | ✓    | –     |
-| worker    | ✓      | ✓    | –    | –          | ✓    | –     |
-| help-site | ✓      | –    | –    | –          | –    | ✓     |
+| Package   | format¹ | lint | knip | typecheck  | test | build |
+| --------- | ------- | ---- | ---- | ---------- | ---- | ----- |
+| web       | ✓       | ✓    | CI²  | (in build) | ✓    | ✓     |
+| shared    | ✓       | ✓    | –    | ✓          | ✓    | ✓     |
+| mobile    | ✓       | ✓    | –    | ✓          | ✓    | –     |
+| worker    | ✓       | ✓    | –    | –          | ✓    | –     |
+| help-site | ✓       | –    | –    | –          | –    | ✓     |
+
+¹ Format runs once on all staged files (not per-package)
+² Knip (dead code detection) runs in CI only — too slow for pre-commit
 
 ### Manual Validation Commands
 

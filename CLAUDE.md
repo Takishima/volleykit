@@ -33,8 +33,9 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 1. **Implement** - Complete the work
 2. **Add changeset** - For `feat:`/`fix:` commits, create `.changeset/*.md` (see below)
-3. **Commit** - Pre-commit hook validates automatically (Claude Code web only)
-4. **Push** - Push to remote
+3. **Validate** - Run `CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh` (streaming output)
+4. **Commit** - Pre-commit hook checks validation marker (instant approve)
+5. **Push** - Push to remote
 
 Use `/pr-review` to create PR and auto-fix Claude Code Review issues.
 
