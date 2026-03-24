@@ -53,9 +53,9 @@ import { t } from '../i18n'
 
   <StepList
     steps={[
-      { title: t('sportsHallReport.accessing.steps.openAssignment') },
-      { title: t('sportsHallReport.accessing.steps.swipeLeft') },
-      { title: t('sportsHallReport.accessing.steps.tapReport') },
+      { title: t('sportsHallReport.accessing.steps.openAssignment'), titleKey: 'sportsHallReport.accessing.steps.openAssignment' },
+      { title: t('sportsHallReport.accessing.steps.swipeLeft'), titleKey: 'sportsHallReport.accessing.steps.swipeLeft' },
+      { title: t('sportsHallReport.accessing.steps.tapReport'), titleKey: 'sportsHallReport.accessing.steps.tapReport' },
     ]}
   />
 
@@ -63,6 +63,8 @@ import { t } from '../i18n'
     id="report-access"
     alt={t('sportsHallReport.accessing.screenshotAlt')}
     caption={t('sportsHallReport.accessing.screenshotCaption')}
+    altKey="sportsHallReport.accessing.screenshotAlt"
+    captionKey="sportsHallReport.accessing.screenshotCaption"
     instructions="Take a screenshot of an assignment card swiped left showing the Generate Report action button alongside Validate and Edit."
   />
 
@@ -74,10 +76,10 @@ import { t } from '../i18n'
 
   <StepList
     steps={[
-      { title: t('sportsHallReport.happyPath.steps.selectLanguage') },
-      { title: t('sportsHallReport.happyPath.steps.configureAds') },
-      { title: t('sportsHallReport.happyPath.steps.tapEverythingOk') },
-      { title: t('sportsHallReport.happyPath.steps.drawSignature') },
+      { title: t('sportsHallReport.happyPath.steps.selectLanguage'), titleKey: 'sportsHallReport.happyPath.steps.selectLanguage' },
+      { title: t('sportsHallReport.happyPath.steps.configureAds'), titleKey: 'sportsHallReport.happyPath.steps.configureAds' },
+      { title: t('sportsHallReport.happyPath.steps.tapEverythingOk'), titleKey: 'sportsHallReport.happyPath.steps.tapEverythingOk' },
+      { title: t('sportsHallReport.happyPath.steps.drawSignature'), titleKey: 'sportsHallReport.happyPath.steps.drawSignature' },
     ]}
   />
 
@@ -85,6 +87,8 @@ import { t } from '../i18n'
     id="report-wizard-entry"
     alt={t('sportsHallReport.happyPath.screenshotAlt')}
     caption={t('sportsHallReport.happyPath.screenshotCaption')}
+    altKey="sportsHallReport.happyPath.screenshotAlt"
+    captionKey="sportsHallReport.happyPath.screenshotCaption"
     instructions="Take a screenshot of the sports hall report wizard modal showing the language selector (Deutsch/Français) and jersey advertising toggles for both teams."
   />
 
@@ -92,6 +96,8 @@ import { t } from '../i18n'
     id="report-signature"
     alt={t('sportsHallReport.happyPath.signatureScreenshotAlt')}
     caption={t('sportsHallReport.happyPath.signatureScreenshotCaption')}
+    altKey="sportsHallReport.happyPath.signatureScreenshotAlt"
+    captionKey="sportsHallReport.happyPath.signatureScreenshotCaption"
     instructions="Take a screenshot of the full-screen signature capture canvas with the signature baseline guide and toolbar."
   />
 
@@ -111,11 +117,11 @@ import { t } from '../i18n'
 
   <StepList
     steps={[
-      { title: t('sportsHallReport.nonConformant.steps.tapReportIssue') },
-      { title: t('sportsHallReport.nonConformant.steps.selectSections') },
-      { title: t('sportsHallReport.nonConformant.steps.addComments') },
-      { title: t('sportsHallReport.nonConformant.steps.reviewPdf') },
-      { title: t('sportsHallReport.nonConformant.steps.collectSignatures') },
+      { title: t('sportsHallReport.nonConformant.steps.tapReportIssue'), titleKey: 'sportsHallReport.nonConformant.steps.tapReportIssue' },
+      { title: t('sportsHallReport.nonConformant.steps.selectSections'), titleKey: 'sportsHallReport.nonConformant.steps.selectSections' },
+      { title: t('sportsHallReport.nonConformant.steps.addComments'), titleKey: 'sportsHallReport.nonConformant.steps.addComments' },
+      { title: t('sportsHallReport.nonConformant.steps.reviewPdf'), titleKey: 'sportsHallReport.nonConformant.steps.reviewPdf' },
+      { title: t('sportsHallReport.nonConformant.steps.collectSignatures'), titleKey: 'sportsHallReport.nonConformant.steps.collectSignatures' },
     ]}
   />
 
