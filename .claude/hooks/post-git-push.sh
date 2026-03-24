@@ -51,11 +51,12 @@ if [[ $command == *"git push"* ]]; then
     if [ -z "$default_branch" ]; then
       default_branch="main"
     fi
+    encoded_branch=$(printf '%s' "$current_branch" | jq -sRr @uri)
 
     cat <<EOF
 {
   "decision": "block",
-  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nBranch '${current_branch}' was pushed to ${owner}/${repo}.\\n\\nPerform these actions silently, then show ONLY the result:\\n\\n1. Use mcp__github__list_pull_requests with owner='${owner}', repo='${repo}', state='open' and check if any PR has head branch '${current_branch}'.\\n\\n2a. If PR exists: Generate PR title (conventional commit format) and body (## Summary, ## Test Plan) from commits since ${default_branch}. Update via mcp__github__update_pull_request with the PR number. Show ONLY: \\\"✓ Updated PR #<number>: <url>\\\"\\n\\n2b. If no PR exists: Generate PR title (conventional commit format) and body (## Summary, ## Test Plan) from commits since ${default_branch}. URL-encode both title and body. Show ONLY a single clickable markdown link: [Create PR: <title>](https://github.com/${owner}/${repo}/compare/${default_branch}...${current_branch}?expand=1&title=<encoded-title>&body=<encoded-body>)"
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nBranch '${current_branch}' was pushed to ${owner}/${repo}.\\n\\nPerform these actions silently, then show ONLY the result:\\n\\n1. Use mcp__github__list_pull_requests with owner='${owner}', repo='${repo}', state='open' and check if any PR has head branch '${current_branch}'.\\n\\n2a. If PR exists: Generate PR title (conventional commit format) and body (## Summary, ## Test Plan) from commits since ${default_branch}. Update via mcp__github__update_pull_request with the PR number. Show ONLY: \\\"✓ Updated PR #<number>: <url>\\\"\\n\\n2b. If no PR exists: Generate PR title (conventional commit format) and body (## Summary, ## Test Plan) from commits since ${default_branch}. URL-encode both title and body. Show ONLY a single clickable markdown link: [Create PR: <title>](https://github.com/${owner}/${repo}/compare/${default_branch}...${encoded_branch}?expand=1&title=<encoded-title>&body=<encoded-body>)"
 }
 EOF
     exit 0

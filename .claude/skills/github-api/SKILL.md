@@ -61,6 +61,13 @@ Handles these URL formats:
 | Get PR reviews    | `mcp__github__pull_request_read`    | `method: "get_reviews"`, `pullRequestNumber`     |
 | Reply to comment  | `mcp__github__add_reply_to_pull_request_comment` | `comment_id`, `body`            |
 
+### CI / Checks
+
+| Operation              | Tool                         | Key Parameters                              |
+| ---------------------- | ---------------------------- | ------------------------------------------- |
+| Get check runs for PR  | `mcp__github__pull_request_read` | `method: "get_check_runs"`, `pullNumber` |
+| Get PR status          | `mcp__github__pull_request_read` | `method: "get_status"`, `pullNumber`     |
+
 ### Repository
 
 | Operation      | Tool                          | Key Parameters         |
