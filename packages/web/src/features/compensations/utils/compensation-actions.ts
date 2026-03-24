@@ -89,7 +89,7 @@ export function createCompensationActions(
       icon: ICON_SMARTPHONE,
       onAction: () => {
         const comp = compensation.convocationCompensation
-        const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0)
+        const total = (comp?.gameCompensation ?? 0) + (comp?.travelExpenses ?? 0)
         handlers.onTwintPayment(total)
       },
     },
