@@ -122,7 +122,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
   // preventing pull-to-refresh gestures from interfering with signature drawing
   return createPortal(
     <div
-      className="fixed inset-0 bg-white flex flex-col touch-none overscroll-none"
+      className="fixed inset-0 bg-surface-card dark:bg-surface-card-dark flex flex-col touch-none overscroll-none"
       style={{ zIndex: SIGNATURE_OVERLAY_Z_INDEX }}
       role="dialog"
       aria-modal="true"
@@ -130,13 +130,13 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
       {...touchGuard}
     >
       {/* Header toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-default bg-surface-subtle">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-default dark:border-border-default-dark bg-surface-subtle dark:bg-surface-subtle-dark">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           <X className="w-4 h-4" aria-hidden="true" />
           {t('common.cancel')}
         </Button>
 
-        <h2 className="text-sm font-medium text-text-primary">{t('pdf.wizard.signature.title')}</h2>
+        <h2 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{t('pdf.wizard.signature.title')}</h2>
 
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={handleClear} disabled={isEmpty}>
@@ -164,7 +164,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
         {/* Center hint text (visible only when canvas is empty) */}
         {isEmpty && !isPortrait && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-lg text-gray-300 select-none">
+            <p className="text-lg text-text-subtle dark:text-text-subtle-dark select-none">
               {t('pdf.wizard.signature.drawHint')}
             </p>
           </div>
@@ -176,7 +176,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
             type="button"
             onClick={() => setPortraitHintDismissed(true)}
             aria-label={t('common.dismissNotification')}
-            className="absolute top-3 left-3 right-3 flex items-center gap-2 rounded-lg bg-surface-subtle/90 backdrop-blur-sm px-3 py-2 text-text-muted shadow-sm"
+            className="absolute top-3 left-3 right-3 flex items-center gap-2 rounded-lg bg-surface-subtle/90 dark:bg-surface-subtle-dark/90 backdrop-blur-sm px-3 py-2 text-text-muted dark:text-text-muted-dark shadow-sm"
           >
             <RotateCw className="w-5 h-5 flex-shrink-0 animate-pulse" aria-hidden="true" />
             <p className="text-xs font-medium flex-1 text-left">

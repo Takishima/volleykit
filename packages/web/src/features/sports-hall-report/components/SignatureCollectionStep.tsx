@@ -225,7 +225,7 @@ export function SignatureCollectionStep({
 
                 {/* Signature thumbnail preview */}
                 {hasSigned && (
-                  <div className="mt-2 rounded border border-border-default dark:border-border-default-dark bg-white p-1">
+                  <div className="mt-2 rounded border border-border-default dark:border-border-default-dark bg-surface-card dark:bg-surface-card-dark p-1">
                     <img
                       src={getSignatureDataUrl(signer.role)}
                       alt={t('pdf.wizard.signature.title')}

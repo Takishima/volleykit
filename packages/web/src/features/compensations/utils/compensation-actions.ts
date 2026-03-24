@@ -77,7 +77,7 @@ export function createCompensationActions(
       id: 'generate-pdf',
       label: 'Generate PDF',
       shortLabel: 'PDF',
-      color: 'bg-slate-500',
+      color: 'bg-text-muted',
       icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGeneratePDF(compensation),
     },
@@ -85,7 +85,7 @@ export function createCompensationActions(
       id: 'twint-payment',
       label: 'Twint',
       shortLabel: 'Twint',
-      color: 'bg-slate-500',
+      color: 'bg-text-muted',
       icon: ICON_SMARTPHONE,
       onAction: () => {
         const comp = compensation.convocationCompensation

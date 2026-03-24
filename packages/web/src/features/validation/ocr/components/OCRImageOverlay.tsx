@@ -65,11 +65,11 @@ export function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOve
   }, [imageSize, containerWidth])
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+    <div className="bg-surface-page dark:bg-surface-card-dark/50 rounded-lg p-3">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Image className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
-          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <Image className="w-4 h-4 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />
+          <span className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
             {t('validation.ocr.rawData.imageOverlay')}
           </span>
         </div>
@@ -77,7 +77,7 @@ export function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOve
           <button
             type="button"
             onClick={() => setShowOverlay(!showOverlay)}
-            className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            className="text-xs px-2 py-1 rounded bg-surface-muted dark:bg-surface-subtle-dark text-text-muted dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-muted-dark transition-colors"
           >
             {showOverlay
               ? t('validation.ocr.rawData.hideOverlay')
@@ -91,13 +91,13 @@ export function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOve
         <div className="flex items-center gap-4 mb-2 text-xs">
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded border-2 border-success-500 bg-success-500/20" />
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="text-text-muted dark:text-text-muted-dark">
               {t('validation.ocr.rawData.matchedWords')}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded border-2 border-gray-400 bg-gray-400/20" />
-            <span className="text-gray-600 dark:text-gray-400">
+            <span className="w-3 h-3 rounded border-2 border-text-subtle bg-text-subtle/20" />
+            <span className="text-text-muted dark:text-text-muted-dark">
               {t('validation.ocr.rawData.otherWords')}
             </span>
           </div>
@@ -107,7 +107,7 @@ export function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOve
       {/* Image container */}
       <div
         ref={containerRef}
-        className="relative overflow-auto max-h-96 rounded border border-gray-200 dark:border-gray-700"
+        className="relative overflow-auto max-h-96 rounded border border-border-default dark:border-border-default-dark"
       >
         <img
           src={imageUrl}
@@ -149,7 +149,7 @@ export function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOve
       </div>
 
       {/* Word count info */}
-      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="mt-2 text-xs text-text-muted dark:text-text-muted-dark">
         {ocrResult.words.length} {t('validation.ocr.rawData.wordsDetected')}
         {' • '}
         {ocrResult.words.filter((w) => isMatchedWord(w.text)).length}{' '}
@@ -160,11 +160,11 @@ export function OCRImageOverlay({ imageUrl, ocrResult, parsedData }: OCRImageOve
       {!ocrResult.hasPreciseBoundingBoxes && ocrResult.fullText && (
         <div className="mt-3">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            <span className="text-xs font-medium text-text-muted dark:text-text-muted-dark">
               {t('validation.ocr.rawData.rawText')}
             </span>
           </div>
-          <pre className="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 p-3 rounded border border-gray-200 dark:border-gray-700 overflow-auto max-h-64 whitespace-pre-wrap break-words">
+          <pre className="text-xs text-text-secondary dark:text-text-secondary-dark bg-surface-card dark:bg-surface-page-dark p-3 rounded border border-border-default dark:border-border-default-dark overflow-auto max-h-64 whitespace-pre-wrap break-words">
             {ocrResult.fullText}
           </pre>
         </div>

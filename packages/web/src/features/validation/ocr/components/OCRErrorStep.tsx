@@ -18,7 +18,7 @@ export function OCRErrorStep({ errorMessage, onRetry }: OCRErrorStepProps) {
       <p className="text-lg font-medium text-danger-700 dark:text-danger-400 mb-2">
         {t('validation.ocr.scanFailed')}
       </p>
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
+      <p className="text-sm text-text-muted dark:text-text-muted-dark text-center max-w-md mb-6">
         {errorMessage ?? t('validation.ocr.errors.processingFailed')}
       </p>
       <button

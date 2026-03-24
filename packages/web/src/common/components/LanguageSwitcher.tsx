@@ -28,7 +28,7 @@ export function LanguageSwitcher({ variant = 'compact', className = '' }: Langua
     return `px-3 py-1 rounded-lg text-sm transition-colors ${
       isActive
         ? 'bg-primary-500 text-primary-950'
-        : 'bg-surface-muted dark:bg-surface-subtle-dark text-text-secondary dark:text-text-secondary-dark hover:bg-gray-300 dark:hover:bg-gray-600'
+        : 'bg-surface-muted dark:bg-surface-subtle-dark text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-muted-dark'
     }`
   }
 

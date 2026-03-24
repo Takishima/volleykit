@@ -27,17 +27,17 @@ export function RawOcrDataPanel({
   const Icon = expanded ? ChevronUp : ChevronDown
 
   return (
-    <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+    <div className="mt-6 pt-4 border-t border-border-default dark:border-border-default-dark">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+        className="w-full flex items-center justify-between py-2 px-3 bg-surface-subtle dark:bg-surface-card-dark rounded-lg hover:bg-surface-muted dark:hover:bg-surface-muted-dark transition-colors"
         aria-expanded={expanded}
         aria-controls="raw-ocr-data"
       >
         <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <Icon className="w-4 h-4 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />
+          <span className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark">
             {t('validation.ocr.rawData.title')}
           </span>
         </div>

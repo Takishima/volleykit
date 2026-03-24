@@ -361,7 +361,7 @@ export function SwipeableCard({
           cursor: isDragging ? 'grabbing' : hasAnyAction ? 'grab' : 'default',
           pointerEvents: blockClicks ? 'none' : 'auto',
         }}
-        className="relative z-10 bg-white dark:bg-gray-800 rounded-xl"
+        className="relative z-10 bg-surface-card dark:bg-surface-card-dark rounded-xl"
       >
         {typeof children === 'function' ? children({ isDrawerOpen }) : children}
       </div>

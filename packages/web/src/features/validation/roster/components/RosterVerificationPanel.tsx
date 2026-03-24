@@ -307,7 +307,7 @@ export function RosterVerificationPanel({
         aria-live="polite"
       >
         <LoadingSpinner size="md" className="mb-3" />
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t('validation.roster.loadingRoster')}
         </p>
       </div>
@@ -337,7 +337,7 @@ export function RosterVerificationPanel({
   return (
     <div className="py-4">
       {/* Team name header */}
-      <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">{teamName}</h3>
+      <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-3">{teamName}</h3>
 
       {/* Coaches Section */}
       <div className="mb-2">
@@ -379,12 +379,12 @@ export function RosterVerificationPanel({
           <div id={`players-section-${team}`} className="mt-2">
             {allPlayers.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-text-muted dark:text-text-muted-dark">
                   {t('validation.roster.emptyRoster')}
                 </p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="bg-surface-card dark:bg-surface-card-dark rounded-lg border border-border-default dark:border-border-default-dark">
                 {allPlayers.map((player) => {
                   const entry = formattedEntries.get(player.id)
                   return (

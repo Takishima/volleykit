@@ -88,7 +88,7 @@ describe('LevelFilterToggle', () => {
 
     const { container } = render(<LevelFilterToggle checked={false} onChange={onChange} />)
 
-    const toggle = container.querySelector('.bg-gray-100')
+    const toggle = container.querySelector('.bg-surface-subtle')
     expect(toggle).toBeInTheDocument()
   })
 })

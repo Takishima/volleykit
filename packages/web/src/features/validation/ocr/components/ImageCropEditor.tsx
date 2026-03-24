@@ -106,7 +106,7 @@ export function ImageCropEditor({
   }, [croppedAreaPixels, imageUrl, rotation, onConfirm, t])
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gray-900">
+    <div className="fixed inset-0 z-50 flex flex-col bg-surface-page-dark">
       {/* Cropper viewport */}
       <div className="relative flex-1">
         <Cropper
@@ -147,14 +147,14 @@ export function ImageCropEditor({
           <button
             type="button"
             onClick={handleRotateLeft}
-            className="p-2 text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="p-2 text-text-secondary-dark hover:text-text-primary-dark bg-white/10 hover:bg-white/20 rounded-full transition-colors"
             aria-label={t('validation.ocr.rotateLeft')}
           >
             <RotateCcw className="w-6 h-6" aria-hidden="true" />
           </button>
 
           {/* Hint text */}
-          <span className="px-3 py-1 text-sm text-gray-300 bg-white/10 rounded">
+          <span className="px-3 py-1 text-sm text-text-secondary-dark bg-white/10 rounded">
             {t('validation.ocr.photoGuide.alignScoresheet')}
           </span>
 
@@ -162,7 +162,7 @@ export function ImageCropEditor({
           <button
             type="button"
             onClick={handleRotateRight}
-            className="p-2 text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="p-2 text-text-secondary-dark hover:text-text-primary-dark bg-white/10 hover:bg-white/20 rounded-full transition-colors"
             aria-label={t('validation.ocr.rotateRight')}
           >
             <RotateCw className="w-6 h-6" aria-hidden="true" />
@@ -171,12 +171,12 @@ export function ImageCropEditor({
       </div>
 
       {/* Controls - pb accounts for iOS safe area behind home indicator */}
-      <div className="flex-shrink-0 flex gap-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-white dark:bg-gray-800">
+      <div className="flex-shrink-0 flex gap-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-surface-card dark:bg-surface-card-dark">
         <button
           type="button"
           onClick={onCancel}
           disabled={isProcessing}
-          className="flex-1 flex items-center justify-center gap-2 min-h-12 px-4 py-3 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 min-h-12 px-4 py-3 text-text-secondary dark:text-text-secondary-dark bg-surface-muted dark:bg-surface-subtle-dark hover:bg-surface-subtle dark:hover:bg-surface-muted-dark rounded-lg font-medium transition-colors disabled:opacity-50"
         >
           <X className="w-5 h-5" aria-hidden="true" />
           {t('validation.ocr.cancel')}
