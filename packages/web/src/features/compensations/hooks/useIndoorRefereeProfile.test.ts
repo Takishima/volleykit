@@ -33,6 +33,11 @@ describe('useIndoorRefereeProfile', () => {
         dataSource: 'api',
       } as never)
     )
+    server.use(
+      http.get('*/showWithNestedObjects', () =>
+        HttpResponse.json({ person: { firstName: 'Jean', lastName: 'Dupont' } })
+      )
+    )
   })
 
   it('returns demo data when in demo mode', () => {
@@ -49,6 +54,8 @@ describe('useIndoorRefereeProfile', () => {
 
     expect(result.current.showTwintAction).toBe(true)
     expect(result.current.mobilePhone).toBe('+41 79 000 00 00')
+    expect(result.current.firstName).toBe('Demo')
+    expect(result.current.lastName).toBe('User')
   })
 
   it('returns showTwintAction=true when API flag is true', async () => {
@@ -90,9 +97,33 @@ describe('useIndoorRefereeProfile', () => {
     })
   })
 
+  it('returns firstName and lastName from person API', async () => {
+    server.use(
+      http.get('*/getIndoorRefereeByActivePerson', () =>
+        HttpResponse.json({
+          mobilePhoneNumbers: '+41 79 123 45 67',
+          showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses: true,
+        })
+      ),
+      http.get('*/showWithNestedObjects', () =>
+        HttpResponse.json({ person: { firstName: 'Marie', lastName: 'Müller' } })
+      )
+    )
+
+    const { result } = renderHook(() => useIndoorRefereeProfile(), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(result.current.firstName).toBe('Marie')
+      expect(result.current.lastName).toBe('Müller')
+    })
+  })
+
   it('returns defaults when API call fails', async () => {
     server.use(
-      http.get('*/getIndoorRefereeByActivePerson', () => new HttpResponse(null, { status: 500 }))
+      http.get('*/getIndoorRefereeByActivePerson', () => new HttpResponse(null, { status: 500 })),
+      http.get('*/showWithNestedObjects', () => new HttpResponse(null, { status: 500 }))
     )
 
     const { result } = renderHook(() => useIndoorRefereeProfile(), {
@@ -103,6 +134,8 @@ describe('useIndoorRefereeProfile', () => {
       // After failed fetch, data is undefined → defaults apply
       expect(result.current.showTwintAction).toBe(false)
       expect(result.current.mobilePhone).toBeNull()
+      expect(result.current.firstName).toBe('')
+      expect(result.current.lastName).toBe('')
     })
   })
 })

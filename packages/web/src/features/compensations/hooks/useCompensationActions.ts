@@ -7,8 +7,8 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore } from '@/common/stores/auth'
 import { toast } from '@/common/stores/toast'
 
-import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
 import { downloadCompensationPDF } from '../utils/compensation-actions'
+import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
 
 interface UseCompensationActionsResult {
   editCompensationModal: {
@@ -34,11 +34,10 @@ interface UseCompensationActionsResult {
 export function useCompensationActions(): UseCompensationActionsResult {
   const { t } = useTranslation()
   const isDemoMode = useAuthStore((state) => state.dataSource) === 'demo'
-  const user = useAuthStore((state) => state.user)
   const editCompensationModal = useModalState<CompensationRecord>()
   const twintModalState = useModalState<true>()
 
-  const { showTwintAction, mobilePhone } = useIndoorRefereeProfile()
+  const { showTwintAction, mobilePhone, firstName, lastName } = useIndoorRefereeProfile()
 
   const pdfMutation = useSafeMutation(
     async (compensation: CompensationRecord, log) => {
@@ -90,8 +89,8 @@ export function useCompensationActions(): UseCompensationActionsResult {
       close: twintModalState.close,
     },
     twintProfile: {
-      firstName: user?.firstName ?? '',
-      lastName: user?.lastName ?? '',
+      firstName,
+      lastName,
       mobilePhone,
     },
     showTwintAction,

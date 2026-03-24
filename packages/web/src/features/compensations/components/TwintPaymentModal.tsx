@@ -28,8 +28,8 @@ export function TwintPaymentModal({
         title={t('compensations.twintModalTitle')}
         titleId="twint-payment-title"
         icon={
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-sky-100 dark:bg-sky-900 flex items-center justify-center">
-            <Smartphone className="w-5 h-5 text-sky-600 dark:text-sky-400" aria-hidden="true" />
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <Smartphone className="w-5 h-5 text-slate-600 dark:text-slate-400" aria-hidden="true" />
           </div>
         }
         onClose={onClose}
