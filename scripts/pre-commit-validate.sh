@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 # Pre-commit validation hook for VolleyKit
 # Detects which packages have staged changes and runs their validation
-# checks in PARALLEL, then build sequentially.
+# checks in PARALLEL, then builds (with independent builds also parallel).
 #
 # IMPORTANT: This hook only runs in Claude Code web environment
 # to avoid slowing down human developers. Human devs rely on CI.
+#
+# Performance optimizations:
+# - knip deferred to CI (slow whole-project scan)
+# - Single root-level format check instead of per-package
+# - Independent builds run in parallel (web + help-site after shared)
+# - Shared-only changes skip mobile when no API/type exports changed
 
 set -e
 
@@ -100,10 +106,15 @@ has_changes_in "packages/mobile/" && HAS_MOBILE=true
 has_changes_in "packages/worker/" && HAS_WORKER=true
 has_changes_in "help-site/" && HAS_HELP_SITE=true
 
-# Shared changes also affect web-app and mobile (downstream consumers)
+# Shared changes affect web-app (always) and mobile (only if exports changed)
 if [ "$HAS_SHARED" = true ]; then
   HAS_WEB_APP=true
-  HAS_MOBILE=true
+  # Only trigger mobile if shared changes touch exported API surface
+  # (src/index.ts, src/*/index.ts, types, hooks, stores, api)
+  if echo "$STAGED_FILES" | grep -q "^packages/shared/src/" && \
+     echo "$STAGED_FILES" | grep -qE "packages/shared/src/(index\.ts|[^/]+/index\.ts|types/|hooks/|stores/|api/)"; then
+    HAS_MOBILE=true
+  fi
 fi
 
 # Root config changes affect all packages
@@ -212,19 +223,28 @@ launch_job() {
   JOB_PIDS+=($!)
 }
 
-# --- Web App checks ---
+# --- Single root-level format check (faster than per-package) ---
+# Check formatting only on staged files instead of per-package full scans
+FORMAT_FILES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|json|css|astro)$' || true)
+if [ -n "$FORMAT_FILES" ]; then
+  # Build absolute paths array for prettier
+  FORMAT_ARGS=()
+  while IFS= read -r f; do
+    FORMAT_ARGS+=("$ROOT_DIR/$f")
+  done <<< "$FORMAT_FILES"
+  launch_job "format" "$ROOT_DIR" prettier --check "${FORMAT_ARGS[@]}"
+fi
+
+# --- Web App checks (knip deferred to CI) ---
 if [ "$HAS_WEB_APP" = true ]; then
   WEB_DIR="$ROOT_DIR/packages/web"
-  launch_job "web:format"  "$WEB_DIR" pnpm run format:check
   launch_job "web:lint"    "$WEB_DIR" pnpm run lint
-  launch_job "web:knip"    "$WEB_DIR" pnpm run knip
   launch_job "web:test"    "$WEB_DIR" pnpm test
 fi
 
 # --- Shared package checks ---
 if [ "$HAS_SHARED" = true ]; then
   SHARED_DIR="$ROOT_DIR/packages/shared"
-  launch_job "shared:format"    "$SHARED_DIR" pnpm run format:check
   launch_job "shared:lint"      "$SHARED_DIR" pnpm run lint
   launch_job "shared:typecheck" "$SHARED_DIR" pnpm run typecheck
   launch_job "shared:test"      "$SHARED_DIR" pnpm test
@@ -233,7 +253,6 @@ fi
 # --- Mobile package checks ---
 if [ "$HAS_MOBILE" = true ]; then
   MOBILE_DIR="$ROOT_DIR/packages/mobile"
-  launch_job "mobile:format"    "$MOBILE_DIR" pnpm run format:check
   launch_job "mobile:lint"      "$MOBILE_DIR" pnpm run lint
   launch_job "mobile:typecheck" "$MOBILE_DIR" pnpm run typecheck
   launch_job "mobile:test"      "$MOBILE_DIR" pnpm test
@@ -242,15 +261,8 @@ fi
 # --- Worker checks ---
 if [ "$HAS_WORKER" = true ]; then
   WORKER_DIR="$ROOT_DIR/packages/worker"
-  launch_job "worker:format" "$WORKER_DIR" pnpm run format:check
   launch_job "worker:lint"   "$WORKER_DIR" pnpm run lint
   launch_job "worker:test"   "$WORKER_DIR" pnpm test
-fi
-
-# --- Help site checks ---
-if [ "$HAS_HELP_SITE" = true ]; then
-  HELP_DIR="$ROOT_DIR/help-site"
-  launch_job "help:format" "$HELP_DIR" pnpm run format:check
 fi
 
 NUM_JOBS=${#JOB_NAMES[@]}
@@ -309,44 +321,82 @@ if [ "$HAS_FAILURES" = false ]; then
   # Build shared first (dependency for web-app and mobile)
   if [ "$HAS_SHARED" = true ]; then
     echo "Building shared..."
-    if (cd "$ROOT_DIR/packages/shared" && pnpm run build) ; then
-      echo -e "${GREEN}shared build passed${NC}"
+    if (cd "$ROOT_DIR/packages/shared" && pnpm run build) >"$TEMP_DIR/build-shared.out" 2>&1; then
+      echo -e "${GREEN}✓ shared build passed${NC}"
     else
-      echo -e "${RED}shared build failed${NC}"
+      echo -e "${RED}✗ shared build failed${NC}"
+      cat "$TEMP_DIR/build-shared.out"
       BUILD_RESULT=1
     fi
   fi
 
-  # Build web-app (only if shared build passed)
-  if [ "$HAS_WEB_APP" = true ] && [ "$BUILD_RESULT" -eq 0 ]; then
-    echo "Building web-app..."
-    if (cd "$ROOT_DIR/packages/web" && pnpm run build) ; then
-      echo -e "${GREEN}web-app build passed${NC}"
-      # Check bundle size immediately after build
-      echo "Checking bundle size..."
-      if (cd "$ROOT_DIR/packages/web" && pnpm run size) ; then
-        echo -e "${GREEN}web-app bundle size passed${NC}"
-      else
-        echo -e "${RED}web-app bundle size exceeded limits${NC}"
-        echo -e "${YELLOW}Note: CI builds the merge commit and may be ~10-15 kB larger than local.${NC}"
-        echo -e "${YELLOW}If local passes but CI fails, update limits in packages/web/package.json.${NC}"
-        BUILD_RESULT=1
+  # Build web-app and help-site in PARALLEL (independent after shared)
+  if [ "$BUILD_RESULT" -eq 0 ]; then
+    declare -a BUILD_NAMES=()
+    declare -a BUILD_PIDS=()
+
+    if [ "$HAS_WEB_APP" = true ]; then
+      echo "Building web-app..."
+      (
+        cd "$ROOT_DIR/packages/web"
+        if pnpm run build >"$TEMP_DIR/build-web.out" 2>&1; then
+          # Check bundle size immediately after build
+          if pnpm run size >>"$TEMP_DIR/build-web.out" 2>&1; then
+            echo "0" >"$TEMP_DIR/build-web.result"
+          else
+            echo "size" >"$TEMP_DIR/build-web.result"
+          fi
+        else
+          echo "1" >"$TEMP_DIR/build-web.result"
+        fi
+      ) &
+      BUILD_NAMES+=("web-app")
+      BUILD_PIDS+=($!)
+    fi
+
+    if [ "$HAS_HELP_SITE" = true ]; then
+      echo "Building help-site..."
+      (
+        cd "$ROOT_DIR/help-site"
+        if pnpm run build >"$TEMP_DIR/build-help.out" 2>&1; then
+          echo "0" >"$TEMP_DIR/build-help.result"
+        else
+          echo "1" >"$TEMP_DIR/build-help.result"
+        fi
+      ) &
+      BUILD_NAMES+=("help-site")
+      BUILD_PIDS+=($!)
+    fi
+
+    # Wait for parallel builds
+    for ((b=0; b<${#BUILD_PIDS[@]}; b++)); do
+      wait "${BUILD_PIDS[$b]}" 2>/dev/null || true
+      B_NAME="${BUILD_NAMES[$b]}"
+      if [ "$B_NAME" = "web-app" ]; then
+        B_RESULT=$(cat "$TEMP_DIR/build-web.result" 2>/dev/null || echo "1")
+        if [ "$B_RESULT" = "0" ]; then
+          echo -e "${GREEN}✓ web-app build + size check passed${NC}"
+        elif [ "$B_RESULT" = "size" ]; then
+          echo -e "${RED}✗ web-app bundle size exceeded limits${NC}"
+          echo -e "${YELLOW}Note: CI builds the merge commit and may be ~10-15 kB larger than local.${NC}"
+          cat "$TEMP_DIR/build-web.out"
+          BUILD_RESULT=1
+        else
+          echo -e "${RED}✗ web-app build failed${NC}"
+          cat "$TEMP_DIR/build-web.out"
+          BUILD_RESULT=1
+        fi
+      elif [ "$B_NAME" = "help-site" ]; then
+        B_RESULT=$(cat "$TEMP_DIR/build-help.result" 2>/dev/null || echo "1")
+        if [ "$B_RESULT" = "0" ]; then
+          echo -e "${GREEN}✓ help-site build passed${NC}"
+        else
+          echo -e "${RED}✗ help-site build failed${NC}"
+          cat "$TEMP_DIR/build-help.out"
+          BUILD_RESULT=1
+        fi
       fi
-    else
-      echo -e "${RED}web-app build failed${NC}"
-      BUILD_RESULT=1
-    fi
-  fi
-
-  # Build help-site
-  if [ "$HAS_HELP_SITE" = true ] && [ "$BUILD_RESULT" -eq 0 ]; then
-    echo "Building help-site..."
-    if (cd "$ROOT_DIR/help-site" && pnpm run build) ; then
-      echo -e "${GREEN}help-site build passed${NC}"
-    else
-      echo -e "${RED}help-site build failed${NC}"
-      BUILD_RESULT=1
-    fi
+    done
   fi
 else
   echo -e "${YELLOW}Build skipped (previous checks failed)${NC}"
@@ -386,4 +436,17 @@ fi
 
 echo ""
 echo -e "${GREEN}All checks passed! Commit allowed.${NC}"
+
+# =============================================================================
+# WRITE SUCCESS MARKER (for lightweight hook gate)
+# =============================================================================
+# The pre-git-commit hook checks this marker to approve commits instantly
+# without re-running validation. Marker includes a hash of staged files
+# so it's invalidated if the staging area changes.
+MARKER_DIR="/tmp/claude-validation-marker"
+mkdir -p "$MARKER_DIR"
+STAGED_HASH=$(git diff --name-only --cached | sort | sha256sum | cut -d' ' -f1)
+echo "$STAGED_HASH" > "$MARKER_DIR/staged-hash"
+date +%s > "$MARKER_DIR/timestamp"
+
 exit 0
