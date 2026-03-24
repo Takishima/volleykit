@@ -478,7 +478,7 @@ export default defineConfig(({ mode }) => {
             name: 'VolleyKit',
             short_name: 'VolleyKit',
             description: 'Swiss Volleyball Referee Management PWA',
-            theme_color: '#ff6b00',
+            theme_color: '#b2e600',
             background_color: '#ffffff',
             display: 'standalone',
             scope: basePath,
