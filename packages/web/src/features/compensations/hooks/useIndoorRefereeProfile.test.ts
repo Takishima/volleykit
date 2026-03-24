@@ -10,10 +10,6 @@ vi.mock('@/common/stores/auth', () => ({
   useAuthStore: vi.fn(),
 }))
 
-vi.mock('@/api/constants', () => ({
-  getApiBaseUrl: () => 'http://localhost/api',
-}))
-
 import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
 
 function createWrapper() {

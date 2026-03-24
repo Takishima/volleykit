@@ -26,7 +26,7 @@ export function useIndoorRefereeProfile() {
   const isDemoMode = useAuthStore((state) => state.dataSource) === 'demo'
 
   const { data } = useQuery<IndoorRefereeProfileResponse>({
-    queryKey: queryKeys.user.profile(),
+    queryKey: queryKeys.user.indoorRefereeProfile(),
     queryFn: () => fetchIndoorRefereeProfile(userId!),
     enabled: !!userId && !isDemoMode,
     staleTime: SETTINGS_STALE_TIME_MS,
