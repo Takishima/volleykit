@@ -11,6 +11,7 @@ export const en: TranslationKeys = {
     travelTime: 'Travel Time',
     offlinePwa: 'Offline & PWA',
     settings: 'Settings',
+    sportsHallReport: 'Sports Hall Report',
   },
 
   common: {
@@ -68,6 +69,10 @@ export const en: TranslationKeys = {
         title: 'Settings',
         description: 'Customize your language, theme, and notification preferences.',
       },
+      sportsHallReport: {
+        title: 'Sports Hall Report',
+        description: 'Generate and submit official sports hall inspection reports.',
+      },
     },
   },
 
@@ -104,6 +109,11 @@ export const en: TranslationKeys = {
     settings: {
       title: 'Settings',
       description: 'Learn how to customize VolleyKit settings and preferences.',
+    },
+    sportsHallReport: {
+      title: 'Sports Hall Report',
+      description:
+        'Learn how to generate and submit sports hall inspection reports for your games.',
     },
   },
 
@@ -315,8 +325,10 @@ export const en: TranslationKeys = {
         validate:
           'Validate – Submit game results and validate the match (available for first referees after the game)',
         edit: 'Edit – Edit your compensation details for this assignment',
-        screenshotAlt: 'Assignment card swiped left showing validate and edit actions',
-        screenshotCaption: 'Swipe left to reveal validate and edit actions',
+        generateReport:
+          'Generate Report – Create a sports hall inspection report (available for eligible league games)',
+        screenshotAlt: 'Assignment card swiped left showing validate, edit, and report actions',
+        screenshotCaption: 'Swipe left to reveal validate, edit, and report actions',
         tip: 'You can also perform a full swipe to immediately trigger the primary action without tapping the button.',
       },
       directions: {
@@ -482,6 +494,21 @@ export const en: TranslationKeys = {
         'The exported PDF includes the game details and compensation information in a formatted document. This is useful for providing to teams that need to pay the referee directly.',
       infoBox:
         'The PDF export creates an official-looking document with all the game and compensation details that teams may require for their records.',
+    },
+    twintPayment: {
+      title: 'Twint Payment',
+      description:
+        'For compensations where the referee needs to be paid directly, you can quickly look up payment details for Twint. Swipe left on any compensation card to reveal the Twint action.',
+      steps: {
+        navigate: 'Go to the Compensations tab',
+        swipeLeft: 'Swipe left on a compensation card to reveal the action buttons',
+        tapTwint: 'Tap the Twint button to open the payment details modal',
+      },
+      screenshotAlt: 'Compensation card swiped left showing Edit, PDF, and Twint actions',
+      screenshotCaption: 'Swipe left to reveal compensation actions including Twint',
+      modalScreenshotAlt: 'Twint payment modal showing referee name, phone number, and amount',
+      modalScreenshotCaption: 'Twint payment details for quick reference',
+      tip: 'The Twint action is only available when the referee has a mobile phone number on file. The amount shown includes both the game compensation and travel allowance.',
     },
     paymentSchedule: {
       title: 'Payment Schedule',
@@ -890,6 +917,74 @@ export const en: TranslationKeys = {
       },
       infoBox:
         'Check the version number when reporting issues – it helps us identify and fix problems faster.',
+    },
+  },
+
+  sportsHallReport: {
+    heading: 'Sports Hall Report',
+    lead: 'The sports hall report allows first referees to document the condition of the sports hall before a game. You can generate a pre-filled PDF report directly from the app.',
+    availabilityNote:
+      'The sports hall report is only available for NLA and NLB games. It does not appear for lower league assignments.',
+    whatIs: {
+      title: 'What is the Sports Hall Report?',
+      description:
+        'Before each game, the first referee is responsible for inspecting the sports hall and documenting its condition. The sports hall report wizard helps you:',
+      features: {
+        preFilledPdf: 'Generate a pre-filled PDF with game and team details',
+        jerseyAds: 'Record jersey advertising information for both teams',
+        signatureCapture: 'Capture your signature digitally',
+        nonConformant: 'Report issues with the sports hall if it does not meet the requirements',
+      },
+    },
+    accessing: {
+      title: 'How to Access the Report',
+      description:
+        'The sports hall report is available for eligible league games. To generate a report:',
+      steps: {
+        openAssignment: 'Open your assignments and find the game',
+        swipeLeft: 'Swipe left on the assignment card to reveal the action buttons',
+        tapReport: 'Tap the "Report" button to open the wizard',
+      },
+      screenshotAlt: 'Assignment card swiped left showing the Generate Report action',
+      screenshotCaption: 'Access the sports hall report from the assignment swipe actions',
+    },
+    happyPath: {
+      title: 'Everything OK – Standard Report',
+      description:
+        'When the sports hall meets all requirements, you can quickly generate a standard report:',
+      steps: {
+        selectLanguage: 'Select the report language (German or French)',
+        configureAds: 'Toggle jersey advertising for each team',
+        tapEverythingOk: 'Tap "Everything OK" to confirm',
+        drawSignature: 'Draw your signature on the signature pad',
+      },
+      screenshotAlt: 'Sports hall report wizard showing language selector and jersey ad toggles',
+      screenshotCaption: 'The report wizard with language selection and jersey advertising options',
+      signatureScreenshotAlt: 'Signature capture canvas for the sports hall report',
+      signatureScreenshotCaption: 'Draw your signature to complete the report',
+      tip: 'Rotate your device to landscape orientation for a more comfortable signing experience.',
+    },
+    nonConformant: {
+      title: 'Reporting Issues',
+      description:
+        'If the sports hall does not meet the requirements, tap "Report Issue" to start the non-conformant report flow:',
+      steps: {
+        tapReportIssue: 'Tap "Report Issue" in the wizard',
+        selectSections: 'Select which checklist sections have issues',
+        addComments: 'Add comments describing the problems',
+        reviewPdf: 'Review the generated PDF preview',
+        collectSignatures: 'Collect signatures from referees and coaches',
+      },
+      screenshotAlt: 'PDF preview of a non-conformant sports hall report',
+      screenshotCaption: 'Preview the generated report before downloading',
+      infoBox:
+        'The non-conformant report requires signatures from both referees. Coach signatures are optional.',
+    },
+    downloadPdf: {
+      title: 'Downloading the Report',
+      description:
+        'After completing the wizard, the PDF is automatically downloaded to your device. You can also use the "Download pre-filled template" link to get a blank template with pre-filled game details for manual completion.',
+      tip: 'The generated PDF can be shared with the venue operator and uploaded to volleymanager if needed.',
     },
   },
 }

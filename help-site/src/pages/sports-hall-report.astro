@@ -1,0 +1,156 @@
+---
+import DocLayout from '../layouts/DocLayout.astro'
+import Screenshot from '../components/Screenshot.astro'
+import DeviceScreenshot from '../components/DeviceScreenshot.astro'
+import InfoBox from '../components/InfoBox.astro'
+import StepList from '../components/StepList.astro'
+import { t } from '../i18n'
+---
+
+<DocLayout
+  title={t('pages.sportsHallReport.title')}
+  description={t('pages.sportsHallReport.description')}
+>
+  <h1 data-i18n="sportsHallReport.heading">{t('sportsHallReport.heading')}</h1>
+
+  <p
+    class="lead text-text-secondary dark:text-text-secondary-dark"
+    data-i18n="sportsHallReport.lead"
+  >
+    {t('sportsHallReport.lead')}
+  </p>
+
+  <InfoBox type="info">
+    <p data-i18n="sportsHallReport.availabilityNote">
+      {t('sportsHallReport.availabilityNote')}
+    </p>
+  </InfoBox>
+
+  <h2 data-i18n="sportsHallReport.whatIs.title">{t('sportsHallReport.whatIs.title')}</h2>
+
+  <p data-i18n="sportsHallReport.whatIs.description">{t('sportsHallReport.whatIs.description')}</p>
+
+  <ul>
+    <li data-i18n="sportsHallReport.whatIs.features.preFilledPdf">
+      {t('sportsHallReport.whatIs.features.preFilledPdf')}
+    </li>
+    <li data-i18n="sportsHallReport.whatIs.features.jerseyAds">
+      {t('sportsHallReport.whatIs.features.jerseyAds')}
+    </li>
+    <li data-i18n="sportsHallReport.whatIs.features.signatureCapture">
+      {t('sportsHallReport.whatIs.features.signatureCapture')}
+    </li>
+    <li data-i18n="sportsHallReport.whatIs.features.nonConformant">
+      {t('sportsHallReport.whatIs.features.nonConformant')}
+    </li>
+  </ul>
+
+  <h2 data-i18n="sportsHallReport.accessing.title">{t('sportsHallReport.accessing.title')}</h2>
+
+  <p data-i18n="sportsHallReport.accessing.description">
+    {t('sportsHallReport.accessing.description')}
+  </p>
+
+  <StepList
+    steps={[
+      { title: t('sportsHallReport.accessing.steps.openAssignment'), titleKey: 'sportsHallReport.accessing.steps.openAssignment' },
+      { title: t('sportsHallReport.accessing.steps.swipeLeft'), titleKey: 'sportsHallReport.accessing.steps.swipeLeft' },
+      { title: t('sportsHallReport.accessing.steps.tapReport'), titleKey: 'sportsHallReport.accessing.steps.tapReport' },
+    ]}
+  />
+
+  <DeviceScreenshot
+    id="report-access"
+    alt={t('sportsHallReport.accessing.screenshotAlt')}
+    caption={t('sportsHallReport.accessing.screenshotCaption')}
+    altKey="sportsHallReport.accessing.screenshotAlt"
+    captionKey="sportsHallReport.accessing.screenshotCaption"
+    instructions="Take a screenshot of an assignment card swiped left showing the Generate Report action button alongside Validate and Edit."
+  />
+
+  <h2 data-i18n="sportsHallReport.happyPath.title">{t('sportsHallReport.happyPath.title')}</h2>
+
+  <p data-i18n="sportsHallReport.happyPath.description">
+    {t('sportsHallReport.happyPath.description')}
+  </p>
+
+  <StepList
+    steps={[
+      { title: t('sportsHallReport.happyPath.steps.selectLanguage'), titleKey: 'sportsHallReport.happyPath.steps.selectLanguage' },
+      { title: t('sportsHallReport.happyPath.steps.configureAds'), titleKey: 'sportsHallReport.happyPath.steps.configureAds' },
+      { title: t('sportsHallReport.happyPath.steps.tapEverythingOk'), titleKey: 'sportsHallReport.happyPath.steps.tapEverythingOk' },
+      { title: t('sportsHallReport.happyPath.steps.drawSignature'), titleKey: 'sportsHallReport.happyPath.steps.drawSignature' },
+    ]}
+  />
+
+  <DeviceScreenshot
+    id="report-wizard-entry"
+    alt={t('sportsHallReport.happyPath.screenshotAlt')}
+    caption={t('sportsHallReport.happyPath.screenshotCaption')}
+    altKey="sportsHallReport.happyPath.screenshotAlt"
+    captionKey="sportsHallReport.happyPath.screenshotCaption"
+    instructions="Take a screenshot of the sports hall report wizard modal showing the language selector (Deutsch/Français) and jersey advertising toggles for both teams."
+  />
+
+  <DeviceScreenshot
+    id="report-signature"
+    alt={t('sportsHallReport.happyPath.signatureScreenshotAlt')}
+    caption={t('sportsHallReport.happyPath.signatureScreenshotCaption')}
+    altKey="sportsHallReport.happyPath.signatureScreenshotAlt"
+    captionKey="sportsHallReport.happyPath.signatureScreenshotCaption"
+    instructions="Take a screenshot of the full-screen signature capture canvas with the signature baseline guide and toolbar."
+  />
+
+  <InfoBox type="tip">
+    <p data-i18n="sportsHallReport.happyPath.tip">
+      {t('sportsHallReport.happyPath.tip')}
+    </p>
+  </InfoBox>
+
+  <h2 data-i18n="sportsHallReport.nonConformant.title">
+    {t('sportsHallReport.nonConformant.title')}
+  </h2>
+
+  <p data-i18n="sportsHallReport.nonConformant.description">
+    {t('sportsHallReport.nonConformant.description')}
+  </p>
+
+  <StepList
+    steps={[
+      { title: t('sportsHallReport.nonConformant.steps.tapReportIssue'), titleKey: 'sportsHallReport.nonConformant.steps.tapReportIssue' },
+      { title: t('sportsHallReport.nonConformant.steps.selectSections'), titleKey: 'sportsHallReport.nonConformant.steps.selectSections' },
+      { title: t('sportsHallReport.nonConformant.steps.addComments'), titleKey: 'sportsHallReport.nonConformant.steps.addComments' },
+      { title: t('sportsHallReport.nonConformant.steps.reviewPdf'), titleKey: 'sportsHallReport.nonConformant.steps.reviewPdf' },
+      { title: t('sportsHallReport.nonConformant.steps.collectSignatures'), titleKey: 'sportsHallReport.nonConformant.steps.collectSignatures' },
+    ]}
+  />
+
+  <Screenshot
+    id="report-pdf-preview"
+    alt={t('sportsHallReport.nonConformant.screenshotAlt')}
+    caption={t('sportsHallReport.nonConformant.screenshotCaption')}
+    altKey="sportsHallReport.nonConformant.screenshotAlt"
+    captionKey="sportsHallReport.nonConformant.screenshotCaption"
+    instructions="Take a screenshot of the non-conformant flow PDF preview step showing the generated report in an iframe with the step indicator at the top."
+  />
+
+  <InfoBox type="info">
+    <p data-i18n="sportsHallReport.nonConformant.infoBox">
+      {t('sportsHallReport.nonConformant.infoBox')}
+    </p>
+  </InfoBox>
+
+  <h2 data-i18n="sportsHallReport.downloadPdf.title">
+    {t('sportsHallReport.downloadPdf.title')}
+  </h2>
+
+  <p data-i18n="sportsHallReport.downloadPdf.description">
+    {t('sportsHallReport.downloadPdf.description')}
+  </p>
+
+  <InfoBox type="tip">
+    <p data-i18n="sportsHallReport.downloadPdf.tip">
+      {t('sportsHallReport.downloadPdf.tip')}
+    </p>
+  </InfoBox>
+</DocLayout>

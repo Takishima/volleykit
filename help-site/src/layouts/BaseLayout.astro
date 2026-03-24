@@ -118,6 +118,18 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
           }
         })
 
+        // Translate elements with data-i18n-alt attribute (for images)
+        document.querySelectorAll('[data-i18n-alt]').forEach((el) => {
+          const key = el.getAttribute('data-i18n-alt')
+          if (key && el instanceof HTMLImageElement) {
+            const translated = t(key)
+            if (translated !== key) {
+              const suffix = el.dataset.altSuffix ?? ''
+              el.alt = translated + suffix
+            }
+          }
+        })
+
         // Translate elements with data-i18n-aria-label attribute
         document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
           const key = el.getAttribute('data-i18n-aria-label')

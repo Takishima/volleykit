@@ -11,6 +11,7 @@ export const fr: TranslationKeys = {
     travelTime: 'Temps de trajet',
     offlinePwa: 'Hors ligne & PWA',
     settings: 'Paramètres',
+    sportsHallReport: 'Rapport de salle',
   },
 
   common: {
@@ -68,6 +69,10 @@ export const fr: TranslationKeys = {
         title: 'Paramètres',
         description: 'Personnalisez la langue, le thème et les préférences de notification.',
       },
+      sportsHallReport: {
+        title: 'Rapport de salle',
+        description: "Générer et soumettre des rapports officiels d'inspection de salle.",
+      },
     },
   },
 
@@ -109,6 +114,11 @@ export const fr: TranslationKeys = {
     settings: {
       title: 'Paramètres',
       description: 'Apprenez à personnaliser les paramètres et préférences de VolleyKit.',
+    },
+    sportsHallReport: {
+      title: 'Rapport de salle',
+      description:
+        "Découvrez comment générer et soumettre des rapports d'inspection de salle pour vos matchs.",
     },
   },
 
@@ -326,9 +336,11 @@ export const fr: TranslationKeys = {
         validate:
           'Valider – Soumettre les résultats du match et valider (disponible pour les premiers arbitres après le match)',
         edit: "Modifier – Modifier vos détails d'indemnité pour cette désignation",
+        generateReport:
+          "Générer un rapport – Créer un rapport d'inspection de salle (disponible pour les matchs de ligue éligibles)",
         screenshotAlt:
-          'Carte de désignation balayée à gauche montrant les actions valider et modifier',
-        screenshotCaption: 'Balayer à gauche pour révéler les actions valider et modifier',
+          'Carte de désignation balayée à gauche montrant les actions valider, modifier et rapport',
+        screenshotCaption: 'Balayer à gauche pour révéler les actions valider, modifier et rapport',
         tip: "Vous pouvez aussi effectuer un balayage complet pour déclencher immédiatement l'action principale sans appuyer sur le bouton.",
       },
       directions: {
@@ -499,6 +511,25 @@ export const fr: TranslationKeys = {
         "Le PDF exporté inclut les détails du match et les informations d'indemnité dans un document formaté. C'est utile pour les équipes qui doivent payer l'arbitre directement.",
       infoBox:
         "L'export PDF crée un document d'aspect officiel avec tous les détails du match et de l'indemnité que les équipes peuvent requérir pour leurs archives.",
+    },
+    twintPayment: {
+      title: 'Paiement Twint',
+      description:
+        "Pour les indemnités où l'arbitre doit être payé directement, vous pouvez rapidement consulter les détails de paiement Twint. Glissez vers la gauche sur une carte d'indemnité pour afficher l'action Twint.",
+      steps: {
+        navigate: "Accédez à l'onglet Indemnités",
+        swipeLeft:
+          "Glissez vers la gauche sur une carte d'indemnité pour afficher les boutons d'action",
+        tapTwint: 'Appuyez sur le bouton Twint pour ouvrir les détails de paiement',
+      },
+      screenshotAlt:
+        "Carte d'indemnité glissée vers la gauche affichant les actions Modifier, PDF et Twint",
+      screenshotCaption:
+        "Glissez vers la gauche pour afficher les actions d'indemnité, y compris Twint",
+      modalScreenshotAlt:
+        "Modal de paiement Twint affichant le nom de l'arbitre, le numéro de téléphone et le montant",
+      modalScreenshotCaption: 'Détails de paiement Twint pour référence rapide',
+      tip: "L'action Twint n'est disponible que lorsque l'arbitre a un numéro de téléphone portable enregistré. Le montant affiché comprend l'indemnité de match et l'indemnité de déplacement.",
     },
     paymentSchedule: {
       title: 'Calendrier de paiement',
@@ -919,6 +950,79 @@ export const fr: TranslationKeys = {
       },
       infoBox:
         'Vérifiez le numéro de version lors de la signalisation de problèmes – cela nous aide à identifier et corriger les problèmes plus rapidement.',
+    },
+  },
+
+  sportsHallReport: {
+    heading: 'Rapport de salle',
+    lead: "Le rapport de salle permet au premier arbitre de documenter l'état de la salle de sport avant un match. Vous pouvez générer un rapport PDF pré-rempli directement depuis l'application.",
+    availabilityNote:
+      "Le rapport de salle n'est disponible que pour les matchs NLA et NLB. Il n'apparaît pas pour les désignations des ligues inférieures.",
+    whatIs: {
+      title: "Qu'est-ce que le rapport de salle ?",
+      description:
+        "Avant chaque match, le premier arbitre est responsable de l'inspection de la salle de sport et de la documentation de son état. L'assistant de rapport de salle vous aide à :",
+      features: {
+        preFilledPdf: 'Générer un PDF pré-rempli avec les détails du match et des équipes',
+        jerseyAds: 'Enregistrer les informations de publicité sur les maillots des deux équipes',
+        signatureCapture: 'Capturer votre signature numériquement',
+        nonConformant: 'Signaler des problèmes avec la salle si elle ne répond pas aux exigences',
+      },
+    },
+    accessing: {
+      title: 'Comment accéder au rapport',
+      description:
+        'Le rapport de salle est disponible pour les matchs de ligue éligibles. Pour générer un rapport :',
+      steps: {
+        openAssignment: 'Ouvrez vos désignations et trouvez le match',
+        swipeLeft:
+          "Glissez vers la gauche sur la carte de désignation pour afficher les boutons d'action",
+        tapReport: "Appuyez sur le bouton « Rapport » pour ouvrir l'assistant",
+      },
+      screenshotAlt:
+        "Carte de désignation glissée vers la gauche affichant l'action Générer un rapport",
+      screenshotCaption:
+        'Accédez au rapport de salle depuis les actions de glissement de la désignation',
+    },
+    happyPath: {
+      title: 'Tout est en ordre – Rapport standard',
+      description:
+        'Lorsque la salle de sport répond à toutes les exigences, vous pouvez rapidement générer un rapport standard :',
+      steps: {
+        selectLanguage: 'Sélectionnez la langue du rapport (allemand ou français)',
+        configureAds: 'Activez/désactivez la publicité sur les maillots pour chaque équipe',
+        tapEverythingOk: 'Appuyez sur « Tout est en ordre » pour confirmer',
+        drawSignature: 'Dessinez votre signature sur le pad de signature',
+      },
+      screenshotAlt:
+        'Assistant de rapport de salle avec sélecteur de langue et options de publicité sur les maillots',
+      screenshotCaption:
+        "L'assistant de rapport avec la sélection de langue et les options de publicité",
+      signatureScreenshotAlt: 'Canvas de capture de signature pour le rapport de salle',
+      signatureScreenshotCaption: 'Dessinez votre signature pour compléter le rapport',
+      tip: 'Tournez votre appareil en mode paysage pour une expérience de signature plus confortable.',
+    },
+    nonConformant: {
+      title: 'Signaler des problèmes',
+      description:
+        'Si la salle de sport ne répond pas aux exigences, appuyez sur « Signaler un problème » pour démarrer le flux de rapport non conforme :',
+      steps: {
+        tapReportIssue: "Appuyez sur « Signaler un problème » dans l'assistant",
+        selectSections: 'Sélectionnez les sections de la checklist qui présentent des problèmes',
+        addComments: 'Ajoutez des commentaires décrivant les problèmes',
+        reviewPdf: "Examinez l'aperçu du PDF généré",
+        collectSignatures: 'Recueillez les signatures des arbitres et des entraîneurs',
+      },
+      screenshotAlt: "Aperçu PDF d'un rapport de salle non conforme",
+      screenshotCaption: 'Aperçu du rapport généré avant le téléchargement',
+      infoBox:
+        'Le rapport non conforme nécessite les signatures des deux arbitres. Les signatures des entraîneurs sont facultatives.',
+    },
+    downloadPdf: {
+      title: 'Télécharger le rapport',
+      description:
+        "Après avoir terminé l'assistant, le PDF est automatiquement téléchargé sur votre appareil. Vous pouvez également utiliser le lien « Télécharger le modèle pré-rempli » pour obtenir un modèle vierge avec les détails du match pré-remplis.",
+      tip: "Le PDF généré peut être partagé avec l'exploitant de la salle et téléchargé sur volleymanager si nécessaire.",
     },
   },
 }

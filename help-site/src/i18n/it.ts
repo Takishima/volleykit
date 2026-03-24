@@ -11,6 +11,7 @@ export const it: TranslationKeys = {
     travelTime: 'Tempo di viaggio',
     offlinePwa: 'Offline & PWA',
     settings: 'Impostazioni',
+    sportsHallReport: 'Rapporto sala',
   },
 
   common: {
@@ -68,6 +69,10 @@ export const it: TranslationKeys = {
         title: 'Impostazioni',
         description: 'Personalizza lingua, tema e preferenze di notifica.',
       },
+      sportsHallReport: {
+        title: 'Rapporto sala',
+        description: 'Generare e inviare rapporti ufficiali di ispezione della sala.',
+      },
     },
   },
 
@@ -106,6 +111,11 @@ export const it: TranslationKeys = {
     settings: {
       title: 'Impostazioni',
       description: 'Scopri come personalizzare le impostazioni e le preferenze di VolleyKit.',
+    },
+    sportsHallReport: {
+      title: 'Rapporto sala',
+      description:
+        'Scopri come generare e inviare rapporti di ispezione della sala per le tue partite.',
     },
   },
 
@@ -320,8 +330,12 @@ export const it: TranslationKeys = {
         validate:
           'Valida – Invia i risultati della partita e valida (disponibile per i primi arbitri dopo la partita)',
         edit: 'Modifica – Modifica i dettagli del tuo compenso per questa designazione',
-        screenshotAlt: 'Scheda designazione scorsa a sinistra che mostra azioni valida e modifica',
-        screenshotCaption: 'Scorri a sinistra per rivelare le azioni valida e modifica',
+        generateReport:
+          'Genera rapporto – Crea un rapporto di ispezione della sala (disponibile per le partite di lega idonee)',
+        screenshotAlt:
+          'Scheda designazione scorsa a sinistra che mostra azioni valida, modifica e genera rapporto',
+        screenshotCaption:
+          'Scorri a sinistra per rivelare le azioni valida, modifica e genera rapporto',
         tip: "Puoi anche eseguire uno scorrimento completo per attivare immediatamente l'azione principale senza toccare il pulsante.",
       },
       directions: {
@@ -489,6 +503,24 @@ export const it: TranslationKeys = {
         "Il PDF esportato include i dettagli della partita e le informazioni sul compenso in un documento formattato. Questo è utile per le squadre che devono pagare l'arbitro direttamente.",
       infoBox:
         "L'esportazione PDF crea un documento dall'aspetto ufficiale con tutti i dettagli della partita e del compenso che le squadre potrebbero richiedere per i loro archivi.",
+    },
+    twintPayment: {
+      title: 'Pagamento Twint',
+      description:
+        "Per i compensi in cui l'arbitro deve essere pagato direttamente, puoi consultare rapidamente i dettagli di pagamento per Twint. Scorri verso sinistra su una carta di compenso per visualizzare l'azione Twint.",
+      steps: {
+        navigate: 'Vai alla scheda Compensi',
+        swipeLeft:
+          'Scorri verso sinistra su una carta di compenso per visualizzare i pulsanti di azione',
+        tapTwint: 'Tocca il pulsante Twint per aprire i dettagli di pagamento',
+      },
+      screenshotAlt: 'Carta di compenso scorsa verso sinistra con azioni Modifica, PDF e Twint',
+      screenshotCaption:
+        'Scorri verso sinistra per visualizzare le azioni di compenso, incluso Twint',
+      modalScreenshotAlt:
+        "Modale di pagamento Twint con nome dell'arbitro, numero di telefono e importo",
+      modalScreenshotCaption: 'Dettagli di pagamento Twint per riferimento rapido',
+      tip: "L'azione Twint è disponibile solo quando l'arbitro ha un numero di cellulare registrato. L'importo mostrato include sia il compenso di gioco che l'indennità di viaggio.",
     },
     paymentSchedule: {
       title: 'Calendario pagamenti',
@@ -904,6 +936,76 @@ export const it: TranslationKeys = {
       },
       infoBox:
         'Controlla il numero di versione quando segnali problemi – ci aiuta a identificare e risolvere i problemi più velocemente.',
+    },
+  },
+
+  sportsHallReport: {
+    heading: 'Rapporto sala',
+    lead: "Il rapporto sala permette al primo arbitro di documentare lo stato della palestra prima di una partita. Puoi generare un rapporto PDF precompilato direttamente dall'app.",
+    availabilityNote:
+      'Il rapporto sala è disponibile solo per le partite NLA e NLB. Non viene visualizzato per le designazioni delle leghe inferiori.',
+    whatIs: {
+      title: "Cos'è il rapporto sala?",
+      description:
+        "Prima di ogni partita, il primo arbitro è responsabile dell'ispezione della palestra e della documentazione del suo stato. L'assistente del rapporto sala ti aiuta a:",
+      features: {
+        preFilledPdf: 'Generare un PDF precompilato con i dettagli della partita e delle squadre',
+        jerseyAds:
+          'Registrare le informazioni sulla pubblicità sulle maglie di entrambe le squadre',
+        signatureCapture: 'Acquisire la tua firma digitalmente',
+        nonConformant: 'Segnalare problemi con la palestra se non soddisfa i requisiti',
+      },
+    },
+    accessing: {
+      title: 'Come accedere al rapporto',
+      description:
+        'Il rapporto sala è disponibile per le partite di lega idonee. Per generare un rapporto:',
+      steps: {
+        openAssignment: 'Apri le tue designazioni e trova la partita',
+        swipeLeft:
+          'Scorri verso sinistra sulla carta della designazione per visualizzare i pulsanti di azione',
+        tapReport: "Tocca il pulsante «Rapporto» per aprire l'assistente",
+      },
+      screenshotAlt: "Carta della designazione scorsa verso sinistra con l'azione Genera rapporto",
+      screenshotCaption: 'Accedi al rapporto sala dalle azioni di scorrimento della designazione',
+    },
+    happyPath: {
+      title: 'Tutto in ordine – Rapporto standard',
+      description:
+        'Quando la palestra soddisfa tutti i requisiti, puoi generare rapidamente un rapporto standard:',
+      steps: {
+        selectLanguage: 'Seleziona la lingua del rapporto (tedesco o francese)',
+        configureAds: 'Attiva/disattiva la pubblicità sulle maglie per ogni squadra',
+        tapEverythingOk: 'Tocca «Tutto in ordine» per confermare',
+        drawSignature: 'Disegna la tua firma sul pad di firma',
+      },
+      screenshotAlt: 'Assistente rapporto sala con selettore lingua e opzioni pubblicità maglie',
+      screenshotCaption: "L'assistente del rapporto con selezione lingua e opzioni pubblicità",
+      signatureScreenshotAlt: 'Canvas di acquisizione firma per il rapporto sala',
+      signatureScreenshotCaption: 'Disegna la tua firma per completare il rapporto',
+      tip: "Ruota il dispositivo in orientamento orizzontale per un'esperienza di firma più comoda.",
+    },
+    nonConformant: {
+      title: 'Segnalare problemi',
+      description:
+        'Se la palestra non soddisfa i requisiti, tocca «Segnala problema» per avviare il flusso di rapporto non conforme:',
+      steps: {
+        tapReportIssue: "Tocca «Segnala problema» nell'assistente",
+        selectSections: 'Seleziona quali sezioni della checklist presentano problemi',
+        addComments: 'Aggiungi commenti che descrivono i problemi',
+        reviewPdf: "Esamina l'anteprima del PDF generato",
+        collectSignatures: 'Raccogli le firme degli arbitri e degli allenatori',
+      },
+      screenshotAlt: 'Anteprima PDF di un rapporto sala non conforme',
+      screenshotCaption: 'Anteprima del rapporto generato prima del download',
+      infoBox:
+        'Il rapporto non conforme richiede le firme di entrambi gli arbitri. Le firme degli allenatori sono facoltative.',
+    },
+    downloadPdf: {
+      title: 'Scaricare il rapporto',
+      description:
+        "Dopo aver completato l'assistente, il PDF viene scaricato automaticamente sul tuo dispositivo. Puoi anche usare il link «Scarica modello precompilato» per ottenere un modello vuoto con i dettagli della partita precompilati.",
+      tip: 'Il PDF generato può essere condiviso con il gestore della sala e caricato su volleymanager se necessario.',
     },
   },
 }

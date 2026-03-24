@@ -23,7 +23,7 @@ export function JerseyAdvertisingSection({
   const { tInterpolate } = useTranslation()
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-testid="report-jersey-ads">
       <JerseyAdToggle
         label={tInterpolate('pdf.wizard.advertisingTeam', {
           team: homeTeam || '–',

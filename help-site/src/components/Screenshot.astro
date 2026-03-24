@@ -14,11 +14,15 @@ interface Props {
   alt: string
   /** Optional caption displayed below the image */
   caption?: string
+  /** i18n key for client-side alt text translation */
+  altKey?: string
+  /** i18n key for client-side caption translation */
+  captionKey?: string
   /** Instructions for capturing the screenshot (for Claude Code) */
   instructions: string
 }
 
-const { id, alt, caption, instructions } = Astro.props
+const { id, alt, caption, altKey, captionKey, instructions } = Astro.props
 
 // Check if screenshot exists
 const imagePath = `${BASE_PATH}/images/screenshots/${id}.png`
@@ -34,6 +38,7 @@ const imageExists = existsSync(absolutePath)
         alt={alt}
         class="mx-auto max-w-full rounded-lg border border-border-default shadow-md dark:border-border-default-dark"
         loading="lazy"
+        {...(altKey ? { 'data-i18n-alt': altKey } : {})}
       />
     ) : (
       <div class="mx-auto max-w-2xl rounded-lg border-2 border-dashed border-border-strong bg-surface-subtle p-8 text-center dark:border-border-strong-dark dark:bg-surface-subtle-dark">
@@ -83,7 +88,10 @@ const imageExists = existsSync(absolutePath)
   {/* Caption */}
   {
     caption && (
-      <figcaption class="mt-3 text-center text-sm text-text-muted dark:text-text-muted-dark">
+      <figcaption
+        class="mt-3 text-center text-sm text-text-muted dark:text-text-muted-dark"
+        {...(captionKey ? { 'data-i18n': captionKey } : {})}
+      >
         {caption}
       </figcaption>
     )

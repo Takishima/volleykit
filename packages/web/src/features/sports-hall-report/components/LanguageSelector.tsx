@@ -18,7 +18,7 @@ export function LanguageSelector({ language, setLanguage, disabled }: LanguageSe
   const { t } = useTranslation()
 
   return (
-    <fieldset className="mb-4">
+    <fieldset className="mb-4" data-testid="report-language-selector">
       <legend className="text-sm font-medium text-text-secondary dark:text-text-secondary-dark mb-2">
         {t('pdf.selectLanguage')}
       </legend>

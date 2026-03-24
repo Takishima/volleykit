@@ -11,6 +11,7 @@ export const de: TranslationKeys = {
     travelTime: 'Reisezeit',
     offlinePwa: 'Offline & PWA',
     settings: 'Einstellungen',
+    sportsHallReport: 'Hallenbericht',
   },
 
   common: {
@@ -69,6 +70,10 @@ export const de: TranslationKeys = {
         title: 'Einstellungen',
         description: 'Sprache, Design und Benachrichtigungen anpassen.',
       },
+      sportsHallReport: {
+        title: 'Hallenbericht',
+        description: 'Offizielle Hallenabnahmeberichte erstellen und einreichen.',
+      },
     },
   },
 
@@ -112,6 +117,11 @@ export const de: TranslationKeys = {
       title: 'Einstellungen',
       description:
         'Erfahren Sie, wie Sie VolleyKit-Einstellungen und -Präferenzen anpassen können.',
+    },
+    sportsHallReport: {
+      title: 'Hallenbericht',
+      description:
+        'Erfahre, wie du Hallenabnahmeberichte für deine Spiele erstellen und einreichen kannst.',
     },
   },
 
@@ -328,8 +338,12 @@ export const de: TranslationKeys = {
         validate:
           'Validieren – Spielergebnisse einreichen und das Spiel validieren (für Erstschiedsrichter nach dem Spiel verfügbar)',
         edit: 'Bearbeiten – Ihre Vergütungsdetails für diesen Einsatz bearbeiten',
-        screenshotAlt: 'Einsatzkarte nach links gewischt mit Validieren- und Bearbeiten-Aktionen',
-        screenshotCaption: 'Nach links wischen, um Validieren- und Bearbeiten-Aktionen anzuzeigen',
+        generateReport:
+          'Bericht erstellen – Erstelle einen Hallenabnahmebericht (verfügbar für berechtigte Ligaspiele)',
+        screenshotAlt:
+          'Einsatzkarte nach links gewischt mit Validieren-, Bearbeiten- und Bericht-Aktionen',
+        screenshotCaption:
+          'Nach links wischen, um Validieren-, Bearbeiten- und Bericht-Aktionen anzuzeigen',
         tip: 'Sie können auch einen vollständigen Wisch durchführen, um die primäre Aktion sofort auszulösen, ohne auf die Schaltfläche zu tippen.',
       },
       directions: {
@@ -500,6 +514,23 @@ export const de: TranslationKeys = {
         'Das exportierte PDF enthält die Spieldetails und Vergütungsinformationen in einem formatierten Dokument. Dies ist nützlich für Teams, die den Schiedsrichter direkt bezahlen müssen.',
       infoBox:
         'Der PDF-Export erstellt ein offiziell aussehendes Dokument mit allen Spiel- und Vergütungsdetails, die Teams für ihre Unterlagen benötigen könnten.',
+    },
+    twintPayment: {
+      title: 'Twint-Zahlung',
+      description:
+        'Für Vergütungen, bei denen der Schiedsrichter direkt bezahlt werden muss, kannst du die Zahlungsdetails für Twint schnell nachschlagen. Wische bei einer Vergütungskarte nach links, um die Twint-Aktion anzuzeigen.',
+      steps: {
+        navigate: 'Gehe zum Tab Vergütungen',
+        swipeLeft:
+          'Wische bei einer Vergütungskarte nach links, um die Aktionsschaltflächen anzuzeigen',
+        tapTwint: 'Tippe auf die Twint-Schaltfläche, um die Zahlungsdetails zu öffnen',
+      },
+      screenshotAlt: 'Vergütungskarte nach links gewischt mit Bearbeiten-, PDF- und Twint-Aktionen',
+      screenshotCaption:
+        'Nach links wischen, um Vergütungsaktionen einschliesslich Twint anzuzeigen',
+      modalScreenshotAlt: 'Twint-Zahlungsmodal mit Schiedsrichtername, Telefonnummer und Betrag',
+      modalScreenshotCaption: 'Twint-Zahlungsdetails zur schnellen Referenz',
+      tip: 'Die Twint-Aktion ist nur verfügbar, wenn der Schiedsrichter eine Mobiltelefonnummer hinterlegt hat. Der angezeigte Betrag enthält sowohl die Spielvergütung als auch die Reiseentschädigung.',
     },
     paymentSchedule: {
       title: 'Zahlungsplan',
@@ -916,6 +947,74 @@ export const de: TranslationKeys = {
       },
       infoBox:
         'Überprüfen Sie die Versionsnummer beim Melden von Problemen – dies hilft uns, Probleme schneller zu identifizieren und zu beheben.',
+    },
+  },
+
+  sportsHallReport: {
+    heading: 'Hallenbericht',
+    lead: 'Der Hallenbericht ermöglicht es dem 1. Schiedsrichter, den Zustand der Sporthalle vor dem Spiel zu dokumentieren. Du kannst einen vorausgefüllten PDF-Bericht direkt aus der App erstellen.',
+    availabilityNote:
+      'Der Hallenbericht ist nur für NLA- und NLB-Spiele verfügbar. Er wird bei Einsätzen in tieferen Ligen nicht angezeigt.',
+    whatIs: {
+      title: 'Was ist der Hallenbericht?',
+      description:
+        'Vor jedem Spiel ist der 1. Schiedsrichter für die Inspektion der Sporthalle und die Dokumentation ihres Zustands verantwortlich. Der Hallenberichts-Assistent hilft dir dabei:',
+      features: {
+        preFilledPdf: 'Vorausgefülltes PDF mit Spiel- und Teamdetails erstellen',
+        jerseyAds: 'Trikotwerbung für beide Teams erfassen',
+        signatureCapture: 'Deine Unterschrift digital erfassen',
+        nonConformant: 'Mängel der Sporthalle melden, wenn sie die Anforderungen nicht erfüllt',
+      },
+    },
+    accessing: {
+      title: 'Zugriff auf den Bericht',
+      description:
+        'Der Hallenbericht ist für berechtigte Ligaspiele verfügbar. So erstellst du einen Bericht:',
+      steps: {
+        openAssignment: 'Öffne deine Einsätze und finde das Spiel',
+        swipeLeft: 'Wische bei der Einsatzkarte nach links, um die Aktionsschaltflächen anzuzeigen',
+        tapReport: 'Tippe auf «Bericht», um den Assistenten zu öffnen',
+      },
+      screenshotAlt: 'Einsatzkarte nach links gewischt mit der Aktion Bericht erstellen',
+      screenshotCaption: 'Zugriff auf den Hallenbericht über die Wisch-Aktionen des Einsatzes',
+    },
+    happyPath: {
+      title: 'Alles in Ordnung – Standardbericht',
+      description:
+        'Wenn die Sporthalle alle Anforderungen erfüllt, kannst du schnell einen Standardbericht erstellen:',
+      steps: {
+        selectLanguage: 'Wähle die Berichtssprache (Deutsch oder Französisch)',
+        configureAds: 'Trikotwerbung für jedes Team ein-/ausschalten',
+        tapEverythingOk: 'Tippe auf «Alles in Ordnung» zur Bestätigung',
+        drawSignature: 'Zeichne deine Unterschrift auf dem Signaturpad',
+      },
+      screenshotAlt: 'Hallenberichts-Assistent mit Sprachauswahl und Trikotwerbungs-Optionen',
+      screenshotCaption: 'Der Berichtsassistent mit Sprachauswahl und Trikotwerbungsoptionen',
+      signatureScreenshotAlt: 'Unterschriftserfassung für den Hallenbericht',
+      signatureScreenshotCaption: 'Zeichne deine Unterschrift, um den Bericht abzuschliessen',
+      tip: 'Drehe dein Gerät ins Querformat für ein komfortableres Unterschreibeerlebnis.',
+    },
+    nonConformant: {
+      title: 'Mängel melden',
+      description:
+        'Wenn die Sporthalle die Anforderungen nicht erfüllt, tippe auf «Problem melden», um den Mängelbericht zu starten:',
+      steps: {
+        tapReportIssue: 'Tippe im Assistenten auf «Problem melden»',
+        selectSections: 'Wähle aus, welche Checklistenabschnitte Mängel aufweisen',
+        addComments: 'Füge Kommentare hinzu, die die Probleme beschreiben',
+        reviewPdf: 'Überprüfe die generierte PDF-Vorschau',
+        collectSignatures: 'Sammle Unterschriften von Schiedsrichtern und Trainern',
+      },
+      screenshotAlt: 'PDF-Vorschau eines Mängel-Hallenberichts',
+      screenshotCaption: 'Vorschau des generierten Berichts vor dem Herunterladen',
+      infoBox:
+        'Der Mängelbericht erfordert Unterschriften beider Schiedsrichter. Trainer-Unterschriften sind optional.',
+    },
+    downloadPdf: {
+      title: 'Bericht herunterladen',
+      description:
+        'Nach Abschluss des Assistenten wird das PDF automatisch auf dein Gerät heruntergeladen. Du kannst auch den Link «Vorausgefüllte Vorlage herunterladen» verwenden, um eine leere Vorlage mit vorausgefüllten Spieldetails für die manuelle Ausfüllung zu erhalten.',
+      tip: 'Das generierte PDF kann mit dem Hallenbetreiber geteilt und bei Bedarf auf volleymanager hochgeladen werden.',
     },
   },
 }

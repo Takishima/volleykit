@@ -15,6 +15,7 @@ export interface TranslationKeys {
     travelTime: string
     offlinePwa: string
     settings: string
+    sportsHallReport: string
   }
 
   // Common UI elements
@@ -73,6 +74,10 @@ export interface TranslationKeys {
         title: string
         description: string
       }
+      sportsHallReport: {
+        title: string
+        description: string
+      }
     }
   }
 
@@ -107,6 +112,10 @@ export interface TranslationKeys {
       description: string
     }
     settings: {
+      title: string
+      description: string
+    }
+    sportsHallReport: {
       title: string
       description: string
     }
@@ -277,6 +286,7 @@ export interface TranslationKeys {
         description: string
         validate: string
         edit: string
+        generateReport: string
         screenshotAlt: string
         screenshotCaption: string
         tip: string
@@ -409,6 +419,20 @@ export interface TranslationKeys {
       usage: string
       infoBox: string
     }
+    twintPayment: {
+      title: string
+      description: string
+      steps: {
+        navigate: string
+        swipeLeft: string
+        tapTwint: string
+      }
+      screenshotAlt: string
+      screenshotCaption: string
+      modalScreenshotAlt: string
+      modalScreenshotCaption: string
+      tip: string
+    }
     paymentSchedule: {
       title: string
       description: string
@@ -418,6 +442,68 @@ export interface TranslationKeys {
         timing: string
       }
       warning: string
+    }
+  }
+
+  // Sports Hall Report page content
+  sportsHallReport: {
+    heading: string
+    lead: string
+    availabilityNote: string
+    whatIs: {
+      title: string
+      description: string
+      features: {
+        preFilledPdf: string
+        jerseyAds: string
+        signatureCapture: string
+        nonConformant: string
+      }
+    }
+    accessing: {
+      title: string
+      description: string
+      steps: {
+        openAssignment: string
+        swipeLeft: string
+        tapReport: string
+      }
+      screenshotAlt: string
+      screenshotCaption: string
+    }
+    happyPath: {
+      title: string
+      description: string
+      steps: {
+        selectLanguage: string
+        configureAds: string
+        tapEverythingOk: string
+        drawSignature: string
+      }
+      screenshotAlt: string
+      screenshotCaption: string
+      signatureScreenshotAlt: string
+      signatureScreenshotCaption: string
+      tip: string
+    }
+    nonConformant: {
+      title: string
+      description: string
+      steps: {
+        tapReportIssue: string
+        selectSections: string
+        addComments: string
+        reviewPdf: string
+        collectSignatures: string
+      }
+      screenshotAlt: string
+      screenshotCaption: string
+      infoBox: string
+    }
+    downloadPdf: {
+      title: string
+      description: string
+      tip: string
     }
   }
 
