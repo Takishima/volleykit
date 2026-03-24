@@ -232,7 +232,7 @@ if [ -n "$FORMAT_FILES" ]; then
   while IFS= read -r f; do
     FORMAT_ARGS+=("$ROOT_DIR/$f")
   done <<< "$FORMAT_FILES"
-  launch_job "format" "$ROOT_DIR" prettier --check "${FORMAT_ARGS[@]}"
+  launch_job "format" "$ROOT_DIR" pnpm exec prettier --check "${FORMAT_ARGS[@]}"
 fi
 
 # --- Web App checks (knip deferred to CI) ---

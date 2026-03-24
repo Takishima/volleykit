@@ -33,7 +33,7 @@
       "Bash(pnpm exec wrangler:*)",
       "Bash(pnpm run size:*)",
       "Bash(CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh)",
-      "Bash(prettier --check:*)"
+      "Bash(pnpm exec prettier --check:*)"
     ],
     "deny": []
   },
