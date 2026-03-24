@@ -16,7 +16,7 @@ else
 fi
 
 # Only act on git commit commands
-if [[ $COMMAND != *"git commit"* ]] && [[ $COMMAND != *"&&"*"commit"* ]]; then
+if [[ $COMMAND != *"git commit"* ]] && [[ $COMMAND != *"git add"*"&&"*"git commit"* ]]; then
   exit 0
 fi
 

@@ -111,6 +111,8 @@ if [ "$HAS_SHARED" = true ]; then
   HAS_WEB_APP=true
   # Only trigger mobile if shared changes touch exported API surface
   # (src/index.ts, src/*/index.ts, types, hooks, stores, api)
+  # e.g. editing packages/shared/src/utils/dateHelpers.ts → skips mobile
+  #      editing packages/shared/src/hooks/index.ts → triggers mobile
   if echo "$STAGED_FILES" | grep -q "^packages/shared/src/" && \
      echo "$STAGED_FILES" | grep -qE "packages/shared/src/(index\.ts|[^/]+/index\.ts|types/|hooks/|stores/|api/)"; then
     HAS_MOBILE=true
@@ -444,7 +446,7 @@ echo -e "${GREEN}All checks passed! Commit allowed.${NC}"
 # without re-running validation. Marker includes a hash of staged files
 # so it's invalidated if the staging area changes.
 MARKER_DIR="/tmp/claude-validation-marker"
-mkdir -p "$MARKER_DIR"
+mkdir -p -m 700 "$MARKER_DIR"
 STAGED_HASH=$(git diff --name-only --cached | sort | sha256sum | cut -d' ' -f1)
 echo "$STAGED_HASH" > "$MARKER_DIR/staged-hash"
 date +%s > "$MARKER_DIR/timestamp"
