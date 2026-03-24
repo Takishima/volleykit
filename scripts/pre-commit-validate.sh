@@ -322,6 +322,16 @@ if [ "$HAS_FAILURES" = false ]; then
     echo "Building web-app..."
     if (cd "$ROOT_DIR/packages/web" && pnpm run build) ; then
       echo -e "${GREEN}web-app build passed${NC}"
+      # Check bundle size immediately after build
+      echo "Checking bundle size..."
+      if (cd "$ROOT_DIR/packages/web" && pnpm run size) ; then
+        echo -e "${GREEN}web-app bundle size passed${NC}"
+      else
+        echo -e "${RED}web-app bundle size exceeded limits${NC}"
+        echo -e "${YELLOW}Note: CI builds the merge commit and may be ~10-15 kB larger than local.${NC}"
+        echo -e "${YELLOW}If local passes but CI fails, update limits in packages/web/package.json.${NC}"
+        BUILD_RESULT=1
+      fi
     else
       echo -e "${RED}web-app build failed${NC}"
       BUILD_RESULT=1
