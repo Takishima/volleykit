@@ -55,7 +55,7 @@ export function ErrorFallbackUI({ error, errorType, onReset }: ErrorFallbackUIPr
         <div className="flex gap-3 justify-center">
           <button
             onClick={onReset}
-            className="px-4 py-2 bg-surface-muted dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark rounded-lg hover:bg-surface-subtle dark:hover:bg-surface-muted-dark transition-colors"
+            className="px-4 py-2 bg-surface-muted dark:bg-surface-subtle-dark text-text-primary dark:text-text-primary-dark rounded-lg hover:bg-surface-muted-hover dark:hover:bg-surface-muted-dark transition-colors"
           >
             {t('errorBoundary.tryAgain')}
           </button>

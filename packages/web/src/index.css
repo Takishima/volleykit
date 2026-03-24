@@ -77,7 +77,7 @@
 
   .btn-secondary {
     @apply bg-surface-muted text-text-primary;
-    @apply hover:bg-surface-subtle focus:ring-border-strong;
+    @apply hover:bg-surface-muted-hover focus:ring-border-strong;
     @apply dark:bg-surface-subtle-dark dark:text-text-primary-dark dark:hover:bg-surface-muted-dark;
   }
 

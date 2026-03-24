@@ -92,7 +92,7 @@ describe('createCompensationActions', () => {
 
     expect(actions.generatePDF.id).toBe('generate-pdf')
     expect(actions.generatePDF.label).toBe('Generate PDF')
-    expect(actions.generatePDF.color).toBe('bg-text-muted')
+    expect(actions.generatePDF.color).toBe('bg-surface-neutral')
     expect(isValidElement(actions.generatePDF.icon)).toBe(true)
   })
 })
