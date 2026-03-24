@@ -6,7 +6,7 @@ argument-hint: "[operation, e.g. 'list open PRs', 'get issue #42']"
 
 # GitHub API Skill
 
-Interact with the GitHub REST API. Use this skill for any GitHub operations (issues, PRs, comments, checks, labels, etc.).
+Interact with GitHub using the built-in MCP server tools (`mcp__github__*`). Use this skill for any GitHub operations (issues, PRs, comments, checks, labels, etc.).
 
 ## User Input
 
@@ -19,123 +19,75 @@ Interpret the user input as a GitHub API operation request. Examples:
 - `list open PRs` → list open pull requests
 - `get issue #42` → fetch issue details
 - `create issue "title" "body"` → create a new issue
-- `list checks on HEAD` → get CI check status for current commit
 - `add label bug to issue #5` → add a label
 - `get review comments on PR #12` → fetch PR review comments
 
-## Setup
+## Repo Detection
 
-Run the helper script to make API calls. It auto-detects the repo from git remote, chooses `gh` or `curl` (with proper `$GITHUB_TOKEN` auth), and handles JSON bodies.
-
-**IMPORTANT**: Always invoke the script via `bash -c` to ensure `$GITHUB_TOKEN` is accessible:
+Parse `owner` and `repo` from the git remote when not obvious from context:
 
 ```bash
-bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh METHOD ENDPOINT [JSON_BODY]'
+git remote get-url origin
 ```
 
-The script:
+Handles these URL formats:
+- SSH: `git@github.com:owner/repo.git`
+- HTTPS: `https://github.com/owner/repo.git`
+- Local proxy: `http://...@127.0.0.1:.../git/owner/repo`
 
-- Auto-detects `OWNER`/`REPO` from git remote (or use literal `OWNER`/`REPO` in endpoints and they get replaced)
-- Prefers `gh api` when available, falls back to `curl` with `$GITHUB_TOKEN`
-- Appends `per_page=100` to GET requests automatically
-- Pipes JSON body via stdin for POST/PATCH/PUT
-
-## Usage Examples
-
-### GET requests
-
-```bash
-bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh GET /repos/OWNER/REPO/pulls?state=open | jq .'
-```
-
-```bash
-bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh GET /repos/OWNER/REPO/issues/42 | jq .'
-```
-
-### POST requests
-
-```bash
-bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh POST /repos/OWNER/REPO/issues "$(jq -n --arg title "Bug report" --arg body "Details here" "{title: \$title, body: \$body}")" | jq .'
-```
-
-### PATCH requests
-
-```bash
-bash -c '${CLAUDE_SKILL_DIR}/scripts/ghapi.sh PATCH /repos/OWNER/REPO/issues/42 "$(jq -n --arg state "closed" "{state: \$state}")" | jq .'
-```
-
-### Multiline body content
-
-```bash
-bash -c 'BODY=$(cat <<'\''EOF'\''
-This is a multiline
-body with **markdown**.
-EOF
-)
-${CLAUDE_SKILL_DIR}/scripts/ghapi.sh POST /repos/OWNER/REPO/issues/42/comments "$(jq -n --arg body "$BODY" "{body: \$body}")" | jq .'
-```
-
-## Common Endpoints Reference
-
-### Pull Requests
-
-| Operation                     | Method | Endpoint                                                  |
-| ----------------------------- | ------ | --------------------------------------------------------- |
-| List open PRs                 | GET    | `/repos/OWNER/REPO/pulls?state=open`                      |
-| Get PR                        | GET    | `/repos/OWNER/REPO/pulls/NUMBER`                          |
-| Create PR                     | POST   | `/repos/OWNER/REPO/pulls` (body: title, body, head, base) |
-| Update PR                     | PATCH  | `/repos/OWNER/REPO/pulls/NUMBER`                          |
-| List PR files                 | GET    | `/repos/OWNER/REPO/pulls/NUMBER/files`                    |
-| List PR reviews               | GET    | `/repos/OWNER/REPO/pulls/NUMBER/reviews`                  |
-| List PR comments              | GET    | `/repos/OWNER/REPO/pulls/NUMBER/comments`                 |
-| Check if PR exists for branch | GET    | `/repos/OWNER/REPO/pulls?head=OWNER:BRANCH&state=open`    |
+## MCP Tool Reference
 
 ### Issues
 
-| Operation     | Method | Endpoint                                                          |
-| ------------- | ------ | ----------------------------------------------------------------- |
-| List issues   | GET    | `/repos/OWNER/REPO/issues?state=open`                             |
-| Get issue     | GET    | `/repos/OWNER/REPO/issues/NUMBER`                                 |
-| Create issue  | POST   | `/repos/OWNER/REPO/issues` (body: title, body, labels, assignees) |
-| Update issue  | PATCH  | `/repos/OWNER/REPO/issues/NUMBER`                                 |
-| Add comment   | POST   | `/repos/OWNER/REPO/issues/NUMBER/comments` (body: body)           |
-| List comments | GET    | `/repos/OWNER/REPO/issues/NUMBER/comments`                        |
-| Add labels    | POST   | `/repos/OWNER/REPO/issues/NUMBER/labels` (body: labels array)     |
+| Operation      | Tool                         | Key Parameters                              |
+| -------------- | ---------------------------- | ------------------------------------------- |
+| Get issue      | `mcp__github__issue_read`    | `method: "get"`, `issue_number`             |
+| List issues    | `mcp__github__list_issues`   | `state: "OPEN"/"CLOSED"`                   |
+| Create issue   | `mcp__github__issue_write`   | `method: "create"`, `title`, `body`         |
+| Update issue   | `mcp__github__issue_write`   | `method: "update"`, `issue_number`, `state` |
+| Add comment    | `mcp__github__add_issue_comment` | `issue_number`, `body`                  |
+| Get comments   | `mcp__github__issue_read`    | `method: "get_comments"`, `issue_number`    |
+| Get labels     | `mcp__github__issue_read`    | `method: "get_labels"`, `issue_number`      |
 
-### CI / Checks
+### Pull Requests
 
-| Operation             | Method | Endpoint                                                          |
-| --------------------- | ------ | ----------------------------------------------------------------- |
-| Check runs for commit | GET    | `/repos/OWNER/REPO/commits/SHA/check-runs`                        |
-| Check runs for PR     | GET    | `/repos/OWNER/REPO/commits/SHA/check-runs` (get SHA from PR head) |
-| Combined status       | GET    | `/repos/OWNER/REPO/commits/SHA/status`                            |
+| Operation         | Tool                                | Key Parameters                                   |
+| ----------------- | ----------------------------------- | ------------------------------------------------ |
+| List PRs          | `mcp__github__list_pull_requests`   | `owner`, `repo`, `state`                         |
+| Get PR            | `mcp__github__pull_request_read`    | `method: "get"`, `pullRequestNumber`             |
+| Create PR         | `mcp__github__create_pull_request`  | `title`, `body`, `head`, `base`                  |
+| Update PR         | `mcp__github__update_pull_request`  | `pullRequestNumber`, `title`, `body`, `state`    |
+| Get PR comments   | `mcp__github__pull_request_read`    | `method: "get_comments"`, `pullRequestNumber`    |
+| Get PR reviews    | `mcp__github__pull_request_read`    | `method: "get_reviews"`, `pullRequestNumber`     |
+| Reply to comment  | `mcp__github__add_reply_to_pull_request_comment` | `comment_id`, `body`            |
 
 ### Repository
 
-| Operation          | Method | Endpoint                              |
-| ------------------ | ------ | ------------------------------------- |
-| Get repo           | GET    | `/repos/OWNER/REPO`                   |
-| List branches      | GET    | `/repos/OWNER/REPO/branches`          |
-| List releases      | GET    | `/repos/OWNER/REPO/releases`          |
-| List workflows     | GET    | `/repos/OWNER/REPO/actions/workflows` |
-| List workflow runs | GET    | `/repos/OWNER/REPO/actions/runs`      |
+| Operation      | Tool                          | Key Parameters         |
+| -------------- | ----------------------------- | ---------------------- |
+| List branches  | `mcp__github__list_branches`  | `owner`, `repo`        |
+| Create branch  | `mcp__github__create_branch`  | `branch`, `sha`        |
+| List commits   | `mcp__github__list_commits`   | `owner`, `repo`, `sha` |
+| Get commit     | `mcp__github__get_commit`     | `owner`, `repo`, `sha` |
+| Search code    | `mcp__github__search_code`    | `query`                |
+| List releases  | `mcp__github__list_releases`  | `owner`, `repo`        |
 
-## Execution
+### Search
 
-Based on the user input:
-
-1. Determine the appropriate API endpoint and method from the reference above
-2. Construct and execute using the `ghapi.sh` wrapper script
-3. Pipe output through `jq` to show relevant fields
-4. For paginated results, call multiple pages: `ENDPOINT?page=1`, `ENDPOINT?page=2`, etc.
+| Operation      | Tool                              | Key Parameters |
+| -------------- | --------------------------------- | -------------- |
+| Search issues  | `mcp__github__search_issues`      | `query`        |
+| Search PRs     | `mcp__github__search_pull_requests` | `query`      |
+| Search repos   | `mcp__github__search_repositories` | `query`      |
 
 ## Tips
 
-- URL-encode branch names: `printf '%s' "$BRANCH" | jq -sRr @uri`
-- Filter by user: `jq '[.[] | select(.user.login == "USERNAME")]'`
+- Always pass `owner` and `repo` explicitly — parse from `git remote get-url origin` if not known
+- For paginated results use the `perPage` and `after` (cursor) parameters
+- To find a PR for a branch: use `mcp__github__list_pull_requests` and filter by `head` branch name, or `mcp__github__search_pull_requests` with query `head:BRANCH`
 - Get current branch: `git rev-parse --abbrev-ref HEAD`
 - Get current SHA: `git rev-parse HEAD`
 
 ## Output
 
-Show the API response formatted with jq. For list operations, show a concise summary table. For mutations, confirm the action and show the resulting URL.
+Show a concise formatted summary of the MCP tool response. For list operations show a summary table. For mutations confirm the action and show the resulting URL.
