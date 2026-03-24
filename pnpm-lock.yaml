@@ -319,6 +319,9 @@ importers:
       happy-dom:
         specifier: ^20.8.4
         version: 20.8.4
+      knip:
+        specifier: ^6.0.4
+        version: 6.0.4
       msw:
         specifier: ^2.12.14
         version: 2.12.14(@types/node@25.5.0)(typescript@6.0.2)
@@ -502,7 +505,7 @@ importers:
         version: 3.8.1
       rollup-plugin-visualizer:
         specifier: ^7.0.1
-        version: 7.0.1(rolldown@1.0.0-rc.11)(rollup@2.80.0)
+        version: 7.0.1(rolldown@1.0.0-rc.11)(rollup@4.59.0)
       size-limit:
         specifier: ^12.0.1
         version: 12.0.1(jiti@2.6.1)
@@ -17543,7 +17546,7 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.0.0-rc.11
       '@rolldown/binding-win32-x64-msvc': 1.0.0-rc.11
 
-  rollup-plugin-visualizer@7.0.1(rolldown@1.0.0-rc.11)(rollup@2.80.0):
+  rollup-plugin-visualizer@7.0.1(rolldown@1.0.0-rc.11)(rollup@4.59.0):
     dependencies:
       open: 11.0.0
       picomatch: 4.0.3
@@ -17551,7 +17554,7 @@ snapshots:
       yargs: 18.0.0
     optionalDependencies:
       rolldown: 1.0.0-rc.11
-      rollup: 2.80.0
+      rollup: 4.59.0
 
   rollup@2.80.0:
     optionalDependencies:
