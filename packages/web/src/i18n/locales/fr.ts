@@ -321,6 +321,10 @@ const fr: Translations = {
     unavailableInCalendarModeTitle: 'Non disponible en mode calendrier',
     unavailableInCalendarModeDescription:
       "Les données d'indemnités ne sont pas disponibles en mode calendrier. Utilisez la connexion complète pour accéder aux détails des indemnités.",
+    twintModalTitle: 'Payer par Twint',
+    twintModalName: 'Nom',
+    twintModalPhone: 'Téléphone',
+    twintNoPhone: 'Aucun numéro de téléphone configuré',
     applyToSameHall: 'Appliquer à tous les matchs à {hallName}',
     applyToSameHallCount: '{count} autres matchs',
     batchUpdateSuccess: '{count} indemnités mises à jour avec succès.',

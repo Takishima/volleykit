@@ -1,7 +1,7 @@
 import { createElement } from 'react'
 
 import type { CompensationRecord } from '@/api/client'
-import { Wallet, FileText } from '@/common/components/icons'
+import { Wallet, FileText, Smartphone } from '@/common/components/icons'
 import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 import {
@@ -46,15 +46,18 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
 // Pre-created icon elements to avoid recreating on each function call
 const ICON_WALLET = createElement(Wallet, { size: SWIPE_ACTION_ICON_SIZE })
 const ICON_FILE_TEXT = createElement(FileText, { size: SWIPE_ACTION_ICON_SIZE })
+const ICON_SMARTPHONE = createElement(Smartphone, { size: SWIPE_ACTION_ICON_SIZE })
 
 export interface CompensationActionConfig {
   editCompensation: SwipeAction
   generatePDF: SwipeAction
+  twintPayment: SwipeAction
 }
 
 export interface CompensationActionHandlers {
   onEditCompensation: (compensation: CompensationRecord) => void
   onGeneratePDF: (compensation: CompensationRecord) => void
+  onTwintPayment: () => void
 }
 
 export function createCompensationActions(
@@ -77,6 +80,14 @@ export function createCompensationActions(
       color: 'bg-slate-500',
       icon: ICON_FILE_TEXT,
       onAction: () => handlers.onGeneratePDF(compensation),
+    },
+    twintPayment: {
+      id: 'twint-payment',
+      label: 'Twint',
+      shortLabel: 'Twint',
+      color: 'bg-pink-500',
+      icon: ICON_SMARTPHONE,
+      onAction: () => handlers.onTwintPayment(),
     },
   }
 }

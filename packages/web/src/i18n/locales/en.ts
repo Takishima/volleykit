@@ -313,6 +313,10 @@ const en: Translations = {
     unavailableInCalendarModeTitle: 'Not available in Calendar Mode',
     unavailableInCalendarModeDescription:
       'Compensation data is not available in calendar mode. Use full login to access compensation details.',
+    twintModalTitle: 'Pay via Twint',
+    twintModalName: 'Name',
+    twintModalPhone: 'Phone',
+    twintNoPhone: 'No phone number configured',
     applyToSameHall: 'Apply to all games at {hallName}',
     applyToSameHallCount: '{count} other games',
     batchUpdateSuccess: 'Updated {count} compensations successfully.',

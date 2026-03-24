@@ -16,6 +16,12 @@ const EditCompensationModal = lazy(() =>
   }))
 )
 
+const TwintPaymentModal = lazy(() =>
+  import('@/features/compensations/components/TwintPaymentModal').then((m) => ({
+    default: m.TwintPaymentModal,
+  }))
+)
+
 export function CompensationsPage() {
   const { t } = useTranslation()
   const {
@@ -31,6 +37,8 @@ export function CompensationsPage() {
     refetch,
     getEmptyStateContent,
     editCompensationModal,
+    twintModal,
+    twintProfile,
   } = useCompensationsPageLogic()
 
   const tabs = [
@@ -133,6 +141,17 @@ export function CompensationsPage() {
             />
           </Suspense>
         )}
+
+        {/* Twint Payment Modal */}
+        <Suspense fallback={null}>
+          <TwintPaymentModal
+            isOpen={twintModal.isOpen}
+            onClose={twintModal.close}
+            firstName={twintProfile.firstName}
+            lastName={twintProfile.lastName}
+            mobilePhone={twintProfile.mobilePhone}
+          />
+        </Suspense>
       </div>
     </PullToRefresh>
   )

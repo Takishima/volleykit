@@ -43,7 +43,13 @@ function shouldSortDescending(filter: FilterType): boolean {
 
 export function useCompensationsPageLogic() {
   const [filter, setFilter] = useState<FilterType>('pendingPast')
-  const { editCompensationModal, handleGeneratePDF } = useCompensationActions()
+  const {
+    editCompensationModal,
+    handleGeneratePDF,
+    twintModal,
+    twintProfile,
+    showTwintAction,
+  } = useCompensationActions()
   const { isAssociationSwitching, isCalendarMode } = useAuthStore(
     useShallow((state) => ({
       isAssociationSwitching: state.isAssociationSwitching,
@@ -131,15 +137,19 @@ export function useCompensationsPageLogic() {
       const actions = createCompensationActions(compensation, {
         onEditCompensation: editCompensationModal.open,
         onGeneratePDF: handleGeneratePDF,
+        onTwintPayment: twintModal.open,
       })
 
       const canEdit = isCompensationEditable(compensation)
+      const baseActions = canEdit
+        ? [actions.editCompensation, actions.generatePDF]
+        : [actions.generatePDF]
 
       return {
-        left: canEdit ? [actions.editCompensation, actions.generatePDF] : [actions.generatePDF],
+        left: showTwintAction ? [...baseActions, actions.twintPayment] : baseActions,
       }
     },
-    [editCompensationModal.open, handleGeneratePDF]
+    [editCompensationModal.open, handleGeneratePDF, twintModal.open, showTwintAction]
   )
 
   // Handler for pull-to-refresh
@@ -189,6 +199,8 @@ export function useCompensationsPageLogic() {
 
     // Modals
     editCompensationModal,
+    twintModal,
+    twintProfile,
   }
 }
 
