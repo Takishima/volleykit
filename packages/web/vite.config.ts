@@ -346,13 +346,16 @@ export default defineConfig(({ mode }) => {
           // This ensures size-limit's "index-*.js" pattern only matches the main bundle.
           chunkFileNames: 'assets/chunk-[name]-[hash].js',
           // Manual chunks for bundle splitting. Names must match size-limit config in package.json.
-          // Current sizes (gzipped) and limits (Vite 8 / Rolldown):
-          // Note: CI builds merge commit which may produce slightly different sizes than local.
-          //   - Main App Bundle (index-*.js):     ~19 kB,  limit 25 kB  (+6 kB headroom)
+          // Current sizes (gzipped) and limits (Vite 8 / Rolldown + React Compiler):
+          // Note: CI builds the merge commit (PR branch + latest main), so CI bundles are typically
+          //   larger than local: CI includes any app code merged from main that's not yet on your
+          //   branch. The React Compiler amplifies this gap because each additional component/hook
+          //   gets per-file memoization overhead. Limits include headroom for this CI difference.
+          //   - Main App Bundle (index-*.js):     ~25 kB,  limit 30 kB  (+5 kB headroom)
           //   - Vendor Chunks (combined):         ~111 kB, limit 115 kB (+4 kB headroom)
           //   - PDF Library (pdf-lib-*.js):       ~178 kB, limit 185 kB (+7 kB headroom) - lazy-loaded
           //   - Image Cropper (cropper-*.js):     ~10 kB,  limit 11 kB  (+1 kB headroom) - lazy-loaded
-          //   - Total JS Bundle:                  ~590 kB, limit 610 kB (+20 kB headroom)
+          //   - Total JS Bundle:                  ~620 kB, limit 680 kB (+60 kB headroom for CI)
           manualChunks(id) {
             if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
               return 'react-vendor'
@@ -385,9 +388,14 @@ export default defineConfig(({ mode }) => {
     plugins: [
       zodLocalesStubPlugin(),
       react(),
-      // React Compiler: limit to source .tsx/.ts files to avoid Babel overhead on
-      // generated/vendor code. runtimeVersion de-duplicates Babel helper imports via
-      // @babel/plugin-transform-runtime instead of inlining them per-file.
+      // React Compiler: apply to web and shared package source files.
+      // - include matches both packages/web/src/ and packages/shared/src/ because pnpm
+      //   resolves workspace symlinks to real paths (no "node_modules" in the resolved path).
+      //   Compiling shared hooks is intentional — it improves their memoization too.
+      // - The reactCompilerPreset's built-in code filter (/\b[A-Z]|\buse/) further limits
+      //   compilation to files that actually contain React components or hooks.
+      // - No @babel/plugin-transform-runtime is needed: the React Compiler only imports
+      //   react/compiler-runtime (a direct module import), not inline Babel helpers.
       babel({
         include: /src\/.*\.[tj]sx?$/,
         exclude: /node_modules/,
