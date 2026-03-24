@@ -316,6 +316,7 @@ const en: Translations = {
     twintModalTitle: 'Pay via Twint',
     twintModalName: 'Name',
     twintModalPhone: 'Phone',
+    twintModalAmount: 'Amount',
     twintNoPhone: 'No phone number configured',
     applyToSameHall: 'Apply to all games at {hallName}',
     applyToSameHallCount: '{count} other games',

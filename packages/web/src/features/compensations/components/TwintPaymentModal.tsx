@@ -11,6 +11,7 @@ interface TwintPaymentModalProps {
   firstName: string
   lastName: string
   mobilePhone: string | null
+  amount: number | null
 }
 
 export function TwintPaymentModal({
@@ -19,6 +20,7 @@ export function TwintPaymentModal({
   firstName,
   lastName,
   mobilePhone,
+  amount,
 }: TwintPaymentModalProps) {
   const { t } = useTranslation()
 
@@ -59,6 +61,17 @@ export function TwintPaymentModal({
             </div>
           )}
         </div>
+
+        {amount !== null && (
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-text-muted dark:text-text-muted-dark mb-1">
+              {t('compensations.twintModalAmount')}
+            </div>
+            <div className="text-base font-semibold text-text-primary dark:text-text-primary-dark">
+              CHF {amount.toFixed(2)}
+            </div>
+          </div>
+        )}
       </div>
     </Modal>
   )

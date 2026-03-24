@@ -17,6 +17,7 @@ function renderModal(props: Partial<React.ComponentProps<typeof TwintPaymentModa
       firstName="Jean"
       lastName="Dupont"
       mobilePhone="+41791234567"
+      amount={85}
       {...props}
     />
   )
@@ -41,6 +42,16 @@ describe('TwintPaymentModal', () => {
   it('shows fallback message when phone is null', () => {
     renderModal({ mobilePhone: null })
     expect(screen.getByText('compensations.twintNoPhone')).toBeInTheDocument()
+  })
+
+  it('renders the amount', () => {
+    renderModal({ amount: 85 })
+    expect(screen.getByText('CHF 85.00')).toBeInTheDocument()
+  })
+
+  it('hides amount when null', () => {
+    renderModal({ amount: null })
+    expect(screen.queryByText(/CHF/)).not.toBeInTheDocument()
   })
 
   it('does not render when closed', () => {

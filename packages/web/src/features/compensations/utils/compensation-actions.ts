@@ -57,7 +57,7 @@ export interface CompensationActionConfig {
 export interface CompensationActionHandlers {
   onEditCompensation: (compensation: CompensationRecord) => void
   onGeneratePDF: (compensation: CompensationRecord) => void
-  onTwintPayment: () => void
+  onTwintPayment: (amount: number) => void
 }
 
 export function createCompensationActions(
@@ -87,7 +87,11 @@ export function createCompensationActions(
       shortLabel: 'Twint',
       color: 'bg-slate-500',
       icon: ICON_SMARTPHONE,
-      onAction: () => handlers.onTwintPayment(),
+      onAction: () => {
+        const comp = compensation.convocationCompensation
+        const total = (comp?.gameCompensation || 0) + (comp?.travelExpenses || 0)
+        handlers.onTwintPayment(total)
+      },
     },
   }
 }
