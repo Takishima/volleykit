@@ -32,9 +32,11 @@ interface UseTourReturn {
 }
 
 export function useTour(tourId: TourId, options: UseTourOptions = {}): UseTourReturn {
-  // The Compiler cannot statically verify the cross-effect ref communication pattern:
-  // Effect 1 resets hasAutoStarted.current and Effect 2 reads it — React guarantees
-  // execution order but the Compiler treats ref reads as potentially stale.
+  // The Compiler changes cross-effect ref communication behaviour: Effect 1 resets
+  // hasAutoStarted.current and Effect 2 reads it. The ESLint plugin reports this
+  // directive as "unused" but the test suite proves the Compiler does alter
+  // runtime behaviour here, so we keep the opt-out.
+  // eslint-disable-next-line react-compiler/react-compiler
   'use no memo'
 
   const { startDelay = TOUR_START_DELAY_MS, autoStart = true } = options
