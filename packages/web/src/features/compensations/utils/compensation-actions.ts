@@ -85,7 +85,7 @@ export function createCompensationActions(
       id: 'twint-payment',
       label: 'Twint',
       shortLabel: 'Twint',
-      color: 'bg-pink-500',
+      color: 'bg-sky-500',
       icon: ICON_SMARTPHONE,
       onAction: () => handlers.onTwintPayment(),
     },

@@ -95,6 +95,8 @@ function extractCalendarCodeFromDashboard(dashboardHtml: string): string | null 
 function deriveUserWithOccupations(
   activeParty: {
     __identity?: string
+    firstName?: string
+    lastName?: string
     groupedEligibleAttributeValues?: AttributeValue[] | null
     eligibleAttributeValues?: AttributeValue[] | null
   } | null,
@@ -123,8 +125,8 @@ function deriveUserWithOccupations(
     ? { ...currentUser, id: userId, occupations }
     : {
         id: userId,
-        firstName: '',
-        lastName: '',
+        firstName: activeParty?.firstName ?? '',
+        lastName: activeParty?.lastName ?? '',
         occupations,
       }
 

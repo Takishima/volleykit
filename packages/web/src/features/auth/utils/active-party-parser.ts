@@ -28,6 +28,8 @@ export type {
  */
 export interface ActiveParty {
   __identity?: string
+  firstName?: string
+  lastName?: string
   eligibleAttributeValues?: AttributeValue[]
   eligibleRoles?: Record<string, RoleDefinition>
   activeAttributeValue?: AttributeValue
@@ -78,6 +80,8 @@ const RoleDefinitionSchema = z.object({
 const ActivePartySchema = z
   .object({
     __identity: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
     eligibleAttributeValues: z.array(AttributeValueSchema).optional(),
     eligibleRoles: z.record(z.string(), RoleDefinitionSchema).optional(),
     activeAttributeValue: AttributeValueSchema.optional(),
