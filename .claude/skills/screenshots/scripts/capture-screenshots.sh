@@ -2,13 +2,13 @@
 # Capture help-site screenshots using Playwright.
 #
 # Usage:
-#   scripts/capture-screenshots.sh                  # All screenshots
-#   scripts/capture-screenshots.sh report-access    # Only matching tests
-#   scripts/capture-screenshots.sh "report-access|report-wizard-entry"  # Multiple patterns
+#   .claude/skills/screenshots/scripts/capture-screenshots.sh                  # All screenshots
+#   .claude/skills/screenshots/scripts/capture-screenshots.sh report-access    # Only matching tests
+#   .claude/skills/screenshots/scripts/capture-screenshots.sh "report-access|report-wizard-entry"
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
 WEB_DIR="$REPO_ROOT/packages/web"
 HELP_DIR="$REPO_ROOT/help-site"
 CONFIG="$WEB_DIR/playwright-screenshots.config.ts"
