@@ -449,6 +449,7 @@ export interface TranslationKeys {
   sportsHallReport: {
     heading: string
     lead: string
+    availabilityNote: string
     whatIs: {
       title: string
       description: string

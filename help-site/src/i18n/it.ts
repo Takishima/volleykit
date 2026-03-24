@@ -942,6 +942,8 @@ export const it: TranslationKeys = {
   sportsHallReport: {
     heading: 'Rapporto sala',
     lead: "Il rapporto sala permette al primo arbitro di documentare lo stato della palestra prima di una partita. Puoi generare un rapporto PDF precompilato direttamente dall'app.",
+    availabilityNote:
+      'Il rapporto sala è disponibile solo per le partite NLA e NLB. Non viene visualizzato per le designazioni delle leghe inferiori.',
     whatIs: {
       title: "Cos'è il rapporto sala?",
       description:

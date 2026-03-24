@@ -923,6 +923,8 @@ export const en: TranslationKeys = {
   sportsHallReport: {
     heading: 'Sports Hall Report',
     lead: 'The sports hall report allows first referees to document the condition of the sports hall before a game. You can generate a pre-filled PDF report directly from the app.',
+    availabilityNote:
+      'The sports hall report is only available for NLA and NLB games. It does not appear for lower league assignments.',
     whatIs: {
       title: 'What is the Sports Hall Report?',
       description:

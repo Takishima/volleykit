@@ -405,11 +405,9 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page)
     await assignmentsPage.waitForAssignmentsLoaded()
 
-    // Find a 1st referee assignment card (report action is only available for 1st referees)
-    const firstRefCards = page
-      .locator('[role="group"][aria-label*="Swipeable"]')
-      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-    const targetCard = firstRefCards.first()
+    // Use the second assignment card (NLA/NLB game with report action)
+    // The first card is a linesman assignment; the second is a 1st referee NLA game
+    const targetCard = assignmentsPage.assignmentCards.nth(1)
     const cardBox = await targetCard.boundingBox()
 
     if (cardBox) {
@@ -590,11 +588,8 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page)
     await assignmentsPage.waitForAssignmentsLoaded()
 
-    // Find a 1st referee assignment card to access the report action
-    const firstRefCards = page
-      .locator('[role="group"][aria-label*="Swipeable"]')
-      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-    const targetCard = firstRefCards.first()
+    // Use the second assignment card (NLA/NLB game with report action)
+    const targetCard = assignmentsPage.assignmentCards.nth(1)
     const cardBox = await targetCard.boundingBox()
 
     if (cardBox) {
@@ -630,11 +625,8 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page)
     await assignmentsPage.waitForAssignmentsLoaded()
 
-    // Navigate to report wizard
-    const firstRefCards = page
-      .locator('[role="group"][aria-label*="Swipeable"]')
-      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-    const targetCard = firstRefCards.first()
+    // Use the second assignment card (NLA/NLB game with report action)
+    const targetCard = assignmentsPage.assignmentCards.nth(1)
     const cardBox = await targetCard.boundingBox()
 
     if (cardBox) {
@@ -1325,11 +1317,8 @@ test.describe('Help Site Screenshots', () => {
       const assignmentsPage = new AssignmentsPage(page)
       await assignmentsPage.waitForAssignmentsLoaded()
 
-      // Find a 1st referee assignment card to access the report action
-      const firstRefCards = page
-        .locator('[role="group"][aria-label*="Swipeable"]')
-        .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-      const targetCard = firstRefCards.first()
+      // Use the second assignment card (NLA/NLB game with report action)
+      const targetCard = assignmentsPage.assignmentCards.nth(1)
       const cardBox = await targetCard.boundingBox()
 
       if (cardBox) {
@@ -1372,11 +1361,8 @@ test.describe('Help Site Screenshots', () => {
       const assignmentsPage = new AssignmentsPage(page)
       await assignmentsPage.waitForAssignmentsLoaded()
 
-      // Navigate to report wizard
-      const firstRefCards = page
-        .locator('[role="group"][aria-label*="Swipeable"]')
-        .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
-      const targetCard = firstRefCards.first()
+      // Use the second assignment card (NLA/NLB game with report action)
+      const targetCard = assignmentsPage.assignmentCards.nth(1)
       const cardBox = await targetCard.boundingBox()
 
       if (cardBox) {

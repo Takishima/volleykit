@@ -953,6 +953,8 @@ export const de: TranslationKeys = {
   sportsHallReport: {
     heading: 'Hallenbericht',
     lead: 'Der Hallenbericht ermöglicht es dem 1. Schiedsrichter, den Zustand der Sporthalle vor dem Spiel zu dokumentieren. Du kannst einen vorausgefüllten PDF-Bericht direkt aus der App erstellen.',
+    availabilityNote:
+      'Der Hallenbericht ist nur für NLA- und NLB-Spiele verfügbar. Er wird bei Einsätzen in tieferen Ligen nicht angezeigt.',
     whatIs: {
       title: 'Was ist der Hallenbericht?',
       description:

@@ -956,6 +956,8 @@ export const fr: TranslationKeys = {
   sportsHallReport: {
     heading: 'Rapport de salle',
     lead: "Le rapport de salle permet au premier arbitre de documenter l'état de la salle de sport avant un match. Vous pouvez générer un rapport PDF pré-rempli directement depuis l'application.",
+    availabilityNote:
+      "Le rapport de salle n'est disponible que pour les matchs NLA et NLB. Il n'apparaît pas pour les désignations des ligues inférieures.",
     whatIs: {
       title: "Qu'est-ce que le rapport de salle ?",
       description:
