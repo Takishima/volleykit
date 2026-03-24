@@ -31,7 +31,9 @@
       "Bash(pnpm exec vitest:*)",
       "Bash(pnpm exec eslint:*)",
       "Bash(pnpm exec wrangler:*)",
-      "Bash(pnpm run size:*)"
+      "Bash(pnpm run size:*)",
+      "Bash(CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh)",
+      "Bash(prettier --check:*)"
     ],
     "deny": []
   },

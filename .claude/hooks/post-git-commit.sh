@@ -24,7 +24,8 @@ fi
 if command -v jq &>/dev/null; then
   EXIT_CODE=$(echo "$INPUT" | jq -r '.tool_result.exit_code // .tool_result.exitCode // "1"' 2>/dev/null || echo "1")
 else
-  EXIT_CODE="0"  # assume success if we can't parse
+  EXIT_CODE=$(echo "$INPUT" | grep -o '"exit_code"[[:space:]]*:[[:space:]]*[0-9]*' | grep -o '[0-9]*$' || echo "1")
+  [ -z "$EXIT_CODE" ] && EXIT_CODE="1"
 fi
 
 if [[ $EXIT_CODE == "0" ]]; then
