@@ -19,6 +19,7 @@ export { useCompensationActions } from './hooks/useCompensationActions'
 // Components
 export { CompensationCard } from './components/CompensationCard'
 export { EditCompensationModal } from './components/EditCompensationModal'
+export { TwintPaymentModal } from './components/TwintPaymentModal'
 
 // Utils
 export {

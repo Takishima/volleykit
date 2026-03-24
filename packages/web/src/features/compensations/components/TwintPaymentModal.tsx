@@ -1,5 +1,3 @@
-import { memo } from 'react'
-
 import { Smartphone } from '@/common/components/icons'
 import { Modal } from '@/common/components/Modal'
 import { ModalHeader } from '@/common/components/ModalHeader'
@@ -15,7 +13,7 @@ interface TwintPaymentModalProps {
   mobilePhone: string | null
 }
 
-function TwintPaymentModalComponent({
+export function TwintPaymentModal({
   isOpen,
   onClose,
   firstName,
@@ -66,4 +64,3 @@ function TwintPaymentModalComponent({
   )
 }
 
-export const TwintPaymentModal = memo(TwintPaymentModalComponent)

@@ -196,6 +196,7 @@ export function useCompensationsPageLogic() {
     editCompensationModal,
     twintModal,
     twintProfile,
+    showTwintAction,
   }
 }
 

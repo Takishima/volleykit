@@ -39,6 +39,7 @@ export function CompensationsPage() {
     editCompensationModal,
     twintModal,
     twintProfile,
+    showTwintAction,
   } = useCompensationsPageLogic()
 
   const tabs = [
@@ -142,16 +143,18 @@ export function CompensationsPage() {
           </Suspense>
         )}
 
-        {/* Twint Payment Modal */}
-        <Suspense fallback={null}>
-          <TwintPaymentModal
-            isOpen={twintModal.isOpen}
-            onClose={twintModal.close}
-            firstName={twintProfile.firstName}
-            lastName={twintProfile.lastName}
-            mobilePhone={twintProfile.mobilePhone}
-          />
-        </Suspense>
+        {/* Twint Payment Modal — only render chunk when feature is enabled */}
+        {showTwintAction && (
+          <Suspense fallback={null}>
+            <TwintPaymentModal
+              isOpen={twintModal.isOpen}
+              onClose={twintModal.close}
+              firstName={twintProfile.firstName}
+              lastName={twintProfile.lastName}
+              mobilePhone={twintProfile.mobilePhone}
+            />
+          </Suspense>
+        )}
       </div>
     </PullToRefresh>
   )
