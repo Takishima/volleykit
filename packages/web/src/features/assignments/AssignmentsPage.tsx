@@ -1,4 +1,4 @@
-import { lazy, Suspense, Fragment } from 'react'
+import { lazy, Suspense, Fragment, useMemo } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { LoadingState, ErrorState, EmptyState } from '@/common/components/LoadingSpinner'
@@ -55,6 +55,16 @@ export function AssignmentsPage() {
     upcomingCount,
     validationClosedCount,
   } = useAssignmentsPageLogic()
+
+  // Pre-compute cumulative item counts per group to avoid O(n²) calculation in render
+  const groupStartIndices = useMemo(
+    () =>
+      groupedData.reduce<{ sums: number[]; total: number }>(
+        ({ sums, total }, g) => ({ sums: [...sums, total], total: total + g.items.length }),
+        { sums: [], total: 0 }
+      ).sums,
+    [groupedData]
+  )
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -143,10 +153,8 @@ export function AssignmentsPage() {
           {(!isLoading || showDummyData) && !error && groupedData.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {groupedData.map((group, groupIndex) => {
-                // Track global item index for tour data attribute
-                const itemsBeforeThisGroup = groupedData
-                  .slice(0, groupIndex)
-                  .reduce((sum, g) => sum + g.items.length, 0)
+                // Look up pre-computed start index to avoid O(n²) slice+reduce per group
+                const itemsBeforeThisGroup = groupStartIndices[groupIndex] ?? 0
 
                 return (
                   <Fragment key={group.week.key}>

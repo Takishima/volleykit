@@ -68,6 +68,15 @@ describe('i18n module', () => {
       const result = tInterpolate('auth.login', { unused: 'value' })
       expect(result).toBe('Login')
     })
+
+    it('unescapes double braces {{ and }} to literal braces after substitution', () => {
+      // tInterpolate replaces {placeholder} then unescapes {{ → { and }} → }
+      // We test via the raw function since we cannot put {{ in locale files easily
+      // Simulate the post-substitution pass directly
+      const result = tInterpolate('validation.wizard.stepOf', { current: '{{2}}', total: 4 })
+      // '{{2}}' is substituted as the value string, then {{ → { and }} → }
+      expect(result).toBe('Step {2} of 4')
+    })
   })
 
   describe('getLocale()', () => {

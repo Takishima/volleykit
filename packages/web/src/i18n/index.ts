@@ -231,7 +231,8 @@ export function tInterpolate(key: TranslationKey, values: Record<string, string 
   for (const [placeholder, value] of Object.entries(values)) {
     result = result.replace(`{${placeholder}}`, String(value))
   }
-  return result
+  // Unescape double braces: {{ → { and }} → } (allows literal braces in translations)
+  return result.replaceAll('{{', '{').replaceAll('}}', '}')
 }
 
 initLocale()

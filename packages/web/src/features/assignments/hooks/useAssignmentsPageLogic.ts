@@ -75,6 +75,118 @@ export function getEmptyStateContent(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Private sub-hooks — extracted to keep useAssignmentsPageLogic under ~30 lines
+// ---------------------------------------------------------------------------
+
+/** Splits calendar assignments into upcoming/past buckets filtered by association. */
+function useCalendarDisplayItems(
+  isCalendarMode: boolean,
+  calendarData: CalendarAssignment[] | undefined,
+  filterByAssociation: (items: CalendarAssignment[]) => CalendarAssignment[]
+) {
+  const calendarUpcoming = useMemo(() => {
+    if (!isCalendarMode || !calendarData) return []
+    const now = new Date()
+    return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) >= now))
+  }, [isCalendarMode, calendarData, filterByAssociation])
+
+  const calendarPast = useMemo(() => {
+    if (!isCalendarMode || !calendarData) return []
+    const now = new Date()
+    return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) < now))
+  }, [isCalendarMode, calendarData, filterByAssociation])
+
+  return { calendarUpcoming, calendarPast }
+}
+
+/** Derives isLoading, error, and a unified refetch from the three query results. */
+function useDerivedLoadingError(
+  isAssociationSwitching: boolean,
+  isCalendarMode: boolean,
+  activeTab: TabType,
+  calendarLoading: boolean,
+  calendarError: Error | null,
+  refetchCalendar: () => void,
+  upcomingLoading: boolean,
+  upcomingError: Error | null,
+  refetchUpcoming: () => void,
+  validationClosedLoading: boolean,
+  validationClosedError: Error | null,
+  refetchValidationClosed: () => void
+) {
+  const isLoading = useMemo(() => {
+    if (isAssociationSwitching) return true
+    if (isCalendarMode) return calendarLoading
+    return activeTab === 'upcoming' ? upcomingLoading : validationClosedLoading
+  }, [
+    isAssociationSwitching,
+    isCalendarMode,
+    calendarLoading,
+    activeTab,
+    upcomingLoading,
+    validationClosedLoading,
+  ])
+
+  const error = useMemo(() => {
+    if (isCalendarMode) return calendarError
+    return activeTab === 'upcoming' ? upcomingError : validationClosedError
+  }, [isCalendarMode, calendarError, activeTab, upcomingError, validationClosedError])
+
+  const refetch = useCallback(() => {
+    if (isCalendarMode) return refetchCalendar()
+    return activeTab === 'upcoming' ? refetchUpcoming() : refetchValidationClosed()
+  }, [isCalendarMode, activeTab, refetchCalendar, refetchUpcoming, refetchValidationClosed])
+
+  return { isLoading, error, refetch }
+}
+
+/** Merges regular assignments with on-call duties and groups them by week. */
+function useMergedDisplayItems(
+  activeTab: TabType,
+  isCalendarMode: boolean,
+  showDummyData: boolean,
+  data: Assignment[] | CalendarAssignment[] | undefined,
+  onCallAssignments: OnCallAssignment[]
+) {
+  const mergedDisplayItems = useMemo((): DisplayItem[] => {
+    if (activeTab !== 'upcoming' || isCalendarMode || showDummyData) return []
+    const items: DisplayItem[] = []
+    if (data) {
+      for (const assignment of data as Assignment[]) {
+        items.push({ type: 'assignment', item: assignment })
+      }
+    }
+    for (const onCall of onCallAssignments) {
+      items.push({ type: 'onCall', item: onCall })
+    }
+    return items.sort((a, b) => {
+      const dateA = getDisplayItemDate(a)
+      const dateB = getDisplayItemDate(b)
+      if (!dateA || !dateB) return 0
+      return new Date(dateA).getTime() - new Date(dateB).getTime()
+    })
+  }, [activeTab, isCalendarMode, showDummyData, data, onCallAssignments])
+
+  const groupedData = useMemo(() => {
+    if (activeTab === 'upcoming' && !isCalendarMode && !showDummyData) {
+      if (mergedDisplayItems.length === 0) return []
+      return groupByWeek(mergedDisplayItems, getDisplayItemDate)
+    }
+    if (!data || data.length === 0) return []
+    const getDate =
+      isCalendarMode && !showDummyData
+        ? (a: { startTime?: string }) => a.startTime
+        : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
+            a.refereeGame?.game?.startingDateTime
+    return groupByWeek(data, getDate as (item: unknown) => string | undefined)
+  }, [activeTab, isCalendarMode, showDummyData, mergedDisplayItems, data])
+
+  return { mergedDisplayItems, groupedData }
+}
+
+// ---------------------------------------------------------------------------
+
 export function useAssignmentsPageLogic() {
   const [activeTab, setActiveTab] = useState<TabType>('upcoming')
   const { isAssociationSwitching, isCalendarMode } = useAuthStore(
@@ -127,20 +239,26 @@ export function useAssignmentsPageLogic() {
   // Update PWA badge with today's game count (only for regular assignments, not calendar mode)
   useDailyGameBadge(isCalendarMode ? [] : (upcomingData ?? []))
 
-  // Compute calendar-specific data (filter by upcoming/past and association)
-  const calendarUpcoming = useMemo(() => {
-    if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
-    const upcoming = calendarData.filter((a) => new Date(a.startTime) >= now)
-    return filterByAssociation(upcoming)
-  }, [isCalendarMode, calendarData, filterByAssociation])
+  const { calendarUpcoming, calendarPast } = useCalendarDisplayItems(
+    isCalendarMode,
+    calendarData,
+    filterByAssociation
+  )
 
-  const calendarPast = useMemo(() => {
-    if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
-    const past = calendarData.filter((a) => new Date(a.startTime) < now)
-    return filterByAssociation(past)
-  }, [isCalendarMode, calendarData, filterByAssociation])
+  const { isLoading, error, refetch } = useDerivedLoadingError(
+    isAssociationSwitching,
+    isCalendarMode,
+    activeTab,
+    calendarLoading,
+    calendarError,
+    refetchCalendar,
+    upcomingLoading,
+    upcomingError,
+    refetchUpcoming,
+    validationClosedLoading,
+    validationClosedError,
+    refetchValidationClosed
+  )
 
   // Select the appropriate data source based on mode and tab
   const rawData = useMemo(() => {
@@ -157,82 +275,19 @@ export function useAssignmentsPageLogic() {
     validationClosedData,
   ])
 
-  // Show loading when switching associations or when query is loading
-  const isLoading = useMemo(() => {
-    if (isAssociationSwitching) return true
-    if (isCalendarMode) return calendarLoading
-    return activeTab === 'upcoming' ? upcomingLoading : validationClosedLoading
-  }, [
-    isAssociationSwitching,
-    isCalendarMode,
-    calendarLoading,
-    activeTab,
-    upcomingLoading,
-    validationClosedLoading,
-  ])
-
-  const error = useMemo(() => {
-    if (isCalendarMode) return calendarError
-    return activeTab === 'upcoming' ? upcomingError : validationClosedError
-  }, [isCalendarMode, calendarError, activeTab, upcomingError, validationClosedError])
-
-  const refetch = useCallback(() => {
-    if (isCalendarMode) {
-      return refetchCalendar()
-    }
-    return activeTab === 'upcoming' ? refetchUpcoming() : refetchValidationClosed()
-  }, [isCalendarMode, activeTab, refetchCalendar, refetchUpcoming, refetchValidationClosed])
-
   // When tour is active, show ONLY the dummy assignment
   const data = useMemo(() => {
-    if (showDummyData) {
-      const tourAssignment = TOUR_DUMMY_ASSIGNMENT as unknown as Assignment
-      return [tourAssignment]
-    }
+    if (showDummyData) return [TOUR_DUMMY_ASSIGNMENT as unknown as Assignment]
     return rawData
   }, [showDummyData, rawData])
 
-  // Merge on-call assignments with regular assignments for upcoming tab (API/demo mode only)
-  const mergedDisplayItems = useMemo((): DisplayItem[] => {
-    if (activeTab !== 'upcoming' || isCalendarMode || showDummyData) {
-      return []
-    }
-
-    const items: DisplayItem[] = []
-
-    if (data) {
-      for (const assignment of data as Assignment[]) {
-        items.push({ type: 'assignment', item: assignment })
-      }
-    }
-
-    for (const onCall of onCallAssignments) {
-      items.push({ type: 'onCall', item: onCall })
-    }
-
-    return items.sort((a, b) => {
-      const dateA = getDisplayItemDate(a)
-      const dateB = getDisplayItemDate(b)
-      if (!dateA || !dateB) return 0
-      return new Date(dateA).getTime() - new Date(dateB).getTime()
-    })
-  }, [activeTab, isCalendarMode, showDummyData, data, onCallAssignments])
-
-  // Group assignments by week for visual separation
-  const groupedData = useMemo(() => {
-    if (activeTab === 'upcoming' && !isCalendarMode && !showDummyData) {
-      if (mergedDisplayItems.length === 0) return []
-      return groupByWeek(mergedDisplayItems, getDisplayItemDate)
-    }
-
-    if (!data || data.length === 0) return []
-    const getDate =
-      isCalendarMode && !showDummyData
-        ? (a: { startTime?: string }) => a.startTime
-        : (a: { refereeGame?: { game?: { startingDateTime?: string } } }) =>
-            a.refereeGame?.game?.startingDateTime
-    return groupByWeek(data, getDate as (item: unknown) => string | undefined)
-  }, [activeTab, isCalendarMode, showDummyData, mergedDisplayItems, data])
+  const { groupedData } = useMergedDisplayItems(
+    activeTab,
+    isCalendarMode,
+    showDummyData,
+    data,
+    onCallAssignments
+  )
 
   const getSwipeConfig = useCallback(
     (assignment: Assignment, t: TranslationFn): SwipeConfig => {

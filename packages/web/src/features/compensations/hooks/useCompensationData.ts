@@ -8,7 +8,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { COMPENSATION_LOOKUP_LIMIT } from '@/common/hooks/usePaginatedQuery'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore, type DataSource } from '@/common/stores/auth'
-import { useDemoStore } from '@/common/stores/demo'
+import { useDemoStore, type AssignmentCompensationEdit } from '@/common/stores/demo'
 import { formatDistanceKm } from '@/common/utils/distance'
 import { logger } from '@/common/utils/logger'
 
@@ -176,6 +176,36 @@ function fetchCompensationByGameNumber(
 }
 
 /**
+ * Applies demo-mode compensation data from the demo store to the form.
+ * Returns a cleanup no-op to match the cleanup-function signature of other strategies.
+ */
+function loadDemoCompensationData(
+  assignment: Assignment,
+  getAssignmentCompensation: (id: string) => AssignmentCompensationEdit | null,
+  setters: Pick<FormStateSetters, 'setKilometers' | 'setReason' | 'setIsDistanceEditable'>
+): () => void {
+  const storedData = getAssignmentCompensation(assignment.__identity)
+  const hasFlexibleTravelExpenses = (
+    assignment.convocationCompensation as { hasFlexibleTravelExpenses?: boolean } | undefined
+  )?.hasFlexibleTravelExpenses
+
+  // Defer state updates to avoid cascading renders (satisfies react-hooks/set-state-in-effect)
+  queueMicrotask(() => {
+    if (storedData) {
+      if (storedData.distanceInMetres !== undefined && storedData.distanceInMetres > 0) {
+        setters.setKilometers(formatDistanceKm(storedData.distanceInMetres))
+      }
+      if (storedData.correctionReason) {
+        setters.setReason(storedData.correctionReason)
+      }
+      logger.debug('[EditCompensationModal] Loaded from demo store:', storedData)
+    }
+    setters.setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+  })
+  return () => {}
+}
+
+/**
  * Fetches compensation details directly by compensation ID.
  * Used for compensation record edits.
  */
@@ -304,25 +334,11 @@ export function useCompensationData({
 
     // Strategy 1: Demo mode - load from stored assignment compensations
     if (isAssignmentEdit && dataSource === 'demo' && assignment) {
-      const storedData = getAssignmentCompensation(assignment.__identity)
-      const hasFlexibleTravelExpenses = (
-        assignment.convocationCompensation as { hasFlexibleTravelExpenses?: boolean } | undefined
-      )?.hasFlexibleTravelExpenses
-
-      // Defer state updates to avoid cascading renders (satisfies react-hooks/set-state-in-effect)
-      queueMicrotask(() => {
-        if (storedData) {
-          if (storedData.distanceInMetres !== undefined && storedData.distanceInMetres > 0) {
-            setKilometers(formatDistanceKm(storedData.distanceInMetres))
-          }
-          if (storedData.correctionReason) {
-            setReason(storedData.correctionReason)
-          }
-          logger.debug('[EditCompensationModal] Loaded from demo store:', storedData)
-        }
-        setIsDistanceEditable(hasFlexibleTravelExpenses !== false)
+      return loadDemoCompensationData(assignment, getAssignmentCompensation, {
+        setKilometers,
+        setReason,
+        setIsDistanceEditable,
       })
-      return
     }
 
     // Strategy 2: Eager-loaded data from assignment (production/calendar mode)
