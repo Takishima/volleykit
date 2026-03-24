@@ -43,13 +43,8 @@ function shouldSortDescending(filter: FilterType): boolean {
 
 export function useCompensationsPageLogic() {
   const [filter, setFilter] = useState<FilterType>('pendingPast')
-  const {
-    editCompensationModal,
-    handleGeneratePDF,
-    twintModal,
-    twintProfile,
-    showTwintAction,
-  } = useCompensationActions()
+  const { editCompensationModal, handleGeneratePDF, twintModal, twintProfile, showTwintAction } =
+    useCompensationActions()
   const { isAssociationSwitching, isCalendarMode } = useAuthStore(
     useShallow((state) => ({
       isAssociationSwitching: state.isAssociationSwitching,

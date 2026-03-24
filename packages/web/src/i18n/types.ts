@@ -207,6 +207,10 @@ export interface Translations {
     applyToSameHallCount: string
     batchUpdateSuccess: string
     batchUpdatePartialSuccess: string
+    twintModalTitle: string
+    twintModalName: string
+    twintModalPhone: string
+    twintNoPhone: string
   }
   exchange: {
     title: string
