@@ -61,7 +61,10 @@
       "types": "./src/offline/index.ts",
       "import": "./src/offline/index.ts",
       "default": "./src/offline/index.ts"
-    }
+    },
+    "./styles/design-tokens.css": "./styles/design-tokens.css",
+    "./styles/colors": "./styles/colors.js",
+    "./styles/colors.js": "./styles/colors.js"
   },
   "scripts": {
     "build": "tsup",
