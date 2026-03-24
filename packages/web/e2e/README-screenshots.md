@@ -42,7 +42,7 @@ Travel screenshots require the production site with OJP API configured. Run from
 
 ```bash
 # Set PRODUCTION_URL and run specific travel tests
-PRODUCTION_URL=https://takishima.github.io/volleykit/ \
+PRODUCTION_URL=https://volleykit.ch/ \
   pnpm exec playwright test e2e/capture-screenshots.spec.ts \
   --project=chromium \
   -g "travel-time|journey-details"
