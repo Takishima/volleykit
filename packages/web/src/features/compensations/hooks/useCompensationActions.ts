@@ -7,6 +7,7 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore } from '@/common/stores/auth'
 import { toast } from '@/common/stores/toast'
 
+import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
 import { downloadCompensationPDF } from '../utils/compensation-actions'
 
 interface UseCompensationActionsResult {
@@ -17,12 +18,26 @@ interface UseCompensationActionsResult {
     close: () => void
   }
   handleGeneratePDF: (compensation: CompensationRecord) => Promise<void>
+  twintModal: {
+    isOpen: boolean
+    open: () => void
+    close: () => void
+  }
+  twintProfile: {
+    firstName: string
+    lastName: string
+    mobilePhone: string | null
+  }
+  showTwintAction: boolean
 }
 
 export function useCompensationActions(): UseCompensationActionsResult {
   const { t } = useTranslation()
   const isDemoMode = useAuthStore((state) => state.dataSource) === 'demo'
   const editCompensationModal = useModalState<CompensationRecord>()
+  const twintModalState = useModalState<true>()
+
+  const { showTwintAction, mobilePhone, firstName, lastName } = useIndoorRefereeProfile()
 
   const pdfMutation = useSafeMutation(
     async (compensation: CompensationRecord, log) => {
@@ -56,6 +71,10 @@ export function useCompensationActions(): UseCompensationActionsResult {
     [isDemoMode, t, pdfMutation]
   )
 
+  const openTwintModal = useCallback(() => {
+    twintModalState.open(true)
+  }, [twintModalState])
+
   return {
     editCompensationModal: {
       isOpen: editCompensationModal.isOpen,
@@ -64,5 +83,16 @@ export function useCompensationActions(): UseCompensationActionsResult {
       close: editCompensationModal.close,
     },
     handleGeneratePDF,
+    twintModal: {
+      isOpen: twintModalState.isOpen,
+      open: openTwintModal,
+      close: twintModalState.close,
+    },
+    twintProfile: {
+      firstName,
+      lastName,
+      mobilePhone,
+    },
+    showTwintAction,
   }
 }

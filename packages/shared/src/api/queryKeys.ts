@@ -283,5 +283,9 @@ export const queryKeys = {
   user: {
     /** User profile query */
     profile: () => ['user', 'profile'] as const,
+    /** Indoor referee profile query (Twint visibility, mobile phone) */
+    indoorRefereeProfile: () => ['user', 'indoor-referee-profile'] as const,
+    /** Person profile query (firstName, lastName, svNumber) */
+    personProfile: () => ['user', 'person-profile'] as const,
   },
 } as const

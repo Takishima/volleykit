@@ -16,6 +16,12 @@ const EditCompensationModal = lazy(() =>
   }))
 )
 
+const TwintPaymentModal = lazy(() =>
+  import('@/features/compensations/components/TwintPaymentModal').then((m) => ({
+    default: m.TwintPaymentModal,
+  }))
+)
+
 export function CompensationsPage() {
   const { t } = useTranslation()
   const {
@@ -31,6 +37,9 @@ export function CompensationsPage() {
     refetch,
     getEmptyStateContent,
     editCompensationModal,
+    twintModal,
+    twintProfile,
+    showTwintAction,
   } = useCompensationsPageLogic()
 
   // Pre-compute cumulative item counts per group to avoid O(n²) calculation in render
@@ -138,6 +147,19 @@ export function CompensationsPage() {
               isOpen={editCompensationModal.isOpen}
               onClose={editCompensationModal.close}
               compensation={editCompensationModal.compensation}
+            />
+          </Suspense>
+        )}
+
+        {/* Twint Payment Modal — only render chunk when feature is enabled */}
+        {showTwintAction && (
+          <Suspense fallback={null}>
+            <TwintPaymentModal
+              isOpen={twintModal.isOpen}
+              onClose={twintModal.close}
+              firstName={twintProfile.firstName}
+              lastName={twintProfile.lastName}
+              mobilePhone={twintProfile.mobilePhone}
             />
           </Suspense>
         )}

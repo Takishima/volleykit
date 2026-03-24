@@ -16,6 +16,7 @@ export { ArrowLeftRight } from 'lucide-react'
 export { Settings } from 'lucide-react'
 
 // Action icons
+export { Smartphone } from 'lucide-react'
 export { Upload } from 'lucide-react'
 export { Camera } from 'lucide-react'
 export { Check } from 'lucide-react'
