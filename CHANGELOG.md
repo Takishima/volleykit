@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.28.0
+
+### Minor Changes
+
+- [#1072](https://github.com/Takishima/volleykit/pull/1072) [`d4e3ce8`](https://github.com/Takishima/volleykit/commit/d4e3ce81f10be265dfe16b1dede756b988303850) Thanks [@Takishima](https://github.com/Takishima)! - Add Twint payment swipe action to compensation items
+
+  When the user's volleymanager profile has Twint visibility enabled
+  (`showPhoneNumberForTwintPaymentOnRefereeStatementOfExpenses`), a Twint
+  swipe action appears on each compensation card. Tapping it opens a modal
+  displaying the referee's name and mobile phone number for easy Twint payment.
+
+- [#1063](https://github.com/Takishima/volleykit/pull/1063) [`3c26688`](https://github.com/Takishima/volleykit/commit/3c266883ab72c75e963809a765dc975dfed52f06) Thanks [@Takishima](https://github.com/Takishima)! - Migrate useSafeMutation to wrap TanStack Query useMutation for DevTools visibility, and add FormSubmitButton component using React 19 useFormStatus
+
+- [#1076](https://github.com/Takishima/volleykit/pull/1076) [`7963d1f`](https://github.com/Takishima/volleykit/commit/7963d1f1d3f62c551251c190010a8a7f7f4e8250) Thanks [@Takishima](https://github.com/Takishima)! - Display payment amount in Twint payment modal
+
+### Patch Changes
+
+- [#1073](https://github.com/Takishima/volleykit/pull/1073) [`f2b6d90`](https://github.com/Takishima/volleykit/commit/f2b6d90ad0b012f52fde75e7ad9c139b560663ca) Thanks [@Takishima](https://github.com/Takishima)! - Fix i18n double-brace escaping: `{{` and `}}` in translations now produce literal `{` and `}` after interpolation.
+
+  Note: minimum Node.js version for `volleykit-web` is now `>=22.0.0` (previously `>=20.0.0`), aligning with the monorepo root requirement.
+
+- [#1065](https://github.com/Takishima/volleykit/pull/1065) [`76fc3ea`](https://github.com/Takishima/volleykit/commit/76fc3eab315b2f3450097946f16b661ee912ef7b) Thanks [@Takishima](https://github.com/Takishima)! - Fix proxy resilience review issues: revert to NetworkFirst caching strategy with 3s timeout, add TTL-based rotation back to primary proxy, call reportProxySuccess on failover retry, remove opaque response caching, migrate all consumers to dynamic getApiBaseUrl()
+
 ## 1.27.0
 
 ### Minor Changes
