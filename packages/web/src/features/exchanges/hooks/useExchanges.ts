@@ -58,13 +58,12 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
   const seasonEndKey = formatDateKey(getSeasonDateRange().to)
 
   // Memoize date range to ensure stable query key across tab switches.
-  // Only recalculates when the day changes (for overnight refresh).
+  // Computed from string date keys so deps are stable (no new Date() in deps array).
   const dateRange = useMemo(
     () => ({
-      from: startOfDay(new Date()).toISOString(),
-      to: endOfDay(getSeasonDateRange().to).toISOString(),
+      from: startOfDay(new Date(todayKey)).toISOString(),
+      to: endOfDay(new Date(seasonEndKey)).toISOString(),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Use date keys for stability, not Date objects
     [todayKey, seasonEndKey]
   )
 

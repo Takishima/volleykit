@@ -3,6 +3,7 @@ import { fixupPluginRules } from '@eslint/compat'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import reactCompiler from 'eslint-plugin-react-compiler'
 import jsxA11y from 'eslint-plugin-jsx-a11y'
 import security from 'eslint-plugin-security'
 import noUnsanitized from 'eslint-plugin-no-unsanitized'
@@ -46,6 +47,7 @@ export default tseslint.config(
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
+      'react-compiler': reactCompiler,
       'jsx-a11y': jsxA11y,
       security: fixupPluginRules(security),
       'no-unsanitized': fixupPluginRules(noUnsanitized),
@@ -61,6 +63,7 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
+      'react-compiler/react-compiler': 'warn',
       // Import ordering - consistent import structure across codebase
       'import-x/order': [
         'warn',

@@ -5,7 +5,8 @@ import { readFileSync, writeFileSync, existsSync } from 'fs'
 import path from 'path'
 
 import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -384,6 +385,15 @@ export default defineConfig(({ mode }) => {
     plugins: [
       zodLocalesStubPlugin(),
       react(),
+      // React Compiler: limit to source .tsx/.ts files to avoid Babel overhead on
+      // generated/vendor code. runtimeVersion de-duplicates Babel helper imports via
+      // @babel/plugin-transform-runtime instead of inlining them per-file.
+      babel({
+        include: /src\/.*\.(t|j)sx?$/,
+        exclude: /node_modules/,
+        runtimeVersion: require('@babel/runtime/package.json').version,
+        presets: [reactCompilerPreset()],
+      }),
       tailwindcss(),
       // Disable PWA for PR previews to avoid service worker scope conflicts
       // The main site's SW scope (/volleykit/) would intercept PR preview requests

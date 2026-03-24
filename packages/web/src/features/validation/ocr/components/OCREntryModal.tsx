@@ -113,6 +113,12 @@ export function OCREntryModal({
 
   // Image URL for displaying the captured scoresheet
   const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
+  // Ref for stable access in reset effect — reading capturedImageUrl in the isOpen
+  // effect would cause it to re-run when the URL changes during the reset itself.
+  const capturedImageUrlRef = useRef(capturedImageUrl)
+  useEffect(() => {
+    capturedImageUrlRef.current = capturedImageUrl
+  })
 
   // Store the captured image blob to pass to validation state
   const capturedBlobRef = useRef<Blob | null>(null)
@@ -148,15 +154,15 @@ export function OCREntryModal({
       setAwayComparison(null)
       setRawOcrData(null)
       setStoredOcrResult(null)
-      // Revoke previous image URL to prevent memory leaks
-      if (capturedImageUrl) {
-        URL.revokeObjectURL(capturedImageUrl)
+      // Revoke previous image URL to prevent memory leaks.
+      // Read from ref to avoid adding capturedImageUrl as a dep (it changes during the reset).
+      if (capturedImageUrlRef.current) {
+        URL.revokeObjectURL(capturedImageUrlRef.current)
       }
       setCapturedImageUrl(null)
       setExpandedSections(new Set(['home-players', 'away-players']))
       reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- capturedImageUrl changes during reset
   }, [isOpen, reset])
 
   // Clean up image URL on unmount

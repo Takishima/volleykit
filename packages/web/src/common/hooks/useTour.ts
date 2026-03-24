@@ -32,6 +32,11 @@ interface UseTourReturn {
 }
 
 export function useTour(tourId: TourId, options: UseTourOptions = {}): UseTourReturn {
+  // The Compiler cannot statically verify the cross-effect ref communication pattern:
+  // Effect 1 resets hasAutoStarted.current and Effect 2 reads it — React guarantees
+  // execution order but the Compiler treats ref reads as potentially stale.
+  'use no memo'
+
   const { startDelay = TOUR_START_DELAY_MS, autoStart = true } = options
 
   const {

@@ -555,7 +555,7 @@ describe('EditCompensationModal', () => {
 
       await waitForFormToLoad()
 
-      const backdrop = container.firstChild as HTMLElement
+      const backdrop = (container.firstChild as HTMLElement).firstChild as HTMLElement
       fireEvent.click(backdrop)
       expect(mockOnClose).toHaveBeenCalledTimes(1)
     })
