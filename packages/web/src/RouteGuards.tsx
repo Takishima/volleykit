@@ -5,7 +5,7 @@
  * - PublicRoute: Redirects authenticated users to home
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Navigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
@@ -49,14 +49,19 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isVerifying, setIsVerifying] = useState(() => shouldVerifySession)
   const [verifyError, setVerifyError] = useState<string | null>(null)
 
+  // Ref for stable access to activeAssociationCode inside the demo init effect.
+  // The effect only runs when data is empty, not on association changes
+  // (association changes are handled by AppShell when user switches occupation).
+  const activeAssociationCodeRef = useRef(activeAssociationCode)
+  useEffect(() => {
+    activeAssociationCodeRef.current = activeAssociationCode
+  })
+
   // Regenerate demo data on page load if demo mode is enabled but data is empty
-  // This only runs once when data needs initialization, not on association changes
-  // (association changes are handled by AppShell when user switches occupation)
   useEffect(() => {
     if (isDemoMode && assignments.length === 0) {
-      initializeDemoData(activeAssociationCode ?? 'SV')
+      initializeDemoData(activeAssociationCodeRef.current ?? 'SV')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run when data is empty, not on association changes
   }, [isDemoMode, assignments.length, initializeDemoData])
 
   // Verify persisted session is still valid on mount

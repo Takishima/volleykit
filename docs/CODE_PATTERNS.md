@@ -331,15 +331,88 @@ const { data, error, isLoading } = useQuery({
 
 ## React 19 Patterns
 
-The project runs React 19 with the **React Compiler** enabled (via `@vitejs/plugin-react` v6). The compiler automatically memoizes components and hooks, so `React.memo`, `useMemo`, and `useCallback` are less critical for preventing re-renders. However, explicit `useMemo`/`useCallback` remain valid for:
+The project runs React 19 with `@vitejs/plugin-react` v6. The **React Compiler** (`babel-plugin-react-compiler`) is **enabled** via the Vite Babel plugin in `vite.config.ts`. The compiler automatically memoizes components and hooks at build time, so manual memoization is generally not needed:
 
-- Expensive computations that should be clearly marked as intentionally cached
-- Stable references for TanStack Query keys and API call parameters
-- Dependencies passed to `useEffect` that should not trigger re-runs
-
-> **Note**: `React.memo` is not used in this codebase — the React Compiler handles component-level memoization automatically. Do not add `React.memo` wrappers.
+- Avoid adding `React.memo`, `useMemo`, or `useCallback` unless you have a measured performance reason
+- If the compiler cannot safely memoize a specific component/hook (e.g. due to rules-of-hooks violations), opt it out with `'use no memo'` at the top of the function and document the reason
+- To verify compiler output, inspect the build with `stats.html` or check for `_c(` / `_memo(` calls in the compiled output
 
 These React 19 hooks are available for adoption alongside existing patterns.
+
+**`use()` — read resources during render**
+
+The `use()` hook reads a Promise or Context during render. Unlike `useEffect`-based patterns, it integrates naturally with `<Suspense>` and error boundaries.
+
+```typescript
+import { use, Suspense } from 'react'
+
+// Wrap async data in a Promise and pass it down
+function AssignmentDetailPage({ detailPromise }: { detailPromise: Promise<Assignment> }) {
+  // Suspends until the promise resolves; the nearest <Suspense> shows the fallback
+  const assignment = use(detailPromise)
+  return <AssignmentCard assignment={assignment} />
+}
+
+// Parent provides the Suspense boundary
+<Suspense fallback={<LoadingSpinner />}>
+  <AssignmentDetailPage detailPromise={fetchAssignmentDetail(id)} />
+</Suspense>
+```
+
+> Prefer `useSuspenseQuery` from TanStack Query for data fetching — it covers this use case with caching, retries, and invalidation. Reserve `use()` for cases where a Promise is passed explicitly as a prop or from context.
+
+**`useTransition` — non-urgent state updates**
+
+Use `useTransition` to mark state updates as non-urgent. React will keep the current UI responsive while the transition is pending.
+
+```typescript
+import { useTransition } from 'react'
+
+function TabBar({ onTabChange }: Props) {
+  const [isPending, startTransition] = useTransition()
+
+  const handleTabChange = (tab: string) => {
+    startTransition(() => {
+      // This state update (e.g., filtering a long list) won't block the UI
+      setActiveTab(tab)
+    })
+  }
+
+  return (
+    <div>
+      {tabs.map((tab) => (
+        <button
+          key={tab}
+          onClick={() => handleTabChange(tab)}
+          // Show a subtle loading indicator while the transition is in progress
+          className={isPending ? 'opacity-60' : ''}
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
+  )
+}
+```
+
+> Good candidates for `useTransition`: tab switches that re-filter large lists, search input that triggers expensive rendering, any state update where the current UI should remain interactive during the update.
+
+**`useDeferredValue` — delay expensive derived rendering**
+
+Where `useTransition` wraps a state update, `useDeferredValue` wraps a value. React renders the stale value first (keeping the UI responsive), then re-renders with the deferred value in the background.
+
+```typescript
+import { useDeferredValue } from 'react'
+
+function AssignmentSearch({ query }: { query: string }) {
+  // Renders instantly with the previous query while the new one is still "pending"
+  const deferredQuery = useDeferredValue(query)
+  const filtered = useMemo(() => filterAssignments(all, deferredQuery), [all, deferredQuery])
+  return <AssignmentList items={filtered} />
+}
+```
+
+> Use `useDeferredValue` when you receive a value from a parent you don't control. Use `useTransition` when you own the state update.
 
 **`useOptimistic` — instant UI feedback**
 
@@ -432,6 +505,13 @@ function ConfirmationModal({ onConfirm, onClose }: Props) {
   <div className="modal">...</div>
 </div>
 
+// Bad: aria-hidden on the OUTER wrapper — hides the dialog from screen readers too!
+<div aria-hidden="true" onClick={onClose} className="fixed inset-0 ...">
+  <div role="dialog" aria-modal="true">  {/* unreachable by AT */}
+    {children}
+  </div>
+</div>
+
 // Good: Proper dialog with non-interactive backdrop
 function Modal({ isOpen, onClose, title, children }: ModalProps) {
   // Handle Escape key
@@ -450,14 +530,14 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
   return (
     <>
-      {/* Backdrop: clickable but not focusable */}
+      {/* Backdrop: purely decorative overlay — aria-hidden hides ONLY this element */}
       <div
-        className="backdrop"
+        className="fixed inset-0 bg-black bg-opacity-50"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Dialog: proper ARIA attributes */}
+      {/* Dialog: proper ARIA attributes — NOT a child of the aria-hidden backdrop */}
       <dialog
         open
         role="dialog"
@@ -471,6 +551,8 @@ function Modal({ isOpen, onClose, title, children }: ModalProps) {
   );
 }
 ```
+
+> **Critical**: `aria-hidden="true"` propagates to all descendants. Never place it on a wrapper element that contains the dialog — it will make the entire modal invisible to screen readers. Keep the backdrop and dialog as siblings, or use only `aria-modal="true"` on the dialog (which instructs AT to ignore background content).
 
 ### Icon Buttons
 

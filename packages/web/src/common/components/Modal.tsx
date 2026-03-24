@@ -134,23 +134,26 @@ export function Modal({
 
   if (!isOpen) return null
 
-  // Backdrop pattern: aria-hidden="true" hides the backdrop from screen readers since it's
-  // purely decorative. Click-to-close is a convenience feature; keyboard users close via Escape.
+  // Backdrop and dialog are siblings: aria-hidden="true" hides ONLY the backdrop from AT.
+  // Placing aria-hidden on the outer wrapper would hide the dialog too.
+  // Click-to-close is a convenience feature; keyboard users close via Escape.
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-      style={{ zIndex }}
-      onClick={handleBackdropClick}
-      aria-hidden="true"
-    >
-      {/* Dialog container */}
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex }}>
+      {/* Backdrop: purely decorative overlay */}
+      <div
+        className="absolute inset-0 bg-black bg-opacity-50"
+        onClick={handleBackdropClick}
+        aria-hidden="true"
+      />
+
+      {/* Dialog container: must NOT be inside the aria-hidden backdrop */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl w-full ${sizeClasses[size]} p-6 focus:outline-none`}
+        className={`relative bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl w-full ${sizeClasses[size]} p-6 focus:outline-none`}
       >
         {children}
       </div>

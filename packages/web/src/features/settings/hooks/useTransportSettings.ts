@@ -70,7 +70,8 @@ export function useTransportSettings() {
   )
 
   const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const [cacheVersion, setCacheVersion] = useState(0)
+  // Incremented by handleClearCache to trigger a re-render so cacheEntryCount is recomputed.
+  const [, setCacheVersion] = useState(0)
 
   // Get current transport enabled state for this association
   const isTransportEnabled = useMemo(() => {
@@ -108,29 +109,25 @@ export function useTransportSettings() {
     return getDefaultArrivalBuffer(associationCode)
   }, [associationCode, arrivalBufferByAssociation])
 
-  // Local state for immediate input feedback
+  // Local state for immediate input feedback (debounced before persisting to store)
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer)
   const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm)
   const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime)
 
+  // When the association changes, reset local inputs to the new association's store values.
+  // Adjusting state during render (not in an effect) avoids an extra render cycle.
+  // See: https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [prevAssociation, setPrevAssociation] = useState(associationCode)
+  if (prevAssociation !== associationCode) {
+    setPrevAssociation(associationCode)
+    setLocalArrivalBuffer(storeArrivalBuffer)
+    setLocalMaxDistance(currentDistanceFilter.maxDistanceKm)
+    setLocalMaxTravelTime(currentMaxTravelTime)
+  }
+
   const arrivalDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const distanceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const travelTimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Sync local state when store value changes externally
-  useEffect(() => {
-    setLocalArrivalBuffer((prev) => (prev !== storeArrivalBuffer ? storeArrivalBuffer : prev))
-  }, [storeArrivalBuffer])
-
-  useEffect(() => {
-    setLocalMaxDistance((prev) =>
-      prev !== currentDistanceFilter.maxDistanceKm ? currentDistanceFilter.maxDistanceKm : prev
-    )
-  }, [currentDistanceFilter.maxDistanceKm])
-
-  useEffect(() => {
-    setLocalMaxTravelTime((prev) => (prev !== currentMaxTravelTime ? currentMaxTravelTime : prev))
-  }, [currentMaxTravelTime])
 
   // Cleanup debounce timeouts on unmount
   useEffect(() => {
@@ -141,12 +138,9 @@ export function useTransportSettings() {
     }
   }, [])
 
-  // Calculate cache entry count
-  const cacheEntryCount = useMemo(
-    () => (isTransportEnabled ? getTravelTimeCacheStats().entryCount : 0),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isTransportEnabled, cacheVersion]
-  )
+  // Computed inline — recomputed on every render, including when setCacheVersion triggers a
+  // re-render after the cache is cleared (see handleClearCache).
+  const cacheEntryCount = isTransportEnabled ? getTravelTimeCacheStats().entryCount : 0
 
   const handleToggleTransport = useCallback(() => {
     if (!associationCode) return

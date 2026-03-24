@@ -42,13 +42,13 @@ export function useRefereeBackups(weeksAhead: number = DEFAULT_WEEKS_AHEAD) {
   const endDateKey = formatDateKey(addWeeks(new Date(), weeksAhead))
 
   // Memoize date range to ensure stable query key across tab switches.
+  // Computed from string date keys so deps are stable (no new Date() in deps array).
   const dateRange = useMemo(
     () => ({
-      from: startOfDay(new Date()).toISOString(),
-      to: endOfDay(addWeeks(new Date(), weeksAhead)).toISOString(),
+      from: startOfDay(new Date(todayKey)).toISOString(),
+      to: endOfDay(new Date(endDateKey)).toISOString(),
     }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Use date keys for stability, not Date objects
-    [todayKey, endDateKey, weeksAhead]
+    [todayKey, endDateKey]
   )
 
   // Build property filters for date range

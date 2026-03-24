@@ -53,12 +53,11 @@ export function useHomeLocationSettings({ t }: UseHomeLocationSettingsOptions) {
   // Refs for stable callback references in geolocation handler
   const setAddressQueryRef = useRef(setAddressQuery)
   const geocodeClearRef = useRef(geocodeClear)
-  // Sync refs on every render to avoid stale closures in callbacks
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Keep refs in sync with the latest callbacks so geolocation handlers never close over stale values
   useEffect(() => {
     setAddressQueryRef.current = setAddressQuery
     geocodeClearRef.current = geocodeClear
-  })
+  }, [geocodeClear])
 
   // Handle geolocation success via callback
   const handleGeolocationSuccess = useCallback(

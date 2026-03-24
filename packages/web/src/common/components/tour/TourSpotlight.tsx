@@ -136,6 +136,14 @@ export function TourSpotlight({
     [targetSelector, placement, freezePosition, isPositioned]
   )
 
+  // Ref for stable access to updatePositions inside the scroll effect.
+  // The scroll effect must only fire when targetSelector changes, not on every
+  // updatePositions identity change (which changes whenever isPositioned changes).
+  const updatePositionsRef = useRef(updatePositions)
+  useEffect(() => {
+    updatePositionsRef.current = updatePositions
+  })
+
   // Elevate target element and its SwipeableCard container above overlay
   // using useLayoutEffect to apply styles before paint
   useLayoutEffect(() => {
@@ -186,19 +194,18 @@ export function TourSpotlight({
     setTooltipPosition(position)
   }, [targetRect, placement])
 
-  // Scroll target into view - this is a separate effect that only depends on targetSelector
-  // to avoid re-scrolling when other dependencies change
+  // Scroll target into view — only when targetSelector changes, not on every
+  // updatePositions identity change.
   useEffect(() => {
     const target = document.querySelector(targetSelector)
     if (!target) return
 
     // First calculate initial position so spotlight appears immediately
-    updatePositions(true)
+    updatePositionsRef.current(true)
 
     // Then scroll element into view with smooth animation
     // The scroll event listener will update positions during the animation
     target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only scroll when target changes, not when updatePositions changes
   }, [targetSelector])
 
   // Subscribe to scroll/resize events for position updates during the tour

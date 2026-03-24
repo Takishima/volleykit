@@ -63,7 +63,7 @@ describe('PdfLanguageModal', () => {
     const onClose = vi.fn()
     render(<PdfLanguageModal {...defaultProps} onClose={onClose} />)
 
-    const backdrop = screen.getByRole('dialog', { hidden: true }).parentElement
+    const backdrop = screen.getByRole('dialog', { hidden: true }).previousElementSibling
     fireEvent.click(backdrop!)
 
     expect(onClose).toHaveBeenCalled()
@@ -89,7 +89,7 @@ describe('PdfLanguageModal', () => {
     const onClose = vi.fn()
     render(<PdfLanguageModal {...defaultProps} onClose={onClose} isLoading />)
 
-    const backdrop = screen.getByRole('dialog', { hidden: true }).parentElement
+    const backdrop = screen.getByRole('dialog', { hidden: true }).previousElementSibling
     fireEvent.click(backdrop!)
 
     expect(onClose).not.toHaveBeenCalled()

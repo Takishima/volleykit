@@ -412,10 +412,10 @@ describe('ValidateGameModal', () => {
         { wrapper: createWrapper() }
       )
 
-      // Click on backdrop (parent of dialog)
+      // Click on backdrop (sibling before the dialog in the new Modal structure)
       const backdrop = screen.getByRole('dialog', {
         hidden: true,
-      }).parentElement
+      }).previousElementSibling
       fireEvent.click(backdrop!)
 
       await waitFor(() => {
