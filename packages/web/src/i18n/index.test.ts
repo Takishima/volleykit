@@ -69,13 +69,11 @@ describe('i18n module', () => {
       expect(result).toBe('Login')
     })
 
-    it('unescapes double braces {{ and }} to literal braces after substitution', () => {
-      // tInterpolate replaces {placeholder} then unescapes {{ → { and }} → }
-      // We test via the raw function since we cannot put {{ in locale files easily
-      // Simulate the post-substitution pass directly
+    it('double braces in values pass through unchanged (sentinel only protects translation strings)', () => {
+      // Sentinels are applied to the translation string before substitution.
+      // Values containing {{ are substituted verbatim and are not unescaped.
       const result = tInterpolate('validation.wizard.stepOf', { current: '{{2}}', total: 4 })
-      // '{{2}}' is substituted as the value string, then {{ → { and }} → }
-      expect(result).toBe('Step {2} of 4')
+      expect(result).toBe('Step {{2}} of 4')
     })
   })
 

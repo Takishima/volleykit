@@ -100,21 +100,28 @@ function useCalendarDisplayItems(
   return { calendarUpcoming, calendarPast }
 }
 
+interface DerivedLoadingErrorOptions {
+  isAssociationSwitching: boolean
+  isCalendarMode: boolean
+  activeTab: TabType
+  calendar: { loading: boolean; error: Error | null; refetch: () => void }
+  upcoming: { loading: boolean; error: Error | null; refetch: () => void }
+  validationClosed: { loading: boolean; error: Error | null; refetch: () => void }
+}
+
 /** Derives isLoading, error, and a unified refetch from the three query results. */
-function useDerivedLoadingError(
-  isAssociationSwitching: boolean,
-  isCalendarMode: boolean,
-  activeTab: TabType,
-  calendarLoading: boolean,
-  calendarError: Error | null,
-  refetchCalendar: () => void,
-  upcomingLoading: boolean,
-  upcomingError: Error | null,
-  refetchUpcoming: () => void,
-  validationClosedLoading: boolean,
-  validationClosedError: Error | null,
-  refetchValidationClosed: () => void
-) {
+function useDerivedLoadingError({
+  isAssociationSwitching,
+  isCalendarMode,
+  activeTab,
+  calendar: { loading: calendarLoading, error: calendarError, refetch: refetchCalendar },
+  upcoming: { loading: upcomingLoading, error: upcomingError, refetch: refetchUpcoming },
+  validationClosed: {
+    loading: validationClosedLoading,
+    error: validationClosedError,
+    refetch: refetchValidationClosed,
+  },
+}: DerivedLoadingErrorOptions) {
   const isLoading = useMemo(() => {
     if (isAssociationSwitching) return true
     if (isCalendarMode) return calendarLoading
@@ -245,20 +252,18 @@ export function useAssignmentsPageLogic() {
     filterByAssociation
   )
 
-  const { isLoading, error, refetch } = useDerivedLoadingError(
+  const { isLoading, error, refetch } = useDerivedLoadingError({
     isAssociationSwitching,
     isCalendarMode,
     activeTab,
-    calendarLoading,
-    calendarError,
-    refetchCalendar,
-    upcomingLoading,
-    upcomingError,
-    refetchUpcoming,
-    validationClosedLoading,
-    validationClosedError,
-    refetchValidationClosed
-  )
+    calendar: { loading: calendarLoading, error: calendarError, refetch: refetchCalendar },
+    upcoming: { loading: upcomingLoading, error: upcomingError, refetch: refetchUpcoming },
+    validationClosed: {
+      loading: validationClosedLoading,
+      error: validationClosedError,
+      refetch: refetchValidationClosed,
+    },
+  })
 
   // Select the appropriate data source based on mode and tab
   const rawData = useMemo(() => {

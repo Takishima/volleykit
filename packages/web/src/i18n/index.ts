@@ -228,11 +228,13 @@ export type TranslationFunction = typeof t
  */
 export function tInterpolate(key: TranslationKey, values: Record<string, string | number>): string {
   let result = t(key)
+  // Protect escaped braces with sentinels before substitution so {{ isn't treated as {placeholder}
+  result = result.replaceAll('{{', '\x00OB').replaceAll('}}', '\x00CB')
   for (const [placeholder, value] of Object.entries(values)) {
     result = result.replace(`{${placeholder}}`, String(value))
   }
-  // Unescape double braces: {{ → { and }} → } (allows literal braces in translations)
-  return result.replaceAll('{{', '{').replaceAll('}}', '}')
+  // Restore sentinels as literal { and }
+  return result.replaceAll('\x00OB', '{').replaceAll('\x00CB', '}')
 }
 
 initLocale()
