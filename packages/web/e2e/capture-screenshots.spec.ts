@@ -405,9 +405,10 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page)
     await assignmentsPage.waitForAssignmentsLoaded()
 
-    // Use the second assignment card (NLA/NLB game with report action)
+    // Use the second swipeable assignment card (NLA/NLB 1st referee game)
     // The first card is a linesman assignment; the second is a 1st referee NLA game
-    const targetCard = assignmentsPage.assignmentCards.nth(1)
+    const swipeableCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+    const targetCard = swipeableCards.nth(1)
     const cardBox = await targetCard.boundingBox()
 
     if (cardBox) {
@@ -588,8 +589,9 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page)
     await assignmentsPage.waitForAssignmentsLoaded()
 
-    // Use the second assignment card (NLA/NLB game with report action)
-    const targetCard = assignmentsPage.assignmentCards.nth(1)
+    // Use the second swipeable assignment card (NLA/NLB 1st referee game)
+    const swipeableCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+    const targetCard = swipeableCards.nth(1)
     const cardBox = await targetCard.boundingBox()
 
     if (cardBox) {
@@ -625,8 +627,9 @@ test.describe('Help Site Screenshots', () => {
     const assignmentsPage = new AssignmentsPage(page)
     await assignmentsPage.waitForAssignmentsLoaded()
 
-    // Use the second assignment card (NLA/NLB game with report action)
-    const targetCard = assignmentsPage.assignmentCards.nth(1)
+    // Use the second swipeable assignment card (NLA/NLB 1st referee game)
+    const swipeableCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+    const targetCard = swipeableCards.nth(1)
     const cardBox = await targetCard.boundingBox()
 
     if (cardBox) {
@@ -1303,6 +1306,40 @@ test.describe('Help Site Screenshots', () => {
     await context.close()
   })
 
+  test('report-access-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext()
+
+    await takeDeviceSpotlightScreenshots(context, 'report-access', async (page) => {
+      await setupCleanEnvironment(page)
+      const loginPage = new LoginPage(page)
+      await loginPage.goto()
+      await loginPage.enterDemoMode()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      await dismissPWANotification(page)
+
+      const assignmentsPage = new AssignmentsPage(page)
+      await assignmentsPage.waitForAssignmentsLoaded()
+
+      // Use the second swipeable assignment card (NLA/NLB 1st referee game)
+      const swipeableCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+      const targetCard = swipeableCards.nth(1)
+      const cardBox = await targetCard.boundingBox()
+
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4
+        await performSwipe(page, cardBox, 'left', swipeDistance)
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      }
+
+      await targetCard.evaluate((el) => {
+        el.id = 'screenshot-target-report-access'
+      })
+      return { selector: '#screenshot-target-report-access', padding: 4 }
+    })
+
+    await context.close()
+  })
+
   test('report-wizard-entry-devices - capture for tablet and phone', async ({ browser }) => {
     const context = await browser.newContext()
 
@@ -1317,8 +1354,9 @@ test.describe('Help Site Screenshots', () => {
       const assignmentsPage = new AssignmentsPage(page)
       await assignmentsPage.waitForAssignmentsLoaded()
 
-      // Use the second assignment card (NLA/NLB game with report action)
-      const targetCard = assignmentsPage.assignmentCards.nth(1)
+      // Use the second swipeable assignment card (NLA/NLB 1st referee game)
+      const swipeableCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+      const targetCard = swipeableCards.nth(1)
       const cardBox = await targetCard.boundingBox()
 
       if (cardBox) {
@@ -1361,8 +1399,9 @@ test.describe('Help Site Screenshots', () => {
       const assignmentsPage = new AssignmentsPage(page)
       await assignmentsPage.waitForAssignmentsLoaded()
 
-      // Use the second assignment card (NLA/NLB game with report action)
-      const targetCard = assignmentsPage.assignmentCards.nth(1)
+      // Use the second swipeable assignment card (NLA/NLB 1st referee game)
+      const swipeableCards = page.locator('[role="group"][aria-label*="Swipeable"]')
+      const targetCard = swipeableCards.nth(1)
       const cardBox = await targetCard.boundingBox()
 
       if (cardBox) {
