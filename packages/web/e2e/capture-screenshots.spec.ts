@@ -26,7 +26,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // Screenshot output directory (relative to web-app)
-const SCREENSHOT_DIR = path.resolve(__dirname, '../../help-site/public/images/screenshots')
+const SCREENSHOT_DIR = path.resolve(__dirname, '../../../help-site/public/images/screenshots')
 
 // Viewport configurations for device-specific screenshots
 const VIEWPORTS = {
@@ -468,6 +468,212 @@ test.describe('Help Site Screenshots', () => {
     // Focus on the tabs area at the top
     await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
     await takeScreenshot(page, 'compensations-filters')
+  })
+
+  // ============================================
+  // Compensation Actions & Twint Screenshots
+  // ============================================
+  test('compensation-actions - capture compensation swipe actions with Twint', async ({ page }) => {
+    await enterDemoModeWithoutTours(page)
+    const navigation = new NavigationPage(page)
+    const compensationsPage = new CompensationsPage(page)
+
+    await navigation.goToCompensations()
+    await compensationsPage.waitForCompensationsLoaded()
+
+    // Find the first compensation card
+    const firstCard = page.locator('[role="group"][aria-label*="Swipeable"]').first()
+    const cardBox = await firstCard.boundingBox()
+
+    if (cardBox) {
+      // Swipe left to reveal actions (Edit, PDF, Twint)
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'left', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    // Spotlight the swiped card
+    const containerSelector = await firstCard.evaluate((el) => {
+      el.id = 'screenshot-target-comp-actions'
+      return '#screenshot-target-comp-actions'
+    })
+
+    await takeSpotlightScreenshot(page, 'compensation-actions', containerSelector, 4)
+  })
+
+  test('twint-payment-modal - capture Twint payment modal', async ({ page }) => {
+    await enterDemoModeWithoutTours(page)
+    const navigation = new NavigationPage(page)
+    const compensationsPage = new CompensationsPage(page)
+
+    await navigation.goToCompensations()
+    await compensationsPage.waitForCompensationsLoaded()
+
+    // Find the first compensation card and swipe left
+    const firstCard = page.locator('[role="group"][aria-label*="Swipeable"]').first()
+    const cardBox = await firstCard.boundingBox()
+
+    if (cardBox) {
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'left', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    // Click the Twint action button (last action in the left swipe drawer)
+    const twintButton = page
+      .locator('[role="group"][aria-label*="Swipeable"]')
+      .first()
+      .locator('button')
+      .filter({ hasText: /Twint/i })
+    if (await twintButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await twintButton.click()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    // Screenshot the Twint modal
+    await takeScreenshot(page, 'twint-payment-modal')
+  })
+
+  // ============================================
+  // Sports Hall Report Screenshots
+  // ============================================
+  test('report-wizard-entry - capture sports hall report wizard', async ({ page }) => {
+    await enterDemoModeWithoutTours(page)
+    const assignmentsPage = new AssignmentsPage(page)
+    await assignmentsPage.waitForAssignmentsLoaded()
+
+    // Find a 1st referee assignment card to access the report action
+    const firstRefCards = page
+      .locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+    const targetCard = firstRefCards.first()
+    const cardBox = await targetCard.boundingBox()
+
+    if (cardBox) {
+      // Swipe left to reveal actions including Generate Report
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'left', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    // Click the report/generate button (look for the report action)
+    const reportButton = page
+      .locator('button')
+      .filter({ hasText: /Bericht|Report|Rapport|Rapporto/i })
+    if (
+      await reportButton
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
+      await reportButton.first().click()
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS)
+    }
+
+    // Wait for the wizard modal to appear
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+
+    // Screenshot the wizard entry (language selector + jersey ads)
+    await takeScreenshot(page, 'report-wizard-entry')
+  })
+
+  test('report-signature - capture signature canvas', async ({ page }) => {
+    await enterDemoModeWithoutTours(page)
+    const assignmentsPage = new AssignmentsPage(page)
+    await assignmentsPage.waitForAssignmentsLoaded()
+
+    // Navigate to report wizard
+    const firstRefCards = page
+      .locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+    const targetCard = firstRefCards.first()
+    const cardBox = await targetCard.boundingBox()
+
+    if (cardBox) {
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'left', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    const reportButton = page
+      .locator('button')
+      .filter({ hasText: /Bericht|Report|Rapport|Rapporto/i })
+    if (
+      await reportButton
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
+      await reportButton.first().click()
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS)
+    }
+
+    // Click "Everything OK" to trigger signature canvas
+    const everythingOkButton = page.locator('[data-testid="report-everything-ok"]')
+    if (await everythingOkButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await everythingOkButton.click()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    // Wait for signature canvas overlay to appear
+    const signatureCanvas = page.locator('[data-testid="report-signature-canvas"]')
+    await signatureCanvas.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+    await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+
+    await takeScreenshot(page, 'report-signature')
+  })
+
+  test.skip('report-pdf-preview - capture PDF preview in non-conformant flow', async ({ page }) => {
+    // Skipped: Non-conformant flow requires checklist sections to be loaded from API
+    // which may not work reliably in demo mode. Run manually if needed.
+    await enterDemoModeWithoutTours(page)
+    const assignmentsPage = new AssignmentsPage(page)
+    await assignmentsPage.waitForAssignmentsLoaded()
+
+    // Navigate to report wizard
+    const firstRefCards = page
+      .locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+    const targetCard = firstRefCards.first()
+    const cardBox = await targetCard.boundingBox()
+
+    if (cardBox) {
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'left', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    const reportButton = page
+      .locator('button')
+      .filter({ hasText: /Bericht|Report|Rapport|Rapporto/i })
+    if (
+      await reportButton
+        .first()
+        .isVisible({ timeout: 2000 })
+        .catch(() => false)
+    ) {
+      await reportButton.first().click()
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS)
+    }
+
+    // Click "Report Issue" to enter non-conformant mode
+    const reportIssueButton = page.locator('[data-testid="report-issue-btn"]')
+    if (await reportIssueButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await reportIssueButton.click()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    // Wait for non-conformant overlay
+    const ncOverlay = page.locator('[data-testid="non-conformant-overlay"]')
+    await ncOverlay.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+
+    // Select first section and proceed through steps to PDF preview
+    // This depends on checklist sections being loaded
+    console.log(
+      '⚠️ report-pdf-preview: Non-conformant flow requires manual interaction for reliable capture'
+    )
+
+    await takeScreenshot(page, 'report-pdf-preview')
   })
 
   // ============================================
@@ -987,6 +1193,40 @@ test.describe('Help Site Screenshots', () => {
         el.id = 'screenshot-target-privacy'
       })
       return { selector: '#screenshot-target-privacy', padding: 4 }
+    })
+
+    await context.close()
+  })
+
+  test('compensation-actions-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext()
+
+    await takeDeviceSpotlightScreenshots(context, 'compensation-actions', async (page) => {
+      await setupCleanEnvironment(page)
+      const loginPage = new LoginPage(page)
+      await loginPage.goto()
+      await loginPage.enterDemoMode()
+      await page.waitForTimeout(PAGE_LOAD_DELAY_MS)
+      await dismissPWANotification(page)
+
+      await page.goto('/compensations')
+      const compensationsPage = new CompensationsPage(page)
+      await compensationsPage.waitForCompensationsLoaded()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      await dismissPWANotification(page)
+
+      const firstCard = page.locator('[role="group"][aria-label*="Swipeable"]').first()
+      const cardBox = await firstCard.boundingBox()
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4
+        await performSwipe(page, cardBox, 'left', swipeDistance)
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      }
+
+      await firstCard.evaluate((el) => {
+        el.id = 'screenshot-target-comp-actions'
+      })
+      return { selector: '#screenshot-target-comp-actions', padding: 4 }
     })
 
     await context.close()

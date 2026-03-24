@@ -53,7 +53,7 @@ export function PdfPreview({ pdfBytes, isLoading }: PdfPreviewProps) {
   if (!blobUrl) return null
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid="report-pdf-preview">
       <div className="flex items-center justify-between">
         <p className="text-sm text-text-secondary dark:text-text-secondary-dark">
           {t('pdf.wizard.nonConformant.previewTitle')}

@@ -127,6 +127,7 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
       role="dialog"
       aria-modal="true"
       aria-label={t('pdf.wizard.signature.title')}
+      data-testid="report-signature-canvas"
       {...touchGuard}
     >
       {/* Header toolbar */}

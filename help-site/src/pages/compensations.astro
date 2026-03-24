@@ -106,6 +106,48 @@ import { t } from '../i18n'
     </p>
   </InfoBox>
 
+  <h2 data-i18n="compensations.twintPayment.title">{t('compensations.twintPayment.title')}</h2>
+
+  <p data-i18n="compensations.twintPayment.description">
+    {t('compensations.twintPayment.description')}
+  </p>
+
+  <ol>
+    <li data-i18n="compensations.twintPayment.steps.navigate">
+      {t('compensations.twintPayment.steps.navigate')}
+    </li>
+    <li data-i18n="compensations.twintPayment.steps.swipeLeft">
+      {t('compensations.twintPayment.steps.swipeLeft')}
+    </li>
+    <li data-i18n="compensations.twintPayment.steps.tapTwint">
+      {t('compensations.twintPayment.steps.tapTwint')}
+    </li>
+  </ol>
+
+  <Screenshot
+    id="compensation-actions"
+    alt={t('compensations.twintPayment.screenshotAlt')}
+    caption={t('compensations.twintPayment.screenshotCaption')}
+    altKey="compensations.twintPayment.screenshotAlt"
+    captionKey="compensations.twintPayment.screenshotCaption"
+    instructions="Take a screenshot of a compensation card swiped left showing the Edit, PDF, and Twint action buttons."
+  />
+
+  <Screenshot
+    id="twint-payment-modal"
+    alt={t('compensations.twintPayment.modalScreenshotAlt')}
+    caption={t('compensations.twintPayment.modalScreenshotCaption')}
+    altKey="compensations.twintPayment.modalScreenshotAlt"
+    captionKey="compensations.twintPayment.modalScreenshotCaption"
+    instructions="Take a screenshot of the Twint payment modal showing the referee name, phone number, and CHF amount."
+  />
+
+  <InfoBox type="tip">
+    <p data-i18n="compensations.twintPayment.tip">
+      {t('compensations.twintPayment.tip')}
+    </p>
+  </InfoBox>
+
   <h2 data-i18n="compensations.exportPdf.title">{t('compensations.exportPdf.title')}</h2>
 
   <p data-i18n="compensations.exportPdf.description">{t('compensations.exportPdf.description')}</p>

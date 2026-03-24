@@ -80,6 +80,7 @@ export function NonConformantOverlay({
       role="dialog"
       aria-modal="true"
       aria-labelledby={MODAL_TITLE_ID}
+      data-testid="non-conformant-overlay"
       {...touchGuard}
     >
       {/* Header */}

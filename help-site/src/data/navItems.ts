@@ -29,6 +29,12 @@ export const navItems: NavItem[] = [
     icon: 'calendar-check',
   },
   {
+    title: 'Sports Hall Report',
+    i18nKey: 'nav.sportsHallReport',
+    href: `${BASE_PATH}/sports-hall-report/`,
+    icon: 'clipboard-check',
+  },
+  {
     title: 'Exchanges',
     i18nKey: 'nav.exchanges',
     href: `${BASE_PATH}/exchanges/`,
