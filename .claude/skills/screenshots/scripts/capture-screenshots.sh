@@ -8,10 +8,12 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 WEB_DIR="$REPO_ROOT/packages/web"
 HELP_DIR="$REPO_ROOT/help-site"
-CONFIG="$WEB_DIR/playwright-screenshots.config.ts"
+CONFIG="$SKILL_DIR/playwright-screenshots.config.ts"
 
 GREP_PATTERN="${1:-}"
 

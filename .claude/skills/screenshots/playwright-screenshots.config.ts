@@ -1,17 +1,21 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with timeout/retry values */
+import path from 'node:path'
+import { execSync } from 'node:child_process'
+
 import { defineConfig, devices } from '@playwright/test'
 
 /**
  * Playwright config for screenshot capture.
- * The default playwright.config.ts excludes capture-screenshots.spec.ts via testIgnore,
- * so this config is needed to run screenshot generation.
+ * Lives in the /screenshots skill directory but resolves paths to packages/web/.
  *
- * Usage:
- *   npx playwright test --config=playwright-screenshots.config.ts --project=chromium
- *   npx playwright test --config=playwright-screenshots.config.ts --project=chromium --grep "report-access"
+ * Usage (via /screenshots skill):
+ *   npx playwright test --config=.claude/skills/screenshots/playwright-screenshots.config.ts --project=chromium
  */
+const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim()
+const webDir = path.join(repoRoot, 'packages', 'web')
+
 export default defineConfig({
-  testDir: './e2e',
+  testDir: path.join(webDir, 'e2e'),
   testMatch: ['**/capture-screenshots.spec.ts'],
   timeout: 60000,
   expect: {
@@ -34,6 +38,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run preview',
+    cwd: webDir,
     url: 'http://localhost:4173',
     reuseExistingServer: true,
     timeout: 120000,
