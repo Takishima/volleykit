@@ -68,6 +68,13 @@ describe('i18n module', () => {
       const result = tInterpolate('auth.login', { unused: 'value' })
       expect(result).toBe('Login')
     })
+
+    it('double braces in values pass through unchanged (sentinel only protects translation strings)', () => {
+      // Sentinels are applied to the translation string before substitution.
+      // Values containing {{ are substituted verbatim and are not unescaped.
+      const result = tInterpolate('validation.wizard.stepOf', { current: '{{2}}', total: 4 })
+      expect(result).toBe('Step {{2}} of 4')
+    })
   })
 
   describe('getLocale()', () => {

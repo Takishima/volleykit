@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/index.ts",
+    "src/api/index.ts",
+    "src/auth/index.ts",
+    "src/stores/index.ts",
+    "src/hooks/index.ts",
+    "src/utils/index.ts",
+    "src/i18n/index.ts",
+    "src/types/index.ts",
+    "src/adapters/index.ts",
+    "src/offline/index.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignore": ["src/**/*.test.{ts,tsx}", "src/**/*.d.ts"],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "exports": "off",
+    "types": "off",
+    "duplicates": "off",
+    "nsExports": "off",
+    "nsTypes": "off"
+  }
+}

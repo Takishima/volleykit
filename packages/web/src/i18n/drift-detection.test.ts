@@ -129,3 +129,37 @@ describe('i18n drift detection', () => {
     expect(overlapping.length).toBeGreaterThan(50)
   })
 })
+
+/**
+ * i18n Completeness Test
+ *
+ * Ensures that de, fr, and it locale files contain every key present in English.
+ * Missing keys fall back to English silently, making bugs hard to spot.
+ * This test catches regressions when new keys are added only to en.ts.
+ */
+describe('i18n completeness', () => {
+  const enFlat = flattenKeys(webEn as unknown as Record<string, unknown>)
+
+  const nonEnglishLocales = [
+    { name: 'de', locale: webDe },
+    { name: 'fr', locale: webFr },
+    { name: 'it', locale: webIt },
+  ] as const
+
+  for (const { name, locale } of nonEnglishLocales) {
+    it(`${name}: contains all keys present in English`, () => {
+      const flat = flattenKeys(locale as unknown as Record<string, unknown>)
+      const missingKeys = Object.keys(enFlat).filter((key) => !(key in flat))
+
+      if (missingKeys.length > 0) {
+        expect.fail(
+          `${name}.ts is missing ${missingKeys.length} key(s) present in en.ts:\n` +
+            missingKeys.map((k) => `  ${k}`).join('\n') +
+            '\n\nAdd the missing translations to avoid silent English fallback.'
+        )
+      }
+
+      expect(missingKeys).toHaveLength(0)
+    })
+  }
+})
