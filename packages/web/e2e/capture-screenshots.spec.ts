@@ -400,6 +400,54 @@ test.describe('Help Site Screenshots', () => {
     await takeSpotlightScreenshot(page, 'assignment-actions', containerSelector, 4)
   })
 
+  test('report-access - capture assignment card with report action visible', async ({ page }) => {
+    await enterDemoModeWithoutTours(page)
+    const assignmentsPage = new AssignmentsPage(page)
+    await assignmentsPage.waitForAssignmentsLoaded()
+
+    // Find a 1st referee assignment card (report action is only available for 1st referees)
+    const firstRefCards = page
+      .locator('[role="group"][aria-label*="Swipeable"]')
+      .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+    const targetCard = firstRefCards.first()
+    const cardBox = await targetCard.boundingBox()
+
+    if (cardBox) {
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'left', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    const containerSelector = await targetCard.evaluate((el) => {
+      el.id = 'screenshot-target-report-access'
+      return '#screenshot-target-report-access'
+    })
+
+    await takeSpotlightScreenshot(page, 'report-access', containerSelector, 4)
+  })
+
+  test('swipe-right-exchange - capture assignment swipe right for exchange', async ({ page }) => {
+    await enterDemoModeWithoutTours(page)
+    const assignmentsPage = new AssignmentsPage(page)
+    await assignmentsPage.waitForAssignmentsLoaded()
+
+    const firstCard = assignmentsPage.assignmentCards.first()
+    const cardBox = await firstCard.boundingBox()
+
+    if (cardBox) {
+      const swipeDistance = cardBox.width * 0.4
+      await performSwipe(page, cardBox, 'right', swipeDistance)
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    }
+
+    const containerSelector = await firstCard.evaluate((el) => {
+      el.id = 'screenshot-target-swipe-exchange'
+      return '#screenshot-target-swipe-exchange'
+    })
+
+    await takeSpotlightScreenshot(page, 'swipe-right-exchange', containerSelector, 4)
+  })
+
   // ============================================
   // Exchange Screenshots
   // ============================================
@@ -1227,6 +1275,140 @@ test.describe('Help Site Screenshots', () => {
         el.id = 'screenshot-target-comp-actions'
       })
       return { selector: '#screenshot-target-comp-actions', padding: 4 }
+    })
+
+    await context.close()
+  })
+
+  test('swipe-right-exchange-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext()
+
+    await takeDeviceSpotlightScreenshots(context, 'swipe-right-exchange', async (page) => {
+      await setupCleanEnvironment(page)
+      const loginPage = new LoginPage(page)
+      await loginPage.goto()
+      await loginPage.enterDemoMode()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+
+      const assignmentsPage = new AssignmentsPage(page)
+      await assignmentsPage.waitForAssignmentsLoaded()
+
+      const firstCard = assignmentsPage.assignmentCards.first()
+      const cardBox = await firstCard.boundingBox()
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4
+        await performSwipe(page, cardBox, 'right', swipeDistance)
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      }
+
+      const container = page.locator('[role="group"][aria-label*="Swipeable"]').first()
+      await container.evaluate((el) => {
+        el.id = 'screenshot-target-swipe-right'
+      })
+      return { selector: '#screenshot-target-swipe-right', padding: 4 }
+    })
+
+    await context.close()
+  })
+
+  test('report-wizard-entry-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext()
+
+    await takeDeviceScreenshots(context, 'report-wizard-entry', async (page) => {
+      await setupCleanEnvironment(page)
+      const loginPage = new LoginPage(page)
+      await loginPage.goto()
+      await loginPage.enterDemoMode()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      await dismissPWANotification(page)
+
+      const assignmentsPage = new AssignmentsPage(page)
+      await assignmentsPage.waitForAssignmentsLoaded()
+
+      // Find a 1st referee assignment card to access the report action
+      const firstRefCards = page
+        .locator('[role="group"][aria-label*="Swipeable"]')
+        .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+      const targetCard = firstRefCards.first()
+      const cardBox = await targetCard.boundingBox()
+
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4
+        await performSwipe(page, cardBox, 'left', swipeDistance)
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      }
+
+      // Click the report/generate button
+      const reportButton = page
+        .locator('button')
+        .filter({ hasText: /Bericht|Report|Rapport|Rapporto/i })
+      if (
+        await reportButton
+          .first()
+          .isVisible({ timeout: 2000 })
+          .catch(() => false)
+      ) {
+        await reportButton.first().click()
+        await page.waitForTimeout(PAGE_LOAD_DELAY_MS)
+      }
+
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+    })
+
+    await context.close()
+  })
+
+  test('report-signature-devices - capture for tablet and phone', async ({ browser }) => {
+    const context = await browser.newContext()
+
+    await takeDeviceScreenshots(context, 'report-signature', async (page) => {
+      await setupCleanEnvironment(page)
+      const loginPage = new LoginPage(page)
+      await loginPage.goto()
+      await loginPage.enterDemoMode()
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      await dismissPWANotification(page)
+
+      const assignmentsPage = new AssignmentsPage(page)
+      await assignmentsPage.waitForAssignmentsLoaded()
+
+      // Navigate to report wizard
+      const firstRefCards = page
+        .locator('[role="group"][aria-label*="Swipeable"]')
+        .filter({ hasText: /1\. SR|1st Ref|1er arbitre|1° arbitro/i })
+      const targetCard = firstRefCards.first()
+      const cardBox = await targetCard.boundingBox()
+
+      if (cardBox) {
+        const swipeDistance = cardBox.width * 0.4
+        await performSwipe(page, cardBox, 'left', swipeDistance)
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      }
+
+      const reportButton = page
+        .locator('button')
+        .filter({ hasText: /Bericht|Report|Rapport|Rapporto/i })
+      if (
+        await reportButton
+          .first()
+          .isVisible({ timeout: 2000 })
+          .catch(() => false)
+      ) {
+        await reportButton.first().click()
+        await page.waitForTimeout(PAGE_LOAD_DELAY_MS)
+      }
+
+      // Click "Everything OK" to trigger signature canvas
+      const everythingOkButton = page.locator('[data-testid="report-everything-ok"]')
+      if (await everythingOkButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await everythingOkButton.click()
+        await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
+      }
+
+      // Wait for signature canvas overlay
+      const signatureCanvas = page.locator('[data-testid="report-signature-canvas"]')
+      await signatureCanvas.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+      await page.waitForTimeout(ANIMATION_SETTLE_DELAY_MS)
     })
 
     await context.close()
