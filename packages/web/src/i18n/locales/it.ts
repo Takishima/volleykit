@@ -324,6 +324,7 @@ const it: Translations = {
     twintModalTitle: 'Pagare con Twint',
     twintModalName: 'Nome',
     twintModalPhone: 'Telefono',
+    twintModalAmount: 'Importo',
     twintNoPhone: 'Nessun numero di telefono configurato',
     batchUpdateSuccess: '{count} compensi aggiornati con successo.',
     batchUpdatePartialSuccess: '{success} su {total} compensi aggiornati. {failed} non riusciti.',

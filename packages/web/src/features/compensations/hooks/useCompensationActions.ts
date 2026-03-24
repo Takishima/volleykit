@@ -20,8 +20,9 @@ interface UseCompensationActionsResult {
   handleGeneratePDF: (compensation: CompensationRecord) => Promise<void>
   twintModal: {
     isOpen: boolean
-    open: () => void
+    open: (amount: number) => void
     close: () => void
+    amount: number | null
   }
   twintProfile: {
     firstName: string
@@ -35,7 +36,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
   const { t } = useTranslation()
   const isDemoMode = useAuthStore((state) => state.dataSource) === 'demo'
   const editCompensationModal = useModalState<CompensationRecord>()
-  const twintModalState = useModalState<true>()
+  const twintModalState = useModalState<number>()
 
   const { showTwintAction, mobilePhone, firstName, lastName } = useIndoorRefereeProfile()
 
@@ -71,9 +72,12 @@ export function useCompensationActions(): UseCompensationActionsResult {
     [isDemoMode, t, pdfMutation]
   )
 
-  const openTwintModal = useCallback(() => {
-    twintModalState.open(true)
-  }, [twintModalState])
+  const openTwintModal = useCallback(
+    (amount: number) => {
+      twintModalState.open(amount)
+    },
+    [twintModalState]
+  )
 
   return {
     editCompensationModal: {
@@ -87,6 +91,7 @@ export function useCompensationActions(): UseCompensationActionsResult {
       isOpen: twintModalState.isOpen,
       open: openTwintModal,
       close: twintModalState.close,
+      amount: twintModalState.data,
     },
     twintProfile: {
       firstName,

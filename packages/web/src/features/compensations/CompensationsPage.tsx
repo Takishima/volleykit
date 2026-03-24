@@ -160,6 +160,7 @@ export function CompensationsPage() {
               firstName={twintProfile.firstName}
               lastName={twintProfile.lastName}
               mobilePhone={twintProfile.mobilePhone}
+              amount={twintModal.amount}
             />
           </Suspense>
         )}

@@ -210,6 +210,7 @@ export interface Translations {
     twintModalTitle: string
     twintModalName: string
     twintModalPhone: string
+    twintModalAmount: string
     twintNoPhone: string
   }
   exchange: {
