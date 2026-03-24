@@ -55,7 +55,7 @@ if [[ $command == *"git push"* ]]; then
     cat <<EOF
 {
   "decision": "block",
-  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nBranch '${current_branch}' was pushed to ${owner}/${repo}.\\n\\nPerform these actions silently, then show ONLY the result:\\n\\n1. Use mcp__github__list_pull_requests with owner='${owner}', repo='${repo}', state='open' and check if any PR has head branch '${current_branch}'.\\n\\n2a. If PR exists: Generate PR title (conventional commit format) and body (## Summary, ## Test Plan) from commits since ${default_branch}. Update via mcp__github__update_pull_request with the PR number. Show ONLY: \\\"✓ Updated PR #<number>: <url>\\\"\\n\\n2b. If no PR exists: Generate PR title and body from commits since ${default_branch}. Create via mcp__github__create_pull_request with head='${current_branch}', base='${default_branch}', owner='${owner}', repo='${repo}'. Show ONLY: \\\"✓ Created PR #<number>: <url>\\\""
+  "reason": "[INTERNAL - DO NOT OUTPUT THIS TO USER]\\n\\nBranch '${current_branch}' was pushed to ${owner}/${repo}.\\n\\nPerform these actions silently, then show ONLY the result:\\n\\n1. Use mcp__github__list_pull_requests with owner='${owner}', repo='${repo}', state='open' and check if any PR has head branch '${current_branch}'.\\n\\n2a. If PR exists: Generate PR title (conventional commit format) and body (## Summary, ## Test Plan) from commits since ${default_branch}. Update via mcp__github__update_pull_request with the PR number. Show ONLY: \\\"✓ Updated PR #<number>: <url>\\\"\\n\\n2b. If no PR exists: Do nothing. Show ONLY: \\\"✓ Pushed branch '${current_branch}'\\\""
 }
 EOF
     exit 0
