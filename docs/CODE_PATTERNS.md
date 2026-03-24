@@ -331,17 +331,11 @@ const { data, error, isLoading } = useQuery({
 
 ## React 19 Patterns
 
-The project runs React 19 with `@vitejs/plugin-react` v6. The **React Compiler** (`babel-plugin-react-compiler`) is **not yet enabled** — it was not installed when the project was initially set up. Manual memoization therefore still applies:
+The project runs React 19 with `@vitejs/plugin-react` v6. The **React Compiler** (`babel-plugin-react-compiler`) is **enabled** via the Vite Babel plugin in `vite.config.ts`. The compiler automatically memoizes components and hooks at build time, so manual memoization is generally not needed:
 
-- Use `React.memo` for components that re-render often with the same props
-- Use `useMemo` for expensive derived computations
-- Use `useCallback` for stable function references passed to child components or `useEffect`
-
-> **Future improvement**: Enable the React Compiler by adding `babel-plugin-react-compiler` and configuring it in `vite.config.ts`:
-> ```ts
-> react({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } })
-> ```
-> Once enabled, the compiler automatically memoizes components and hooks, and most manual `React.memo`/`useMemo`/`useCallback` calls can be removed.
+- Avoid adding `React.memo`, `useMemo`, or `useCallback` unless you have a measured performance reason
+- If the compiler cannot safely memoize a specific component/hook (e.g. due to rules-of-hooks violations), opt it out with `'use no memo'` at the top of the function and document the reason
+- To verify compiler output, inspect the build with `stats.html` or check for `_c(` / `_memo(` calls in the compiled output
 
 These React 19 hooks are available for adoption alongside existing patterns.
 
