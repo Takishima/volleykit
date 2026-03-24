@@ -66,7 +66,7 @@
 /* Component styles */
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-4 py-2 rounded-(--radius-lg) font-medium transition-colors;
     @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
 
@@ -77,17 +77,17 @@
 
   .btn-secondary {
     @apply bg-surface-muted text-text-primary;
-    @apply hover:bg-gray-300 focus:ring-gray-500;
-    @apply dark:bg-surface-subtle-dark dark:text-text-primary-dark dark:hover:bg-gray-600;
+    @apply hover:bg-surface-subtle focus:ring-border-strong;
+    @apply dark:bg-surface-subtle-dark dark:text-text-primary-dark dark:hover:bg-surface-muted-dark;
   }
 
   .card {
-    @apply bg-surface-card rounded-xl shadow-sm border border-border-default p-4;
+    @apply bg-surface-card rounded-(--radius-xl) shadow-(--shadow-sm) border border-border-default p-4;
     @apply dark:bg-surface-card-dark dark:border-border-default-dark;
   }
 
   .input {
-    @apply w-full px-4 py-2 rounded-lg border border-border-strong;
+    @apply w-full px-4 py-2 rounded-(--radius-lg) border border-border-strong;
     @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
     @apply dark:bg-surface-card-dark dark:border-border-strong-dark dark:text-text-primary-dark;
   }
