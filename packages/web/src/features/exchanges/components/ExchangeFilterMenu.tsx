@@ -79,7 +79,7 @@ function FilterToggleRow({
           </span>
         )}
         <div
-          className={`w-10 h-6 rounded-full transition-colors relative ${enabled ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+          className={`w-10 h-6 rounded-full transition-colors relative ${enabled ? 'bg-primary-600' : 'bg-surface-muted dark:bg-surface-muted-dark'}`}
         >
           <div
             className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-1'}`}

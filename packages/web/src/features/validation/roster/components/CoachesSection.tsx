@@ -137,7 +137,7 @@ export function CoachesSection({
 
   return (
     <div
-      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700"
+      className="bg-surface-card dark:bg-surface-card-dark rounded-lg border border-border-default dark:border-border-default-dark divide-y divide-border-default dark:divide-border-default-dark"
       role="list"
       aria-label={t('validation.roster.coaches')}
     >

@@ -73,11 +73,11 @@ export function OCRResultsStep({
       {/* Home Team Section */}
       {homeComparison && (
         <div className="mb-6">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+          <h3 className="text-base font-semibold text-text-primary dark:text-text-primary-dark mb-3">
             {homeComparison.teamName}
             {homeComparison.ocrTeamName &&
               homeComparison.ocrTeamName !== homeComparison.teamName && (
-                <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                <span className="ml-2 text-xs font-normal text-text-muted dark:text-text-muted-dark">
                   {tInterpolate('validation.ocr.ocrTeamLabel', {
                     name: homeComparison.ocrTeamName,
                   })}
@@ -126,11 +126,11 @@ export function OCRResultsStep({
       {/* Away Team Section */}
       {awayComparison && (
         <div className="mb-6">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+          <h3 className="text-base font-semibold text-text-primary dark:text-text-primary-dark mb-3">
             {awayComparison.teamName}
             {awayComparison.ocrTeamName &&
               awayComparison.ocrTeamName !== awayComparison.teamName && (
-                <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                <span className="ml-2 text-xs font-normal text-text-muted dark:text-text-muted-dark">
                   {tInterpolate('validation.ocr.ocrTeamLabel', {
                     name: awayComparison.ocrTeamName,
                   })}

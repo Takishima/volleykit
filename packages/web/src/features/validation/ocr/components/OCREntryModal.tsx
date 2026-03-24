@@ -365,22 +365,22 @@ export function OCREntryModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col bg-white dark:bg-gray-900"
+      className="fixed inset-0 z-[60] flex flex-col bg-surface-card dark:bg-surface-page-dark"
       role="dialog"
       aria-modal="true"
       aria-labelledby="ocr-entry-title"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-default dark:border-border-default-dark">
         <div>
-          <h1 id="ocr-entry-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h1 id="ocr-entry-title" className="text-lg font-semibold text-text-primary dark:text-text-primary-dark">
             {t('validation.ocr.scanScoresheet')}
           </h1>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-2 text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-primary-dark rounded-lg hover:bg-surface-subtle dark:hover:bg-surface-card-dark transition-colors"
           aria-label={t('common.close')}
         >
           <X className="w-5 h-5" aria-hidden="true" />
@@ -410,11 +410,11 @@ export function OCREntryModal({
 
       {/* Footer - only in results step */}
       {step === 'results' && (
-        <div className="flex gap-3 px-4 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex gap-3 px-4 py-4 border-t border-border-default dark:border-border-default-dark">
           <button
             type="button"
             onClick={handleRetry}
-            className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+            className="flex-1 px-4 py-3 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg transition-colors"
           >
             {t('validation.ocr.retryCapture')}
           </button>

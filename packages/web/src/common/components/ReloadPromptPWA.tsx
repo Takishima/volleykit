@@ -26,14 +26,14 @@ export default function ReloadPromptPWA() {
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-white p-4 shadow-lg ring-1 ring-black/5"
+      className="fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-surface-card dark:bg-surface-card-dark p-4 shadow-lg ring-1 ring-black/5"
     >
       <div className="flex items-start gap-3">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
             {offlineReady ? t('pwa.offlineReady') : t('pwa.newVersionAvailable')}
           </p>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-text-muted dark:text-text-muted-dark">
             {offlineReady ? t('pwa.offlineReadyDescription') : t('pwa.newVersionDescription')}
           </p>
         </div>
@@ -52,7 +52,7 @@ export default function ReloadPromptPWA() {
         )}
         <button
           onClick={dismissPrompt}
-          className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:outline-none"
+          className="rounded-md bg-surface-subtle dark:bg-surface-subtle-dark px-3 py-2 text-sm font-medium text-text-secondary dark:text-text-secondary-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:ring-2 focus:ring-border-strong focus:ring-offset-2 focus:outline-none"
           aria-label={needRefresh ? t('pwa.dismissAriaLabel') : t('pwa.closeAriaLabel')}
         >
           {needRefresh ? t('pwa.dismiss') : t('common.close')}

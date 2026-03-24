@@ -137,8 +137,8 @@ describe('FilterChip', () => {
     it('applies inactive styles when not active', () => {
       render(<FilterChip label="Distance" active={false} onToggle={() => {}} />)
       const chip = screen.getByRole('switch')
-      expect(chip).toHaveClass('bg-gray-100')
-      expect(chip).toHaveClass('text-gray-600')
+      expect(chip).toHaveClass('bg-surface-subtle')
+      expect(chip).toHaveClass('text-text-muted')
     })
 
     it('applies base chip styles', () => {

@@ -111,6 +111,6 @@ describe('createAssignmentActions', () => {
 
     const actions = createAssignmentActions(validatedAssignment, handlers, mockT)
 
-    expect(actions.validateGame.color).toBe('bg-slate-500')
+    expect(actions.validateGame.color).toBe('bg-surface-neutral')
   })
 })

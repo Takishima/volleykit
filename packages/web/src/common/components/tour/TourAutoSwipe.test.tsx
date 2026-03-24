@@ -26,7 +26,7 @@ describe('TourAutoSwipe', () => {
     container.style.width = '300px'
 
     swipeableContent = document.createElement('div')
-    swipeableContent.className = 'z-10 bg-white'
+    swipeableContent.className = 'z-10 bg-surface-card'
     swipeableContent.style.transform = 'translateX(0px)'
 
     container.appendChild(swipeableContent)
@@ -223,7 +223,7 @@ describe('TourAutoSwipe', () => {
       swipeableCardWrapper.style.width = '300px'
 
       const swipeableDiv = document.createElement('div')
-      swipeableDiv.className = 'z-10 bg-white rounded-xl'
+      swipeableDiv.className = 'z-10 bg-surface-card rounded-xl'
       swipeableDiv.style.transform = 'translateX(0px)'
 
       const innerCard = document.createElement('div')

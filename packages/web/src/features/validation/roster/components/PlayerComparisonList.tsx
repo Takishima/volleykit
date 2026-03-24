@@ -81,7 +81,7 @@ function ComparisonItem({ result, isSelected, onToggle, isSelectable }: Comparis
           type="checkbox"
           checked={isSelected}
           onChange={onToggle}
-          className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+          className="w-4 h-4 text-primary-500 border-border-strong dark:border-border-strong-dark rounded focus:ring-primary-500 focus:ring-2"
           aria-label={`Select ${displayName}`}
         />
       )}
@@ -94,11 +94,11 @@ function ComparisonItem({ result, isSelected, onToggle, isSelectable }: Comparis
       {/* Player info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <User className="w-4 h-4 text-gray-400 flex-shrink-0" aria-hidden="true" />
-          <span className="font-medium text-gray-900 dark:text-white truncate">{displayName}</span>
+          <User className="w-4 h-4 text-text-subtle dark:text-text-subtle-dark flex-shrink-0" aria-hidden="true" />
+          <span className="font-medium text-text-primary dark:text-text-primary-dark truncate">{displayName}</span>
         </div>
         {secondaryName && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+          <p className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5 truncate">
             {secondaryName}
           </p>
         )}
@@ -112,7 +112,7 @@ function ComparisonItem({ result, isSelected, onToggle, isSelectable }: Comparis
           {config.label}
         </span>
         {result.confidence > 0 && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-text-muted dark:text-text-muted-dark">
             {tInterpolate('validation.ocr.comparison.confidence', {
               score: String(result.confidence),
             })}
@@ -155,7 +155,7 @@ export function PlayerComparisonList({
   if (results.length === 0) {
     return (
       <div className="py-8 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t('validation.ocr.comparison.noMatches')}
         </p>
       </div>
@@ -201,7 +201,7 @@ export function PlayerComparisonList({
               ? t('validation.ocr.comparison.deselectAll')
               : t('validation.ocr.comparison.selectAll')}
           </button>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-text-subtle dark:text-text-subtle-dark">
             ({selectedCount}/{selectableCount})
           </span>
         </div>

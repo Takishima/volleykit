@@ -248,12 +248,12 @@ export function OCRCaptureModal({
   // Show camera preview
   if (step === 'camera') {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-gray-900">
+      <div className="fixed inset-0 z-50 flex flex-col bg-surface-page-dark">
         {/* Video preview with guide overlay */}
         <div className="relative flex-1 min-h-0 overflow-hidden">
           <video
             ref={videoRef}
-            className="w-full h-full object-cover bg-gray-800"
+            className="w-full h-full object-cover bg-surface-card-dark"
             autoPlay
             playsInline
             muted
@@ -263,11 +263,11 @@ export function OCRCaptureModal({
         </div>
 
         {/* Camera controls */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-gray-900 safe-area-bottom">
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-surface-page-dark safe-area-bottom">
           <button
             type="button"
             onClick={handleCameraCancel}
-            className="px-4 py-2 text-white bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
+            className="px-4 py-2 text-text-primary-dark bg-surface-subtle-dark hover:bg-surface-muted-dark rounded-lg font-medium transition-colors"
           >
             {t('validation.ocr.cancel')}
           </button>
@@ -276,7 +276,7 @@ export function OCRCaptureModal({
           <button
             type="button"
             onClick={capturePhoto}
-            className="w-16 h-16 rounded-full bg-white hover:bg-gray-100 flex items-center justify-center transition-colors"
+            className="w-16 h-16 rounded-full bg-surface-card hover:bg-surface-subtle flex items-center justify-center transition-colors"
             aria-label={t('validation.ocr.takePhoto')}
           >
             <div className="w-12 h-12 rounded-full bg-danger-500" />
@@ -297,19 +297,19 @@ export function OCRCaptureModal({
       aria-modal="true"
       aria-labelledby="ocr-capture-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-sm w-full mx-4 overflow-hidden">
+      <div className="bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-xl max-w-sm w-full mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark">
           <h2
             id="ocr-capture-title"
-            className="text-lg font-semibold text-gray-900 dark:text-white"
+            className="text-lg font-semibold text-text-primary dark:text-text-primary-dark"
           >
             {t('validation.ocr.scanScoresheet')}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-primary-dark rounded-lg hover:bg-surface-subtle dark:hover:bg-surface-muted-dark transition-colors"
             aria-label={t('common.close')}
           >
             <X className="w-5 h-5" aria-hidden="true" />
@@ -318,7 +318,7 @@ export function OCRCaptureModal({
 
         {/* Content */}
         <div className="p-4 space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <p className="text-sm text-text-muted dark:text-text-secondary-dark">
             {t('validation.ocr.scanScoresheetDescription')}
           </p>
 
@@ -359,7 +359,7 @@ export function OCRCaptureModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-full px-4 py-3 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
+              className="w-full px-4 py-3 text-text-muted dark:text-text-muted-dark hover:bg-surface-subtle dark:hover:bg-surface-muted-dark rounded-lg transition-colors font-medium"
             >
               {t('validation.ocr.cancel')}
             </button>

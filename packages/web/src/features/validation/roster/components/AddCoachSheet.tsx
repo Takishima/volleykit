@@ -271,7 +271,7 @@ export function AddCoachSheet({ isOpen, onClose, role, onSelectCoach }: AddCoach
             text-sm font-medium
             text-text-secondary dark:text-text-secondary-dark
             bg-surface-subtle dark:bg-surface-subtle-dark
-            hover:bg-gray-200 dark:hover:bg-gray-700
+            hover:bg-surface-muted dark:hover:bg-surface-muted-dark
             transition-colors
             focus:outline-none focus:ring-2 focus:ring-primary-500/50
           "

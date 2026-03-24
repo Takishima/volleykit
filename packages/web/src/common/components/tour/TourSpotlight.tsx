@@ -362,7 +362,7 @@ export function TourSpotlight({
         {/* Arrow */}
         <div
           style={getArrowStyles()}
-          className="[--arrow-color:theme(colors.white)] dark:[--arrow-color:theme(colors.gray.800)]"
+          className="[--arrow-color:theme(colors.surface-card)] dark:[--arrow-color:theme(colors.surface-card-dark)]"
           aria-hidden="true"
         />
 

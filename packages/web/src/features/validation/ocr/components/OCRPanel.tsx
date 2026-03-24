@@ -214,16 +214,16 @@ export function OCRPanel({
       aria-modal="true"
       aria-labelledby="ocr-panel-title"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <h2 id="ocr-panel-title" className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark flex-shrink-0">
+          <h2 id="ocr-panel-title" className="text-lg font-semibold text-text-primary dark:text-text-primary-dark">
             {t('validation.ocr.scanScoresheet')}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="text-sm text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-primary-dark"
           >
             {t('validation.ocr.cancel')}
           </button>
@@ -235,10 +235,10 @@ export function OCRPanel({
           {step === 'capture' && !showCaptureModal && (
             <div className="py-8 flex flex-col items-center justify-center">
               <Camera
-                className="w-16 h-16 text-gray-300 dark:text-gray-600 mb-4"
+                className="w-16 h-16 text-border-strong dark:text-text-muted-dark mb-4"
                 aria-hidden="true"
               />
-              <p className="text-sm text-gray-600 dark:text-gray-300 text-center mb-4">
+              <p className="text-sm text-text-muted dark:text-text-secondary-dark text-center mb-4">
                 {t('validation.ocr.scanScoresheetDescription')}
               </p>
               <button
@@ -259,14 +259,14 @@ export function OCRPanel({
               aria-live="polite"
             >
               <LoadingSpinner size="lg" className="mb-4" />
-              <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+              <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-2">
                 {t('validation.ocr.processing')}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-text-muted dark:text-text-muted-dark">
                 {progress?.status ?? t('validation.ocr.processingDescription')}
               </p>
               {progress && progress.progress > 0 && (
-                <div className="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-4 overflow-hidden">
+                <div className="w-48 h-2 bg-surface-muted dark:bg-surface-subtle-dark rounded-full mt-4 overflow-hidden">
                   <div
                     className="h-full bg-primary-500 rounded-full transition-all duration-300"
                     style={{ width: `${progress.progress}%` }}
@@ -287,11 +287,11 @@ export function OCRPanel({
 
               {/* Team name from OCR */}
               {processedResult && (
-                <p className="text-sm text-gray-600 dark:text-gray-300">{teamName}</p>
+                <p className="text-sm text-text-muted dark:text-text-secondary-dark">{teamName}</p>
               )}
 
               {/* Comparison title */}
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+              <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
                 {t('validation.ocr.comparison.title')}
               </h3>
 
@@ -313,7 +313,7 @@ export function OCRPanel({
               <p className="text-sm font-medium text-danger-700 dark:text-danger-400 mb-2">
                 {t('validation.ocr.scanFailed')}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-4">
+              <p className="text-xs text-text-muted dark:text-text-muted-dark text-center mb-4">
                 {error?.message ?? t('validation.ocr.errors.processingFailed')}
               </p>
               <button
@@ -330,11 +330,11 @@ export function OCRPanel({
 
         {/* Footer - only show in results step */}
         {step === 'results' && (
-          <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="flex gap-3 p-4 border-t border-border-default dark:border-border-default-dark flex-shrink-0">
             <button
               type="button"
               onClick={handleRetry}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark rounded-lg transition-colors"
             >
               {t('validation.ocr.retryCapture')}
             </button>
@@ -342,7 +342,7 @@ export function OCRPanel({
               type="button"
               onClick={handleApplyResults}
               disabled={selectedPlayerIds.size === 0}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 disabled:bg-surface-muted dark:disabled:bg-surface-muted-dark disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               {t('validation.ocr.useResults')}
             </button>

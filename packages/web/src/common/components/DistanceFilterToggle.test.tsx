@@ -135,7 +135,7 @@ describe('DistanceFilterToggle', () => {
       <DistanceFilterToggle checked={false} onChange={onChange} maxDistanceKm={50} />
     )
 
-    const toggle = container.querySelector('.bg-gray-100')
+    const toggle = container.querySelector('.bg-surface-subtle')
     expect(toggle).toBeInTheDocument()
   })
 

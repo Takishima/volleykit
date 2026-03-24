@@ -140,7 +140,7 @@ describe('TravelTimeFilterToggle', () => {
       <TravelTimeFilterToggle checked={false} onChange={onChange} maxTravelTimeMinutes={60} />
     )
 
-    const toggle = container.querySelector('.bg-gray-100')
+    const toggle = container.querySelector('.bg-surface-subtle')
     expect(toggle).toBeInTheDocument()
   })
 
