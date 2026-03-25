@@ -41,6 +41,7 @@ jobs:
 
       - name: Capture screenshots
         working-directory: packages/web
+        shell: bash
         env:
           GREP_PATTERN: ${{ inputs.grep-pattern }}
         run: |
