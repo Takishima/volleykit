@@ -1,12 +1,8 @@
 /**
  * VolleyKit Color Tokens (JS)
  *
- * JavaScript export of the design token colors for platforms that
- * cannot consume CSS custom properties directly (e.g. React Native
- * with NativeWind / Tailwind 3).
- *
- * These values MUST stay in sync with design-tokens.css.
- * When changing colors, update BOTH files.
+ * AUTO-GENERATED from design-tokens.css — do not edit manually.
+ * Run `pnpm run generate:tokens` to regenerate.
  */
 
 const primary = {

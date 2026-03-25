@@ -23,7 +23,8 @@ This replaces the old block-retry-block cycle. Claude gets immediate feedback fr
 1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
 2. **Detect affected packages** - Determines which packages have changes (web, shared, mobile, worker, help-site)
 3. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-4. **Run checks in PARALLEL** - Single format check on staged files + per-package lint, typecheck, test
+4. **Check design token sync** - Verify `colors.js` matches `design-tokens.css` (when style files are staged)
+5. **Run checks in PARALLEL** - Single format check on staged files + per-package lint, typecheck, test
 5. **Build shared** then **web + help-site in parallel** - Build affected packages
 
 Shared package changes trigger web validation (always) and mobile validation (only when exported API surface is touched).

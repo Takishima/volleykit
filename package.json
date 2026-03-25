@@ -7,6 +7,8 @@
     "changeset:version": "changeset version",
     "changeset:status": "changeset status",
     "generate:api": "pnpm --filter volleykit-web run generate:api",
+    "generate:tokens": "node scripts/sync-style-tokens.js",
+    "generate:tokens:check": "node scripts/sync-style-tokens.js --check",
     "lint": "pnpm -r run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",

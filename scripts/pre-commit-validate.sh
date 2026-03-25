@@ -225,6 +225,11 @@ launch_job() {
   JOB_PIDS+=($!)
 }
 
+# --- Design token sync check ---
+if has_changes_in "packages/shared/styles/"; then
+  launch_job "tokens:check" "$ROOT_DIR" node scripts/sync-style-tokens.js --check
+fi
+
 # --- Single root-level format check (faster than per-package) ---
 # Check formatting only on staged files instead of per-package full scans
 FORMAT_FILES=$(echo "$STAGED_FILES" | grep -E '\.(ts|tsx|js|jsx|json|css|astro)$' || true)
