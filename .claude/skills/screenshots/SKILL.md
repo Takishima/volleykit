@@ -19,7 +19,7 @@ If arguments are provided, use them as a grep filter pattern. If empty, regenera
 
 ## Prerequisites
 
-Playwright browsers must be installed locally before running. If not already installed, run:
+Playwright browsers must be installed before running. If not already installed, run:
 
 ```bash
 cd packages/web && npx playwright install chromium
