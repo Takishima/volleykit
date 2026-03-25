@@ -44,9 +44,9 @@ export function EasterEggModal({ isOpen, type, onClose }: EasterEggModalProps) {
     switch (type) {
       case 'ac3':
         return (
-          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center">
             <PartyPopper
-              className="w-6 h-6 text-amber-600 dark:text-amber-400"
+              className="w-6 h-6 text-warning-600 dark:text-warning-400"
               aria-hidden="true"
             />
           </div>

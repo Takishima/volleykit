@@ -25,9 +25,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: 'text-primary-950 bg-primary-500 hover:bg-primary-600 focus:ring-primary-500',
   secondary:
     'text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:ring-border-strong',
-  success: 'text-white bg-success-600 hover:bg-success-800 focus:ring-success-500',
-  danger: 'text-white bg-danger-600 hover:bg-danger-800 focus:ring-danger-500',
-  warning: 'text-white bg-warning-600 hover:bg-warning-800 focus:ring-warning-500',
+  success: 'text-white bg-success-600 hover:bg-success-700 focus:ring-success-500',
+  danger: 'text-white bg-danger-600 hover:bg-danger-700 focus:ring-danger-500',
+  warning: 'text-white bg-warning-600 hover:bg-warning-700 focus:ring-warning-500',
   ghost:
     'text-text-secondary dark:text-text-secondary-dark bg-transparent hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark focus:ring-border-strong',
 }

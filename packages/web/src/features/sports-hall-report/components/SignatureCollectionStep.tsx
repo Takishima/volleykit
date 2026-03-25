@@ -184,7 +184,7 @@ export function SignatureCollectionStep({
                           : onAwayCoachNameChange(e.target.value)
                       }
                       placeholder={t('pdf.wizard.nonConformant.coachNamePlaceholder')}
-                      className="w-full rounded-md border border-border-default dark:border-border-default-dark bg-surface-primary dark:bg-surface-primary-dark text-text-primary dark:text-text-primary-dark text-sm px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-text-muted dark:placeholder:text-text-muted-dark"
+                      className="w-full rounded-md border border-border-default dark:border-border-default-dark bg-surface-primary dark:bg-surface-primary-dark text-text-primary dark:text-text-primary-dark text-sm px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder:text-text-muted dark:placeholder:text-text-muted-dark"
                     />
                   </div>
                 )}

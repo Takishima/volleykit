@@ -108,7 +108,7 @@ export function AssignmentDetailScreen({ route }: Props) {
   if (isError) {
     return (
       <View className="flex-1 bg-white items-center justify-center px-6">
-        <Feather name="alert-circle" size={48} color={COLORS.red500} />
+        <Feather name="alert-circle" size={48} color={COLORS.danger500} />
         <Text className="text-red-600 text-center mt-4 mb-4">
           {error?.message ?? t('common.error')}
         </Text>

@@ -59,7 +59,7 @@ function getErrorColor(type: ErrorType): string {
     case 'network':
       return COLORS.amber500
     case 'application':
-      return COLORS.red500
+      return COLORS.danger500
     default:
       return COLORS.gray500
   }
@@ -164,11 +164,11 @@ export function ErrorBanner({
 }): JSX.Element {
   return (
     <View className="bg-red-50 border border-red-200 rounded-lg p-4 flex-row items-center">
-      <Feather name="alert-circle" size={20} color={COLORS.red500} />
+      <Feather name="alert-circle" size={20} color={COLORS.danger500} />
       <Text className="flex-1 text-red-700 ml-3">{message}</Text>
       {onRetry && (
         <TouchableOpacity onPress={onRetry} accessibilityRole="button" accessibilityLabel="Retry">
-          <Feather name="refresh-cw" size={18} color={COLORS.red500} />
+          <Feather name="refresh-cw" size={18} color={COLORS.danger500} />
         </TouchableOpacity>
       )}
     </View>

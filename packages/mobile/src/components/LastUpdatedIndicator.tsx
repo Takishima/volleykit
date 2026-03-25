@@ -41,7 +41,7 @@ function getStatusColor(status: CacheStatus): string {
     case 'stale':
       return COLORS.amber500
     case 'expired':
-      return COLORS.red500
+      return COLORS.danger500
     default:
       return COLORS.gray400
   }
