@@ -162,7 +162,7 @@ export function NonConformantOverlay({
           </Button>
           {nc.ncStep === 'signatures' ? (
             <Button
-              variant="blue"
+              variant="success"
               className="flex-1"
               onClick={nc.handleNcDownload}
               disabled={!nc.canProceed || nc.isGenerating}
@@ -181,7 +181,7 @@ export function NonConformantOverlay({
             </Button>
           ) : (
             <Button
-              variant="blue"
+              variant="success"
               className="flex-1"
               onClick={nc.handleNcNext}
               disabled={!nc.canProceed || nc.isGenerating}

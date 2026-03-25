@@ -42,8 +42,8 @@ const titleSizeClasses: Record<TitleSize, string> = {
  *   title="Export PDF"
  *   titleId="pdf-export-title"
  *   icon={
- *     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
- *       <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+ *     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+ *       <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
  *     </div>
  *   }
  * />

@@ -60,21 +60,14 @@ describe('Button', () => {
     it('applies success variant styles', () => {
       render(<Button variant="success">Confirm</Button>)
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('bg-green-600')
+      expect(button).toHaveClass('bg-success-600')
       expect(button).toHaveClass('text-white')
     })
 
     it('applies danger variant styles', () => {
       render(<Button variant="danger">Delete</Button>)
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('bg-red-600')
-      expect(button).toHaveClass('text-white')
-    })
-
-    it('applies blue variant styles', () => {
-      render(<Button variant="blue">Export</Button>)
-      const button = screen.getByRole('button')
-      expect(button).toHaveClass('bg-blue-600')
+      expect(button).toHaveClass('bg-danger-600')
       expect(button).toHaveClass('text-white')
     })
 

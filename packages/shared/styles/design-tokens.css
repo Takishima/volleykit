@@ -26,6 +26,24 @@
   --color-svv-white: #ffffff;
 
   /* ==============================================
+   * WARM NEUTRAL PALETTE (stone)
+   * Overrides Tailwind's cool gray with warm tones
+   * that harmonize with the lime primary
+   * ============================================== */
+
+  --color-gray-50: #fafaf9;
+  --color-gray-100: #f5f5f4;
+  --color-gray-200: #e7e5e4;
+  --color-gray-300: #d6d3d1;
+  --color-gray-400: #a8a29e;
+  --color-gray-500: #78716c;
+  --color-gray-600: #57534e;
+  --color-gray-700: #44403c;
+  --color-gray-800: #292524;
+  --color-gray-900: #1c1917;
+  --color-gray-950: #0c0a09;
+
+  /* ==============================================
    * SEMANTIC PRIMARY COLOR PALETTE
    * Electric lime - energetic and modern
    * ============================================== */
@@ -48,37 +66,44 @@
    * For states: success, warning, danger
    * ============================================== */
 
-  /* Success color (teal - distinct from primary lime) */
-  --color-success-50: #f0fdfa;
-  --color-success-100: #ccfbf1;
-  --color-success-200: #99f6e4;
-  --color-success-400: #2dd4bf;
-  --color-success-500: #14b8a6; /* Main success color */
-  --color-success-600: #0d9488; /* Hover/emphasis */
-  --color-success-800: #115e59;
-  --color-success-900: #134e4a;
-  --color-success-950: #042f2e;
+  /* Success color (emerald - blue-shifted green, distinct from yellow-green lime) */
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-200: #a7f3d0;
+  --color-success-300: #6ee7b7;
+  --color-success-400: #34d399;
+  --color-success-500: #10b981; /* Main success color */
+  --color-success-600: #059669; /* Hover/emphasis */
+  --color-success-700: #047857;
+  --color-success-800: #065f46;
+  --color-success-900: #064e3b;
+  --color-success-950: #022c22;
 
-  /* Warning color (orange - distinct from yellow-lime) */
-  --color-warning-50: #fff7ed;
-  --color-warning-100: #ffedd5;
-  --color-warning-200: #fed7aa;
-  --color-warning-400: #fb923c;
-  --color-warning-500: #f97316; /* Main warning color */
-  --color-warning-600: #ea580c; /* Hover/emphasis */
-  --color-warning-800: #9a3412;
-  --color-warning-900: #7c2d12;
-  --color-warning-950: #431407;
+  /* Warning color (amber - warm golden, analogous neighbor to lime) */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b; /* Main warning color */
+  --color-warning-600: #d97706; /* Hover/emphasis */
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-warning-950: #451a03;
 
-  /* Danger color (red - universal meaning) */
-  --color-danger-50: #fef2f2;
-  --color-danger-100: #fee2e2;
-  --color-danger-200: #fecaca;
-  --color-danger-400: #f87171;
-  --color-danger-500: #ef4444; /* Main danger color */
-  --color-danger-600: #dc2626; /* Hover/emphasis */
-  --color-danger-800: #991b1b;
-  --color-danger-900: #7f1d1d;
+  /* Danger color (rose - vibrant and modern, warm undertone) */
+  --color-danger-50: #fff1f2;
+  --color-danger-100: #ffe4e6;
+  --color-danger-200: #fecdd3;
+  --color-danger-300: #fda4af;
+  --color-danger-400: #fb7185;
+  --color-danger-500: #f43f5e; /* Main danger color */
+  --color-danger-600: #e11d48; /* Hover/emphasis */
+  --color-danger-700: #be123c;
+  --color-danger-800: #9f1239;
+  --color-danger-900: #881337;
+  --color-danger-950: #4c0519;
 
   /* ==============================================
    * SEMANTIC SURFACE COLORS (backgrounds)
@@ -154,8 +179,8 @@
    * FONT FAMILY
    * ============================================== */
 
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    'Courier New', monospace;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }

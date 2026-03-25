@@ -12,25 +12,25 @@ export const COLORS = {
   // Primary colors
   primary: '#0ea5e9', // sky-500
 
-  // Gray scale
-  gray50: '#f9fafb',
-  gray100: '#f3f4f6',
-  gray200: '#e5e7eb',
-  gray400: '#9ca3af',
-  gray500: '#6b7280',
-  gray600: '#4b5563',
-  gray700: '#374151',
-  gray900: '#111827',
+  // Gray scale (warm stone tones)
+  gray50: '#fafaf9',
+  gray100: '#f5f5f4',
+  gray200: '#e7e5e4',
+  gray400: '#a8a29e',
+  gray500: '#78716c',
+  gray600: '#57534e',
+  gray700: '#44403c',
+  gray900: '#1c1917',
 
-  // Status colors
-  green100: '#dcfce7',
-  green500: '#22c55e',
-  green700: '#15803d',
-  blue100: '#dbeafe',
-  blue700: '#1d4ed8',
-  amber500: '#f59e0b',
-  amber600: '#d97706',
-  red500: '#ef4444',
+  // Status colors (emerald success, amber warning, rose danger)
+  success100: '#d1fae5',
+  success500: '#10b981',
+  success700: '#047857',
+  primary100: '#e0f2fe',
+  primary700: '#0369a1',
+  warning500: '#f59e0b',
+  warning600: '#d97706',
+  danger500: '#f43f5e', // rose-500
   sky500: '#0ea5e9',
   sky600: '#0284c7',
   purple600: '#9333ea',

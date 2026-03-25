@@ -1,0 +1,65 @@
+name: Update Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      grep-pattern:
+        description: 'Grep pattern to filter screenshots (leave empty for all)'
+        required: false
+        default: ''
+      branch:
+        description: 'Branch to commit screenshots to (defaults to triggering branch)'
+        required: false
+        default: ''
+
+jobs:
+  capture:
+    name: Capture Screenshots
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
+    env:
+      HOME: /root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/web
+
+      - name: Generate API types
+        working-directory: packages/web
+        run: pnpm run generate:api
+
+      - name: Build web app
+        working-directory: packages/web
+        run: pnpm run build
+
+      - name: Capture screenshots
+        working-directory: packages/web
+        env:
+          GREP_PATTERN: ${{ inputs.grep-pattern }}
+        run: |
+          PLAYWRIGHT_ARGS=(
+            test
+            "--config=../../.claude/skills/screenshots/playwright-screenshots.config.ts"
+            "--project=chromium"
+          )
+          if [ -n "$GREP_PATTERN" ]; then
+            PLAYWRIGHT_ARGS+=("--grep" "$GREP_PATTERN")
+          fi
+          npx playwright "${PLAYWRIGHT_ARGS[@]}"
+
+      - name: Build help-site (verify screenshots)
+        working-directory: help-site
+        run: pnpm run build
+
+      - name: Commit and push screenshots
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore(docs): update help-site screenshots'
+          file_pattern: 'help-site/public/images/screenshots/*'

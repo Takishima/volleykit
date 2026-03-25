@@ -138,11 +138,11 @@ export function LoginScreen(_props: Props) {
 
       {error && (
         <View
-          className="bg-red-50 p-4 rounded-lg mb-4"
+          className="bg-danger-50 p-4 rounded-lg mb-4"
           accessibilityRole="alert"
           accessibilityLiveRegion="polite"
         >
-          <Text className="text-red-700">{error}</Text>
+          <Text className="text-danger-700">{error}</Text>
         </View>
       )}
 

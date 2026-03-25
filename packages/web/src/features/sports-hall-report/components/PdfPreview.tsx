@@ -41,7 +41,7 @@ export function PdfPreview({ pdfBytes, isLoading }: PdfPreviewProps) {
       <div className="flex items-center justify-center h-[50vh] min-h-[300px] rounded-lg border border-border-default dark:border-border-default-dark">
         <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark">
           <span
-            className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
+            className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"
             aria-hidden="true"
           />
           {t('pdf.generating')}
@@ -61,7 +61,7 @@ export function PdfPreview({ pdfBytes, isLoading }: PdfPreviewProps) {
         <button
           type="button"
           onClick={handleOpenInNewTab}
-          className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+          className="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
         >
           <ExternalLink className="w-3 h-3" aria-hidden="true" />
           {t('pdf.wizard.nonConformant.openInNewTab')}

@@ -77,8 +77,8 @@ describe('ConflictWarning components', () => {
       render(<ConflictIndicator conflicts={[createMockConflict()]} />)
 
       const indicator = screen.getByLabelText('Scheduling conflict')
-      expect(indicator).toHaveClass('bg-red-100')
-      expect(indicator).toHaveClass('text-red-700')
+      expect(indicator).toHaveClass('bg-danger-100')
+      expect(indicator).toHaveClass('text-danger-700')
     })
   })
 
@@ -211,8 +211,8 @@ describe('ConflictWarning components', () => {
       const container = screen
         .getByText('Potential scheduling conflict')
         .closest('div')?.parentElement
-      expect(container).toHaveClass('bg-red-50')
-      expect(container).toHaveClass('border-red-200')
+      expect(container).toHaveClass('bg-danger-50')
+      expect(container).toHaveClass('border-danger-200')
     })
   })
 })

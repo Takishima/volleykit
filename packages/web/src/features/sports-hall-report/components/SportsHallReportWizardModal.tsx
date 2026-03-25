@@ -185,7 +185,7 @@ export function SportsHallReportWizardModal({
       className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
         mode === 'non-conformant'
           ? 'bg-warning-100 dark:bg-warning-900'
-          : 'bg-blue-100 dark:bg-blue-900'
+          : 'bg-primary-100 dark:bg-primary-900'
       }`}
     >
       {mode === 'non-conformant' ? (
@@ -194,7 +194,7 @@ export function SportsHallReportWizardModal({
           aria-hidden="true"
         />
       ) : (
-        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+        <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
       )}
     </div>
   )

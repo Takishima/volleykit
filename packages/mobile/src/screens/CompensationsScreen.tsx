@@ -88,7 +88,9 @@ export function CompensationsScreen(_props: Props) {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center mb-4">{error?.message ?? t('common.error')}</Text>
+        <Text className="text-danger-600 text-center mb-4">
+          {error?.message ?? t('common.error')}
+        </Text>
         <TouchableOpacity
           className="bg-primary-600 rounded-lg px-6 py-3"
           onPress={() => refetch()}

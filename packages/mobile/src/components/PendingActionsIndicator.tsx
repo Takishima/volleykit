@@ -154,14 +154,14 @@ export function PendingActionsBadge({ style }: PendingActionsBadgeProps): JSX.El
       accessibilityLabel={t('offline.pendingActions', { count: pendingCount })}
       accessibilityLiveRegion="polite"
     >
-      <View className="flex-row items-center bg-amber-100 rounded-full px-2.5 py-1">
+      <View className="flex-row items-center bg-warning-100 rounded-full px-2.5 py-1">
         <Feather
           name="upload-cloud"
           size={BADGE_ICON_SIZE}
-          color={COLORS.amber600}
+          color={COLORS.warning600}
           style={{ marginRight: BADGE_ICON_MARGIN }}
         />
-        <Text className="text-amber-800 text-xs font-medium">{pendingCount}</Text>
+        <Text className="text-warning-800 text-xs font-medium">{pendingCount}</Text>
         {isSyncing && <Text className="sr-only">{t('offline.syncing')}</Text>}
       </View>
     </Animated.View>

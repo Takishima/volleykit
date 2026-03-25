@@ -23,8 +23,8 @@ type Props = RootStackScreenProps<'AssignmentDetail'>
 
 // Status badge color mappings
 const STATUS_COLORS = {
-  active: { bg: 'bg-green-100', text: 'text-green-700' },
-  cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
+  active: { bg: 'bg-success-100', text: 'text-success-700' },
+  cancelled: { bg: 'bg-danger-100', text: 'text-danger-700' },
   archived: { bg: 'bg-gray-100', text: 'text-gray-700' },
 } as const
 
@@ -108,8 +108,8 @@ export function AssignmentDetailScreen({ route }: Props) {
   if (isError) {
     return (
       <View className="flex-1 bg-white items-center justify-center px-6">
-        <Feather name="alert-circle" size={48} color={COLORS.red500} />
-        <Text className="text-red-600 text-center mt-4 mb-4">
+        <Feather name="alert-circle" size={48} color={COLORS.danger500} />
+        <Text className="text-danger-600 text-center mt-4 mb-4">
           {error?.message ?? t('common.error')}
         </Text>
         <TouchableOpacity
@@ -204,9 +204,9 @@ export function AssignmentDetailScreen({ route }: Props) {
 
           {/* Exchange indicator */}
           {display.hasExchange && (
-            <View className="bg-amber-50 rounded-lg p-4 flex-row items-center">
-              <Feather name="repeat" size={18} color={COLORS.amber600} />
-              <Text className="text-amber-700 ml-3 flex-1">{t('assignments.exchangeOpen')}</Text>
+            <View className="bg-warning-50 rounded-lg p-4 flex-row items-center">
+              <Feather name="repeat" size={18} color={COLORS.warning600} />
+              <Text className="text-warning-700 ml-3 flex-1">{t('assignments.exchangeOpen')}</Text>
             </View>
           )}
 

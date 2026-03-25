@@ -137,14 +137,16 @@ export function SignatureCanvas({ onComplete, onCancel }: SignatureCanvasProps) 
           {t('common.cancel')}
         </Button>
 
-        <h2 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{t('pdf.wizard.signature.title')}</h2>
+        <h2 className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+          {t('pdf.wizard.signature.title')}
+        </h2>
 
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={handleClear} disabled={isEmpty}>
             <Trash2 className="w-4 h-4" aria-hidden="true" />
             {t('pdf.wizard.signature.clear')}
           </Button>
-          <Button variant="blue" size="sm" onClick={handleDone} disabled={isEmpty}>
+          <Button variant="success" size="sm" onClick={handleDone} disabled={isEmpty}>
             <Check className="w-4 h-4" aria-hidden="true" />
             {t('pdf.wizard.signature.done')}
           </Button>

@@ -327,7 +327,7 @@ describe('ExchangeConfirmationModal', () => {
         />
       )
       const confirmButton = screen.getByText('Confirm Take Over')
-      expect(confirmButton).toHaveClass('bg-green-600')
+      expect(confirmButton).toHaveClass('bg-success-600')
     })
 
     it('uses correct button colors for remove variant', () => {
@@ -344,7 +344,7 @@ describe('ExchangeConfirmationModal', () => {
         name: 'Remove from Exchange',
         hidden: true,
       })
-      expect(confirmButton).toHaveClass('bg-red-600')
+      expect(confirmButton).toHaveClass('bg-danger-600')
     })
   })
 })

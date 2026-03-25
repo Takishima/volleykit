@@ -37,28 +37,28 @@ const TOAST_STYLES: Record<
   { bg: string; border: string; text: string; iconColor: string }
 > = {
   success: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    text: 'text-green-800',
-    iconColor: '#22c55e', // green-500
+    bg: 'bg-success-50',
+    border: 'border-success-200',
+    text: 'text-success-800',
+    iconColor: '#10b981', // success-500 (emerald)
   },
   error: {
-    bg: 'bg-red-50',
-    border: 'border-red-200',
-    text: 'text-red-800',
-    iconColor: '#ef4444', // red-500
+    bg: 'bg-danger-50',
+    border: 'border-danger-200',
+    text: 'text-danger-800',
+    iconColor: '#f43f5e', // danger-500 (rose)
   },
   warning: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    text: 'text-amber-800',
-    iconColor: '#f59e0b', // amber-500
+    bg: 'bg-warning-50',
+    border: 'border-warning-200',
+    text: 'text-warning-800',
+    iconColor: '#f59e0b', // warning-500 (amber)
   },
   info: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    text: 'text-blue-800',
-    iconColor: '#3b82f6', // blue-500
+    bg: 'bg-primary-50',
+    border: 'border-primary-200',
+    text: 'text-primary-800',
+    iconColor: '#0ea5e9', // primary-500 (sky)
   },
 }
 

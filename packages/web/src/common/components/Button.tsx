@@ -1,13 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-export type ButtonVariant =
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'danger'
-  | 'warning'
-  | 'blue'
-  | 'ghost'
+export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost'
 
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
@@ -32,10 +25,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: 'text-primary-950 bg-primary-500 hover:bg-primary-600 focus:ring-primary-500',
   secondary:
     'text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:ring-border-strong',
-  success: 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500',
-  danger: 'text-white bg-red-600 hover:bg-red-700 focus:ring-red-500',
-  warning: 'text-white bg-warning-500 hover:bg-warning-600 focus:ring-warning-500',
-  blue: 'text-white bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+  success: 'text-white bg-success-600 hover:bg-success-700 focus:ring-success-500',
+  danger: 'text-white bg-danger-600 hover:bg-danger-700 focus:ring-danger-500',
+  warning: 'text-white bg-warning-600 hover:bg-warning-700 focus:ring-warning-500',
   ghost:
     'text-text-secondary dark:text-text-secondary-dark bg-transparent hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark focus:ring-border-strong',
 }

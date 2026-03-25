@@ -37,11 +37,11 @@ export interface LastUpdatedIndicatorProps {
 function getStatusColor(status: CacheStatus): string {
   switch (status) {
     case 'fresh':
-      return COLORS.green500
+      return COLORS.success500
     case 'stale':
-      return COLORS.amber500
+      return COLORS.warning500
     case 'expired':
-      return COLORS.red500
+      return COLORS.danger500
     default:
       return COLORS.gray400
   }
