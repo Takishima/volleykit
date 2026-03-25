@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with timeout/retry values */
 import path from 'node:path'
-import { execSync } from 'node:child_process'
 
 import { defineConfig, devices } from '@playwright/test'
 
@@ -11,7 +10,7 @@ import { defineConfig, devices } from '@playwright/test'
  * Usage (via /screenshots skill):
  *   npx playwright test --config=.claude/skills/screenshots/playwright-screenshots.config.ts --project=chromium
  */
-const repoRoot = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim()
+const repoRoot = path.resolve(__dirname, '..', '..', '..')
 const webDir = path.join(repoRoot, 'packages', 'web')
 
 export default defineConfig({
