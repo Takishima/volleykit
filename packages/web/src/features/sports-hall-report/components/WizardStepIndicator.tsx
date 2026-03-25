@@ -33,14 +33,14 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
               <div className="flex items-center gap-1.5 whitespace-nowrap">
                 {isCompleted ? (
                   <CheckCircle
-                    className="w-5 h-5 text-primary-500 flex-shrink-0"
+                    className="w-5 h-5 text-primary-800 dark:text-primary-400 flex-shrink-0"
                     aria-hidden="true"
                   />
                 ) : (
                   <span
                     className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
                       isCurrent
-                        ? 'bg-primary-500 text-white'
+                        ? 'bg-primary-500 text-gray-900'
                         : 'bg-surface-subtle dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark'
                     }`}
                   >
@@ -52,7 +52,7 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
                     isCurrent
                       ? 'font-medium text-text-primary dark:text-text-primary-dark'
                       : isCompleted
-                        ? 'text-primary-500'
+                        ? 'text-primary-800 dark:text-primary-400'
                         : 'text-text-muted dark:text-text-muted-dark'
                   }`}
                 >

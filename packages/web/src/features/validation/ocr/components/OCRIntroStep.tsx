@@ -16,7 +16,7 @@ export function OCRIntroStep({ onStartScan, onSkip }: OCRIntroStepProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh]">
       <Camera
-        className="w-16 h-16 text-primary-400 dark:text-primary-500 mb-4"
+        className="w-16 h-16 text-primary-600 dark:text-primary-500 mb-4"
         aria-hidden="true"
       />
       <h2 className="text-xl font-semibold text-text-primary dark:text-text-primary-dark mb-2">
@@ -55,7 +55,10 @@ export function OCRIntroStep({ onStartScan, onSkip }: OCRIntroStepProps) {
           className="w-full flex items-start gap-4 p-4 bg-surface-card dark:bg-surface-card-dark border-2 border-border-default dark:border-border-strong-dark rounded-xl hover:border-primary-300 dark:hover:border-primary-700 hover:bg-surface-page dark:hover:bg-surface-muted-dark transition-colors text-left"
         >
           <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg bg-surface-subtle dark:bg-surface-subtle-dark">
-            <PenTool className="w-6 h-6 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />
+            <PenTool
+              className="w-6 h-6 text-text-muted dark:text-text-muted-dark"
+              aria-hidden="true"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <span className="block text-base font-semibold text-text-primary dark:text-text-primary-dark">

@@ -26,22 +26,22 @@
   --color-svv-white: #ffffff;
 
   /* ==============================================
-   * WARM NEUTRAL PALETTE (stone)
-   * Overrides Tailwind's cool gray with warm tones
-   * that harmonize with the lime primary
+   * COOL NEUTRAL PALETTE (slate)
+   * Blue-gray tones that pair naturally with lime
+   * and create a modern, digital-first aesthetic
    * ============================================== */
 
-  --color-gray-50: #fafaf9;
-  --color-gray-100: #f5f5f4;
-  --color-gray-200: #e7e5e4;
-  --color-gray-300: #d6d3d1;
-  --color-gray-400: #a8a29e;
-  --color-gray-500: #78716c;
-  --color-gray-600: #57534e;
-  --color-gray-700: #44403c;
-  --color-gray-800: #292524;
-  --color-gray-900: #1c1917;
-  --color-gray-950: #0c0a09;
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-950: #020617;
 
   /* ==============================================
    * SEMANTIC PRIMARY COLOR PALETTE
@@ -60,6 +60,23 @@
   --color-primary-800: #526d07;
   --color-primary-900: #455c0b;
   --color-primary-950: #233400;
+
+  /* ==============================================
+   * INFO COLOR (blue)
+   * Informational states, help text, tooltips, links
+   * ============================================== */
+
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6; /* Main info color */
+  --color-info-600: #2563eb; /* Hover/emphasis */
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+  --color-info-950: #172554;
 
   /* ==============================================
    * SEMANTIC STATUS COLORS

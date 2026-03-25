@@ -1,4 +1,4 @@
-const { primary, success, warning, danger, gray } = require('@volleykit/shared/styles/colors')
+const { primary, info, success, warning, danger, gray } = require('@volleykit/shared/styles/colors')
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -8,6 +8,7 @@ module.exports = {
     extend: {
       colors: {
         primary,
+        info,
         success,
         warning,
         danger,

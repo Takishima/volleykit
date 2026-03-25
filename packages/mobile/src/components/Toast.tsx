@@ -58,7 +58,7 @@ const TOAST_STYLES: Record<
     bg: 'bg-primary-50',
     border: 'border-primary-200',
     text: 'text-primary-800',
-    iconColor: '#0ea5e9', // primary-500 (sky)
+    iconColor: '#3b82f6', // info-500 (blue)
   },
 }
 

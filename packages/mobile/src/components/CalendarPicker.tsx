@@ -78,7 +78,7 @@ export function CalendarPicker({
             accessibilityRole="button"
             accessibilityLabel={t('common.cancel')}
           >
-            <Text className="text-sky-500 text-base">{t('common.cancel')}</Text>
+            <Text className="text-info-500 text-base">{t('common.cancel')}</Text>
           </TouchableOpacity>
           <Text className="text-gray-900 text-lg font-semibold">
             {t('settings.calendar.selectCalendar')}

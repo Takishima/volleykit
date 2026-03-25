@@ -294,12 +294,12 @@ export function AppShell() {
       {/* Calendar mode banner */}
       {isCalendarMode && (
         <div
-          className="bg-sky-100 dark:bg-sky-900/50 border-b border-sky-200 dark:border-sky-800"
+          className="bg-info-100 dark:bg-info-900/50 border-b border-info-200 dark:border-info-800"
           role="alert"
           aria-live="polite"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <p className="text-sm text-sky-800 dark:text-sky-200 text-center font-medium">
+            <p className="text-sm text-info-800 dark:text-info-200 text-center font-medium">
               {t('common.calendarModeBanner')}
             </p>
           </div>

@@ -99,7 +99,7 @@ export function BiometricPrompt({
 
           {/* Authenticate button */}
           <TouchableOpacity
-            className={`py-4 rounded-xl mb-3 ${isAuthenticating ? 'bg-sky-300' : 'bg-sky-500'}`}
+            className={`py-4 rounded-xl mb-3 ${isAuthenticating ? 'bg-info-300' : 'bg-info-500'}`}
             onPress={onAuthenticate}
             disabled={isAuthenticating}
             accessibilityRole="button"
@@ -119,7 +119,7 @@ export function BiometricPrompt({
             accessibilityRole="button"
             accessibilityLabel={t('auth.enterCredentials')}
           >
-            <Text className="text-sky-500 font-medium text-center">
+            <Text className="text-info-500 font-medium text-center">
               {t('auth.enterCredentials')}
             </Text>
           </TouchableOpacity>

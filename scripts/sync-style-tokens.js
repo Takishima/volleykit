@@ -20,7 +20,7 @@ const CSS_PATH = resolve(ROOT, 'packages/shared/styles/design-tokens.css')
 const JS_PATH = resolve(ROOT, 'packages/shared/styles/colors.js')
 
 // Color groups to extract (token prefix -> JS export name)
-const COLOR_GROUPS = ['primary', 'success', 'warning', 'danger', 'gray']
+const COLOR_GROUPS = ['primary', 'info', 'success', 'warning', 'danger', 'gray']
 
 function parseDesignTokens(css) {
   const colors = {}

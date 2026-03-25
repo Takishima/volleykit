@@ -119,7 +119,7 @@ export function ErrorScreen({
         {/* Retry button */}
         {onRetry && (
           <TouchableOpacity
-            className="bg-sky-500 rounded-lg py-3 px-6 mb-4"
+            className="bg-info-500 rounded-lg py-3 px-6 mb-4"
             onPress={onRetry}
             accessibilityRole="button"
             accessibilityLabel={t('errorBoundary.tryAgain')}

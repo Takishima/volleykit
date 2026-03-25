@@ -9,30 +9,30 @@ import Constants from 'expo-constants'
  * These match the Tailwind CSS color palette
  */
 export const COLORS = {
-  // Primary colors
-  primary: '#0ea5e9', // sky-500
+  // Info color (used for interactive blue elements)
+  primary: '#3b82f6', // info-500
 
-  // Gray scale (warm stone tones)
-  gray50: '#fafaf9',
-  gray100: '#f5f5f4',
-  gray200: '#e7e5e4',
-  gray400: '#a8a29e',
-  gray500: '#78716c',
-  gray600: '#57534e',
-  gray700: '#44403c',
-  gray900: '#1c1917',
+  // Gray scale (cool slate tones)
+  gray50: '#f8fafc',
+  gray100: '#f1f5f9',
+  gray200: '#e2e8f0',
+  gray400: '#94a3b8',
+  gray500: '#64748b',
+  gray600: '#475569',
+  gray700: '#334155',
+  gray900: '#0f172a',
 
   // Status colors (emerald success, amber warning, rose danger)
   success100: '#d1fae5',
   success500: '#10b981',
   success700: '#047857',
-  primary100: '#e0f2fe',
-  primary700: '#0369a1',
+  info100: '#dbeafe',
+  info500: '#3b82f6',
+  info600: '#2563eb',
+  info700: '#1d4ed8',
   warning500: '#f59e0b',
   warning600: '#d97706',
   danger500: '#f43f5e', // rose-500
-  sky500: '#0ea5e9',
-  sky600: '#0284c7',
   purple600: '#9333ea',
 } as const
 

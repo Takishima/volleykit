@@ -78,7 +78,7 @@ export function CalendarSettingsScreen(_props: Props) {
             </View>
             <View
               className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
-                settings.syncMode === 'ical' ? 'border-sky-500 bg-sky-500' : 'border-gray-300'
+                settings.syncMode === 'ical' ? 'border-info-500 bg-info-500' : 'border-gray-300'
               }`}
             >
               {settings.syncMode === 'ical' && <Feather name="check" size={14} color="white" />}
@@ -108,7 +108,7 @@ export function CalendarSettingsScreen(_props: Props) {
             </View>
             <View
               className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
-                settings.syncMode === 'direct' ? 'border-sky-500 bg-sky-500' : 'border-gray-300'
+                settings.syncMode === 'direct' ? 'border-info-500 bg-info-500' : 'border-gray-300'
               }`}
             >
               {settings.syncMode === 'direct' && <Feather name="check" size={14} color="white" />}
@@ -121,7 +121,7 @@ export function CalendarSettingsScreen(_props: Props) {
       {settings.syncMode === 'ical' && (
         <View className="mt-6 px-4">
           <TouchableOpacity
-            className="bg-sky-500 rounded-lg py-4"
+            className="bg-info-500 rounded-lg py-4"
             onPress={handleIcalSubscribe}
             accessibilityRole="button"
             accessibilityLabel={t('settings.calendar.subscribeIcal')}
@@ -170,7 +170,7 @@ export function CalendarSettingsScreen(_props: Props) {
           <View className="mt-6 px-4">
             <TouchableOpacity
               className={`rounded-lg py-4 ${
-                settings.selectedCalendarId ? 'bg-sky-500' : 'bg-gray-300'
+                settings.selectedCalendarId ? 'bg-info-500' : 'bg-gray-300'
               }`}
               onPress={handleSyncNow}
               disabled={!settings.selectedCalendarId || isSyncing}

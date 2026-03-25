@@ -210,7 +210,7 @@ export function LoginScreen(_props: Props) {
               color={isAuthenticating ? COLORS.gray400 : COLORS.primary}
             />
             <Text
-              className={`ml-2 font-medium ${isAuthenticating ? 'text-gray-400' : 'text-sky-500'}`}
+              className={`ml-2 font-medium ${isAuthenticating ? 'text-gray-400' : 'text-info-500'}`}
             >
               {isAuthenticating
                 ? t('common.loading')

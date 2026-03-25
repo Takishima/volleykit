@@ -73,7 +73,7 @@ export function OfflineActionBlocker({
           </Text>
 
           <TouchableOpacity
-            className="bg-sky-500 rounded-lg py-3 px-4"
+            className="bg-info-500 rounded-lg py-3 px-4"
             onPress={onDismiss}
             accessibilityRole="button"
             accessibilityLabel="Close"

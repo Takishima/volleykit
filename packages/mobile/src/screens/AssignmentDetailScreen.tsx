@@ -113,7 +113,7 @@ export function AssignmentDetailScreen({ route }: Props) {
           {error?.message ?? t('common.error')}
         </Text>
         <TouchableOpacity
-          className="bg-sky-500 rounded-lg px-6 py-3"
+          className="bg-info-500 rounded-lg px-6 py-3"
           onPress={() => refetch()}
           accessibilityRole="button"
           accessibilityLabel={t('common.retry')}
@@ -187,8 +187,8 @@ export function AssignmentDetailScreen({ route }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={t('common.openInMaps')}
               >
-                <Feather name="navigation" size={14} color={COLORS.sky500} />
-                <Text className="text-sky-500 ml-2 font-medium">{t('common.openInMaps')}</Text>
+                <Feather name="navigation" size={14} color={COLORS.info500} />
+                <Text className="text-info-500 ml-2 font-medium">{t('common.openInMaps')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -212,9 +212,9 @@ export function AssignmentDetailScreen({ route }: Props) {
 
           {/* Message indicator */}
           {display.hasMessage && (
-            <View className="bg-sky-50 rounded-lg p-4 flex-row items-center">
-              <Feather name="message-circle" size={18} color={COLORS.sky600} />
-              <Text className="text-sky-700 ml-3 flex-1">{t('assignments.hasMessage')}</Text>
+            <View className="bg-info-50 rounded-lg p-4 flex-row items-center">
+              <Feather name="message-circle" size={18} color={COLORS.info600} />
+              <Text className="text-info-700 ml-3 flex-1">{t('assignments.hasMessage')}</Text>
             </View>
           )}
 

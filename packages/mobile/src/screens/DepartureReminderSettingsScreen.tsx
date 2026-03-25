@@ -224,7 +224,7 @@ export function DepartureReminderSettingsScreen(_props: Props) {
                   <View
                     className={`w-6 h-6 rounded-full border-2 items-center justify-center ${
                       settings.bufferMinutes === minutes
-                        ? 'border-sky-500 bg-sky-500'
+                        ? 'border-info-500 bg-info-500'
                         : 'border-gray-300'
                     }`}
                   >
