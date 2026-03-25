@@ -17,6 +17,16 @@ $ARGUMENTS
 
 If arguments are provided, use them as a grep filter pattern. If empty, regenerate all screenshots.
 
+## Prerequisites
+
+Playwright browsers must be installed locally before running. If not already installed, run:
+
+```bash
+cd packages/web && npx playwright install chromium
+```
+
+**Note**: This requires network access to `storage.googleapis.com`. If running in a restricted environment (e.g. Claude Code remote), the download may fail. In that case, run the screenshot capture locally instead.
+
 ## Run
 
 Execute the capture script from the skill directory:
