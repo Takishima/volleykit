@@ -41,14 +41,16 @@ jobs:
 
       - name: Capture screenshots
         working-directory: packages/web
+        env:
+          GREP_PATTERN: ${{ inputs.grep-pattern }}
         run: |
           PLAYWRIGHT_ARGS=(
             test
             "--config=../../.claude/skills/screenshots/playwright-screenshots.config.ts"
             "--project=chromium"
           )
-          if [ -n "${{ inputs.grep-pattern }}" ]; then
-            PLAYWRIGHT_ARGS+=("--grep" "${{ inputs.grep-pattern }}")
+          if [ -n "$GREP_PATTERN" ]; then
+            PLAYWRIGHT_ARGS+=("--grep" "$GREP_PATTERN")
           fi
           npx playwright "${PLAYWRIGHT_ARGS[@]}"
 

@@ -57,7 +57,7 @@ function getErrorIcon(type: ErrorType): keyof typeof Feather.glyphMap {
 function getErrorColor(type: ErrorType): string {
   switch (type) {
     case 'network':
-      return COLORS.amber500
+      return COLORS.warning500
     case 'application':
       return COLORS.danger500
     default:
@@ -163,9 +163,9 @@ export function ErrorBanner({
   onRetry?: () => void
 }): JSX.Element {
   return (
-    <View className="bg-red-50 border border-red-200 rounded-lg p-4 flex-row items-center">
+    <View className="bg-danger-50 border border-danger-200 rounded-lg p-4 flex-row items-center">
       <Feather name="alert-circle" size={20} color={COLORS.danger500} />
-      <Text className="flex-1 text-red-700 ml-3">{message}</Text>
+      <Text className="flex-1 text-danger-700 ml-3">{message}</Text>
       {onRetry && (
         <TouchableOpacity onPress={onRetry} accessibilityRole="button" accessibilityLabel="Retry">
           <Feather name="refresh-cw" size={18} color={COLORS.danger500} />

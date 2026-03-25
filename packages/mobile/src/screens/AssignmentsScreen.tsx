@@ -28,8 +28,8 @@ type Props = MainTabScreenProps<'Assignments'>
 
 // Status badge color mappings
 const STATUS_COLORS = {
-  active: { bg: 'bg-green-100', text: 'text-green-700' },
-  cancelled: { bg: 'bg-red-100', text: 'text-red-700' },
+  active: { bg: 'bg-success-100', text: 'text-success-700' },
+  cancelled: { bg: 'bg-danger-100', text: 'text-danger-700' },
   archived: { bg: 'bg-gray-100', text: 'text-gray-700' },
 } as const
 
@@ -93,7 +93,9 @@ export function AssignmentsScreen({ navigation }: Props) {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center mb-4">{error?.message ?? t('common.error')}</Text>
+        <Text className="text-danger-600 text-center mb-4">
+          {error?.message ?? t('common.error')}
+        </Text>
         <TouchableOpacity
           className="bg-primary-600 rounded-lg px-6 py-3"
           onPress={() => refetch()}

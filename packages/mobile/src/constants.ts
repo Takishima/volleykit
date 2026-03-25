@@ -23,13 +23,13 @@ export const COLORS = {
   gray900: '#1c1917',
 
   // Status colors (emerald success, amber warning, rose danger)
-  green100: '#d1fae5',
-  green500: '#10b981',
-  green700: '#065f46',
-  blue100: '#dbeafe',
-  blue700: '#1d4ed8',
-  amber500: '#f59e0b',
-  amber600: '#d97706',
+  success100: '#d1fae5',
+  success500: '#10b981',
+  success700: '#047857',
+  primary100: '#e0f2fe',
+  primary700: '#0369a1',
+  warning500: '#f59e0b',
+  warning600: '#d97706',
   danger500: '#f43f5e', // rose-500
   sky500: '#0ea5e9',
   sky600: '#0284c7',

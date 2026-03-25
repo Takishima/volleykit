@@ -28,8 +28,8 @@ type Props = MainTabScreenProps<'Exchanges'>
 
 // Status badge color mappings
 const STATUS_COLORS = {
-  open: { bg: 'bg-green-100', text: 'text-green-700' },
-  applied: { bg: 'bg-blue-100', text: 'text-blue-700' },
+  open: { bg: 'bg-success-100', text: 'text-success-700' },
+  applied: { bg: 'bg-primary-100', text: 'text-primary-700' },
   closed: { bg: 'bg-gray-100', text: 'text-gray-700' },
 } as const
 
@@ -93,7 +93,9 @@ export function ExchangesScreen(_props: Props) {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-red-600 text-center mb-4">{error?.message ?? t('common.error')}</Text>
+        <Text className="text-danger-600 text-center mb-4">
+          {error?.message ?? t('common.error')}
+        </Text>
         <TouchableOpacity
           className="bg-primary-600 rounded-lg px-6 py-3"
           onPress={() => refetch()}

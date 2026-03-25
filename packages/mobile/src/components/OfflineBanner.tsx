@@ -67,7 +67,7 @@ export function OfflineBanner({
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
     >
-      <View className="bg-amber-500 px-4 py-2 flex-row items-center justify-center">
+      <View className="bg-warning-500 px-4 py-2 flex-row items-center justify-center">
         <Feather name="wifi-off" size={16} color="white" style={{ marginRight: 8 }} />
         <Text className="text-white text-sm font-medium">
           {message ?? t('errorBoundary.networkErrorDescription')}
@@ -90,12 +90,12 @@ export function OfflineIndicator(): JSX.Element | null {
 
   return (
     <View
-      className="flex-row items-center bg-amber-100 rounded-full px-2 py-1"
+      className="flex-row items-center bg-warning-100 rounded-full px-2 py-1"
       accessibilityRole="alert"
       accessibilityLabel={t('common.offline')}
     >
-      <Feather name="wifi-off" size={12} color={COLORS.amber500} />
-      <Text className="text-amber-600 text-xs ml-1">{t('common.offline')}</Text>
+      <Feather name="wifi-off" size={12} color={COLORS.warning500} />
+      <Text className="text-warning-600 text-xs ml-1">{t('common.offline')}</Text>
     </View>
   )
 }

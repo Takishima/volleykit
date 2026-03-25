@@ -58,8 +58,8 @@ export function OfflineActionBlocker({
           onPress={(e) => e.stopPropagation()}
         >
           <View className="items-center mb-4">
-            <View className="w-16 h-16 rounded-full bg-amber-100 items-center justify-center mb-3">
-              <Feather name="wifi-off" size={32} color={COLORS.amber500} />
+            <View className="w-16 h-16 rounded-full bg-warning-100 items-center justify-center mb-3">
+              <Feather name="wifi-off" size={32} color={COLORS.warning500} />
             </View>
             <Text className="text-lg font-semibold text-gray-900 text-center">
               {t('errorBoundary.connectionProblem')}
