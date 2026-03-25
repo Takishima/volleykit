@@ -28,7 +28,7 @@ export function LanguageSelector({ language, setLanguage, disabled }: LanguageSe
             key={code}
             className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-colors text-sm ${
               language === code
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-text-primary dark:text-text-primary-dark'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-text-primary dark:text-text-primary-dark'
                 : 'border-border-default dark:border-border-default-dark text-text-secondary dark:text-text-secondary-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
             }`}
           >

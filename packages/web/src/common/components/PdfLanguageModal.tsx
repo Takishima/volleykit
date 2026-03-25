@@ -39,8 +39,8 @@ export function PdfLanguageModal({
   }, [isOpen, defaultLanguage])
 
   const pdfIcon = (
-    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
+    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+      <FileText className="w-5 h-5 text-primary-600 dark:text-primary-400" aria-hidden="true" />
     </div>
   )
 
@@ -69,7 +69,7 @@ export function PdfLanguageModal({
             key={code}
             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
               selected === code
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                 : 'border-border-default dark:border-border-default-dark hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
             }`}
           >
@@ -79,7 +79,7 @@ export function PdfLanguageModal({
               value={code}
               checked={selected === code}
               onChange={() => setSelected(code)}
-              className="w-4 h-4 text-blue-600"
+              className="w-4 h-4 text-primary-600"
               disabled={isLoading}
             />
             <span className="text-text-primary dark:text-text-primary-dark">{name}</span>
@@ -92,7 +92,7 @@ export function PdfLanguageModal({
           {t('common.cancel')}
         </Button>
         <Button
-          variant="blue"
+          variant="success"
           className="flex-1"
           onClick={() => onConfirm(selected)}
           disabled={isLoading}

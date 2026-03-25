@@ -26,18 +26,21 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
               {index > 0 && (
                 <div
                   className={`h-px flex-1 ${
-                    isCompleted ? 'bg-blue-500' : 'bg-border-default dark:bg-border-default-dark'
+                    isCompleted ? 'bg-primary-500' : 'bg-border-default dark:bg-border-default-dark'
                   }`}
                 />
               )}
               <div className="flex items-center gap-1.5 whitespace-nowrap">
                 {isCompleted ? (
-                  <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" aria-hidden="true" />
+                  <CheckCircle
+                    className="w-5 h-5 text-primary-500 flex-shrink-0"
+                    aria-hidden="true"
+                  />
                 ) : (
                   <span
                     className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${
                       isCurrent
-                        ? 'bg-blue-500 text-white'
+                        ? 'bg-primary-500 text-white'
                         : 'bg-surface-subtle dark:bg-surface-subtle-dark text-text-muted dark:text-text-muted-dark'
                     }`}
                   >
@@ -49,7 +52,7 @@ export function WizardStepIndicator({ steps, currentStep }: WizardStepIndicatorP
                     isCurrent
                       ? 'font-medium text-text-primary dark:text-text-primary-dark'
                       : isCompleted
-                        ? 'text-blue-500'
+                        ? 'text-primary-500'
                         : 'text-text-muted dark:text-text-muted-dark'
                   }`}
                 >

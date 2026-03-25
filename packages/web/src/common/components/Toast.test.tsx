@@ -72,8 +72,8 @@ describe('ToastContainer', () => {
       render(<ToastContainer />)
 
       const alert = screen.getByRole('alert')
-      expect(alert).toHaveClass('bg-green-50')
-      expect(alert).toHaveClass('border-green-200')
+      expect(alert).toHaveClass('bg-success-50')
+      expect(alert).toHaveClass('border-success-200')
     })
 
     it('renders error toast with correct styling', () => {
@@ -85,8 +85,8 @@ describe('ToastContainer', () => {
       render(<ToastContainer />)
 
       const alert = screen.getByRole('alert')
-      expect(alert).toHaveClass('bg-red-50')
-      expect(alert).toHaveClass('border-red-200')
+      expect(alert).toHaveClass('bg-danger-50')
+      expect(alert).toHaveClass('border-danger-200')
     })
 
     it('renders warning toast with correct styling', () => {
@@ -98,8 +98,8 @@ describe('ToastContainer', () => {
       render(<ToastContainer />)
 
       const alert = screen.getByRole('alert')
-      expect(alert).toHaveClass('bg-amber-50')
-      expect(alert).toHaveClass('border-amber-200')
+      expect(alert).toHaveClass('bg-warning-50')
+      expect(alert).toHaveClass('border-warning-200')
     })
 
     it('renders info toast with correct styling', () => {
@@ -111,8 +111,8 @@ describe('ToastContainer', () => {
       render(<ToastContainer />)
 
       const alert = screen.getByRole('alert')
-      expect(alert).toHaveClass('bg-blue-50')
-      expect(alert).toHaveClass('border-blue-200')
+      expect(alert).toHaveClass('bg-primary-50')
+      expect(alert).toHaveClass('border-primary-200')
     })
   })
 

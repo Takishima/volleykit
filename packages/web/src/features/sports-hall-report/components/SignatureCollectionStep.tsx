@@ -252,7 +252,7 @@ export function SignatureCollectionStep({
           <button
             type="button"
             onClick={() => onToggleAwayCoach(true)}
-            className="flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
             {t('pdf.wizard.nonConformant.addCoach')}

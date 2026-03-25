@@ -76,7 +76,7 @@ describe('CalendarErrorModal', () => {
     render(<CalendarErrorModal isOpen={true} errorType="network" onAcknowledge={onAcknowledge} />)
 
     // Check that the warning icon container is present
-    expect(document.querySelector('.bg-red-100, .bg-red-900')).toBeInTheDocument()
+    expect(document.querySelector('.bg-danger-100, .bg-danger-900')).toBeInTheDocument()
   })
 
   it('should clean up event listener when modal closes', () => {

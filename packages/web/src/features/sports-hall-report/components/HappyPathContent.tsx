@@ -80,7 +80,7 @@ export function HappyPathContent({
           </Button>
         )}
         <Button
-          variant="blue"
+          variant="success"
           className="flex-1"
           onClick={onGenerate}
           disabled={isGenerating}

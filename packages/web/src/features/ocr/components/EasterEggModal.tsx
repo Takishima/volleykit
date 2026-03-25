@@ -53,8 +53,11 @@ export function EasterEggModal({ isOpen, type, onClose }: EasterEggModalProps) {
         )
       case 'multipleDoctors':
         return (
-          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <Stethoscope className="w-6 h-6 text-red-600 dark:text-red-400" aria-hidden="true" />
+          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-danger-100 dark:bg-danger-900/30 flex items-center justify-center">
+            <Stethoscope
+              className="w-6 h-6 text-danger-600 dark:text-danger-400"
+              aria-hidden="true"
+            />
           </div>
         )
     }

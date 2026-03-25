@@ -10,28 +10,28 @@ const TOAST_STYLES: Record<
   { bg: string; border: string; text: string; icon: string }
 > = {
   success: {
-    bg: 'bg-green-50 dark:bg-green-900/30',
-    border: 'border-green-200 dark:border-green-800',
-    text: 'text-green-800 dark:text-green-200',
-    icon: 'text-green-500 dark:text-green-400',
+    bg: 'bg-success-50 dark:bg-success-900/30',
+    border: 'border-success-200 dark:border-success-800',
+    text: 'text-success-800 dark:text-success-200',
+    icon: 'text-success-500 dark:text-success-400',
   },
   error: {
-    bg: 'bg-red-50 dark:bg-red-900/30',
-    border: 'border-red-200 dark:border-red-800',
-    text: 'text-red-800 dark:text-red-200',
-    icon: 'text-red-500 dark:text-red-400',
+    bg: 'bg-danger-50 dark:bg-danger-900/30',
+    border: 'border-danger-200 dark:border-danger-800',
+    text: 'text-danger-800 dark:text-danger-200',
+    icon: 'text-danger-500 dark:text-danger-400',
   },
   warning: {
-    bg: 'bg-amber-50 dark:bg-amber-900/30',
-    border: 'border-amber-200 dark:border-amber-800',
-    text: 'text-amber-800 dark:text-amber-200',
-    icon: 'text-amber-500 dark:text-amber-400',
+    bg: 'bg-warning-50 dark:bg-warning-900/30',
+    border: 'border-warning-200 dark:border-warning-800',
+    text: 'text-warning-800 dark:text-warning-200',
+    icon: 'text-warning-500 dark:text-warning-400',
   },
   info: {
-    bg: 'bg-blue-50 dark:bg-blue-900/30',
-    border: 'border-blue-200 dark:border-blue-800',
-    text: 'text-blue-800 dark:text-blue-200',
-    icon: 'text-blue-500 dark:text-blue-400',
+    bg: 'bg-primary-50 dark:bg-primary-900/30',
+    border: 'border-primary-200 dark:border-primary-800',
+    text: 'text-primary-800 dark:text-primary-200',
+    icon: 'text-primary-500 dark:text-primary-400',
   },
 }
 

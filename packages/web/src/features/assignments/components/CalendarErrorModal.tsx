@@ -62,8 +62,11 @@ export function CalendarErrorModal({ isOpen, errorType, onAcknowledge }: Calenda
         title={t('calendarError.title')}
         titleId="calendar-error-modal-title"
         icon={
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" aria-hidden="true" />
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-danger-100 dark:bg-danger-900 flex items-center justify-center">
+            <AlertTriangle
+              className="w-5 h-5 text-danger-600 dark:text-danger-400"
+              aria-hidden="true"
+            />
           </div>
         }
       />

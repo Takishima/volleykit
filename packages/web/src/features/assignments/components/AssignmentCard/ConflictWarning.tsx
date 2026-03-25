@@ -43,7 +43,7 @@ export function ConflictIndicator({ conflicts }: ConflictWarningProps) {
 
   return (
     <span
-      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 flex-shrink-0"
+      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-danger-100 dark:bg-danger-900/40 text-danger-700 dark:text-danger-300 flex-shrink-0"
       title={t('assignments.conflictWarningTooltip')}
       aria-label={t('assignments.conflictWarningTooltip')}
     >
@@ -67,7 +67,7 @@ function ConflictDetail({ conflict }: { conflict: AssignmentConflict }) {
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-sm font-medium text-red-700 dark:text-red-300">
+      <span className="text-sm font-medium text-danger-700 dark:text-danger-300">
         {conflictingAssignment.homeTeam} - {conflictingAssignment.awayTeam}
       </span>
       <span className="text-xs text-text-muted dark:text-text-muted-dark">
@@ -96,13 +96,13 @@ export function ConflictDetails({ conflicts }: ConflictWarningProps) {
   }
 
   return (
-    <div className="flex items-start gap-2 py-1.5 px-2 bg-red-50 dark:bg-red-950/30 rounded-md border border-red-200 dark:border-red-800/50">
+    <div className="flex items-start gap-2 py-1.5 px-2 bg-danger-50 dark:bg-danger-950/30 rounded-md border border-danger-200 dark:border-danger-800/50">
       <AlertTriangle
-        className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
+        className="w-4 h-4 text-danger-600 dark:text-danger-400 flex-shrink-0 mt-0.5"
         aria-hidden="true"
       />
       <div className="flex flex-col gap-1.5 min-w-0">
-        <span className="text-xs font-medium text-red-700 dark:text-red-300">
+        <span className="text-xs font-medium text-danger-700 dark:text-danger-300">
           {t('assignments.conflictWarningTitle')}
         </span>
         {conflicts.map((conflict) => (
