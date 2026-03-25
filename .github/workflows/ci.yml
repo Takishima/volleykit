@@ -5,6 +5,7 @@ on:
     paths:
       - 'packages/web/**'
       - 'packages/shared/**'
+      - 'scripts/sync-style-tokens.js'
       - 'docs/api/volleymanager-openapi.yaml'
       - '.github/workflows/ci.yml'
       - '.github/actions/**'
@@ -12,6 +13,7 @@ on:
     paths:
       - 'packages/web/**'
       - 'packages/shared/**'
+      - 'scripts/sync-style-tokens.js'
       - 'docs/api/volleymanager-openapi.yaml'
       - '.changeset/**'
       - '.github/workflows/ci.yml'
@@ -85,6 +87,19 @@ jobs:
             packages/shared/src/api/schema.ts
             packages/web/src/api/schema.ts
           retention-days: 1
+  # Design token sync check - ensures colors.js matches design-tokens.css
+  tokens:
+    name: Token Sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Check token sync
+        run: node scripts/sync-style-tokens.js --check
   # Security audit - runs independently (doesn't need API types)
   audit:
     name: Security Audit
