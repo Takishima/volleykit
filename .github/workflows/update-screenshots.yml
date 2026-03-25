@@ -1,0 +1,78 @@
+name: Update Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      grep-pattern:
+        description: 'Grep pattern to filter screenshots (leave empty for all)'
+        required: false
+        default: ''
+      branch:
+        description: 'Branch to commit screenshots to (defaults to triggering branch)'
+        required: false
+        default: ''
+
+jobs:
+  capture:
+    name: Capture Screenshots
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.0-noble
+    env:
+      HOME: /root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: packages/web
+
+      - name: Generate API types
+        working-directory: packages/web
+        run: pnpm run generate:api
+
+      - name: Build web app
+        working-directory: packages/web
+        run: pnpm run build
+
+      - name: Capture screenshots
+        working-directory: packages/web
+        run: |
+          PLAYWRIGHT_ARGS=(
+            test
+            "--config=../../.claude/skills/screenshots/playwright-screenshots.config.ts"
+            "--project=chromium"
+          )
+          if [ -n "${{ inputs.grep-pattern }}" ]; then
+            PLAYWRIGHT_ARGS+=("--grep" "${{ inputs.grep-pattern }}")
+          fi
+          npx playwright "${PLAYWRIGHT_ARGS[@]}"
+
+      - name: Build help-site (verify screenshots)
+        working-directory: help-site
+        run: pnpm run build
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet help-site/public/images/screenshots/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No screenshot changes detected."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Screenshot changes detected:"
+            git diff --stat help-site/public/images/screenshots/
+          fi
+
+      - name: Commit and push screenshots
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add help-site/public/images/screenshots/
+          git commit -m "chore(docs): update help-site screenshots"
+          git push

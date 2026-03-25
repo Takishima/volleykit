@@ -25,7 +25,11 @@ Playwright browsers must be installed before running. If not already installed, 
 cd packages/web && npx playwright install chromium
 ```
 
-**Note**: This requires network access to `storage.googleapis.com`. If running in a restricted environment (e.g. Claude Code remote), the download may fail. In that case, run the screenshot capture locally instead.
+**Note**: This requires network access to `storage.googleapis.com`. If running in a restricted environment (e.g. Claude Code remote), the download may fail. In that case, use the **Update Screenshots** GitHub Actions workflow instead:
+
+```bash
+gh workflow run update-screenshots.yml --ref <branch-name> -f grep-pattern="<optional-filter>"
+```
 
 ## Run
 
