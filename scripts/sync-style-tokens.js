@@ -28,10 +28,28 @@ function parseDesignTokens(css) {
   for (const group of COLOR_GROUPS) {
     colors[group] = {}
     // Match lines like: --color-primary-500: #b2e600;
+    // Limitation: only hex colors are supported. If design-tokens.css starts
+    // using rgb(), hsl(), or CSS color names, this regex will skip them.
+    // Extend the regex and value transform here if that happens.
     const re = new RegExp(`--color-${group}-(\\d+):\\s*(#[0-9a-fA-F]{3,8})`, 'g')
     let match
     while ((match = re.exec(css)) !== null) {
       colors[group][match[1]] = match[2]
+    }
+  }
+
+  // Warn about non-hex color values that were skipped
+  for (const group of COLOR_GROUPS) {
+    const allRe = new RegExp(`--color-${group}-(\\d+):\\s*([^;]+)`, 'g')
+    let match
+    while ((match = allRe.exec(css)) !== null) {
+      const shade = match[1]
+      const value = match[2].trim()
+      if (!colors[group][shade]) {
+        console.warn(
+          `Warning: --color-${group}-${shade} uses non-hex value "${value}" and was skipped`
+        )
+      }
     }
   }
 
