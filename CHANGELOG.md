@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.29.0
+
+### Minor Changes
+
+- [#1083](https://github.com/Takishima/volleykit/pull/1083) [`a64c29e`](https://github.com/Takishima/volleykit/commit/a64c29e8fedcced1a0e17c171d62196da04bcfe6) Thanks [@Takishima](https://github.com/Takishima)! - Redesigned color palette: warm stone neutrals, emerald success, amber warning, rose danger. Replaced hardcoded Tailwind color classes with semantic design tokens across all components.
+
+### Patch Changes
+
+- [#1079](https://github.com/Takishima/volleykit/pull/1079) [`a74604d`](https://github.com/Takishima/volleykit/commit/a74604d4abe3122ac33d4c355e2dcf9ced93255a) Thanks [@Takishima](https://github.com/Takishima)! - Add Sports Hall Report help page, document Twint payment action on compensations, refresh all screenshots to reflect current UI, and add data-testid attributes to sports hall report wizard components
+
+- Updated dependencies [[`a64c29e`](https://github.com/Takishima/volleykit/commit/a64c29e8fedcced1a0e17c171d62196da04bcfe6)]:
+  - @volleykit/shared@1.29.0
+
 ## 1.28.0
 
 ### Minor Changes

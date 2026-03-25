@@ -1,5 +1,11 @@
 # @volleykit/shared
 
+## 1.29.0
+
+### Minor Changes
+
+- [#1083](https://github.com/Takishima/volleykit/pull/1083) [`a64c29e`](https://github.com/Takishima/volleykit/commit/a64c29e8fedcced1a0e17c171d62196da04bcfe6) Thanks [@Takishima](https://github.com/Takishima)! - Redesigned color palette: warm stone neutrals, emerald success, amber warning, rose danger. Replaced hardcoded Tailwind color classes with semantic design tokens across all components.
+
 ## 1.21.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@volleykit/shared",
-  "version": "1.21.0",
+  "version": "1.29.0",
   "description": "Shared code between VolleyKit web and mobile apps",
   "private": true,
   "main": "./dist/index.js",
