@@ -97,7 +97,7 @@ export function AssignmentDetailScreen({ route }: Props) {
       <View className="flex-1 bg-white items-center justify-center">
         <ActivityIndicator
           size="large"
-          color={COLORS.primary}
+          color={COLORS.interactive}
           accessibilityLabel={t('common.loading')}
         />
       </View>

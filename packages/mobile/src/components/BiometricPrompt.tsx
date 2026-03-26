@@ -77,7 +77,7 @@ export function BiometricPrompt({
             <MaterialCommunityIcons
               name={iconName}
               size={BIOMETRIC_ICON_SIZE}
-              color={isAuthenticating ? COLORS.primary : COLORS.gray500}
+              color={isAuthenticating ? COLORS.interactive : COLORS.gray500}
             />
           </View>
 

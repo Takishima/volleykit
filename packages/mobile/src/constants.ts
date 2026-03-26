@@ -9,8 +9,8 @@ import Constants from 'expo-constants'
  * These match the Tailwind CSS color palette
  */
 export const COLORS = {
-  // Info color (used for interactive blue elements)
-  primary: '#3b82f6', // info-500
+  // Interactive blue (info-500) — links, toggles, active tabs
+  interactive: '#3b82f6', // info-500
 
   // Gray scale (cool slate tones)
   gray50: '#f8fafc',

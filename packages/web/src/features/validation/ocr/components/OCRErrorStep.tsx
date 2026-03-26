@@ -24,7 +24,7 @@ export function OCRErrorStep({ errorMessage, onRetry }: OCRErrorStepProps) {
       <button
         type="button"
         onClick={onRetry}
-        className="flex items-center gap-2 px-6 py-3 text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors font-medium"
+        className="flex items-center gap-2 px-6 py-3 text-gray-900 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors font-medium"
       >
         <RefreshCw className="w-5 h-5" aria-hidden="true" />
         {t('validation.ocr.retryCapture')}

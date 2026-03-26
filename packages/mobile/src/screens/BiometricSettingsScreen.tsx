@@ -125,7 +125,7 @@ export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
               <Switch
                 value={isEnabled}
                 onValueChange={handleToggle}
-                trackColor={{ false: COLORS.gray200, true: COLORS.primary }}
+                trackColor={{ false: COLORS.gray200, true: COLORS.interactive }}
                 ios_backgroundColor={COLORS.gray200}
                 accessibilityRole="switch"
                 accessibilityLabel={`${t('settings.biometric.enable')} ${biometricName}`}

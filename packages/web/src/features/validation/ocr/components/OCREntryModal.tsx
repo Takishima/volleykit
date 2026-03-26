@@ -421,7 +421,7 @@ export function OCREntryModal({
           <button
             type="button"
             onClick={() => onComplete(capturedBlobRef.current ?? undefined)}
-            className="flex-1 px-4 py-3 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+            className="flex-1 px-4 py-3 text-sm font-medium text-gray-900 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
           >
             {t('validation.ocr.continueToValidation')}
           </button>

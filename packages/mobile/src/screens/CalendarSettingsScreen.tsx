@@ -39,7 +39,7 @@ export function CalendarSettingsScreen(_props: Props) {
   if (isLoading) {
     return (
       <View className="flex-1 bg-gray-50 items-center justify-center">
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={COLORS.interactive} />
       </View>
     )
   }

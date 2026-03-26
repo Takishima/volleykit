@@ -244,7 +244,7 @@ export function OCRPanel({
               <button
                 type="button"
                 onClick={handleOpenCapture}
-                className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors"
+                className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-gray-900 font-medium rounded-lg transition-colors"
               >
                 {t('validation.ocr.scanScoresheet')}
               </button>
@@ -319,7 +319,7 @@ export function OCRPanel({
               <button
                 type="button"
                 onClick={handleRetry}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-900 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
               >
                 <RefreshCw className="w-4 h-4" aria-hidden="true" />
                 {t('validation.ocr.retryCapture')}
@@ -342,7 +342,7 @@ export function OCRPanel({
               type="button"
               onClick={handleApplyResults}
               disabled={selectedPlayerIds.size === 0}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 disabled:bg-surface-muted dark:disabled:bg-surface-muted-dark disabled:cursor-not-allowed rounded-lg transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-900 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-muted dark:disabled:bg-surface-muted-dark disabled:cursor-not-allowed rounded-lg transition-colors"
             >
               {t('validation.ocr.useResults')}
             </button>

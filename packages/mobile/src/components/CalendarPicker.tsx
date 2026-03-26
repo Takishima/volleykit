@@ -56,7 +56,7 @@ export function CalendarPicker({
           <Text className="text-gray-900 text-base">{item.title}</Text>
           <Text className="text-gray-500 text-sm">{item.source}</Text>
         </View>
-        {isSelected && <Feather name="check" size={24} color={COLORS.primary} />}
+        {isSelected && <Feather name="check" size={24} color={COLORS.interactive} />}
       </TouchableOpacity>
     )
   }

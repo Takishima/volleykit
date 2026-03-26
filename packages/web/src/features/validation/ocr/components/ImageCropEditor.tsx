@@ -185,7 +185,7 @@ export function ImageCropEditor({
           type="button"
           onClick={handleConfirm}
           disabled={isProcessing || !croppedAreaPixels}
-          className="flex-1 flex items-center justify-center gap-2 min-h-12 px-4 py-3 text-white bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 min-h-12 px-4 py-3 text-gray-900 bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors disabled:opacity-50"
         >
           <Check className="w-5 h-5" aria-hidden="true" />
           {isProcessing ? t('validation.ocr.processing') : t('common.confirm')}

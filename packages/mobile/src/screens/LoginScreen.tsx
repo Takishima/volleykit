@@ -207,7 +207,7 @@ export function LoginScreen(_props: Props) {
             <MaterialCommunityIcons
               name={biometricIcon}
               size={24}
-              color={isAuthenticating ? COLORS.gray400 : COLORS.primary}
+              color={isAuthenticating ? COLORS.gray400 : COLORS.interactive}
             />
             <Text
               className={`ml-2 font-medium ${isAuthenticating ? 'text-gray-400' : 'text-info-500'}`}

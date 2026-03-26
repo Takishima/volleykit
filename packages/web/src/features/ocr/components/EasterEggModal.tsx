@@ -75,7 +75,7 @@ export function EasterEggModal({ isOpen, type, onClose }: EasterEggModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="w-full px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+          className="w-full px-4 py-2.5 text-sm font-medium text-gray-900 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
         >
           {t('easterEggs.dismiss')}
         </button>

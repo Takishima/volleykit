@@ -187,7 +187,7 @@ export function ScoresheetPanel({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-900 bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
             >
               <Upload className="w-4 h-4" aria-hidden="true" />
               {tKey('selectFile')}

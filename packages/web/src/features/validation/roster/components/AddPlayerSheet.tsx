@@ -271,7 +271,7 @@ export function AddPlayerSheet({
           className="
               w-full py-3 px-4 rounded-lg
               text-sm font-medium
-              text-white bg-primary-500 hover:bg-primary-600
+              text-gray-900 bg-primary-500 hover:bg-primary-600
               dark:bg-primary-600 dark:hover:bg-primary-700
               transition-colors
               focus:outline-none focus:ring-2 focus:ring-primary-500/50

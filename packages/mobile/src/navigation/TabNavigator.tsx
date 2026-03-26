@@ -35,7 +35,7 @@ export function TabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: COLORS.primary,
+        tabBarActiveTintColor: COLORS.interactive,
         tabBarInactiveTintColor: COLORS.gray500,
         headerShown: true,
         headerRight: () => <HeaderRight />,

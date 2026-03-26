@@ -150,7 +150,7 @@ export function DepartureReminderSettingsScreen(_props: Props) {
   if (isLoading) {
     return (
       <View className="flex-1 bg-gray-50 items-center justify-center">
-        <ActivityIndicator size="large" color={COLORS.primary} />
+        <ActivityIndicator size="large" color={COLORS.interactive} />
       </View>
     )
   }
@@ -182,12 +182,12 @@ export function DepartureReminderSettingsScreen(_props: Props) {
               </Text>
             </View>
             {isRequestingPermissions ? (
-              <ActivityIndicator size="small" color={COLORS.primary} />
+              <ActivityIndicator size="small" color={COLORS.interactive} />
             ) : (
               <Switch
                 value={settings.enabled}
                 onValueChange={handleToggle}
-                trackColor={{ false: COLORS.gray200, true: COLORS.primary }}
+                trackColor={{ false: COLORS.gray200, true: COLORS.interactive }}
                 accessibilityRole="switch"
                 accessibilityLabel={t('settings.departure.title')}
                 accessibilityState={{ checked: settings.enabled }}
