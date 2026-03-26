@@ -1,6 +1,6 @@
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'accent'
+  variant?: 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'secondary' | 'accent'
   className?: string
   title?: string
 }
@@ -11,7 +11,8 @@ const variantStyles = {
   success: 'bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200',
   warning: 'bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200',
   danger: 'bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200',
-  info: 'bg-secondary-100 text-secondary-800 dark:bg-secondary-900 dark:text-secondary-200',
+  info: 'bg-info-100 text-info-800 dark:bg-info-900 dark:text-info-200',
+  secondary: 'bg-secondary-100 text-secondary-800 dark:bg-secondary-900 dark:text-secondary-200',
   accent: 'bg-accent-100 text-accent-800 dark:bg-accent-900 dark:text-accent-200',
 } as const
 
