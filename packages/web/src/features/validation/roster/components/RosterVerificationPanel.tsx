@@ -337,7 +337,9 @@ export function RosterVerificationPanel({
   return (
     <div className="py-4">
       {/* Team name header */}
-      <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-3">{teamName}</h3>
+      <h3 className="text-sm font-medium text-text-primary dark:text-text-primary-dark mb-3">
+        {teamName}
+      </h3>
 
       {/* Coaches Section */}
       <div className="mb-2">

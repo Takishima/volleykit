@@ -53,7 +53,9 @@ export function LanguagePicker({
         <View className="flex-1">
           <Text className="text-gray-900 text-base">{LANGUAGE_NAMES[item]}</Text>
         </View>
-        {isSelected && <Feather name="check" size={SETTINGS_ICON_SIZE} color={COLORS.interactive} />}
+        {isSelected && (
+          <Feather name="check" size={SETTINGS_ICON_SIZE} color={COLORS.interactive} />
+        )}
       </TouchableOpacity>
     )
   }
