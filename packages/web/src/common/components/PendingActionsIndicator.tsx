@@ -101,7 +101,7 @@ export function PendingActionsBadge() {
 
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-200"
+      className="flex items-center gap-1.5 rounded-full bg-warning-100 px-2.5 py-1 text-xs font-medium text-warning-800 dark:bg-warning-900/30 dark:text-warning-200"
       title={tInterpolate('offline.pendingActions', { count: pendingCount })}
       role="status"
       aria-live="polite"

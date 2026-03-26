@@ -279,12 +279,12 @@ export function AppShell() {
       {/* Demo mode banner */}
       {dataSource === 'demo' && (
         <div
-          className="bg-amber-100 dark:bg-amber-900/50 border-b border-amber-200 dark:border-amber-800"
+          className="bg-warning-100 dark:bg-warning-900/50 border-b border-warning-200 dark:border-warning-800"
           role="alert"
           aria-live="polite"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <p className="text-sm text-amber-800 dark:text-amber-200 text-center font-medium">
+            <p className="text-sm text-warning-800 dark:text-warning-200 text-center font-medium">
               {t('common.demoModeBanner')}
             </p>
           </div>
@@ -294,12 +294,12 @@ export function AppShell() {
       {/* Calendar mode banner */}
       {isCalendarMode && (
         <div
-          className="bg-sky-100 dark:bg-sky-900/50 border-b border-sky-200 dark:border-sky-800"
+          className="bg-primary-100 dark:bg-primary-900/50 border-b border-primary-200 dark:border-primary-800"
           role="alert"
           aria-live="polite"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            <p className="text-sm text-sky-800 dark:text-sky-200 text-center font-medium">
+            <p className="text-sm text-primary-800 dark:text-primary-200 text-center font-medium">
               {t('common.calendarModeBanner')}
             </p>
           </div>
