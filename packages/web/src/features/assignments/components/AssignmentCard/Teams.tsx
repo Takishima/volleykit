@@ -26,7 +26,7 @@ export function Teams() {
         )}
         {gender === 'f' && (
           <FemaleIcon
-            className="w-3 h-3 text-accent-400 dark:text-accent-300"
+            className="w-3 h-3 text-danger-400 dark:text-danger-300"
             aria-label={t('common.women')}
           />
         )}

@@ -92,7 +92,7 @@ export function AssignmentsPage() {
           >
             {t('assignments.upcoming')}
             {upcomingCount > 0 ? (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-secondary-100 dark:bg-secondary-900 text-secondary-800 dark:text-secondary-200 text-xs">
+              <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs">
                 {upcomingCount}
               </span>
             ) : null}

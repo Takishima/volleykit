@@ -171,7 +171,7 @@ function ExchangeCardComponent({
                 )}
                 {gender === 'f' && (
                   <FemaleIcon
-                    className="w-3.5 h-3.5 text-accent-400 dark:text-accent-300 shrink-0"
+                    className="w-3.5 h-3.5 text-danger-400 dark:text-danger-300 shrink-0"
                     aria-label={t('common.women')}
                   />
                 )}

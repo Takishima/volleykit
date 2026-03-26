@@ -87,7 +87,7 @@ function CompensationCardComponent({
               )}
               {gender === 'f' && (
                 <FemaleIcon
-                  className="w-3 h-3 flex-shrink-0 text-accent-400 dark:text-accent-300"
+                  className="w-3 h-3 flex-shrink-0 text-danger-400 dark:text-danger-300"
                   aria-label={t('common.women')}
                 />
               )}
