@@ -17,7 +17,7 @@ function getStepIndicatorStyle(
     if (isInvalid) {
       return 'bg-warning-500 text-warning-950 ring-2 ring-warning-500 ring-offset-2 dark:ring-offset-surface-card-dark'
     }
-    return 'bg-primary-500 text-primary-950 ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-surface-card-dark'
+    return 'bg-primary-500 text-white ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-surface-card-dark'
   }
   // Non-current read-only (finalized) step
   if (isReadOnly) {

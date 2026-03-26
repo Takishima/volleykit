@@ -8,15 +8,19 @@
  *
  * Tailwind CSS 4 registers these as utilities via @theme.
  * Mobile (Tailwind 3 + NativeWind) imports colors from colors.js instead.
+ *
+ * Three-layer token architecture:
+ *   Layer 1 — Raw palette: --color-blue-500, --color-amber-500, etc.
+ *   Layer 2 — Base tokens: --color-primary-500: var(--color-blue-500);
+ *   Layer 3 — Semantic tokens: --color-surface-*, --color-text-*, --color-border-*
+ * Components reference Layer 2/3 only. Dark mode swaps Layer 2/3, raw values stay fixed.
  */
 
 @theme {
   /* ==============================================
-   * PRIMARY BRAND COLOR SYSTEM
-   * Change these values to restyle the entire app
+   * LEGACY / ASSOCIATION BRAND COLORS
    * ============================================== */
 
-  /* Legacy brand colors (kept for reference) */
   --color-volleyball-orange: #ff6b00;
   --color-volleyball-blue: #003366;
   --color-volleyball-light: #f5f5f5;
@@ -26,116 +30,211 @@
   --color-svv-white: #ffffff;
 
   /* ==============================================
-   * WARM NEUTRAL PALETTE (stone)
-   * Overrides Tailwind's cool gray with warm tones
-   * that harmonize with the lime primary
+   * LAYER 1 — RAW PALETTE
+   * Pure color scales, never referenced by components directly
    * ============================================== */
 
-  --color-gray-50: #fafaf9;
-  --color-gray-100: #f5f5f4;
-  --color-gray-200: #e7e5e4;
-  --color-gray-300: #d6d3d1;
-  --color-gray-400: #a8a29e;
-  --color-gray-500: #78716c;
-  --color-gray-600: #57534e;
-  --color-gray-700: #44403c;
-  --color-gray-800: #292524;
-  --color-gray-900: #1c1917;
-  --color-gray-950: #0c0a09;
+  /* Deep vivid blue — FIVB, Mikasa, trust, teamwork */
+  --color-blue-50: #e8eefb;
+  --color-blue-100: #b5c7f3;
+  --color-blue-200: #8ba6eb;
+  --color-blue-300: #5e83e2;
+  --color-blue-400: #3a67da;
+  --color-blue-500: #1b4fd9;
+  --color-blue-600: #1743bf;
+  --color-blue-700: #143daa;
+  --color-blue-800: #103290;
+  --color-blue-900: #0d2b7a;
+  --color-blue-950: #071b52;
+
+  /* Amber gold — Mikasa ball, energy, achievement */
+  --color-amber-50: #fff9e6;
+  --color-amber-100: #ffedb3;
+  --color-amber-200: #ffe080;
+  --color-amber-300: #ffd24d;
+  --color-amber-400: #ffc526;
+  --color-amber-500: #f5a623;
+  --color-amber-600: #db8f1a;
+  --color-amber-700: #b87514;
+  --color-amber-800: #955c0e;
+  --color-amber-900: #7a4a0a;
+  --color-amber-950: #4a2c05;
+
+  /* Coral red — attack line, Swiss flag, competition */
+  --color-coral-50: #fef0ef;
+  --color-coral-100: #fdd5d3;
+  --color-coral-200: #fbb4b0;
+  --color-coral-300: #f48d87;
+  --color-coral-400: #ed6d65;
+  --color-coral-500: #e5443a;
+  --color-coral-600: #cc3830;
+  --color-coral-700: #ad2e28;
+  --color-coral-800: #8e2520;
+  --color-coral-900: #751e1a;
+  --color-coral-950: #490f0c;
 
   /* ==============================================
-   * SEMANTIC PRIMARY COLOR PALETTE
-   * Electric lime - energetic and modern
+   * COOL NEUTRAL PALETTE (slate)
+   * Blue-tinted grays that harmonize with the blue primary
    * ============================================== */
 
-  /* Primary color shades (electric lime) */
-  --color-primary-50: #fdffe4;
-  --color-primary-100: #f9ffc4;
-  --color-primary-200: #f1ff90;
-  --color-primary-300: #e2ff50;
-  --color-primary-400: #d7ff37;
-  --color-primary-500: #b2e600; /* Main brand color */
-  --color-primary-600: #8ab800; /* Hover state */
-  --color-primary-700: #688b00;
-  --color-primary-800: #526d07;
-  --color-primary-900: #455c0b;
-  --color-primary-950: #233400;
+  --color-gray-50: #f8f9fc;
+  --color-gray-100: #eef0f5;
+  --color-gray-200: #dfe2ea;
+  --color-gray-300: #c8ccd8;
+  --color-gray-400: #9ca0ab;
+  --color-gray-500: #6b7080;
+  --color-gray-600: #5c6170;
+  --color-gray-700: #454a58;
+  --color-gray-800: #2e3340;
+  --color-gray-900: #1a1d27;
+  --color-gray-950: #0f1117;
+
+  /* ==============================================
+   * LAYER 2 — BASE TOKENS (PRIMARY / SECONDARY / ACCENT)
+   * Map raw palette to semantic roles
+   * ============================================== */
+
+  /* Primary — deep blue */
+  --color-primary-50: var(--color-blue-50);
+  --color-primary-100: var(--color-blue-100);
+  --color-primary-200: var(--color-blue-200);
+  --color-primary-300: var(--color-blue-300);
+  --color-primary-400: var(--color-blue-400);
+  --color-primary-500: var(--color-blue-500);
+  --color-primary-600: var(--color-blue-600);
+  --color-primary-700: var(--color-blue-700);
+  --color-primary-800: var(--color-blue-800);
+  --color-primary-900: var(--color-blue-900);
+  --color-primary-950: var(--color-blue-950);
+
+  /* Secondary — amber gold */
+  --color-secondary-50: var(--color-amber-50);
+  --color-secondary-100: var(--color-amber-100);
+  --color-secondary-200: var(--color-amber-200);
+  --color-secondary-300: var(--color-amber-300);
+  --color-secondary-400: var(--color-amber-400);
+  --color-secondary-500: var(--color-amber-500);
+  --color-secondary-600: var(--color-amber-600);
+  --color-secondary-700: var(--color-amber-700);
+  --color-secondary-800: var(--color-amber-800);
+  --color-secondary-900: var(--color-amber-900);
+  --color-secondary-950: var(--color-amber-950);
+
+  /* Accent — coral red */
+  --color-accent-50: var(--color-coral-50);
+  --color-accent-100: var(--color-coral-100);
+  --color-accent-200: var(--color-coral-200);
+  --color-accent-300: var(--color-coral-300);
+  --color-accent-400: var(--color-coral-400);
+  --color-accent-500: var(--color-coral-500);
+  --color-accent-600: var(--color-coral-600);
+  --color-accent-700: var(--color-coral-700);
+  --color-accent-800: var(--color-coral-800);
+  --color-accent-900: var(--color-coral-900);
+  --color-accent-950: var(--color-coral-950);
 
   /* ==============================================
    * SEMANTIC STATUS COLORS
-   * For states: success, warning, danger
+   * For states: success, warning, danger, info
    * ============================================== */
 
-  /* Success color (emerald - blue-shifted green, distinct from yellow-green lime) */
-  --color-success-50: #ecfdf5;
-  --color-success-100: #d1fae5;
-  --color-success-200: #a7f3d0;
-  --color-success-300: #6ee7b7;
-  --color-success-400: #34d399;
-  --color-success-500: #10b981; /* Main success color */
-  --color-success-600: #059669; /* Hover/emphasis */
-  --color-success-700: #047857;
-  --color-success-800: #065f46;
-  --color-success-900: #064e3b;
-  --color-success-950: #022c22;
+  /* Success / Win (green) */
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success-950: #052e16;
 
-  /* Warning color (amber - warm golden, analogous neighbor to lime) */
+  /* Warning (amber — shared with secondary for cohesion) */
   --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
   --color-warning-200: #fde68a;
   --color-warning-300: #fcd34d;
   --color-warning-400: #fbbf24;
-  --color-warning-500: #f59e0b; /* Main warning color */
-  --color-warning-600: #d97706; /* Hover/emphasis */
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
   --color-warning-700: #b45309;
   --color-warning-800: #92400e;
   --color-warning-900: #78350f;
   --color-warning-950: #451a03;
 
-  /* Danger color (rose - vibrant and modern, warm undertone) */
-  --color-danger-50: #fff1f2;
-  --color-danger-100: #ffe4e6;
-  --color-danger-200: #fecdd3;
-  --color-danger-300: #fda4af;
-  --color-danger-400: #fb7185;
-  --color-danger-500: #f43f5e; /* Main danger color */
-  --color-danger-600: #e11d48; /* Hover/emphasis */
-  --color-danger-700: #be123c;
-  --color-danger-800: #9f1239;
-  --color-danger-900: #881337;
-  --color-danger-950: #4c0519;
+  /* Danger / Error / Loss (red) */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-200: #fecaca;
+  --color-danger-300: #fca5a5;
+  --color-danger-400: #f87171;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-danger-800: #991b1b;
+  --color-danger-900: #7f1d1d;
+  --color-danger-950: #450a0a;
+
+  /* Info (blue — lighter shade of primary for cohesion) */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-200: #bfdbfe;
+  --color-info-300: #93c5fd;
+  --color-info-400: #60a5fa;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+  --color-info-700: #1d4ed8;
+  --color-info-800: #1e40af;
+  --color-info-900: #1e3a8a;
+  --color-info-950: #172554;
 
   /* ==============================================
-   * SEMANTIC SURFACE COLORS (backgrounds)
+   * SPORT-SPECIFIC TOKENS
+   * Volleyball-specific semantic colors
+   * ============================================== */
+
+  --color-sport-home: var(--color-blue-500); /* Home team — primary blue */
+  --color-sport-away: var(--color-coral-500); /* Away team — coral red */
+  --color-sport-live: #ef4444; /* Live match indicator — pulsing red */
+  --color-sport-trend-up: #22c55e; /* Positive stat trend */
+  --color-sport-trend-down: #ef4444; /* Negative stat trend */
+  --color-sport-badge: var(--color-amber-500); /* Set/achievement badge — gold */
+  --color-sport-court: #d4a76a; /* Court diagram floor — sandy beige */
+
+  /* ==============================================
+   * LAYER 3 — SEMANTIC SURFACE COLORS (backgrounds)
    * ============================================== */
 
   /* Light mode surfaces */
-  --color-surface-page: var(--color-gray-50); /* Page background */
-  --color-surface-card: #ffffff; /* Cards, elevated surfaces */
-  --color-surface-subtle: var(--color-gray-100); /* Hover states, subtle bg */
+  --color-surface-page: var(--color-gray-50); /* Cool off-white with slight blue tint */
+  --color-surface-card: #ffffff; /* Pure white for cards, modals */
+  --color-surface-subtle: var(--color-gray-100); /* Hover states, nested sections */
   --color-surface-muted: var(--color-gray-200); /* Disabled, secondary buttons */
   --color-surface-muted-hover: var(--color-gray-300); /* Hover for muted surfaces */
-  --color-surface-neutral: var(--color-gray-500); /* Neutral action buttons, inactive indicators */
+  --color-surface-neutral: var(--color-gray-500); /* Neutral action buttons */
 
-  /* Dark mode surfaces (used via dark: prefix in components) */
-  --color-surface-page-dark: var(--color-gray-900);
-  --color-surface-card-dark: var(--color-gray-800);
-  --color-surface-subtle-dark: var(--color-gray-700);
-  --color-surface-muted-dark: var(--color-gray-700);
-  --color-surface-neutral-dark: var(--color-gray-500);
+  /* Dark mode surfaces */
+  --color-surface-page-dark: var(--color-gray-950); /* Near-black with blue undertone */
+  --color-surface-card-dark: var(--color-gray-900); /* Elevated dark surface */
+  --color-surface-subtle-dark: var(--color-gray-800); /* Hover states, secondary cards */
+  --color-surface-muted-dark: var(--color-gray-700); /* Disabled dark surfaces */
+  --color-surface-neutral-dark: var(--color-gray-500); /* Neutral dark actions */
 
   /* ==============================================
    * SEMANTIC TEXT COLORS (foreground)
    * ============================================== */
 
   /* Light mode text */
-  --color-text-primary: var(--color-gray-900); /* Headings, important text */
-  --color-text-secondary: var(--color-gray-700); /* Body text */
-  --color-text-muted: var(--color-gray-500); /* Labels, captions */
-  --color-text-subtle: var(--color-gray-400); /* Hints, timestamps */
+  --color-text-primary: var(--color-gray-900); /* Near-black, softer than #000 */
+  --color-text-secondary: var(--color-gray-600); /* Labels, metadata */
+  --color-text-muted: var(--color-gray-500); /* Timestamps, captions */
+  --color-text-subtle: var(--color-gray-400); /* Placeholders, disabled */
 
   /* Dark mode text */
-  --color-text-primary-dark: var(--color-gray-100);
+  --color-text-primary-dark: #f0f1f4; /* Off-white, not pure #FFF */
   --color-text-secondary-dark: var(--color-gray-300);
   --color-text-muted-dark: var(--color-gray-400);
   --color-text-subtle-dark: var(--color-gray-500);

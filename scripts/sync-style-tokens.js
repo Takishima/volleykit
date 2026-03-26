@@ -20,36 +20,54 @@ const CSS_PATH = resolve(ROOT, 'packages/shared/styles/design-tokens.css')
 const JS_PATH = resolve(ROOT, 'packages/shared/styles/colors.js')
 
 // Color groups to extract (token prefix -> JS export name)
-const COLOR_GROUPS = ['primary', 'success', 'warning', 'danger', 'gray']
+const COLOR_GROUPS = [
+  'primary',
+  'secondary',
+  'accent',
+  'success',
+  'warning',
+  'danger',
+  'info',
+  'gray',
+]
 
 function parseDesignTokens(css) {
+  // Step 1: Build a lookup of ALL --color-* hex values for var() resolution
+  const hexLookup = {}
+  const hexRe = /--(color-[a-z]+-\d+):\s*(#[0-9a-fA-F]{3,8})/g
+  let m
+  while ((m = hexRe.exec(css)) !== null) {
+    hexLookup[m[1]] = m[2]
+  }
+
   const colors = {}
 
   for (const group of COLOR_GROUPS) {
     colors[group] = {}
     // Match lines like: --color-primary-500: #b2e600;
-    // Limitation: only hex colors are supported. If design-tokens.css starts
-    // using rgb(), hsl(), or CSS color names, this regex will skip them.
-    // Extend the regex and value transform here if that happens.
-    const re = new RegExp(`--color-${group}-(\\d+):\\s*(#[0-9a-fA-F]{3,8})`, 'g')
+    // Also matches: --color-primary-500: var(--color-blue-500);
+    const re = new RegExp(`--color-${group}-(\\d+):\\s*([^;]+)`, 'g')
     let match
     while ((match = re.exec(css)) !== null) {
-      colors[group][match[1]] = match[2]
-    }
-  }
-
-  // Warn about non-hex color values that were skipped
-  for (const group of COLOR_GROUPS) {
-    const allRe = new RegExp(`--color-${group}-(\\d+):\\s*([^;]+)`, 'g')
-    let match
-    while ((match = allRe.exec(css)) !== null) {
       const shade = match[1]
       const value = match[2].trim()
-      if (!colors[group][shade]) {
-        console.warn(
-          `Warning: --color-${group}-${shade} uses non-hex value "${value}" and was skipped`
-        )
+
+      // Direct hex value
+      if (/^#[0-9a-fA-F]{3,8}$/.test(value)) {
+        colors[group][shade] = value
+        continue
       }
+
+      // Resolve var() references: var(--color-blue-500) -> lookup hex
+      const varMatch = value.match(/^var\(--(.+)\)$/)
+      if (varMatch && hexLookup[varMatch[1]]) {
+        colors[group][shade] = hexLookup[varMatch[1]]
+        continue
+      }
+
+      console.warn(
+        `Warning: --color-${group}-${shade} uses unresolvable value "${value}" and was skipped`
+      )
     }
   }
 

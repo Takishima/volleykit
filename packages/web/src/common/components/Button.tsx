@@ -22,7 +22,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: 'text-primary-950 bg-primary-500 hover:bg-primary-600 focus:ring-primary-500',
+  primary: 'text-white bg-primary-500 hover:bg-primary-600 focus:ring-primary-500',
   secondary:
     'text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:ring-border-strong',
   success: 'text-white bg-success-600 hover:bg-success-700 focus:ring-success-500',
