@@ -373,7 +373,10 @@ export function OCREntryModal({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-default dark:border-border-default-dark">
         <div>
-          <h1 id="ocr-entry-title" className="text-lg font-semibold text-text-primary dark:text-text-primary-dark">
+          <h1
+            id="ocr-entry-title"
+            className="text-lg font-semibold text-text-primary dark:text-text-primary-dark"
+          >
             {t('validation.ocr.scanScoresheet')}
           </h1>
         </div>

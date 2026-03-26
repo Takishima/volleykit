@@ -18,7 +18,9 @@ export function RawTeamData({ team, label }: RawTeamDataProps) {
         <span className="text-xs font-medium text-text-muted dark:text-text-muted-dark uppercase">
           {label}
         </span>
-        <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{team.name || '-'}</p>
+        <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+          {team.name || '-'}
+        </p>
       </div>
 
       {/* Players */}
