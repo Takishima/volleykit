@@ -20,13 +20,13 @@ export function Teams() {
         <span>{position}</span>
         {gender === 'm' && (
           <MaleIcon
-            className="w-3 h-3 text-blue-500 dark:text-blue-400"
+            className="w-3 h-3 text-primary-400 dark:text-primary-300"
             aria-label={t('common.men')}
           />
         )}
         {gender === 'f' && (
           <FemaleIcon
-            className="w-3 h-3 text-pink-500 dark:text-pink-400"
+            className="w-3 h-3 text-accent-400 dark:text-accent-300"
             aria-label={t('common.women')}
           />
         )}

@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'ghost'
+export type ButtonVariant = 'primary' | 'secondary' | 'accent' | 'success' | 'danger' | 'warning' | 'ghost'
 
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
@@ -25,6 +25,7 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary: 'text-white bg-primary-500 hover:bg-primary-600 focus:ring-primary-500',
   secondary:
     'text-text-secondary dark:text-text-secondary-dark bg-surface-subtle dark:bg-surface-subtle-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark focus:ring-border-strong',
+  accent: 'text-white bg-accent-500 hover:bg-accent-600 focus:ring-accent-500',
   success: 'text-white bg-success-600 hover:bg-success-700 focus:ring-success-500',
   danger: 'text-white bg-danger-600 hover:bg-danger-700 focus:ring-danger-500',
   warning: 'text-white bg-warning-600 hover:bg-warning-700 focus:ring-warning-500',

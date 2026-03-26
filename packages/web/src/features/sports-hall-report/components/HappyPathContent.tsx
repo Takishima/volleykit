@@ -70,7 +70,7 @@ export function HappyPathContent({
       <ModalFooter>
         {onReportIssue && (
           <Button
-            variant="warning"
+            variant="accent"
             className="flex-1"
             onClick={onReportIssue}
             disabled={isGenerating}

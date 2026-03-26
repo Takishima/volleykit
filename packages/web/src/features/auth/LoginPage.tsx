@@ -50,7 +50,7 @@ export function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Volleyball
-            className="w-16 h-16 text-primary-600 dark:text-primary-400 mx-auto"
+            className="w-16 h-16 text-secondary-500 dark:text-secondary-400 mx-auto"
             aria-hidden="true"
           />
           <h1 className="mt-4 text-3xl font-bold text-text-primary dark:text-text-primary-dark">

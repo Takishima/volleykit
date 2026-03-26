@@ -81,13 +81,13 @@ function CompensationCardComponent({
               </span>
               {gender === 'm' && (
                 <MaleIcon
-                  className="w-3 h-3 flex-shrink-0 text-blue-500 dark:text-blue-400"
+                  className="w-3 h-3 flex-shrink-0 text-primary-400 dark:text-primary-300"
                   aria-label={t('common.men')}
                 />
               )}
               {gender === 'f' && (
                 <FemaleIcon
-                  className="w-3 h-3 flex-shrink-0 text-pink-500 dark:text-pink-400"
+                  className="w-3 h-3 flex-shrink-0 text-accent-400 dark:text-accent-300"
                   aria-label={t('common.women')}
                 />
               )}
@@ -97,7 +97,7 @@ function CompensationCardComponent({
           {/* Amount */}
           <div className="flex items-center gap-2">
             <div
-              className={`text-sm font-bold ${isPaid ? 'text-success-500 dark:text-success-400' : 'text-warning-500 dark:text-warning-400'}`}
+              className={`text-sm font-bold ${isPaid ? 'text-success-500 dark:text-success-400' : 'text-secondary-500 dark:text-secondary-400'}`}
             >
               {total.toFixed(0)}
             </div>
@@ -130,7 +130,7 @@ function CompensationCardComponent({
                 {t('compensations.total')}:
               </span>
               <span
-                className={`font-bold ${isPaid ? 'text-success-500 dark:text-success-400' : 'text-warning-500 dark:text-warning-400'}`}
+                className={`font-bold ${isPaid ? 'text-success-500 dark:text-success-400' : 'text-secondary-500 dark:text-secondary-400'}`}
               >
                 {t('common.currencyChf')} {total.toFixed(2)}
               </span>
@@ -173,7 +173,7 @@ function CompensationCardComponent({
                 className={
                   isPaid
                     ? 'text-success-500 dark:text-success-400'
-                    : 'text-warning-500 dark:text-warning-400'
+                    : 'text-secondary-500 dark:text-secondary-400'
                 }
               >
                 {isPaid ? t('compensations.paid') : t('compensations.pending')}

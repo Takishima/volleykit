@@ -44,7 +44,7 @@ export function BottomNavigation({ navItems }: BottomNavigationProps) {
                     transition-all duration-150 rounded-lg mx-1
                     ${
                       isActive
-                        ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30'
+                        ? 'text-secondary-600 dark:text-secondary-400 bg-secondary-50 dark:bg-secondary-900/30'
                         : isDisabled
                           ? 'text-text-muted/50 dark:text-text-muted-dark/50 cursor-not-allowed'
                           : 'text-text-muted dark:text-text-muted-dark hover:text-text-secondary dark:hover:text-text-secondary-dark'
