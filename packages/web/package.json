@@ -119,7 +119,7 @@
     "eslint-plugin-security": "^4.0.0",
     "eslint-plugin-sonarjs": "^4.0.2",
     "globals": "^17.4.0",
-    "happy-dom": "^20.8.4",
+    "happy-dom": "^20.8.9",
     "knip": "^6.0.4",
     "msw": "^2.12.14",
     "openapi-typescript": "^7.13.0",
