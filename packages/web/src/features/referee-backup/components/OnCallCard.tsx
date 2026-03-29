@@ -18,7 +18,7 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
 
   return (
     <Card
-      className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/50"
+      className="bg-warning-50 dark:bg-warning-950/30 border-warning-200 dark:border-warning-800/50"
       aria-label={ariaLabel}
     >
       <CardContent className="p-0">
@@ -29,20 +29,20 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
               <span
                 className={`text-xs font-medium ${
                   isToday
-                    ? 'text-amber-700 dark:text-amber-300'
-                    : 'text-amber-600 dark:text-amber-400'
+                    ? 'text-warning-700 dark:text-warning-300'
+                    : 'text-warning-600 dark:text-warning-400'
                 }`}
               >
                 {dateLabel}
               </span>
-              <span className="text-lg font-bold text-amber-900 dark:text-amber-100">
+              <span className="text-lg font-bold text-warning-900 dark:text-warning-100">
                 {timeLabel}
               </span>
             </div>
 
             {/* Label */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+              <p className="text-sm font-medium text-warning-900 dark:text-warning-100">
                 {t('onCall.duty')}
               </p>
             </div>
@@ -51,8 +51,8 @@ function OnCallCardComponent({ assignment }: OnCallCardProps) {
             <div
               className={`flex-shrink-0 px-2 py-1 text-xs font-semibold rounded ${
                 assignment.league === 'NLA'
-                  ? 'bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100'
-                  : 'bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-200'
+                  ? 'bg-warning-200 dark:bg-warning-800 text-warning-900 dark:text-warning-100'
+                  : 'bg-warning-100 dark:bg-warning-900/70 text-warning-800 dark:text-warning-200'
               }`}
             >
               {assignment.league}

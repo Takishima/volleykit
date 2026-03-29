@@ -165,13 +165,13 @@ function ExchangeCardComponent({
                 <span className="truncate">{leagueCategory}</span>
                 {gender === 'm' && (
                   <MaleIcon
-                    className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 shrink-0"
+                    className="w-3.5 h-3.5 text-primary-400 dark:text-primary-300 shrink-0"
                     aria-label={t('common.men')}
                   />
                 )}
                 {gender === 'f' && (
                   <FemaleIcon
-                    className="w-3.5 h-3.5 text-pink-500 dark:text-pink-400 shrink-0"
+                    className="w-3.5 h-3.5 text-danger-400 dark:text-danger-300 shrink-0"
                     aria-label={t('common.women')}
                   />
                 )}
