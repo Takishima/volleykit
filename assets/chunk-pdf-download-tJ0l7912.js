@@ -1,0 +1,1 @@
+function e(e,t){let n=new Blob([new Uint8Array(e)],{type:`application/pdf`}),r=URL.createObjectURL(n),i=document.createElement(`a`);i.href=r,i.download=t,document.body.appendChild(i),i.click(),document.body.removeChild(i),URL.revokeObjectURL(r)}export{e as downloadPdf};
