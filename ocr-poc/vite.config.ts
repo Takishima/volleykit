@@ -1,9 +1,12 @@
+import { createRequire } from 'module'
 import path from 'path'
 
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+
+const require = createRequire(import.meta.url)
 
 // Base path for GitHub Pages subdirectory deployment
 // In production, this app is served from /volleykit/ocr-poc/
@@ -24,13 +27,14 @@ export default defineConfig({
   resolve: {
     // Use array format for aliases - order matters for matching!
     alias: [
-      // CRITICAL: Deduplicate React - ensure all imports use root-hoisted React (npm workspaces)
+      // CRITICAL: Deduplicate React - ensure all imports resolve to a single React instance
       // This prevents "multiple React instances" errors when importing from web-app
-      { find: 'react', replacement: path.resolve(__dirname, '../node_modules/react') },
-      { find: 'react-dom', replacement: path.resolve(__dirname, '../node_modules/react-dom') },
+      // Use require.resolve for reliable resolution through pnpm's virtual store
+      { find: 'react', replacement: path.dirname(require.resolve('react/package.json')) },
+      { find: 'react-dom', replacement: path.dirname(require.resolve('react-dom/package.json')) },
       {
         find: 'react-easy-crop',
-        replacement: path.resolve(__dirname, '../node_modules/react-easy-crop'),
+        replacement: path.dirname(require.resolve('react-easy-crop')),
       },
       // Most specific aliases first
       // Web-app shared components resolve to PoC stubs (translation, icons)
@@ -50,8 +54,8 @@ export default defineConfig({
         find: '@volleykit/validation',
         replacement: path.resolve(__dirname, '../packages/web/src/features/validation'),
       },
-      // Ensure fuse.js resolves from root node_modules (npm workspaces hoisting)
-      { find: 'fuse.js', replacement: path.resolve(__dirname, '../node_modules/fuse.js') },
+      // Ensure fuse.js resolves reliably through pnpm's virtual store
+      { find: 'fuse.js', replacement: path.dirname(require.resolve('fuse.js')) },
     ],
   },
   plugins: [
