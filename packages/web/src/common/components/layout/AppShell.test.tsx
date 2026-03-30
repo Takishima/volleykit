@@ -239,9 +239,9 @@ describe('AppShell', () => {
 
         renderAppShell()
 
-        // Find the calendar banner by its sky-colored background (banner, not header indicator)
+        // Find the calendar banner by its primary-colored background (banner, not header indicator)
         const banners = screen.getAllByRole('alert')
-        const calendarBanner = banners.find((b) => b.className.includes('sky'))
+        const calendarBanner = banners.find((b) => b.className.includes('primary-100'))
         expect(calendarBanner).toBeInTheDocument()
       })
 
@@ -256,9 +256,9 @@ describe('AppShell', () => {
 
         renderAppShell()
 
-        // Should not have calendar mode banner (sky-colored alert)
+        // Should not have calendar mode banner (primary-colored alert)
         const banners = screen.queryAllByRole('alert')
-        const calendarBanner = banners.find((b) => b.className.includes('sky'))
+        const calendarBanner = banners.find((b) => b.className.includes('primary-100'))
         expect(calendarBanner).toBeUndefined()
       })
 
@@ -273,9 +273,9 @@ describe('AppShell', () => {
 
         renderAppShell()
 
-        // Find the calendar banner by its sky-colored background
+        // Find the calendar banner by its primary-colored background
         const banners = screen.getAllByRole('alert')
-        const calendarBanner = banners.find((b) => b.className.includes('sky'))
+        const calendarBanner = banners.find((b) => b.className.includes('primary-100'))
         expect(calendarBanner).toBeInTheDocument()
         expect(calendarBanner).toHaveAttribute('aria-live', 'polite')
       })
@@ -299,9 +299,9 @@ describe('AppShell', () => {
 
           renderAppShell()
 
-          // Find the calendar banner by its sky-colored background class
+          // Find the calendar banner by its primary-colored background class
           const banners = screen.getAllByRole('alert')
-          const calendarBanner = banners.find((b) => b.className.includes('sky'))
+          const calendarBanner = banners.find((b) => b.className.includes('primary-100'))
           expect(calendarBanner?.textContent).toMatch(expectedPattern)
         }
       )
@@ -417,12 +417,12 @@ describe('AppShell', () => {
 
         renderAppShell()
 
-        // Find demo banner (amber-colored) by its background
+        // Find demo banner (warning-colored) by its background
         const alerts = screen.getAllByRole('alert')
-        const demoBanner = alerts.find((a) => a.className.includes('amber'))
+        const demoBanner = alerts.find((a) => a.className.includes('warning'))
         expect(demoBanner).toBeInTheDocument()
-        // Calendar banner (sky-colored) should not be present
-        const calendarBanner = alerts.find((a) => a.className.includes('sky'))
+        // Calendar banner (primary-colored) should not be present
+        const calendarBanner = alerts.find((a) => a.className.includes('primary-100'))
         expect(calendarBanner).toBeUndefined()
       })
 
@@ -437,12 +437,12 @@ describe('AppShell', () => {
 
         renderAppShell()
 
-        // Find the calendar banner by its sky-colored background
+        // Find the calendar banner by its primary-colored background
         const banners = screen.getAllByRole('alert')
-        const calendarBanner = banners.find((b) => b.className.includes('sky'))
+        const calendarBanner = banners.find((b) => b.className.includes('primary-100'))
         expect(calendarBanner).toBeInTheDocument()
-        // Demo banner (amber-colored) should not be present
-        const demoBanner = banners.find((b) => b.className.includes('amber'))
+        // Demo banner (warning-colored) should not be present
+        const demoBanner = banners.find((b) => b.className.includes('warning'))
         expect(demoBanner).toBeUndefined()
       })
     })

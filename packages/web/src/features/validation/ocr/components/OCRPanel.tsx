@@ -217,7 +217,10 @@ export function OCRPanel({
       <div className="bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-default dark:border-border-default-dark flex-shrink-0">
-          <h2 id="ocr-panel-title" className="text-lg font-semibold text-text-primary dark:text-text-primary-dark">
+          <h2
+            id="ocr-panel-title"
+            className="text-lg font-semibold text-text-primary dark:text-text-primary-dark"
+          >
             {t('validation.ocr.scanScoresheet')}
           </h2>
           <button

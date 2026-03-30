@@ -37,7 +37,9 @@ export function CollapsibleSection({
       >
         <div className="flex items-center gap-2">
           <Icon className="w-4 h-4 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />
-          <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">{title}</span>
+          <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+            {title}
+          </span>
           <span className="text-xs text-text-muted dark:text-text-muted-dark">({count})</span>
         </div>
         {discrepancies > 0 && (

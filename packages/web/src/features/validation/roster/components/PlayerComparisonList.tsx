@@ -94,8 +94,13 @@ function ComparisonItem({ result, isSelected, onToggle, isSelectable }: Comparis
       {/* Player info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <User className="w-4 h-4 text-text-subtle dark:text-text-subtle-dark flex-shrink-0" aria-hidden="true" />
-          <span className="font-medium text-text-primary dark:text-text-primary-dark truncate">{displayName}</span>
+          <User
+            className="w-4 h-4 text-text-subtle dark:text-text-subtle-dark flex-shrink-0"
+            aria-hidden="true"
+          />
+          <span className="font-medium text-text-primary dark:text-text-primary-dark truncate">
+            {displayName}
+          </span>
         </div>
         {secondaryName && (
           <p className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5 truncate">

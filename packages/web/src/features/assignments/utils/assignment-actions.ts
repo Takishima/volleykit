@@ -45,7 +45,9 @@ export function createAssignmentActions(
       id: 'validate-game',
       label: t('assignments.validateGame'),
       shortLabel: t('assignments.validateGameShort'),
-      color: assignment.refereeGame?.game?.scoresheet?.closedAt ? 'bg-surface-neutral' : 'bg-primary-500',
+      color: assignment.refereeGame?.game?.scoresheet?.closedAt
+        ? 'bg-surface-neutral'
+        : 'bg-primary-500',
       icon: ICON_CHECK,
       onAction: () => handlers.onValidateGame(assignment),
     },
