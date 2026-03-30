@@ -87,7 +87,7 @@ const en: Translations = {
         description:
           'Interactive tips that guide you through each section of the app using example data.',
         safeModeNote:
-          'Note: Safe mode is enabled by default, which blocks certain operations. To perform actions like validating games or managing exchanges, disable safe mode in the Safe Mode section below.',
+          'Note: Safe mode is enabled by default. Validation will save your changes without finalizing. Exchange operations are always allowed. To finalize games directly, disable safe mode in the Safe Mode section below.',
         restart: 'Restart Tours',
         statusCompleted: 'Completed',
         statusSkipped: 'Skipped',
@@ -519,7 +519,7 @@ const en: Translations = {
     },
     safeMode: 'Safe Mode',
     safeModeDescription:
-      'Safe mode restricts dangerous operations like adding/taking games from exchange. Validation saves your changes but does not finalize the game — you complete the validation on VolleyManager.',
+      'Safe mode makes validation save your changes without finalizing the game — you complete the validation on VolleyManager. Exchange operations (adding, taking, removing) are always allowed.',
     safeModeEnabled: 'Safe mode is enabled',
     safeModeDisabled: 'Safe mode is disabled',
     safeModeWarning: 'Safe mode is disabled — action required',

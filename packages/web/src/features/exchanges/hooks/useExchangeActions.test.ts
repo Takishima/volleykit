@@ -447,7 +447,7 @@ describe('useExchangeActions', () => {
     })
   })
 
-  describe('safe mode guards', () => {
+  describe('safe mode does not block exchange operations', () => {
     beforeEach(() => {
       vi.useRealTimers()
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
@@ -460,42 +460,24 @@ describe('useExchangeActions', () => {
       )
     })
 
-    it('should block take over when safe mode is enabled', async () => {
+    it('should allow take over when safe mode is enabled', async () => {
       const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleTakeOver(mockExchange)
       })
 
-      expect(mockApplyMutate).not.toHaveBeenCalled()
-      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
+      expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity)
     })
 
-    it('should block remove from exchange when safe mode is enabled', async () => {
+    it('should allow remove from exchange when safe mode is enabled', async () => {
       const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
       await act(async () => {
         await result.current.handleRemoveFromExchange(mockExchange)
       })
 
-      expect(mockRemoveOwnMutate).not.toHaveBeenCalled()
-      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
-    })
-
-    it('should not block operations in demo mode even with safe mode enabled', async () => {
-      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
-        selector({ dataSource: 'demo' } as ReturnType<typeof authStore.useAuthStore.getState>)
-      )
-
-      const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
-
-      await act(async () => {
-        await result.current.handleTakeOver(mockExchange)
-      })
-
-      // In demo mode, operations are allowed even with safe mode enabled
-      // because demo mode uses local data and poses no risk
-      expect(mockApplyMutate).toHaveBeenCalledWith(mockExchange.__identity)
+      expect(mockRemoveOwnMutate).toHaveBeenCalledWith('test-convocation-1')
     })
   })
 })

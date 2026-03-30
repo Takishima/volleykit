@@ -40,7 +40,6 @@ export function useExchangeActions(): UseExchangeActionsResult {
       logContext: 'useExchangeActions',
       successMessage: 'exchange.applySuccess',
       errorMessage: 'exchange.applyError',
-      safeGuard: { context: 'useExchangeActions', action: 'taking exchange' },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => takeOverModal.close(),
     }
@@ -59,10 +58,6 @@ export function useExchangeActions(): UseExchangeActionsResult {
       logContext: 'useExchangeActions',
       successMessage: 'exchange.removeSuccess',
       errorMessage: 'exchange.removeError',
-      safeGuard: {
-        context: 'useExchangeActions',
-        action: 'removing own exchange',
-      },
       skipSuccessToastInDemoMode: true,
       onSuccess: () => removeFromExchangeModal.close(),
     }

@@ -88,7 +88,7 @@ const it: Translations = {
         description:
           "Suggerimenti interattivi che ti guidano attraverso ogni sezione dell'app usando dati di esempio.",
         safeModeNote:
-          'Nota: La modalità sicura è attiva per impostazione predefinita e blocca alcune operazioni. Per validare partite o gestire gli scambi, disattiva la modalità sicura nella sezione sottostante.',
+          'Nota: La modalità sicura è attiva per impostazione predefinita. La convalida salva le modifiche senza finalizzare. Le operazioni di borsa sono sempre consentite. Per finalizzare le partite direttamente, disattiva la modalità sicura nella sezione sottostante.',
         restart: 'Riavvia tour',
         statusCompleted: 'Completato',
         statusSkipped: 'Saltato',
@@ -530,7 +530,7 @@ const it: Translations = {
     },
     safeMode: 'Modalità sicura',
     safeModeDescription:
-      "La modalità sicura limita operazioni pericolose come l'aggiunta/assunzione di partite dalla borsa scambi. La convalida salva le modifiche ma non finalizza la partita — completi la convalida su VolleyManager.",
+      'La modalità sicura salva le modifiche durante la convalida senza finalizzare la partita — completi la convalida su VolleyManager. Le operazioni di borsa (aggiunta, assunzione, rimozione) sono sempre consentite.',
     safeModeEnabled: 'La modalità sicura è attivata',
     safeModeDisabled: 'La modalità sicura è disattivata',
     safeModeWarning: 'Modalità sicura disattivata — azione richiesta',
