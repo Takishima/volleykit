@@ -81,13 +81,13 @@ function CompensationCardComponent({
               </span>
               {gender === 'm' && (
                 <MaleIcon
-                  className="w-3 h-3 flex-shrink-0 text-blue-500 dark:text-blue-400"
+                  className="w-3 h-3 flex-shrink-0 text-primary-400 dark:text-primary-300"
                   aria-label={t('common.men')}
                 />
               )}
               {gender === 'f' && (
                 <FemaleIcon
-                  className="w-3 h-3 flex-shrink-0 text-pink-500 dark:text-pink-400"
+                  className="w-3 h-3 flex-shrink-0 text-danger-400 dark:text-danger-300"
                   aria-label={t('common.women')}
                 />
               )}

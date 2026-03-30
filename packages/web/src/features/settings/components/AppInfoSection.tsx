@@ -99,13 +99,13 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
             {/* Service worker unavailable notice */}
             {registrationError && (
               <div
-                className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3"
+                className="rounded-lg bg-warning-50 dark:bg-warning-950/30 border border-warning-200 dark:border-warning-800 p-3"
                 role="status"
               >
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                <p className="text-sm font-medium text-warning-800 dark:text-warning-200">
                   {t('pwa.serviceWorkerUnavailable')}
                 </p>
-                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                <p className="text-xs text-warning-700 dark:text-warning-300 mt-1">
                   {t('pwa.serviceWorkerUnavailableDescription')}
                 </p>
               </div>

@@ -7,7 +7,7 @@ export function DateTime() {
   return (
     <div className="flex flex-col items-end w-14 shrink-0">
       <span
-        className={`text-xs font-medium ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-text-muted dark:text-text-muted-dark'}`}
+        className={`text-xs font-medium ${isToday ? 'text-text-primary dark:text-text-primary-dark font-bold' : 'text-text-muted dark:text-text-muted-dark'}`}
       >
         {dateLabel}
       </span>

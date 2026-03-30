@@ -31,7 +31,10 @@ export function TwintPaymentModal({
         titleId="twint-payment-title"
         icon={
           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-surface-subtle dark:bg-surface-subtle-dark flex items-center justify-center">
-            <Smartphone className="w-5 h-5 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />
+            <Smartphone
+              className="w-5 h-5 text-text-muted dark:text-text-muted-dark"
+              aria-hidden="true"
+            />
           </div>
         }
         onClose={onClose}

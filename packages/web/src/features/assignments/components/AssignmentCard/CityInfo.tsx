@@ -18,7 +18,7 @@ export function CityInfo() {
           <ConflictIndicator conflicts={conflicts} />
           {singleBallMatch && (
             <span
-              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] font-bold flex-shrink-0"
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-warning-100 dark:bg-warning-900/40 text-warning-700 dark:text-warning-300 text-[10px] font-bold flex-shrink-0"
               title={t('assignments.singleBallHallTooltip')}
               aria-label={t('assignments.singleBallHallTooltip')}
             >

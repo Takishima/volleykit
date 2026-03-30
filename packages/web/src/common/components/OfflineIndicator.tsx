@@ -38,7 +38,7 @@ export function OfflineIndicator() {
     <div
       role="alert"
       aria-live="assertive"
-      className="bg-amber-500 text-amber-950 border-b border-amber-600"
+      className="bg-warning-500 text-warning-950 border-b border-warning-600"
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
@@ -46,12 +46,12 @@ export function OfflineIndicator() {
           <span className="text-sm font-medium">{t('offline.youAreOffline')}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden text-xs text-amber-800 sm:inline">
+          <span className="hidden text-xs text-warning-800 sm:inline">
             {t('offline.cachedDataAvailable')}
           </span>
           <button
             onClick={handleDismiss}
-            className="rounded p-1 hover:bg-amber-600/20 focus:outline-none focus:ring-2 focus:ring-amber-700 focus:ring-offset-1 focus:ring-offset-amber-500"
+            className="rounded p-1 hover:bg-warning-600/20 focus:outline-none focus:ring-2 focus:ring-warning-700 focus:ring-offset-1 focus:ring-offset-warning-500"
             aria-label={t('offline.dismissAriaLabel')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
