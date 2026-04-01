@@ -89,7 +89,7 @@ const fr: Translations = {
         description:
           "Conseils interactifs qui vous guident à travers chaque section de l'application avec des données d'exemple.",
         safeModeNote:
-          'Remarque : Le mode sécurisé est activé par défaut, ce qui bloque certaines opérations. Pour valider des matchs ou gérer les échanges, désactivez le mode sécurisé dans la section ci-dessous.',
+          'Remarque : Le mode sécurisé est activé par défaut. La validation enregistre vos modifications sans finaliser. Les opérations de bourse sont toujours autorisées. Pour finaliser les matchs directement, désactivez le mode sécurisé dans la section ci-dessous.',
         restart: 'Recommencer les visites',
         statusCompleted: 'Terminé',
         statusSkipped: 'Ignoré',
@@ -534,7 +534,7 @@ const fr: Translations = {
     },
     safeMode: 'Mode sécurisé',
     safeModeDescription:
-      "Le mode sécurisé restreint les opérations dangereuses comme l'ajout/la prise de matchs depuis la bourse aux échanges. La validation enregistre vos modifications mais ne finalise pas le match — vous complétez la validation sur VolleyManager.",
+      'Le mode sécurisé enregistre vos modifications lors de la validation sans finaliser le match — vous complétez la validation sur VolleyManager. Les opérations de bourse (ajout, prise, retrait) sont toujours autorisées.',
     safeModeEnabled: 'Le mode sécurisé est activé',
     safeModeDisabled: 'Le mode sécurisé est désactivé',
     safeModeWarning: 'Mode sécurisé désactivé — action requise',

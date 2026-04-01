@@ -429,15 +429,15 @@ describe('useAssignmentActions', () => {
       )
     })
 
-    it('should block add to exchange when safe mode is enabled', () => {
+    it('should allow add to exchange when safe mode is enabled', () => {
+      mockMutateAsync.mockResolvedValue(undefined)
       const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() })
 
       act(() => {
         result.current.handleAddToExchange(mockAssignment)
       })
 
-      expect(mockAddAssignmentToExchange).not.toHaveBeenCalled()
-      expect(toast.warning).toHaveBeenCalledWith('settings.safeModeBlocked')
+      expect(mockMutateAsync).toHaveBeenCalledWith(mockAssignment.__identity)
     })
 
     it('should allow opening validate game modal when safe mode is enabled for unvalidated games', () => {

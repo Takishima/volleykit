@@ -200,7 +200,7 @@ export const DEMO_HOME_LOCATION: UserLocation = {
 export interface SettingsState {
   // === Global settings (shared across all modes) ===
 
-  // Safe mode - blocks exchanges/compensations, and in validation saves without finalizing
+  // Safe mode - in validation saves without finalizing (exchanges are always allowed)
   isSafeModeEnabled: boolean
   setSafeMode: (enabled: boolean) => void
 

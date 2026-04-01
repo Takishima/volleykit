@@ -54,7 +54,7 @@ interface UseAssignmentActionsResult {
 export function useAssignmentActions(): UseAssignmentActionsResult {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const { guard, isDemoMode } = useSafeModeGuard()
+  const { isDemoMode } = useSafeModeGuard()
   const locale = useLanguageStore((state) => state.locale)
   const addAssignmentToExchange = useDemoStore((state) => state.addAssignmentToExchange)
   const addToExchangeMutation = useAddToExchange()
@@ -105,15 +105,6 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
         return
       }
 
-      if (
-        guard({
-          context: 'useAssignmentActions',
-          action: 'adding to exchange',
-        })
-      ) {
-        return
-      }
-
       if (isDemoMode) {
         addAssignmentToExchange(assignment.__identity)
         // Invalidate exchanges query so the new exchange appears immediately
@@ -146,7 +137,7 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
           toast.error(t('exchange.addedToExchangeError'))
         })
     },
-    [guard, isDemoMode, addAssignmentToExchange, queryClient, t, addToExchangeMutation]
+    [isDemoMode, addAssignmentToExchange, queryClient, t, addToExchangeMutation]
   )
 
   return {

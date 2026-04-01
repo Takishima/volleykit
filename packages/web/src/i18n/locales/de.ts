@@ -88,7 +88,7 @@ const de: Translations = {
         description:
           'Interaktive Tipps, die Sie mit Beispieldaten durch jeden Bereich der App führen.',
         safeModeNote:
-          'Hinweis: Der Sicherheitsmodus ist standardmässig aktiviert und blockiert bestimmte Aktionen. Um Spiele zu validieren oder Börsenaktionen durchzuführen, deaktivieren Sie den Sicherheitsmodus im Abschnitt unten.',
+          'Hinweis: Der Sicherheitsmodus ist standardmässig aktiviert. Die Validierung speichert Ihre Änderungen, ohne das Spiel abzuschliessen. Börsenaktionen sind immer erlaubt. Um Spiele direkt abzuschliessen, deaktivieren Sie den Sicherheitsmodus im Abschnitt unten.',
         restart: 'Touren neu starten',
         statusCompleted: 'Abgeschlossen',
         statusSkipped: 'Übersprungen',
@@ -537,7 +537,7 @@ const de: Translations = {
     },
     safeMode: 'Sicherheitsmodus',
     safeModeDescription:
-      'Der Sicherheitsmodus beschränkt gefährliche Operationen wie das Hinzufügen/Übernehmen von Spielen zur/von Tauschbörse. Die Validierung speichert Ihre Änderungen, schliesst das Spiel aber nicht ab — Sie schliessen die Validierung im VolleyManager ab.',
+      'Der Sicherheitsmodus speichert bei der Validierung Ihre Änderungen, ohne das Spiel abzuschliessen — Sie schliessen die Validierung im VolleyManager ab. Börsenaktionen (Hinzufügen, Übernehmen, Entfernen) sind immer erlaubt.',
     safeModeEnabled: 'Sicherheitsmodus ist aktiviert',
     safeModeDisabled: 'Sicherheitsmodus ist deaktiviert',
     safeModeWarning: 'Sicherheitsmodus ist deaktiviert — Aktion erforderlich',
