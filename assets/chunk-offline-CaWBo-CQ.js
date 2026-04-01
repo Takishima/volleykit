@@ -1,0 +1,1 @@
+import{u as e}from"./chunk-action-sync-D47mWx0L.js";import"./index-Cv54bS2Z.js";export{e as getMetadata};
