@@ -1,1 +1,0 @@
-import{n as e}from"./chunk-react-vendor-DnDiFoZL.js";import{a as t,i as n,t as r}from"./chunk-language-CG-ur5hP.js";var i=e();function a(){let e=(0,i.c)(2),a=r(o),s;return e[0]===a?s=e[1]:(s={t:n,tInterpolate:t,locale:a},e[0]=a,e[1]=s),s}function o(e){return e.locale}export{a as t};
