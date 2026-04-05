@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.30.0
+
+### Minor Changes
+
+- [#1100](https://github.com/Takishima/volleykit/pull/1100) [`af4f56f`](https://github.com/Takishima/volleykit/commit/af4f56fea1d5a87c6b1a6b887d2abd03c37b5699) Thanks [@Takishima](https://github.com/Takishima)! - Allow exchange operations (add, take over, remove) in safe mode
+
 ## 1.29.0
 
 ### Minor Changes
