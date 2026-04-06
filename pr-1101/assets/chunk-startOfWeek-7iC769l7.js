@@ -1,0 +1,1 @@
+import{t as e}from"./chunk-toDate-5iNjj05e.js";var t={};function n(){return t}function r(t,r){let i=n(),a=r?.weekStartsOn??r?.locale?.options?.weekStartsOn??i.weekStartsOn??i.locale?.options?.weekStartsOn??0,o=e(t,r?.in),s=o.getDay(),c=(s<a?7:0)+s-a;return o.setDate(o.getDate()-c),o.setHours(0,0,0,0),o}export{n,r as t};
