@@ -187,7 +187,7 @@ jobs:
           enable_jekyll: false
           cname: volleykit.ch
       - name: Comment PR with preview link
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const previewUrl = `https://volleykit.ch/pr-${{ github.event.pull_request.number }}/`;
