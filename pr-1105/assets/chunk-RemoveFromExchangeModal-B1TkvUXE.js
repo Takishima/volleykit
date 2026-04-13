@@ -1,0 +1,1 @@
+import{n as e,t}from"./chunk-react-vendor-DnDiFoZL.js";import{t as n}from"./chunk-ExchangeConfirmationModal-5DuYo1_8.js";var r=e(),i=t();function a(e){let t=(0,r.c)(2),a;return t[0]===e?a=t[1]:(a=(0,i.jsx)(n,{...e,variant:`remove`}),t[0]=e,t[1]=a),a}export{a as RemoveFromExchangeModal};
