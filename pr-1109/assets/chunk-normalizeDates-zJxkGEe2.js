@@ -1,0 +1,1 @@
+import{n as e}from"./chunk-toDate-5iNjj05e.js";function t(t,...n){let r=e.bind(null,t||n.find(e=>typeof e==`object`));return n.map(r)}export{t};
