@@ -1,0 +1,1 @@
+function e(e){return{referee:`occupations.referee`,player:`occupations.player`,clubAdmin:`occupations.clubAdmin`,associationAdmin:`occupations.associationAdmin`}[e]}export{e as t};
