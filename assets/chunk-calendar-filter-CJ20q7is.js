@@ -1,1 +1,0 @@
-import{i as e}from"./chunk-state-iVnELuKW.js";var t=`__all__`,n=e(e=>({selectedAssociation:t,associations:[],setSelectedAssociation:t=>e({selectedAssociation:t}),setAssociations:t=>e({associations:t}),resetFilter:()=>e({selectedAssociation:t})}));export{n,t};

@@ -1,0 +1,1 @@
+import{i as e}from"./chunk-pdf-lib-B0igVZ5j.js";export{e as PDFDocument};
