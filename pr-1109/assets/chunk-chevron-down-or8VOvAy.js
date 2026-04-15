@@ -1,1 +1,0 @@
-import{r as e}from"./chunk-icons-0MVDhxct.js";var t=e(`chevron-down`,[[`path`,{d:`m6 9 6 6 6-6`,key:`qrunsl`}]]);export{t};
