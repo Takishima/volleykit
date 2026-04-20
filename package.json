@@ -21,16 +21,16 @@
     "shared:test": "pnpm --filter @volleykit/shared run test"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-query": "^5.99.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^2.31.0",
     "@types/react": "^19.2.14",
-    "prettier": "^3.8.2",
+    "prettier": "^3.8.3",
     "typescript": "~6.0.2"
   },
   "pnpm": {
