@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 
 /** Raw pixels to pull before triggering refresh (before resistance applied) */
 const RAW_PULL_THRESHOLD = 80
@@ -65,16 +65,6 @@ export function usePullToRefresh({
   // Track touch state
   const startY = useRef(0)
   const isPulling = useRef(false)
-
-  // Reset state when disabled
-  useEffect(() => {
-    if (!enabled) {
-      setPullDistance(0)
-      setIsRefreshing(false)
-      startY.current = 0
-      isPulling.current = false
-    }
-  }, [enabled])
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
@@ -155,8 +145,10 @@ export function usePullToRefresh({
   }, [enabled, pullDistance, isRefreshing, onRefresh])
 
   return {
-    pullDistance,
-    isRefreshing,
+    // Hide stale pull/refresh state when disabled; touch handlers bail early so
+    // internal state can't advance while disabled.
+    pullDistance: enabled ? pullDistance : 0,
+    isRefreshing: enabled && isRefreshing,
     threshold: PULL_THRESHOLD,
     containerProps: {
       onTouchStart: handleTouchStart,
