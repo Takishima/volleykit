@@ -68,7 +68,13 @@ export function usePullToRefresh({
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      if (!enabled || isRefreshing) return
+      if (!enabled) {
+        // Clear any gesture state left over from before enabled flipped off
+        isPulling.current = false
+        startY.current = 0
+        return
+      }
+      if (isRefreshing) return
 
       // Only enable pull-to-refresh when at the top of the scroll container
       // Check both window scroll and the element's scroll position
@@ -86,8 +92,14 @@ export function usePullToRefresh({
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
+      if (!enabled) {
+        // Drop stale gesture state so a re-enable mid-gesture doesn't use a stale startY
+        isPulling.current = false
+        startY.current = 0
+        return
+      }
       // isPulling.current is the authoritative check for whether a pull gesture is active
-      if (!enabled || !isPulling.current || isRefreshing) {
+      if (!isPulling.current || isRefreshing) {
         return
       }
 
@@ -117,7 +129,12 @@ export function usePullToRefresh({
   )
 
   const handleTouchEnd = useCallback(async () => {
-    if (!enabled || !isPulling.current) return
+    if (!enabled) {
+      isPulling.current = false
+      startY.current = 0
+      return
+    }
+    if (!isPulling.current) return
 
     isPulling.current = false
 
@@ -145,8 +162,9 @@ export function usePullToRefresh({
   }, [enabled, pullDistance, isRefreshing, onRefresh])
 
   return {
-    // Hide stale pull/refresh state when disabled; touch handlers bail early so
-    // internal state can't advance while disabled.
+    // Hide stale pull/refresh state when disabled. Touch handlers also clear
+    // internal gesture refs on the first event after a disable so an
+    // enable→disable→enable cycle can't reuse a stale startY.
     pullDistance: enabled ? pullDistance : 0,
     isRefreshing: enabled && isRefreshing,
     threshold: PULL_THRESHOLD,
