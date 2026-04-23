@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 
 export interface GeolocationState {
   /** Current position coordinates, null if not yet obtained */
@@ -65,7 +65,9 @@ export function useGeolocation(options: UseGeolocationOptions = {}): UseGeolocat
 
   // Store onSuccess in a ref to avoid recreating requestLocation on every callback change
   const onSuccessRef = useRef(onSuccess)
-  onSuccessRef.current = onSuccess
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+  }, [onSuccess])
 
   const [state, setState] = useState<GeolocationState>(() => ({
     position: null,

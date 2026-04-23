@@ -106,14 +106,17 @@ export function useLoginPageLogic() {
     }
   }, [clearStaleSession])
 
-  // Countdown timer for lockout
-  useEffect(() => {
-    if (!lockedUntil || lockedUntil <= 0) {
-      setLockoutCountdown(null)
-      return
-    }
+  // Reset the countdown whenever lockedUntil changes (adjust state during render
+  // per https://react.dev/learn/you-might-not-need-an-effect).
+  const [prevLockedUntil, setPrevLockedUntil] = useState(lockedUntil)
+  if (prevLockedUntil !== lockedUntil) {
+    setPrevLockedUntil(lockedUntil)
+    setLockoutCountdown(lockedUntil && lockedUntil > 0 ? lockedUntil : null)
+  }
 
-    setLockoutCountdown(lockedUntil)
+  // Countdown timer for lockout (interval callback — not sync setState in effect body)
+  useEffect(() => {
+    if (!lockedUntil || lockedUntil <= 0) return
 
     const interval = setInterval(() => {
       setLockoutCountdown((prev) => {
@@ -128,17 +131,15 @@ export function useLoginPageLogic() {
     return () => clearInterval(interval)
   }, [lockedUntil])
 
-  // Check for updates when login fails
-  useEffect(() => {
-    const hasError = error || calendarError
-    if (hasError && !checkedForUpdateAfterError && !needRefresh) {
-      setCheckedForUpdateAfterError(true)
-      checkForUpdate()
-    }
+  // Reset the "we already checked" flag whenever the error state clears.
+  const hasError = Boolean(error || calendarError)
+  const [prevHasError, setPrevHasError] = useState(hasError)
+  if (prevHasError !== hasError) {
+    setPrevHasError(hasError)
     if (!hasError) {
       setCheckedForUpdateAfterError(false)
     }
-  }, [error, calendarError, checkedForUpdateAfterError, needRefresh, checkForUpdate])
+  }
 
   const handleUpdate = useCallback(async () => {
     if (isUpdating) return
@@ -182,6 +183,9 @@ export function useLoginPageLogic() {
           passwordRef.current.value = ''
         }
         navigate('/')
+      } else if (!needRefresh) {
+        setCheckedForUpdateAfterError(true)
+        await checkForUpdate()
       }
     } finally {
       isSubmittingRef.current = false
@@ -215,6 +219,7 @@ export function useLoginPageLogic() {
     setIsValidatingCalendar(true)
     setCalendarError(null)
 
+    let hadError = false
     try {
       const result = await validateCalendarCode(code, abortController.signal)
 
@@ -224,6 +229,7 @@ export function useLoginPageLogic() {
 
       if (!result.valid) {
         setCalendarError(result.error ?? 'auth.calendarValidationFailed')
+        hadError = true
         return
       }
 
@@ -234,11 +240,16 @@ export function useLoginPageLogic() {
         return
       }
       setCalendarError('auth.calendarValidationFailed')
+      hadError = true
     } finally {
       isSubmittingRef.current = false
       if (!abortController.signal.aborted) {
         setIsValidatingCalendar(false)
       }
+    }
+    if (hadError && !needRefresh) {
+      setCheckedForUpdateAfterError(true)
+      await checkForUpdate()
     }
   }
 

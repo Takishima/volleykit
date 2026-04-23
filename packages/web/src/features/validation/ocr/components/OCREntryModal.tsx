@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 
 import { X } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import type { ParsedGameSheet, ParsedOfficial, OCRResult } from '@/features/ocr'
+import type { ParsedGameSheet, ParsedOfficial } from '@/features/ocr'
 import { EasterEggModal } from '@/features/ocr/components/EasterEggModal'
 import { useEasterEggDetection } from '@/features/ocr/hooks/useEasterEggDetection'
 import { useOCRScoresheet } from '@/features/ocr/hooks/useOCRScoresheet'
@@ -108,9 +108,6 @@ export function OCREntryModal({
   // Raw OCR data for debugging/transparency
   const [rawOcrData, setRawOcrData] = useState<ParsedGameSheet | null>(null)
 
-  // Stored OCR result with bounding boxes
-  const [storedOcrResult, setStoredOcrResult] = useState<OCRResult | null>(null)
-
   // Image URL for displaying the captured scoresheet
   const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null)
   // Ref for stable access in reset effect — reading capturedImageUrl in the isOpen
@@ -145,22 +142,29 @@ export function OCREntryModal({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, showCaptureModal, onClose])
 
-  // Reset when modal opens
-  useEffect(() => {
+  // Reset local state when the modal opens (adjust state during render
+  // per https://react.dev/learn/you-might-not-need-an-effect).
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen)
     if (isOpen) {
       setStep('intro')
       setScoresheetType('electronic')
       setHomeComparison(null)
       setAwayComparison(null)
       setRawOcrData(null)
-      setStoredOcrResult(null)
-      // Revoke previous image URL to prevent memory leaks.
-      // Read from ref to avoid adding capturedImageUrl as a dep (it changes during the reset).
+      setCapturedImageUrl(null)
+      setExpandedSections(new Set(['home-players', 'away-players']))
+    }
+  }
+
+  // Side effects that must run when the modal opens: revoke the stale blob URL
+  // and reset the OCR hook.
+  useEffect(() => {
+    if (isOpen) {
       if (capturedImageUrlRef.current) {
         URL.revokeObjectURL(capturedImageUrlRef.current)
       }
-      setCapturedImageUrl(null)
-      setExpandedSections(new Set(['home-players', 'away-players']))
       reset()
     }
   }, [isOpen, reset])
@@ -173,13 +177,6 @@ export function OCREntryModal({
       }
     }
   }, [capturedImageUrl])
-
-  // Sync OCR result from hook when it updates
-  useEffect(() => {
-    if (hookOcrResult) {
-      setStoredOcrResult(hookOcrResult)
-    }
-  }, [hookOcrResult])
 
   // Match OCR team to home/away based on team names
   const matchOCRTeams = useCallback(
@@ -331,7 +328,6 @@ export function OCREntryModal({
     setHomeComparison(null)
     setAwayComparison(null)
     setRawOcrData(null)
-    setStoredOcrResult(null)
     if (capturedImageUrl) {
       URL.revokeObjectURL(capturedImageUrl)
     }
@@ -401,7 +397,7 @@ export function OCREntryModal({
             homeComparison={homeComparison}
             awayComparison={awayComparison}
             rawOcrData={rawOcrData}
-            storedOcrResult={storedOcrResult}
+            storedOcrResult={hookOcrResult}
             capturedImageUrl={capturedImageUrl}
             expandedSections={expandedSections}
             onToggleSection={toggleSection}

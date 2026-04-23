@@ -94,6 +94,46 @@ describe('usePullToRefresh', () => {
 
       expect(result.current.pullDistance).toBe(0)
     })
+
+    it('does not use stale gesture state after an enable→disable→enable cycle', () => {
+      const { result, rerender } = renderHook(
+        ({ enabled }) => usePullToRefresh({ onRefresh: mockOnRefresh, enabled }),
+        { initialProps: { enabled: true } }
+      )
+
+      const mockElement = { scrollTop: 0 } as HTMLElement
+
+      // Start a pull while enabled (establishes startY=100, isPulling=true)
+      act(() => {
+        result.current.containerProps.onTouchStart({
+          touches: [{ clientY: 100 }],
+          currentTarget: mockElement,
+        } as unknown as React.TouchEvent)
+      })
+
+      // Disable mid-gesture, then re-enable. A subsequent touchmove while
+      // disabled must clear the internal gesture refs so the first event after
+      // re-enable doesn't compute a diff from the original startY.
+      rerender({ enabled: false })
+      act(() => {
+        result.current.containerProps.onTouchMove({
+          touches: [{ clientY: 150 }],
+          preventDefault: vi.fn(),
+        } as unknown as React.TouchEvent)
+      })
+      rerender({ enabled: true })
+
+      // Without an intervening touchstart, touchmove should not resume the
+      // stale gesture (isPulling was cleared on the disabled touchmove).
+      act(() => {
+        result.current.containerProps.onTouchMove({
+          touches: [{ clientY: 300 }],
+          preventDefault: vi.fn(),
+        } as unknown as React.TouchEvent)
+      })
+
+      expect(result.current.pullDistance).toBe(0)
+    })
   })
 
   describe('pull gesture handling', () => {

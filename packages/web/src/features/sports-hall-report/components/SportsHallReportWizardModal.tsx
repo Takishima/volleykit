@@ -77,8 +77,11 @@ export function SportsHallReportWizardModal({
     })
   }, [isOpen, loadSections])
 
-  // Reset all state when modal opens
-  useEffect(() => {
+  // Reset local state when modal opens (adjust state during render
+  // per https://react.dev/learn/you-might-not-need-an-effect).
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen)
     if (isOpen) {
       setLanguage(defaultLanguage)
       setIsGeneratingHappy(false)
@@ -86,9 +89,15 @@ export function SportsHallReportWizardModal({
       setShowCloseConfirm(false)
       setJerseyAdvertising({ homeTeam: true, awayTeam: true })
       setMode('happy')
+    }
+  }
+
+  // Reset the non-conformant wizard whenever the modal opens (side effect on a nested hook).
+  useEffect(() => {
+    if (isOpen) {
       resetNc()
     }
-  }, [isOpen, defaultLanguage, resetNc])
+  }, [isOpen, resetNc])
 
   const isGenerating = mode === 'happy' ? isGeneratingHappy : nc.isGenerating
 
