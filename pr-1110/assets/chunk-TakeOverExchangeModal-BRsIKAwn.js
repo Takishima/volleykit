@@ -1,1 +1,0 @@
-import{n as e,t}from"./chunk-react-vendor-C57_37j7.js";import{t as n}from"./chunk-ExchangeConfirmationModal-ClfX5Hq7.js";var r=e(),i=t();function a(e){let t=(0,r.c)(2),a;return t[0]===e?a=t[1]:(a=(0,i.jsx)(n,{...e,variant:`takeOver`}),t[0]=e,t[1]=a),a}export{a as TakeOverExchangeModal};
