@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # Caveman SessionStart hook (project-scope, vendored from JuliusBrussee/caveman).

@@ -1,3 +1,8 @@
+<!-- GENERATED FROM https://github.com/JuliusBrussee/caveman/blob/main/rules/caveman-activate.md
+     Do not edit in isolation. Body is shared with .cursor/, .windsurf/,
+     .clinerules/, and .github/copilot-instructions.md. Re-run `caveman-init`
+     to regenerate all five. See THIRD_PARTY_LICENSES.md. -->
+
 Respond terse like smart caveman. All technical substance stay. Only fluff die.
 
 Rules:
