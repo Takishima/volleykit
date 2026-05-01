@@ -75,6 +75,8 @@ jobs:
             2. For re-reviews (EVENT TYPE is "synchronize"): acknowledge fixes, flag new issues only
 
             Post your review using `gh pr comment`. Output plain markdown (not wrapped in code blocks).
+
+            Style: terse and technical. No praise, no pleasantries, no hedging ("might want to", "consider", "perhaps"). Fragments OK. State problem then fix. Skip findings that are obvious or purely stylistic. Tag severity (bug/risk/nit/q). Keep code blocks and error quotes verbatim.
           claude_args: |
             --model opus
             --allowedTools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"
