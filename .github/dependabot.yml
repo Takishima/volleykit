@@ -43,6 +43,10 @@ updates:
       # @react-navigation packages are pinned by Expo SDK — upgrade via `expo install`.
       - dependency-name: "@react-navigation/*"
         update-types: ["version-update:semver-major"]
+      # astro is pinned to 6.1.9 in help-site (see help-site/package.json) because newer
+      # versions break the build with current vite/rolldown/@tailwindcss/vite combo.
+      # Upgrade manually once the upstream incompatibility is resolved.
+      - dependency-name: "astro"
     groups:
       # Group all minor/patch updates into a single PR
       all-minor-patch:
