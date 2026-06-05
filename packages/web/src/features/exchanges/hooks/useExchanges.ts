@@ -18,7 +18,7 @@ import { useActionQueueStore } from '@/common/stores/action-queue'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
 import type { MutationCallbacks, OfflineMutationResult } from '@/common/types/mutation'
-import { getSeasonDateRange } from '@/common/utils/date-helpers'
+import { getActiveOrUpcomingSeasonDateRange } from '@/common/utils/date-helpers'
 import { createLogger } from '@/common/utils/logger'
 
 const log = createLogger('useExchanges')
@@ -55,7 +55,10 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
   // Compute date keys (YYYY-MM-DD) for stable memoization.
   // Using just the date portion ensures the key is stable within the same day.
   const todayKey = formatDateKey(new Date())
-  const seasonEndKey = formatDateKey(getSeasonDateRange().to)
+  // Use the active-or-upcoming season so the upper bound is never in the past
+  // during the summer off-season (which would invert the date window and hide
+  // all upcoming exchanges).
+  const seasonEndKey = formatDateKey(getActiveOrUpcomingSeasonDateRange().to)
 
   // Memoize date range to ensure stable query key across tab switches.
   // Computed from string date keys so deps are stable (no new Date() in deps array).

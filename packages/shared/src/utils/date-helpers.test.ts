@@ -20,6 +20,7 @@ import {
   formatRosterEntries,
   getMaxLastNameWidth,
   getSeasonDateRange,
+  getActiveOrUpcomingSeasonDateRange,
   type RosterPlayerData,
 } from './date-helpers'
 
@@ -491,5 +492,63 @@ describe('getSeasonDateRange', () => {
     expect(result.from).toBeInstanceOf(Date)
     expect(result.to).toBeInstanceOf(Date)
     expect(result.to > result.from).toBe(true)
+  })
+})
+
+describe('getActiveOrUpcomingSeasonDateRange', () => {
+  it('should match the current season while in season (November)', () => {
+    const refDate = new Date(2025, 10, 15) // November 15, 2025
+    const result = getActiveOrUpcomingSeasonDateRange(refDate)
+
+    expect(result.from.getFullYear()).toBe(2025)
+    expect(result.from.getMonth()).toBe(8) // September
+    expect(result.to.getFullYear()).toBe(2026)
+    expect(result.to.getMonth()).toBe(4) // May
+  })
+
+  it('should match the current season in spring before it ends (March)', () => {
+    const refDate = new Date(2026, 2, 10) // March 10, 2026
+    const result = getActiveOrUpcomingSeasonDateRange(refDate)
+
+    expect(result.from.getFullYear()).toBe(2025)
+    expect(result.to.getFullYear()).toBe(2026)
+    expect(result.to.getMonth()).toBe(4) // May 2026
+  })
+
+  it('should look forward to the upcoming season during the summer off-season (June)', () => {
+    const refDate = new Date(2026, 5, 5) // June 5, 2026 (off-season)
+    const result = getActiveOrUpcomingSeasonDateRange(refDate)
+
+    // Upcoming season: September 2026 -> May 2027
+    expect(result.from.getFullYear()).toBe(2026)
+    expect(result.from.getMonth()).toBe(8) // September
+    expect(result.to.getFullYear()).toBe(2027)
+    expect(result.to.getMonth()).toBe(4) // May
+  })
+
+  it('should look forward to the upcoming season in August', () => {
+    const refDate = new Date(2026, 7, 20) // August 20, 2026 (off-season)
+    const result = getActiveOrUpcomingSeasonDateRange(refDate)
+
+    expect(result.from.getFullYear()).toBe(2026)
+    expect(result.from.getMonth()).toBe(8) // September
+    expect(result.to.getFullYear()).toBe(2027)
+    expect(result.to.getMonth()).toBe(4) // May
+  })
+
+  it('should still include the final day of the season (May 31)', () => {
+    const refDate = new Date(2026, 4, 31) // May 31, 2026 (last day of season)
+    const result = getActiveOrUpcomingSeasonDateRange(refDate)
+
+    // Season has not ended yet on its last day -> still the current season
+    expect(result.to.getFullYear()).toBe(2026)
+    expect(result.to.getMonth()).toBe(4) // May 2026
+  })
+
+  it('should never return a range whose end is before the reference day', () => {
+    const refDate = new Date(2026, 6, 1) // July 1, 2026
+    const result = getActiveOrUpcomingSeasonDateRange(refDate)
+
+    expect(result.to >= refDate).toBe(true)
   })
 })

@@ -3,7 +3,16 @@
  * Extracted from web-app/src/shared/utils/date-helpers.ts for cross-platform use.
  */
 
-import { parseISO, startOfWeek, endOfWeek, isValid, getISOWeek, getYear, format } from 'date-fns'
+import {
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+  startOfDay,
+  isValid,
+  getISOWeek,
+  getYear,
+  format,
+} from 'date-fns'
 
 // ============================================================================
 // Time Conversion Constants
@@ -337,6 +346,37 @@ export function getSeasonDateRange(referenceDate: Date = new Date()): {
   const seasonEnd = new Date(seasonEndYear, SEASON_END_MONTH + 1, 0)
 
   return { from: seasonStart, to: seasonEnd }
+}
+
+/**
+ * Calculate the active or upcoming volleyball season date range.
+ *
+ * During the season (and the spring tail up to its end) this matches
+ * {@link getSeasonDateRange}. During the summer off-season (June–August),
+ * the current season has already ended, so this looks forward to the
+ * upcoming season instead of returning a range whose end is in the past.
+ *
+ * Forward-looking consumers (e.g. fetching upcoming game exchanges) should
+ * use this so the date window never collapses to an empty/inverted range.
+ *
+ * @param referenceDate - Date to calculate the season for (defaults to current date)
+ * @returns Object with season start and end dates
+ */
+export function getActiveOrUpcomingSeasonDateRange(referenceDate: Date = new Date()): {
+  from: Date
+  to: Date
+} {
+  const currentRange = getSeasonDateRange(referenceDate)
+
+  // If the current season has not ended yet, it is still the relevant one.
+  if (currentRange.to >= startOfDay(referenceDate)) {
+    return currentRange
+  }
+
+  // Off-season after season end: use the upcoming season, which starts in
+  // this calendar year's season-start month.
+  const upcomingSeasonStart = new Date(referenceDate.getFullYear(), SEASON_START_MONTH, 1)
+  return getSeasonDateRange(upcomingSeasonStart)
 }
 
 // ============================================================================
