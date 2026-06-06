@@ -27,6 +27,7 @@ export {
   getMaxLastNameWidth,
   // Season utilities
   getSeasonDateRange,
+  getActiveOrUpcomingSeasonDateRange,
 } from '@volleykit/shared/utils'
 
 export type {
