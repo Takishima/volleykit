@@ -6,7 +6,7 @@
 
 import { Platform } from 'react-native'
 
-import * as Calendar from 'expo-calendar'
+import * as Calendar from 'expo-calendar/legacy'
 
 import type { CalendarInfo, CalendarEventData } from '../types/calendar'
 
