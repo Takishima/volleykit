@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { CompensationRecord } from '@/api/client'
 import * as compensationHooks from './hooks/useCompensations'
@@ -53,7 +53,9 @@ vi.mock('@/common/hooks/useCompensationActions', () => ({
   }),
 }))
 
-// Use a date 7 days in the past to ensure it shows in the "Pending (Past)" tab
+// Use a date 7 days in the past to ensure it shows in the "Pending (Past)" tab.
+// The system time is pinned mid-season (see beforeEach) so this date always falls
+// within the Sept-May season window that CompensationsPage filters by.
 function getPastGameDate(): string {
   const date = new Date()
   date.setDate(date.getDate() - 7)
@@ -106,8 +108,17 @@ describe('CompensationsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    // Pin time mid-season so relative mock dates stay inside the season filter
+    // (otherwise tests fail during the June-August off-season)
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    vi.setSystemTime(new Date('2026-01-15T12:00:00Z'))
+
     // Default mocks - single useCompensations hook with dynamic filter
     vi.mocked(compensationHooks.useCompensations).mockReturnValue(createMockQueryResult([]))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   describe('Tab Navigation', () => {

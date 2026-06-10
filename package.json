@@ -29,14 +29,14 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
-    "@types/react": "^19.2.16",
+    "@types/react": "^19.2.17",
     "prettier": "^3.8.3",
     "typescript": "~6.0.2"
   },
   "pnpm": {
     "overrides": {
       "fast-xml-parser": "^5.5.7",
-      "@types/react": "^19.2.16",
+      "@types/react": "^19.2.17",
       "axios": "^1.12.0",
       "jsdom": "^27.4.0",
       "@xmldom/xmldom": "^0.8.11",
