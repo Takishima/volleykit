@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Validate PR number input
         if: github.event.inputs.pr_number != ''
         run: |
@@ -177,7 +177,7 @@ jobs:
     if: github.event.schedule == '0 4 1 * *' || inputs.squash_history == true
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Check gh-pages exists and get commit count
         id: check
         run: |

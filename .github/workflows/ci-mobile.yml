@@ -34,7 +34,7 @@ jobs:
       api-cache-key: ${{ steps.api-cache-key.outputs.key }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -60,7 +60,7 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -81,7 +81,7 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -102,7 +102,7 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
