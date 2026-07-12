@@ -156,11 +156,11 @@ export default tseslint.config(
       'sonarjs/no-nested-functions': 'off',
       'sonarjs/no-unused-vars': 'off',
       'sonarjs/pseudo-random': 'off',
-      // New in eslint-plugin-sonarjs 4.1.0 - high false positive rates, mostly on tests
+      // Test-only assertion style rules new in eslint-plugin-sonarjs 4.1.0.
+      // no-floating-point-equality / super-linear-regex are NOT muted globally so
+      // they still catch real float-comparison and ReDoS bugs in production code.
       'sonarjs/prefer-specific-assertions': 'off',
       'sonarjs/no-trivial-assertions': 'off',
-      'sonarjs/no-floating-point-equality': 'off',
-      'sonarjs/super-linear-regex': 'off',
       // Code quality rules - enabled to catch complexity and potential issues
       // cognitive-complexity threshold set to 25 to accommodate complex React patterns
       // (gesture handlers, async hooks with caching). Default of 15 is too strict for React.
@@ -235,6 +235,8 @@ export default tseslint.config(
       'sonarjs/no-nested-conditional': 'off',
       // Some tests verify "no throw" behavior without explicit assertions
       'sonarjs/assertions-in-tests': 'off',
+      // Exact float equality is fine in tests with deterministic fixture values
+      'sonarjs/no-floating-point-equality': 'off',
       // Import ordering is relaxed for tests - mocks need to be set up before imports
       'import-x/order': 'off',
     },
