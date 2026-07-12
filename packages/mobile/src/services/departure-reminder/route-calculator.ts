@@ -270,19 +270,25 @@ function parseDurationToMinutes(duration: string): number {
 
   let totalMinutes = 0
 
+  // These ISO-8601 duration patterns are a single capture group followed by a
+  // literal - linear time, no catastrophic backtracking. sonarjs/super-linear-regex
+  // flags them as a false positive.
   // Extract hours
+  // eslint-disable-next-line sonarjs/super-linear-regex
   const hoursMatch = duration.match(/(\d+)H/)
   if (hoursMatch) {
     totalMinutes += parseInt(hoursMatch[1]!, 10) * 60
   }
 
   // Extract minutes
+  // eslint-disable-next-line sonarjs/super-linear-regex
   const minutesMatch = duration.match(/(\d+)M/)
   if (minutesMatch) {
     totalMinutes += parseInt(minutesMatch[1]!, 10)
   }
 
   // Extract seconds (round up to minutes)
+  // eslint-disable-next-line sonarjs/super-linear-regex
   const secondsMatch = duration.match(/(\d+)S/)
   if (secondsMatch) {
     totalMinutes += Math.ceil(parseInt(secondsMatch[1]!, 10) / 60)
