@@ -12,6 +12,13 @@ inputs:
     description: Optional prefix for cache key (defaults to working directory basename)
     required: false
     default: ''
+  frozen-lockfile:
+    description: >-
+      Whether to install with --frozen-lockfile. Set to 'false' for workflows
+      that intentionally reconcile the lockfile (e.g. dependabot audit fix),
+      where the incoming lockfile may be out of sync with package.json.
+    required: false
+    default: 'true'
 outputs:
   cache-hit:
     description: Whether node_modules cache was hit
@@ -60,8 +67,15 @@ runs:
           ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
           ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-main-
           ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-
-    # Install from root to handle workspaces correctly
+    # Install from root to handle workspaces correctly.
+    # When frozen-lockfile is 'false', always install so the lockfile is
+    # reconciled with package.json even if a stale node_modules cache was hit.
     - name: Install dependencies
-      if: steps.cache-root-modules.outputs.cache-hit != 'true' || steps.cache-node-modules.outputs.cache-hit != 'true'
+      if: inputs.frozen-lockfile != 'true' || steps.cache-root-modules.outputs.cache-hit != 'true' || steps.cache-node-modules.outputs.cache-hit != 'true'
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: |
+        if [ "${{ inputs.frozen-lockfile }}" = "true" ]; then
+          pnpm install --frozen-lockfile
+        else
+          pnpm install --no-frozen-lockfile
+        fi
