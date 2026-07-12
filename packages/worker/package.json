@@ -16,11 +16,11 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260608.1",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.4.1",
-    "globals": "^17.6.0",
+    "eslint": "^10.7.0",
+    "globals": "^17.7.0",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.60.1",
-    "vitest": "^4.1.8",
-    "wrangler": "^4.98.0"
+    "typescript-eslint": "^8.63.0",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.110.0"
   }
 }
