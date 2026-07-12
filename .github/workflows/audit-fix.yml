@@ -42,7 +42,7 @@ jobs:
       audit_summary: ${{ steps.audit-report.outputs.audit_summary }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -129,7 +129,7 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Download fixed packages
         uses: actions/download-artifact@v8
         with:
@@ -165,7 +165,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Download fixed packages
         uses: actions/download-artifact@v8
         with:
