@@ -68,7 +68,7 @@ jobs:
         run: echo "key=api-types-v2-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             packages/shared/src/api/schema.ts
@@ -184,7 +184,7 @@ jobs:
       # Cache ESLint results (ESLint handles per-file invalidation internally)
       # Key based on ESLint config, TypeScript config, and plugins
       - name: Cache ESLint
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: packages/web/.eslintcache
           key: eslint-${{ runner.os }}-${{ hashFiles('packages/web/eslint.config.js', 'packages/web/tsconfig.json', 'pnpm-lock.yaml') }}
@@ -242,7 +242,7 @@ jobs:
       # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
       # Key based on tooling config - source file changes don't invalidate transforms
       - name: Cache Vite
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: packages/web/node_modules/.vite
           key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
@@ -280,7 +280,7 @@ jobs:
       # Cache Vite pre-bundled dependencies (shared key with test job)
       # Key based on dependencies and config - source changes don't affect dep pre-bundling
       - name: Cache Vite
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: packages/web/node_modules/.vite
           key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}

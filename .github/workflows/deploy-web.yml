@@ -52,7 +52,7 @@ jobs:
           working-directory: packages/web
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             packages/web/src/api/schema.ts
@@ -63,7 +63,7 @@ jobs:
         run: pnpm run generate:api
       # Cache ESLint results
       - name: Cache ESLint
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: packages/web/.eslintcache
           key: eslint-${{ runner.os }}-main-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx') }}
@@ -74,7 +74,7 @@ jobs:
         run: pnpm run lint --cache --cache-location .eslintcache
       # Cache Vite/Vitest artifacts (Vitest stores cache in .vite/vitest)
       - name: Cache Vite
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: packages/web/node_modules/.vite
           key: vite-${{ runner.os }}-main-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
@@ -113,7 +113,7 @@ jobs:
           node-version: '22'
       # Cache Astro build artifacts
       - name: Cache Astro build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: help-site/node_modules/.astro
           key: astro-${{ runner.os }}-main-${{ hashFiles('help-site/src/**/*', 'help-site/astro.config.mjs') }}
@@ -144,7 +144,7 @@ jobs:
           working-directory: ocr-poc
       # Cache ESLint results
       - name: Cache ESLint
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ocr-poc/.eslintcache
           key: ocr-poc-eslint-${{ runner.os }}-main-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx') }}
@@ -155,7 +155,7 @@ jobs:
         run: pnpm run lint --cache --cache-location .eslintcache
       # Cache Vite build artifacts
       - name: Cache Vite build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ocr-poc/node_modules/.vite
           key: ocr-poc-vite-${{ runner.os }}-main-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx', 'ocr-poc/vite.config.ts') }}

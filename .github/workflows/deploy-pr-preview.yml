@@ -33,7 +33,7 @@ jobs:
       # Cache generated API types (shared across branches)
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             packages/web/src/api/schema.ts
@@ -74,7 +74,7 @@ jobs:
           node-version: '22'
       # Cache Astro build artifacts per branch
       - name: Cache Astro build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: help-site/node_modules/.astro
           key: astro-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('help-site/src/**/*', 'help-site/astro.config.mjs') }}
@@ -105,7 +105,7 @@ jobs:
           working-directory: ocr-poc
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ocr-poc/node_modules/.vite
           key: ocr-poc-vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx', 'ocr-poc/vite.config.ts') }}
