@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.31.0
+
+### Patch Changes
+
+- [#1132](https://github.com/Takishima/volleykit/pull/1132) [`e4f000c`](https://github.com/Takishima/volleykit/commit/e4f000c90e3176452b86bd42a09bca8a468e43ad) Thanks [@dependabot](https://github.com/apps/dependabot)! - Fix exchanges not loading during the summer off-season. The exchange query used the current volleyball season's end date as its upper bound, which falls in the past between June and August, inverting the date window and hiding all upcoming exchanges. A new `getActiveOrUpcomingSeasonDateRange` helper looks forward to the upcoming season when the current one has ended.
+
+- [#1111](https://github.com/Takishima/volleykit/pull/1111) [`9e08370`](https://github.com/Takishima/volleykit/commit/9e0837010a3ebf2a6632a75865c5b686d45bdc9d) Thanks [@Takishima](https://github.com/Takishima)! - Fix `react-hooks/set-state-in-effect` and `react-hooks/refs` lint errors by migrating affected hooks and modal state resets to the "adjust state during render" pattern and moving `checkForUpdate()` into login submit handlers.
+
+- Updated dependencies [[`e4f000c`](https://github.com/Takishima/volleykit/commit/e4f000c90e3176452b86bd42a09bca8a468e43ad)]:
+  - @volleykit/shared@1.31.0
+
 ## 1.30.0
 
 ### Minor Changes

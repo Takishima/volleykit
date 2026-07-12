@@ -1,5 +1,11 @@
 # @volleykit/shared
 
+## 1.31.0
+
+### Minor Changes
+
+- [#1132](https://github.com/Takishima/volleykit/pull/1132) [`e4f000c`](https://github.com/Takishima/volleykit/commit/e4f000c90e3176452b86bd42a09bca8a468e43ad) Thanks [@dependabot](https://github.com/apps/dependabot)! - Fix exchanges not loading during the summer off-season. The exchange query used the current volleyball season's end date as its upper bound, which falls in the past between June and August, inverting the date window and hiding all upcoming exchanges. A new `getActiveOrUpcomingSeasonDateRange` helper looks forward to the upcoming season when the current one has ended.
+
 ## 1.29.0
 
 ### Minor Changes
