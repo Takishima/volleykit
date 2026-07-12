@@ -108,6 +108,11 @@ export default tseslint.config(
       'sonarjs/pseudo-random': 'off',
       'sonarjs/use-type-alias': 'off',
       'sonarjs/slow-regex': 'off',
+      // New in eslint-plugin-sonarjs 4.1.0 - high false positive rates, mostly on tests
+      'sonarjs/prefer-specific-assertions': 'off',
+      'sonarjs/no-trivial-assertions': 'off',
+      'sonarjs/no-floating-point-equality': 'off',
+      'sonarjs/super-linear-regex': 'off',
       // cognitive-complexity threshold set to 25 for complex React patterns
       'sonarjs/cognitive-complexity': ['error', 25],
     },

@@ -20,7 +20,7 @@ jobs:
     name: Capture Screenshots
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.60.0-noble
+      image: mcr.microsoft.com/playwright:v1.61.1-noble
     env:
       HOME: /root
     steps:

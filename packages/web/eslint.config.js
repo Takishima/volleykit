@@ -156,6 +156,11 @@ export default tseslint.config(
       'sonarjs/no-nested-functions': 'off',
       'sonarjs/no-unused-vars': 'off',
       'sonarjs/pseudo-random': 'off',
+      // New in eslint-plugin-sonarjs 4.1.0 - high false positive rates, mostly on tests
+      'sonarjs/prefer-specific-assertions': 'off',
+      'sonarjs/no-trivial-assertions': 'off',
+      'sonarjs/no-floating-point-equality': 'off',
+      'sonarjs/super-linear-regex': 'off',
       // Code quality rules - enabled to catch complexity and potential issues
       // cognitive-complexity threshold set to 25 to accommodate complex React patterns
       // (gesture handlers, async hooks with caching). Default of 15 is too strict for React.
