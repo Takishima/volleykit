@@ -1,0 +1,1 @@
+import"./chunk-utils-CQ9_HL81.js";function e(e){let t=e.message.toLowerCase(),n=e.name.toLowerCase();return n===`typeerror`&&t.includes(`fetch`)||n===`networkerror`||t.includes(`network`)||t.includes(`failed to fetch`)||t.includes(`connection`)||t.includes(`timeout`)||t.includes(`cors`)||t.includes(`offline`)?`network`:`application`}export{e as t};
