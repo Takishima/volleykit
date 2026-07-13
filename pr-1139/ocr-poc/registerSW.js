@@ -1,1 +1,0 @@
-if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/pr-1139/ocr-poc/sw.js', { scope: '/pr-1139/ocr-poc/' })})}
