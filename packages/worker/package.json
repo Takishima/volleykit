@@ -14,13 +14,13 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260713.1",
+    "@cloudflare/workers-types": "^5.20260718.1",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.7.0",
     "globals": "^17.7.0",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.63.0",
+    "typescript-eslint": "^8.64.0",
     "vitest": "^4.1.10",
-    "wrangler": "^4.110.0"
+    "wrangler": "^4.112.0"
   }
 }

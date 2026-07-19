@@ -237,6 +237,11 @@ export default tseslint.config(
       'sonarjs/assertions-in-tests': 'off',
       // Exact float equality is fine in tests with deterministic fixture values
       'sonarjs/no-floating-point-equality': 'off',
+      // New in eslint-plugin-sonarjs 4.2.0 - test-only style rules.
+      // parameterized-tests would force test.each on intentionally explicit,
+      // readable per-case tests; fixed waits are sometimes needed in e2e flows.
+      'sonarjs/parameterized-tests': 'off',
+      'sonarjs/no-fixed-wait-in-tests': 'off',
       // Import ordering is relaxed for tests - mocks need to be set up before imports
       'import-x/order': 'off',
     },
