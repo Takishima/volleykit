@@ -94,7 +94,7 @@
     "knip": "^6.27.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "happy-dom": "^20.10.6",
+    "happy-dom": "^20.11.0",
     "msw": "^2.15.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
