@@ -210,7 +210,7 @@ function getScheduledNotifications(): ScheduledNotification[] {
  *
  * Usage:
  * ```typescript
- * import { notificationService } from '@/common/services/notifications';
+ * import { notificationService } from '@/common/services/notifications/notification-service';
  *
  * if (notificationService.isSupported()) {
  *   const permission = await notificationService.requestPermission();
