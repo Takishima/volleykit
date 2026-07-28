@@ -38,17 +38,12 @@ import {
 // ---------------------------------------------------------------------------
 
 export { downloadPdf } from './pdf-download'
-export {
-  getChecklistSections,
-  type ChecklistSection,
-  type ChecklistSubItem,
-} from './pdf-field-mappings'
+export { getChecklistSections } from './pdf-field-mappings'
 export {
   buildReportFilename,
   extractSportsHallReportData,
   getLeagueCategoryFromAssignment,
   mapAppLocaleToPdfLanguage,
-  type Gender,
   type Language,
   type LeagueCategory,
   type SportsHallReportData,

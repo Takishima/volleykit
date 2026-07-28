@@ -38,7 +38,7 @@ import type { OfflineAction } from './action-types'
 import type { QueryClient } from '@tanstack/react-query'
 
 // Re-export types for existing consumers
-export type { ActionSyncResult, SyncResult }
+export type { SyncResult }
 
 const log = createLogger('action-sync')
 

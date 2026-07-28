@@ -8,18 +8,7 @@
  */
 
 // Re-export everything from types
-export type {
-  LocationSource,
-  UserLocation,
-  DistanceFilter,
-  SbbDestinationType,
-  ValidationReferenceMode,
-  TravelTimeFilter,
-  GameGapFilter,
-  NotificationSettings,
-  ModeSettings,
-  SettingsState,
-} from './types'
+export type { UserLocation, DistanceFilter, SbbDestinationType, ModeSettings } from './types'
 
 export {
   DEFAULT_ARRIVAL_BUFFER_SV_MINUTES,
@@ -29,10 +18,6 @@ export {
   getDefaultArrivalBuffer,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-  DEFAULT_ARRIVAL_BUFFER_MINUTES,
-  DEFAULT_MIN_GAME_GAP_MINUTES,
-  DEFAULT_NOTIFICATION_SETTINGS,
-  DEFAULT_MODE_SETTINGS,
   DEMO_HOME_LOCATION,
 } from './types'
 

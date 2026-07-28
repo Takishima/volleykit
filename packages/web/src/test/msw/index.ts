@@ -1,1 +1,1 @@
-export { server, http, HttpResponse, createHandlers, defaultResponses } from './server'
+export { server, http, HttpResponse } from './server'

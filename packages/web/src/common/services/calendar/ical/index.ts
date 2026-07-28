@@ -22,15 +22,7 @@
  */
 
 // Types
-export type {
-  ICalEvent,
-  CalendarAssignment,
-  Gender,
-  RefereeRole,
-  ParsedFields,
-  ParseConfidence,
-  ParseResult,
-} from './types'
+export type { CalendarAssignment, ParseResult } from './types'
 
 // Parser functions
-export { parseICalFeed, extractAssignment, parseCalendarFeed } from './parser'
+export { parseCalendarFeed } from './parser'

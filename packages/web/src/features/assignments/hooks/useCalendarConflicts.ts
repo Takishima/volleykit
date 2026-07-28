@@ -26,11 +26,10 @@ import {
   type ConflictMap,
   type AssignmentConflict,
   type ConflictEvaluator,
-  type SmartConflictOptions,
 } from '@/features/assignments/utils/conflict-detection'
 
 // Re-export types for convenience
-export type { ConflictMap, AssignmentConflict, ConflictEvaluator, SmartConflictOptions }
+export type { ConflictMap, AssignmentConflict, ConflictEvaluator }
 
 /** Default conflict threshold in minutes */
 const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
