@@ -17,6 +17,7 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_GUARD="$(cd "$HERE/.." && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 
 # Sourced up front: the scratch fixture is built from SHELLCHECK_INPUTS, and
@@ -42,6 +43,18 @@ not_ok() {
 # --- scratch monorepo ---------------------------------------------------------
 
 SCRATCH=$(mktemp -d)
+# `cd ""` is a successful no-op in bash, so a failed mktemp would run this whole
+# suite against the working repo — creating fixtures, committing them, and
+# overwriting .gitignore. That happened. Refuse to continue without a real
+# scratch directory, and refuse if it is somehow the repo itself.
+if [ -z "$SCRATCH" ] || [ ! -d "$SCRATCH" ]; then
+  echo "$(basename "$0"): could not create a scratch directory; refusing to run" >&2
+  exit 1
+fi
+if [ "$SCRATCH" = "$REPO_GUARD" ] || [ -e "$SCRATCH/.git" ]; then
+  echo "$(basename "$0"): scratch directory is not empty or is a repository; refusing" >&2
+  exit 1
+fi
 # The cache MUST live outside the scratch repo. reset_tree runs `git clean -qfd`,
 # which would delete it, leaving every later row running against a cold cache —
 # and divergence is only consulted once no check is missing, so the divergence
@@ -761,6 +774,23 @@ else
 fi
 rm -f scripts/scratch-debug.sh
 reset_tree
+
+# Both suites build a scratch repo and commit into it. `cd ""` is a successful
+# no-op in bash, so a failed mktemp silently pointed all of that at the working
+# repo — fixtures created, commits landed on the branch, .gitignore overwritten.
+# This asserts the refusal, from outside, with mktemp forced to fail.
+MTFAIL="$SCRATCH/mtfail"
+mkdir -p "$MTFAIL"
+printf '#!/bin/sh\nexit 1\n' >"$MTFAIL/mktemp"
+chmod +x "$MTFAIL/mktemp"
+for suite in validation-lib.test.sh validate.test.sh; do
+  OUT=$(PATH="$MTFAIL:$PATH" bash "$HERE/$suite" 2>&1)
+  case "$OUT" in
+    *"refusing to run"*) ok "$suite refuses to run without a scratch directory" ;;
+    *) not_ok "$suite refuses to run without a scratch directory" \
+      "it would have run against the working repo — ${OUT%%$'\n'*}" ;;
+  esac
+done
 
 # --- guards -------------------------------------------------------------------
 

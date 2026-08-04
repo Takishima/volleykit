@@ -1,16 +1,23 @@
 #!/usr/bin/env bash
-# Tests for scripts/validation-lib.sh.
+# Tests for scripts/validation-lib.sh and .claude/hooks/pre-git-commit.sh.
 #
 #   scripts/validation-lib.test.sh
 #
-# Runs against a scratch repository in a temp directory — it never touches the
-# working repo. These assert the invariants the check cache rests on: if
+# Two halves. The first asserts the invariants the check cache rests on: if
 # fingerprint() gets any of them wrong, the commit gate either approves
-# unvalidated code or throws away results it should have kept.
+# unvalidated code or throws away results it should have kept. The second drives
+# the commit hook — its predicate, and end to end through its JSON input, which
+# is where several bypasses lived.
+#
+# Everything runs against a scratch repository in a temp directory and never
+# writes to the working repo. The lib-missing rows exercise a COPY of the hook
+# rather than moving the real predicate aside: the EXIT trap deletes $SCRATCH,
+# and the other shell checks run in the same parallel wave.
 
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_GUARD="$(cd "$HERE/.." && pwd)"
 LIB="$HERE/validation-lib.sh"
 HOOK="$HERE/../.claude/hooks/pre-git-commit.sh"
 
@@ -42,6 +49,18 @@ assert_ne() {
 # --- scratch repository -------------------------------------------------------
 
 SCRATCH=$(mktemp -d)
+# `cd ""` is a successful no-op in bash, so a failed mktemp would run this whole
+# suite against the working repo — creating fixtures, committing them, and
+# overwriting .gitignore. That happened. Refuse to continue without a real
+# scratch directory, and refuse if it is somehow the repo itself.
+if [ -z "$SCRATCH" ] || [ ! -d "$SCRATCH" ]; then
+  echo "$(basename "$0"): could not create a scratch directory; refusing to run" >&2
+  exit 1
+fi
+if [ "$SCRATCH" = "$REPO_GUARD" ] || [ -e "$SCRATCH/.git" ]; then
+  echo "$(basename "$0"): scratch directory is not empty or is a repository; refusing" >&2
+  exit 1
+fi
 trap 'rm -rf "$SCRATCH"' EXIT
 
 cd "$SCRATCH" || exit 1
@@ -253,24 +272,27 @@ assert_not_gated "a path containing the word" "cat docs/git-${C}s.md"
 # question, which blocked every Bash call in the session.
 
 hook_decision() {
-  printf '%s' "$1" | PATH="${2:-$PATH}" CLAUDE_CODE_REMOTE=true bash "$HOOK" 2>/dev/null |
+  printf '%s' "$1" | PATH="${2:-$PATH}" CLAUDE_CODE_REMOTE=true bash "${3:-$HOOK}" 2>/dev/null |
     sed -n 's/.*"decision"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p'
 }
 
 assert_decision() {
   local label=$1 want=$2 got
-  got=$(hook_decision "$3" "${4:-$PATH}")
+  got=$(hook_decision "$3" "${4:-$PATH}" "${5:-$HOOK}")
   if [ "$got" = "$want" ]; then ok "hook: $label"; else not_ok "hook: $label" "expected $want, got '${got:-<none>}'"; fi
 }
 
 # json_escape turns a fixture into a JSON string body the way a real caller would.
+# Preflighted at top level: every call site is $(json_escape ...), and an `exit`
+# there ends only that subshell — a jq-less run reported 31 rows as wrong
+# decisions instead of one missing tool.
+if ! command -v jq >/dev/null 2>&1; then
+  echo "validation-lib.test.sh: jq is required to build hook payloads" >&2
+  exit 1
+fi
+
 json_escape() {
-  local out
-  if ! out=$(printf '%s' "$1" | jq -Rs . 2>&1); then
-    echo "validation-lib.test.sh: jq is required to build hook payloads: $out" >&2
-    exit 1
-  fi
-  printf '%s' "$out" | sed 's/^"//;s/"$//'
+  printf '%s' "$1" | jq -Rs . | sed 's/^"//;s/"$//'
 }
 
 for fixture in "${GATED_FIXTURES[@]}"; do
@@ -314,20 +336,31 @@ assert_decision "without jq, a possible commit is blocked" "block" \
   "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$NOJQ_BIN"
 
 # The lib can go missing. That must not take the session's shell with it: the
-# hook runs on every Bash call, and the message's own remedy needs one. This
-# branch has shipped in two orderings, blocking everything in one of them, with
-# no row either time.
-LIB_DIR="$(dirname "$HOOK")/lib"
-LIB_AWAY="$SCRATCH/lib-away"
-if mv "$LIB_DIR" "$LIB_AWAY" 2>/dev/null; then
-  assert_decision "with the predicate lib missing, an unrelated command still runs" \
-    "approve" '{"tool_input":{"command":"ls -la"}}'
-  assert_decision "with the predicate lib missing, a possible commit is blocked" \
-    "block" "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")"
-  mv "$LIB_AWAY" "$LIB_DIR"
-else
-  not_ok "the predicate lib can be moved aside for the test" "$LIB_DIR"
-fi
+# hook runs on every Bash call, and the message's own remedy needs one.
+#
+# Exercised against a COPY with no sibling lib/ — the hook resolves HOOK_DIR from
+# BASH_SOURCE, so the branch fires without touching the working repo. Moving the
+# real lib aside would leave a tracked file inside $SCRATCH, which the EXIT trap
+# deletes on Ctrl-C, and would race the other shell checks in the same wave.
+NOLIB_HOOK="$SCRATCH/nolib/pre-git-commit.sh"
+mkdir -p "$SCRATCH/nolib"
+cp "$HOOK" "$NOLIB_HOOK"
+
+assert_decision "with the predicate lib missing, an unrelated command still runs" \
+  "approve" '{"tool_input":{"command":"ls -la"}}' "$PATH" "$NOLIB_HOOK"
+
+# The fallback is a second copy of might_be_git_commit — unavoidable, since on
+# that path the definition is what failed to load. Nothing else can hold it to
+# the original, so the whole gated table runs through it.
+for fixture in "${GATED_FIXTURES[@]}"; do
+  label=${fixture%%$'\x01'*}
+  cmd=${fixture#*$'\x01'}
+  payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
+  assert_decision "with the lib missing, still gated: $label" "block" "$payload" "$PATH" "$NOLIB_HOOK"
+done
+
+assert_decision "with the lib missing, an escaped subcommand is still gated" "block" \
+  '{"tool_input":{"command":"git \u0063ommit -m x"}}' "$PATH" "$NOLIB_HOOK"
 
 # --- commit-hook registration -------------------------------------------------
 #
