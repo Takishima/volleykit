@@ -30,3 +30,14 @@ const TEST_TIMEOUT_HEADROOM_MS = 7000
 
 /** Budget for a whole test. Must exceed ASYNC_UTIL_TIMEOUT_MS. */
 export const TEST_TIMEOUT_MS = ASYNC_UTIL_TIMEOUT_MS + TEST_TIMEOUT_HEADROOM_MS
+
+/**
+ * Budget for beforeAll/afterAll/beforeEach/afterEach.
+ *
+ * Derived rather than left at Vitest's default so all three budgets move
+ * together: a hook may await the same cold dynamic imports a test does — the
+ * shared setup preloads translations and date locales in a beforeAll — and a
+ * waitFor inside a hook spends the assertion budget here, where it would
+ * otherwise hit the same equality this module exists to prevent.
+ */
+export const HOOK_TIMEOUT_MS = TEST_TIMEOUT_MS
