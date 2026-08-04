@@ -386,6 +386,12 @@ else
   not_ok "the hook is executable" "chmod +x .claude/hooks/pre-git-commit.sh"
 fi
 
+# --- row count ------------------------------------------------------------------
+#
+# See validate.test.sh: the per-block counts cannot see their own block being
+# deleted, so the total is pinned outside all of them.
+assert_eq "the suite ran every row it defines" "$((PASS + FAIL + 1))" 111
+
 # --- result -------------------------------------------------------------------
 
 report

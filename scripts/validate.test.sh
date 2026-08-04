@@ -792,6 +792,12 @@ chmod +x "$MTFAIL/mktemp"
 # assertions must not be settable from the ambient environment, where it would
 # delete both rows and leave only a count nobody compares.
 RESPAWN_BEFORE=$((PASS + FAIL))
+# The expectation is computed and asserted OUTSIDE the block, or deleting the
+# block takes its own lever with it — the shape the guard count was fixed for,
+# one level up.
+EXPECTED_REFUSAL_ROWS=2
+[ "$NO_RESPAWN" = false ] || EXPECTED_REFUSAL_ROWS=0
+
 if [ "$NO_RESPAWN" = false ]; then
   for suite in validation-lib.test.sh validate.test.sh; do
     OUT=$(PATH="$MTFAIL:$PATH" bash "$HERE/$suite" --no-respawn 2>&1)
@@ -802,13 +808,12 @@ if [ "$NO_RESPAWN" = false ]; then
     esac
   done
 
-  # The last conditional block whose rows nobody counted: under --no-respawn it
-  # legitimately contributes none, so the tally alone cannot tell "skipped
-  # deliberately" from "silently stopped asserting". Counted on the normal path,
-  # which is the only one a regression would travel.
-  assert_eq "the refusal block contributed a row per suite" \
-    "$((PASS + FAIL - RESPAWN_BEFORE))" 2
 fi
+
+# Under --no-respawn the block legitimately contributes nothing, so the expected
+# value carries that rather than the assertion being skipped.
+assert_eq "the refusal block contributed a row per suite" \
+  "$((PASS + FAIL - RESPAWN_BEFORE))" "$EXPECTED_REFUSAL_ROWS"
 
 # --- guards -------------------------------------------------------------------
 
@@ -841,6 +846,19 @@ else
     "exit $STATUS (the command would be exec'd as argv and half-ignored)"
 fi
 reset_tree
+
+# --- row count ------------------------------------------------------------------
+#
+# Every per-block count is self-guarded: it lives beside the block it counts, so
+# deleting that block whole takes its own lever with it. Only a total pinned
+# outside all of them catches a block disappearing entirely.
+#
+# Yes, adding a row means updating this line in the same commit. That is the
+# cost of the lever, and a stale total fails loudly next to the change that
+# caused it.
+EXPECTED_ROWS=91
+[ "$NO_RESPAWN" = false ] || EXPECTED_ROWS=89
+assert_eq "the suite ran every row it defines" "$((PASS + FAIL + 1))" "$EXPECTED_ROWS"
 
 # --- result -------------------------------------------------------------------
 
