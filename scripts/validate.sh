@@ -117,7 +117,7 @@ FORMAT_ROOT=".prettierrc.json .prettierignore"
 # matched by no other constant and by no shell predicate — editing it registered
 # nothing. CI is the only enforcer a settings.json change cannot switch off; the
 # shell lint's own scope is wider and lives in scripts/shellcheck.sh.
-SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
+SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh scripts/shellcheck.sh scripts/test-lib.sh .github/workflows/ci-shell.yml"
 
 # The design-token check compares the two generated files. Its trigger used to
 # be hand-written while its inputs were listed separately, so editing the

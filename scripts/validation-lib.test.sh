@@ -19,6 +19,8 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_GUARD="$(cd "$HERE/.." && pwd)"
 LIB="$HERE/validation-lib.sh"
+# shellcheck source=./test-lib.sh
+source "$HERE/test-lib.sh" || exit 1
 HOOK="$HERE/../.claude/hooks/pre-git-commit.sh"
 
 PASS=0
@@ -49,18 +51,7 @@ assert_ne() {
 # --- scratch repository -------------------------------------------------------
 
 SCRATCH=$(mktemp -d)
-# `cd ""` is a successful no-op in bash, so a failed mktemp would run this whole
-# suite against the working repo — creating fixtures, committing them, and
-# overwriting .gitignore. That happened. Refuse to continue without a real
-# scratch directory, and refuse if it is somehow the repo itself.
-if [ -z "$SCRATCH" ] || [ ! -d "$SCRATCH" ]; then
-  echo "$(basename "$0"): could not create a scratch directory; refusing to run" >&2
-  exit 1
-fi
-if [ "$SCRATCH" = "$REPO_GUARD" ] || [ -e "$SCRATCH/.git" ]; then
-  echo "$(basename "$0"): scratch directory is not empty or is a repository; refusing" >&2
-  exit 1
-fi
+require_scratch "$SCRATCH" "$(basename "$0")" "$REPO_GUARD" || exit 1
 trap 'rm -rf "$SCRATCH"' EXIT
 
 cd "$SCRATCH" || exit 1
@@ -351,16 +342,33 @@ assert_decision "with the predicate lib missing, an unrelated command still runs
 
 # The fallback is a second copy of might_be_git_commit — unavoidable, since on
 # that path the definition is what failed to load. Nothing else can hold it to
-# the original, so the whole gated table runs through it.
-for fixture in "${GATED_FIXTURES[@]}"; do
-  label=${fixture%%$'\x01'*}
-  cmd=${fixture#*$'\x01'}
-  payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
-  assert_decision "with the lib missing, still gated: $label" "block" "$payload" "$PATH" "$NOLIB_HOOK"
-done
+# the original, so it is pinned in BOTH directions.
+#
+# Driving the whole gated table through it would add nothing: every fixture
+# carries the literal subcommand, so a narrow and a wide fallback classify them
+# identically. What distinguishes them is an escaped payload.
+assert_decision "with the lib missing, a literal commit is still gated" "block" \
+  "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$PATH" "$NOLIB_HOOK"
+assert_decision "with the lib missing, a \\u-escaped subcommand is still gated" "block" \
+  '{"tool_input":{"command":"git \\u0063ommit -m x"}}' "$PATH" "$NOLIB_HOOK"
+assert_decision "with the lib missing, a \\U-escaped payload is still gated" "block" \
+  '{"tool_input":{"command":"git \\U0001F600 commit -m x"}}' "$PATH" "$NOLIB_HOOK"
 
-assert_decision "with the lib missing, an escaped subcommand is still gated" "block" \
-  '{"tool_input":{"command":"git \u0063ommit -m x"}}' "$PATH" "$NOLIB_HOOK"
+# The other direction, which has actually shipped broken: widening the fallback
+# blocks the whole session. `git grep <subcommand>` and friends are deliberately
+# absent — the fallback is a superset and gates them by design, and so is any
+# path containing the word, which is why the block message points at non-Bash
+# tools rather than at a shell command.
+while IFS= read -r cmd; do
+  [ -z "$cmd" ] && continue
+  payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
+  assert_decision "with the lib missing, still runnable: $cmd" "approve" "$payload" "$PATH" "$NOLIB_HOOK"
+done <<'RECOVERY'
+ls -la
+git status
+git log --oneline
+git diff --stat
+RECOVERY
 
 # --- commit-hook registration -------------------------------------------------
 #

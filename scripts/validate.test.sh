@@ -17,11 +17,13 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_GUARD="$(cd "$HERE/.." && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 
 # Sourced up front: the scratch fixture is built from SHELLCHECK_INPUTS, and
 # is_shell_file / shellcheck_files / all_shell_files are read by rows below.
+# shellcheck source=./test-lib.sh
+source "$HERE/test-lib.sh" || exit 1
+
 # shellcheck source=./shellcheck.sh
 source "$HERE/shellcheck.sh" || exit 1
 
@@ -43,26 +45,16 @@ not_ok() {
 # --- scratch monorepo ---------------------------------------------------------
 
 SCRATCH=$(mktemp -d)
-# `cd ""` is a successful no-op in bash, so a failed mktemp would run this whole
-# suite against the working repo — creating fixtures, committing them, and
-# overwriting .gitignore. That happened. Refuse to continue without a real
-# scratch directory, and refuse if it is somehow the repo itself.
-if [ -z "$SCRATCH" ] || [ ! -d "$SCRATCH" ]; then
-  echo "$(basename "$0"): could not create a scratch directory; refusing to run" >&2
-  exit 1
-fi
-if [ "$SCRATCH" = "$REPO_GUARD" ] || [ -e "$SCRATCH/.git" ]; then
-  echo "$(basename "$0"): scratch directory is not empty or is a repository; refusing" >&2
-  exit 1
-fi
+require_scratch "$SCRATCH" "$(basename "$0")" "$REPO" || exit 1
 # The cache MUST live outside the scratch repo. reset_tree runs `git clean -qfd`,
 # which would delete it, leaving every later row running against a cold cache —
 # and divergence is only consulted once no check is missing, so the divergence
 # rows would pass without the rule ever being evaluated.
 CACHE=$(mktemp -d)
+require_scratch "$CACHE" "$(basename "$0") (cache)" "$REPO" || exit 1
 trap 'rm -rf "$SCRATCH" "$CACHE"' EXIT
 
-mkdir -p "$SCRATCH/bin"
+mkdir -p "${SCRATCH:?}/bin"
 for tool in pnpm node shellcheck; do
   printf '#!/bin/sh\nexit 0\n' >"$SCRATCH/bin/$tool"
   chmod +x "$SCRATCH/bin/$tool"
@@ -516,6 +508,10 @@ assert_records "a file under no package and no root selects nothing" ""
 # The backup lives outside the repo: an untracked file inside it would itself
 # be a change, and `git clean` in reset_tree would delete the cache directory.
 BACKUP="$(mktemp)"
+[ -n "$BACKUP" ] && [ -f "$BACKUP" ] || {
+  echo "$(basename "$0"): could not create a temp file; refusing to run" >&2
+  exit 1
+}
 
 # Prime the cache against the exact worktree content asserted on below.
 echo 'export const a = 42' >packages/web/src/index.ts
@@ -783,14 +779,21 @@ MTFAIL="$SCRATCH/mtfail"
 mkdir -p "$MTFAIL"
 printf '#!/bin/sh\nexit 1\n' >"$MTFAIL/mktemp"
 chmod +x "$MTFAIL/mktemp"
-for suite in validation-lib.test.sh validate.test.sh; do
-  OUT=$(PATH="$MTFAIL:$PATH" bash "$HERE/$suite" 2>&1)
-  case "$OUT" in
-    *"refusing to run"*) ok "$suite refuses to run without a scratch directory" ;;
-    *) not_ok "$suite refuses to run without a scratch directory" \
-      "it would have run against the working repo — ${OUT%%$'\n'*}" ;;
-  esac
-done
+
+# The marker bounds the recursion OUTSIDE the guard under test. This row spawns
+# validate.test.sh, so with the guard regressed the child would reach this same
+# block and spawn two more, forever — the row could never report, and the
+# failure would be a hung parallel wave rather than a red row.
+if [ -z "${VOLLEYKIT_TEST_NO_RESPAWN:-}" ]; then
+  for suite in validation-lib.test.sh validate.test.sh; do
+    OUT=$(VOLLEYKIT_TEST_NO_RESPAWN=1 PATH="$MTFAIL:$PATH" bash "$HERE/$suite" 2>&1)
+    case "$OUT" in
+      *"refusing to run"*) ok "$suite refuses to run without a scratch directory" ;;
+      *) not_ok "$suite refuses to run without a scratch directory" \
+        "it would have run against the working repo — ${OUT%%$'\n'*}" ;;
+    esac
+  done
+fi
 
 # --- guards -------------------------------------------------------------------
 
