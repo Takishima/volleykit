@@ -40,13 +40,13 @@ jobs:
       - name: Lint shell scripts
         run: shellcheck -x --severity=info -e SC1091,SC2015 scripts/*.sh .claude/hooks/*.sh .claude/hooks/lib/*.sh
 
-  validation-lib-test:
-    name: validation-lib tests
+  shell-tests:
+    name: shell test suites
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      - name: Run validation library tests
+      - name: Run the validation suites
         run: |
           bash scripts/validation-lib.test.sh
           bash scripts/validate.test.sh

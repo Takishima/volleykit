@@ -115,7 +115,12 @@ TOKENS_INPUTS="packages/shared/styles scripts/sync-style-tokens.js"
 # CHANGE DETECTION
 # =============================================================================
 
-CHANGED=$(changed_files)
+# A non-zero return means git cannot represent some path in the change set.
+# Exiting 3 rather than 0 or 1 makes the hook report a broken gate instead of an
+# open one — an unrepresentable path must not read as "no changes".
+if ! CHANGED=$(changed_files); then
+  exit 3
+fi
 
 if [ -z "$CHANGED" ]; then
   say "${GREEN}No changes, nothing to validate.${NC}"
@@ -160,7 +165,7 @@ fi
 if [ "$GATE_MODE" = false ] && matches 'volleymanager-openapi\.yaml'; then
   echo "OpenAPI spec changed, regenerating types..."
   pnpm run generate:api
-  CHANGED=$(changed_files)
+  CHANGED=$(changed_files) || exit 3
 fi
 
 # =============================================================================
@@ -225,6 +230,20 @@ declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
 
 _register() {
   local name=$1 class=$2 dir=$3 cmd=$4 paths=$5 args=${6-}
+  # run_check execs CHECK_CMD as argv with no shell, so a metacharacter is
+  # passed through as a literal argument and silently does nothing. That is how
+  # `a.sh && b.sh` came to run only a.sh while the check reported green.
+  # Composites need a sentinel handled by name in run_check (__format__,
+  # __web_build__). Fail at registration rather than pass at runtime.
+  # shellcheck disable=SC2016  # the patterns match literal metacharacters
+  case "$cmd" in
+    __*) ;;
+    *[\&\|\;\<\>\`]* | *'$('*)
+      echo "register_check: $name: shell metacharacter in command." >&2
+      echo "run_check execs argv, not a shell line. Use a sentinel." >&2
+      exit 3
+      ;;
+  esac
   CHECK_NAMES+=("$name")
   CHECK_CLASS["$name"]=$class
   CHECK_DIR["$name"]=$dir
@@ -287,7 +306,7 @@ if matches "$(paths_to_regex "$FORMAT_ROOT")"; then
   # `-c -o --exclude-standard` is the same listing fingerprint() uses.
   FORMAT_CANDIDATES=$(
     {
-      git -c core.quotePath=false ls-files -c -o --exclude-standard 2>/dev/null || true
+      tracked_and_untracked_files
       printf '%s\n' "$FORMAT_CANDIDATES"
     } | grep -E "$FORMAT_EXT" | sed '/^$/d' | sort -u || true
   )

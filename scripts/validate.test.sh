@@ -55,23 +55,33 @@ git init -q .
 git config user.email test@example.com
 git config user.name Test
 
-# The package layout is derived from validate.sh's own table rather than
-# restated here: a package added there with a path that exists nowhere would
-# otherwise fail nothing, which is the manual-agreement pattern this suite is
-# meant to remove. Only the `declare -A PKG_INPUTS=(...)` block is evaluated.
+# The package layout is derived from validate.sh's own table. `mkdir -p` alone
+# would not be a guard — git does not track empty directories, so a package
+# added to the table with a path that exists nowhere would still fail nothing.
+# Each derived path gets a real committed file, and a generated row below
+# asserts the package is reachable from it.
+eval "$(sed -n '/^declare -a PKG_NAMES=(/p' "$HERE/validate.sh")"
 eval "$(sed -n '/^declare -A PKG_INPUTS=(/,/^)/p' "$HERE/validate.sh")"
 
 mkdir -p scripts .claude/hooks/lib docs/api
-for pkg in "${!PKG_INPUTS[@]}"; do
+for pkg in "${PKG_NAMES[@]}"; do
   for path in ${PKG_INPUTS[$pkg]}; do
     case "$path" in
-      *.json | *.yaml) mkdir -p "$(dirname "$path")" ;;
-      *) mkdir -p "$path" ;;
+      *.json)
+        mkdir -p "$(dirname "$path")"
+        [ -e "$path" ] || echo '{}' >"$path"
+        ;;
+      *.yaml)
+        mkdir -p "$(dirname "$path")"
+        [ -e "$path" ] || echo 'openapi: 3.0.0' >"$path"
+        ;;
+      *)
+        mkdir -p "$path"
+        [ -e "$path/probe.ts" ] || echo 'export const probe = 1' >"$path/probe.ts"
+        ;;
     esac
   done
 done
-mkdir -p packages/web/src packages/shared/src packages/shared/styles \
-  packages/mobile/src packages/worker/src help-site/src
 
 cp "$HERE/validate.sh" "$HERE/validation-lib.sh" "$HERE/validation-lib.test.sh" \
   "$HERE/validate.test.sh" scripts/
@@ -84,6 +94,8 @@ echo '{}' >pnpm-lock.yaml
 echo '{}' >pnpm-workspace.yaml
 echo '{}' >.prettierrc.json
 printf 'node_modules\n' >.prettierignore
+mkdir -p packages/shared/styles packages/web/src packages/shared/src \
+  packages/mobile/src packages/worker/src help-site/src
 echo 'x' >scripts/sync-style-tokens.js
 echo 'export const a = 1' >packages/web/src/index.ts
 echo 'export const b = 1' >packages/shared/src/index.ts
@@ -92,12 +104,14 @@ echo 'export const c = 1' >packages/mobile/src/index.ts
 echo 'export const d = 1' >packages/worker/src/index.ts
 echo 'x' >help-site/src/index.astro
 echo 'openapi: 3.0.0' >docs/api/volleymanager-openapi.yaml
-for p in web shared mobile worker; do echo '{}' >"packages/$p/package.json"; done
-echo '{}' >help-site/package.json
 
 git add -A
 git commit -qm init
 
+# These suites run as checks inside validate.sh, which exports VOLLEYKIT_NO_CACHE
+# for --no-cache. Inheriting it forces every cache_hit false, so `validate.sh
+# --no-cache` would fail its own suites and blame the validation code.
+unset VOLLEYKIT_NO_CACHE
 export VOLLEYKIT_CACHE_DIR="$CACHE"
 
 echo "validate.sh"
@@ -151,6 +165,18 @@ assert_absent() {
 }
 
 # --- affectedness -------------------------------------------------------------
+#
+# One generated row per package: touching a file under the package's own first
+# input path must select a check for it. This is what makes the table the single
+# source of truth — add a package with a wrong path and this fails, rather than
+# the suite quietly having no opinion.
+
+for pkg in "${PKG_NAMES[@]}"; do
+  first=${PKG_INPUTS[$pkg]%% *}
+  echo 'export const probe = 2' >"$first/probe.ts"
+  assert_contains "a change under $pkg's own input path selects a $pkg check" "check $pkg:"
+done
+
 
 echo 'export const a = 2' >packages/web/src/index.ts
 assert_records "a web source edit selects web checks and format" \
@@ -230,25 +256,23 @@ format_argv() {
 }
 
 echo 'export const zz = 1' >packages/web/src/zz-new.ts
-if format_argv | grep -q 'zz-new'; then
-  ok "an untracked file reaches prettier on its own"
-else
-  not_ok "an untracked file reaches prettier on its own" "$(format_argv | tr '\n' ' ')"
-fi
+ARGV=$(format_argv)
+case "$ARGV" in
+  *zz-new*) ok "an untracked file reaches prettier on its own" ;;
+  *) not_ok "an untracked file reaches prettier on its own" "$(printf '%s' "$ARGV" | tr '\n' ' ')" ;;
+esac
 
 printf '\n\n' >>.prettierrc.json
-if format_argv | grep -q 'zz-new'; then
-  ok "a prettier-config change widens rather than replaces the file set"
-else
-  not_ok "a prettier-config change widens rather than replaces the file set" \
-    "zz-new.ts dropped out when .prettierrc.json also changed"
-fi
-
-if format_argv | grep -q 'packages/mobile'; then
-  ok "the widened set reaches files that did not change"
-else
-  not_ok "the widened set reaches files that did not change" "$(format_argv | tr '\n' ' ')"
-fi
+ARGV=$(format_argv)
+case "$ARGV" in
+  *zz-new*) ok "a prettier-config change widens rather than replaces the file set" ;;
+  *) not_ok "a prettier-config change widens rather than replaces the file set" \
+    "zz-new.ts dropped out when .prettierrc.json also changed" ;;
+esac
+case "$ARGV" in
+  *packages/mobile*) ok "the widened set reaches files that did not change" ;;
+  *) not_ok "the widened set reaches files that did not change" "$(printf '%s' "$ARGV" | tr '\n' ' ')" ;;
+esac
 reset_tree
 
 # Restore the plain stub for the rows below.
@@ -352,6 +376,38 @@ reset_tree
 (cd "$SCRATCH" && bash scripts/validate.sh bogus >/dev/null 2>&1)
 [ $? -eq 2 ] && ok "an unknown argument is rejected" ||
   not_ok "an unknown argument is rejected"
+
+# --- guards -------------------------------------------------------------------
+
+# A path git cannot list unquoted must break the gate, not open it: exit 3, not
+# 0. `pre-git-commit.sh` reads anything other than 0 or 1 as a broken gate.
+printf 'export const q = 1\n' >'packages/web/src/we"ird.ts'
+(cd "$SCRATCH" && bash scripts/validate.sh --gate >/dev/null 2>&1)
+STATUS=$?
+if [ "$STATUS" -eq 3 ]; then
+  ok "a path git cannot list unquoted breaks the gate rather than opening it"
+else
+  not_ok "a path git cannot list unquoted breaks the gate rather than opening it" \
+    "exit $STATUS (0 would approve the commit with nothing run)"
+fi
+rm -f 'packages/web/src/we"ird.ts'
+reset_tree
+
+# run_check execs argv, so a composite command must fail at registration.
+sed 's|"bash scripts/validate.test.sh"|"bash a.sh \&\& bash b.sh"|' \
+  "$HERE/validate.sh" >"$SCRATCH/scripts/validate-composite.sh"
+# Touch a SHELL_INPUTS path so the composite check actually registers.
+printf '\n# t\n' >>.claude/settings.json
+(cd "$SCRATCH" && bash scripts/validate-composite.sh --gate >/dev/null 2>&1)
+STATUS=$?
+rm -f "$SCRATCH/scripts/validate-composite.sh"
+if [ "$STATUS" -eq 3 ]; then
+  ok "a composite check command is rejected at registration"
+else
+  not_ok "a composite check command is rejected at registration" \
+    "exit $STATUS (the command would be exec'd as argv and half-ignored)"
+fi
+reset_tree
 
 # --- result -------------------------------------------------------------------
 

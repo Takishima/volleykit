@@ -45,11 +45,16 @@ NC='\033[0m'
 # divergence comparison — so a quoted path matched nothing and the gate opened
 # with zero checks run. In a de/fr/it codebase that is not a hypothetical.
 #
-# Known limit: paths containing a literal quote, backslash or newline stay
-# quoted regardless, and a newline-separated stream cannot represent them at
-# all. Such a path is skipped rather than mis-parsed.
+# A path containing a literal quote, backslash or newline stays C-quoted even
+# with quotePath=false, and a newline-separated stream cannot represent a path
+# with a newline at all. Those are NOT skipped: a skipped path is invisible to
+# the registry, which is the accented-filename hole again — gate open, zero
+# checks run, output identical to an empty change. This returns non-zero
+# instead, and the caller turns that into a broken gate rather than an open one.
 changed_files() {
-  {
+  local out
+  out=$(
+    {
     if git rev-parse --verify -q HEAD >/dev/null 2>&1; then
       git -c core.quotePath=false diff --name-only HEAD 2>/dev/null || true
     fi
@@ -60,8 +65,23 @@ changed_files() {
     # ever saw. Listing it here registers its checks and lets the divergence
     # rule report it.
     git -c core.quotePath=false diff --name-only --cached 2>/dev/null || true
-    git -c core.quotePath=false ls-files -o --exclude-standard 2>/dev/null || true
-  } | sed '/^$/d' | sort -u
+      git -c core.quotePath=false ls-files -o --exclude-standard 2>/dev/null || true
+    } | sed '/^$/d' | sort -u
+  )
+  if printf '%s\n' "$out" | grep -q '^"'; then
+    echo "validation: git cannot list this path unquoted, so the change set" >&2
+    echo "cannot be trusted. Rename it (no quote, backslash or newline):" >&2
+    printf '%s\n' "$out" | grep '^"' | sed 's/^/  /' >&2
+    return 1
+  fi
+  printf '%s\n' "$out"
+}
+
+# Every file under the given pathspecs that git knows about, tracked or not.
+# Shares changed_files' quoting rationale; kept here so a new listing in
+# validate.sh does not have to rediscover the flag.
+tracked_and_untracked_files() {
+  git -c core.quotePath=false ls-files -c -o --exclude-standard 2>/dev/null -- "$@" || true
 }
 
 # Paths that are BOTH staged and modified in the worktree — the intersection of

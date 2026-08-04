@@ -56,6 +56,10 @@ echo '{}' >package.json
 git add -A
 git commit -qm init
 
+# These suites run as checks inside validate.sh, which exports VOLLEYKIT_NO_CACHE
+# for --no-cache. Inheriting it forces every cache_hit false, so `validate.sh
+# --no-cache` would fail its own suites and blame the validation code.
+unset VOLLEYKIT_NO_CACHE
 export VOLLEYKIT_CACHE_DIR="$SCRATCH/.cache"
 # shellcheck source=./validation-lib.sh
 source "$LIB" || exit 1

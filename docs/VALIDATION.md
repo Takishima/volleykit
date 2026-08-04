@@ -38,7 +38,9 @@ a cached PASS for the current file contents, and approves instantly if so.
 | `unstaged <path>` | Staged content differs from the worktree copy     | `git add -A`          |
 
 Exit 0 = gate open, 1 = work outstanding, anything else = the gate itself
-failed.
+failed and the hook blocks. A path git cannot list unquoted — one containing a
+quote, backslash or newline — is that third case: it would otherwise be
+invisible to every check and read as "no changes".
 
 Two consequences worth knowing:
 
@@ -101,9 +103,10 @@ Two suites, both run by the `validation:test` check:
   the commit hook's predicate.
 - `scripts/validate.test.sh` — the registry itself, against a scratch monorepo
   with `pnpm` stubbed: a table of _changed path -> expected `--gate` records_.
-  The scratch layout is derived from `PKG_INPUTS`, so a package added there with
-  a path that exists nowhere fails rather than passing silently. Add a check or
-  a trigger, add a row.
+  The scratch layout is derived from `PKG_INPUTS` and seeded with real files, and
+  one row per package is generated from the table — so a package added there with
+  a path that exists nowhere, or with no `register_check` block, fails. Add a
+  check or a trigger, add a row.
 
 The check is triggered by any edit to `SHELL_INPUTS` — the scripts,
 `.claude/hooks/`, and `.claude/settings.json`, which is what registers the hook
