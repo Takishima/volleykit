@@ -1,9 +1,11 @@
 # Quick Build Check
 
-Run production build only.
+Build every package touched by the current changes, in dependency order, plus
+the web bundle size check. Passing results are cached and count towards the
+commit gate, so they are never re-run at commit time.
 
 ```bash
-cd packages/web && pnpm run build
+scripts/validate.sh build
 ```
 
 Output: `✓ Build` or `✗ Build: [error summary]`

@@ -1,33 +1,86 @@
 # Validation Guide
 
-Read this file before committing changes.
+## The Short Version
+
+```bash
+scripts/validate.sh          # everything the commit gate requires
+scripts/validate.sh lint     # only lint, across every affected package
+scripts/validate.sh --gate   # list what is still missing (runs nothing)
+```
+
+Every passing check is cached by the content hash of the files it reads.
+**Nothing is ever run twice.** Validate as often as you like during the work —
+the commit gate reuses those results instead of starting over.
+
+Do not run raw `pnpm run lint` / `pnpm test` / `pnpm run build` to validate;
+those results are not recorded and will be re-run at commit time.
 
 ## Pre-Commit Validation (Claude Code Web Only)
 
-Validation uses a two-part system in Claude Code web (`CLAUDE_CODE_REMOTE=true`). Human developers rely on CI instead.
+Human developers rely on CI. The commit gate is active only in Claude Code web
+(`CLAUDE_CODE_REMOTE=true`), but `scripts/validate.sh` itself runs anywhere.
 
 ### How It Works
 
-**Step 1: Run validation** (streaming output — Claude sees results in real-time):
+**Step 1: Run validation** — output streams as each check finishes:
 
 ```bash
-CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh
+scripts/validate.sh
 ```
 
-**Step 2: Commit** — the pre-commit hook checks the validation marker and approves instantly.
+**Step 2: Commit** — `.claude/hooks/pre-git-commit.sh` asks
+`scripts/validate.sh --gate` whether every required check has a cached PASS for
+the current file contents. If yes, the commit is approved instantly. If not,
+the block message names the exact checks that are missing.
 
-This replaces the old block-retry-block cycle. Claude gets immediate feedback from each check as it completes.
+### The Check Cache
+
+Each check declares the paths it depends on. Its cache key is a hash of:
+
+- the index blob hashes of every tracked file under those paths, plus
+- the contents of any of those files modified in the working tree, plus
+- the root config set (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`,
+  `tsconfig.json`, `eslint.config.*`, prettier config)
+
+Consequences that matter in practice:
+
+| Situation                                 | Behaviour                                          |
+| ----------------------------------------- | -------------------------------------------------- |
+| Ran `/lint` mid-work, then commit         | Lint is **not** re-run                             |
+| Fixed a lint error in `web`, re-validated | Only `web` checks re-run; `shared`/`mobile` cached |
+| Edited a file's contents, same file set   | That package's cache correctly invalidates         |
+| `git add` of an extra file                | Does **not** invalidate anything on its own        |
+| Second commit with no edits in between    | Everything still cached                            |
+| Changed `pnpm-lock.yaml`                  | Everything invalidates                             |
+
+Cache lives in `.validation-cache/` (gitignored). There is no expiry —
+correctness comes from the content hash, not from a timer.
+
+```bash
+scripts/validate.sh --no-cache   # force a full re-run
+scripts/validate.sh --clear      # drop the cache
+```
 
 ### What Validation Does
 
-1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
-2. **Detect affected packages** - Determines which packages have changes (web, shared, mobile, worker, help-site)
-3. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-4. **Check design token sync** - Verify `colors.js` matches `design-tokens.css` (when style files are staged)
-5. **Run checks in PARALLEL** - Single format check on staged files + per-package lint, typecheck, test
-5. **Build shared** then **web + help-site in parallel** - Build affected packages
+1. **Detect changes** - staged + unstaged + untracked vs `HEAD` (no `git add` required)
+2. **Skip trivial changes** - docs-only, or nothing matching source/config patterns
+3. **Detect affected packages** - web, shared, mobile, worker, help-site
+4. **Generate API types** - if `volleymanager-openapi.yaml` changed
+5. **Check design token sync** - `colors.js` vs `design-tokens.css`, when style files changed
+6. **Run uncached checks in PARALLEL** - format on changed files + per-package lint, typecheck, test
+7. **Build** - `shared` first, then `web` + `help-site` in parallel (web build includes the size check)
 
-Shared package changes trigger web validation (always) and mobile validation (only when exported API surface is touched).
+Shared package changes trigger web validation (always) and mobile validation
+(only when the exported API surface is touched).
+
+### Check Classes
+
+`scripts/validate.sh <class>` runs one class across every affected package:
+`format`, `tokens`, `lint`, `typecheck`, `test`, `build`.
+
+Slash commands `/lint`, `/test`, `/build` are thin wrappers over these, so their
+results also count towards the commit gate.
 
 ### Checks Per Package
 
@@ -39,10 +92,13 @@ Shared package changes trigger web validation (always) and mobile validation (on
 | worker    | ✓       | ✓    | –    | –          | ✓    | –     |
 | help-site | ✓       | –    | –    | –          | –    | ✓     |
 
-¹ Format runs once on all staged files (not per-package)
+¹ Format runs once on all changed files (not per-package)
 ² Knip (dead code detection) runs in CI only — too slow for pre-commit
 
 ### Manual Validation Commands
+
+These are **not cached** and do not count towards the commit gate. Use them for
+auto-fixing and exploration; use `scripts/validate.sh` to validate.
 
 Run from `packages/web/` directory:
 

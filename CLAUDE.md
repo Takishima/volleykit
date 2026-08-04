@@ -20,7 +20,7 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 | When                          | Read                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------ |
-| Before committing             | [docs/VALIDATION.md](docs/VALIDATION.md) - validation commands, bundle limits  |
+| Validation details needed     | [docs/VALIDATION.md](docs/VALIDATION.md) - check matrix, cache, bundle limits  |
 | Touching auth/API/worker code | [docs/SECURITY_CHECKLIST.md](docs/SECURITY_CHECKLIST.md)                       |
 | Unsure about patterns         | [docs/CODE_PATTERNS.md](docs/CODE_PATTERNS.md)                                 |
 | Writing tests                 | [docs/TESTING_STRATEGY.md](docs/TESTING_STRATEGY.md)                           |
@@ -33,9 +33,24 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 
 1. **Implement** - Complete the work
 2. **Add changeset** - For `feat:`/`fix:` commits, create `.changeset/*.md` (see below)
-3. **Validate** - Run `CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh` (streaming output)
-4. **Commit** - Pre-commit hook checks validation marker (instant approve)
+3. **Validate** - Run `scripts/validate.sh` (streaming output)
+4. **Commit** - Pre-commit hook confirms every check passed for the current file contents (instant approve)
 5. **Push** - Push to remote
+
+**Validate whatever you want, whenever you want — nothing is ever run twice.**
+Results are cached by the content hash of the files each check reads, so a
+check that already passed is skipped at commit time, and fixing one package
+does not re-run the others.
+
+```bash
+scripts/validate.sh          # everything the commit gate requires
+scripts/validate.sh lint     # only lint, across every affected package
+scripts/validate.sh --gate   # what is still missing (runs nothing)
+```
+
+Never run raw `pnpm run lint` / `pnpm test` / `pnpm run build` for validation —
+those results are not cached and will be re-run at commit time. Use
+`scripts/validate.sh` (or `/lint`, `/test`, `/build`) instead.
 
 Use `/pr-review` to create PR and auto-fix Claude Code Review issues.
 
