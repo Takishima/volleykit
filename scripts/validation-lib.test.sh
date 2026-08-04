@@ -76,6 +76,25 @@ export VOLLEYKIT_CACHE_DIR="$SCRATCH/.cache"
 # shellcheck source=./validation-lib.sh
 source "$LIB" || exit 1
 
+# --- the scratch guard ----------------------------------------------------------
+#
+# Both suites source test-lib.sh and both are protected by it, so both assert it.
+# Pinned in only one, a change made while running the other reads as green.
+
+require_scratch "$REPO_GUARD/scripts" "probe" "$REPO_GUARD" 2>/dev/null &&
+  not_ok "a scratch path inside the repo is refused" || ok "a scratch path inside the repo is refused"
+
+# A fresh subdirectory, not $SCRATCH itself — by this point that is a git repo,
+# which the .git branch correctly refuses.
+mkdir -p "$SCRATCH/probe-ok"
+require_scratch "$SCRATCH/probe-ok" "probe" "$REPO_GUARD" 2>/dev/null &&
+  ok "a real scratch path is accepted" || not_ok "a real scratch path is accepted"
+rmdir "$SCRATCH/probe-ok"
+
+require_temp_file "$REPO_GUARD/package.json" "probe" "$REPO_GUARD" 2>/dev/null &&
+  not_ok "a temp-file path inside the repo is refused" ||
+  ok "a temp-file path inside the repo is refused"
+
 echo "validation-lib.sh"
 
 # --- fingerprint --------------------------------------------------------------

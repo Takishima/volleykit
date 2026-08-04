@@ -52,6 +52,10 @@ not_ok() {
 
 SCRATCH=$(mktemp -d)
 require_scratch "$SCRATCH" "$(basename "$0")" "$REPO" || exit 1
+# Installed before the next mktemp: the cache guard's `exit 1` would otherwise
+# fire with $SCRATCH already created and nothing to remove it.
+trap 'rm -rf "$SCRATCH"' EXIT
+
 # The cache MUST live outside the scratch repo. reset_tree runs `git clean -qfd`,
 # which would delete it, leaving every later row running against a cold cache —
 # and divergence is only consulted once no check is missing, so the divergence
@@ -234,6 +238,11 @@ require_temp_file "" "probe" "$REPO" 2>/dev/null &&
 
 require_temp_file "$CACHE" "probe" "$REPO" 2>/dev/null &&
   not_ok "a directory is refused as a temp file" || ok "a directory is refused as a temp file"
+
+# A real file inside the repo, so the not-a-file branch does not answer first.
+require_temp_file "$REPO/package.json" "probe" "$REPO" 2>/dev/null &&
+  not_ok "a temp-file path inside the repo is refused" ||
+  ok "a temp-file path inside the repo is refused"
 
 # --- the table describes the real repo ------------------------------------------
 #

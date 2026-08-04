@@ -18,7 +18,7 @@
 require_scratch() {
   local path=$1 label=$2 repo=$3
 
-  if [ -z "$path" ] || [ ! -d "$path" ]; then
+  if [ ! -d "$path" ]; then
     echo "$label: could not create a scratch directory; refusing to run" >&2
     return 1
   fi
@@ -42,7 +42,7 @@ require_scratch() {
 require_temp_file() {
   local path=$1 label=$2 repo=$3
 
-  if [ -z "$path" ] || [ ! -f "$path" ]; then
+  if [ ! -f "$path" ]; then
     echo "$label: could not create a temp file; refusing to run" >&2
     return 1
   fi
