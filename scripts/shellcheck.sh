@@ -30,6 +30,34 @@ SHELLCHECK_EXCLUDED=".specify"  # vendored by scripts/update-speckit.sh
 # helpers use deliberately. `info` is included because SC2086 lives there.
 SHELLCHECK_ARGS=(-x --severity=info -e SC1091 -e SC2015)
 
+# One predicate for "is this a shell file", used by the lint's own file list, by
+# validate.sh's trigger and by validate.test.sh's coverage scan. Keying any of
+# the three on a narrower proxy is how the same hole reopened three times: a
+# directory list, then a file extension, each time missing the file the coverage
+# claim was about.
+#
+# Extension OR shell shebang. `.envrc` is tracked bash with no extension;
+# `#!/usr/bin/env sh` and ksh are the same case.
+SHELL_SHEBANG_RE='^#!([^[:space:]]*/)?(env[[:space:]]+)?(ba|z|k|da|a)?sh([[:space:]]|$)'
+
+is_shell_file() {
+  case "$1" in *.sh) return 0 ;; esac
+  [ -f "$1" ] || return 1
+  head -1 "$1" 2>/dev/null | grep -qE "$SHELL_SHEBANG_RE"
+}
+
+# Every tracked shell file in the repo. `git grep` narrows to files carrying a
+# shebang at all, so only those are opened — reading the first line of all ~1150
+# tracked files took longer than the rest of the suite.
+all_shell_files() {
+  {
+    git ls-files '*.sh'
+    git grep -lE '^#!' -- ':!*.sh' 2>/dev/null | while IFS= read -r f; do
+      is_shell_file "$f" && printf '%s\n' "$f"
+    done
+  } | sed '/^$/d' | sort -u
+}
+
 # Every .sh under the covered paths. Found rather than globbed: a glob for an
 # empty directory stays literal and shellcheck then errors on a path that does
 # not exist, failing the check for a reason unrelated to shell quality.
@@ -38,14 +66,16 @@ SHELLCHECK_ARGS=(-x --severity=info -e SC1091 -e SC2015)
 # a process substitution's status is not observable at all, so an earlier version
 # claimed to fail on a missing path and silently linted a narrower set instead.
 shellcheck_files() {
-  local path found all=""
+  local path found all="" f
   for path in $SHELLCHECK_INPUTS; do
     if [ -f "$path" ]; then
       all="$all$path"$'\n'
       continue
     fi
-    found=$(find "$path" -name '*.sh' -type f) || return 1
-    all="$all$found"$'\n'
+    found=$(find "$path" -type f) || return 1
+    while IFS= read -r f; do
+      [ -n "$f" ] && is_shell_file "$f" && all="$all$f"$'\n'
+    done <<<"$found"
   done
   printf '%s' "$all" | sed '/^$/d' | sort
 }

@@ -226,7 +226,7 @@ check_paths_exist "SHELLCHECK_EXCLUDED" $SHELLCHECK_EXCLUDED
 # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
 EXCLUDED_COUNT=$(printf '%s\n' $SHELLCHECK_EXCLUDED | sed '/^$/d' | wc -l)
 if [ "$EXCLUDED_COUNT" -le 1 ]; then
-  ok "the shell-lint exclusion list is still minimal ($EXCLUDED_COUNT entry)"
+  ok "the shell-lint exclusion list is still minimal ($EXCLUDED_COUNT of max 1)"
 else
   not_ok "the shell-lint exclusion list is still minimal" \
     "$EXCLUDED_COUNT entries — each one excuses its tree from the coverage row"
@@ -238,24 +238,23 @@ fi
 # `git ls-files` over the whole repo, not a list of directories to look in —
 # naming the scan roots is the same covers-what-existed-when-it-was-written
 # shape, one level up, and it left six tracked scripts linted by nothing.
+LINTED_SET="|$(cd "$REPO" && shellcheck_files | tr '\n' '|')"
 UNCOVERED=""
 SHELL_FILE_COUNT=0
 while IFS= read -r f; do
   SHELL_FILE_COUNT=$((SHELL_FILE_COUNT + 1))
   covered=false
-  for path in $SHELLCHECK_INPUTS $SHELLCHECK_EXCLUDED; do
-    case "$f" in "$path"/* | "$path") covered=true; break ;; esac
-  done
+  # Membership in the linted set, not "sits under a directory the linter looks
+  # in" — those differ for any file the lint's own filter skips, which is how an
+  # extensionless script under scripts/ counted as covered and was never linted.
+  case "$LINTED_SET" in *"|$f|"*) covered=true ;; esac
+  if [ "$covered" = false ]; then
+    for path in $SHELLCHECK_EXCLUDED; do
+      case "$f" in "$path"/* | "$path") covered=true; break ;; esac
+    done
+  fi
   [ "$covered" = true ] || UNCOVERED="$UNCOVERED $f"
-done < <(
-  cd "$REPO" && git ls-files | while IFS= read -r f; do
-    [ -f "$f" ] || continue
-    case "$f" in *.sh) printf '%s\n' "$f"; continue ;; esac
-    # Extension alone is a proxy: .envrc is tracked bash and was invisible to a
-    # `git ls-files '*.sh'` scan.
-    head -1 "$f" 2>/dev/null | grep -qE '^#!.*(bash|/sh|zsh|dash)' && printf '%s\n' "$f"
-  done | sort
-)
+done < <(cd "$REPO" && all_shell_files)
 
 if [ "$SHELL_FILE_COUNT" -ge 10 ]; then
   ok "the shell-file scan found the repo's scripts ($SHELL_FILE_COUNT)"
@@ -562,6 +561,30 @@ else
   ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess"
 fi
 reset_tree
+
+# The trigger widening is invisible to every other row: it corresponds to no
+# path constant, so the constants-to-triggers check structurally cannot see it.
+# Both halves get a row that goes red on revert.
+
+mkdir -p packages/mobile
+# shellcheck disable=SC2016  # fixture content, deliberately not expanded here
+printf '#!/usr/bin/env bash\nrm -rf $UNQUOTED/*\n' >packages/mobile/scripts_helper
+GOT=$(gate_records)
+case "$GOT" in
+  *"check validation:registry"*) ok "a shell file outside every directory list selects the registry check" ;;
+  *) not_ok "a shell file outside every directory list selects the registry check" "$GOT" ;;
+esac
+rm -rf packages/mobile
+reset_tree
+
+for block in push pull_request; do
+  if workflow_paths "$block" | grep -qE '^\*\*\.sh$|^\*\*/\*\.sh$'; then
+    ok "ci-shell.yml $block triggers on shell files outside the listed directories"
+  else
+    not_ok "ci-shell.yml $block triggers on shell files outside the listed directories" \
+      "no repo-wide shell glob in its paths filter"
+  fi
+done
 
 # --- guards -------------------------------------------------------------------
 

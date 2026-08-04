@@ -120,10 +120,12 @@ Three checks cover the validation code itself:
 `SHELL_INPUTS` — the scripts, `.claude/hooks/`, and `.claude/settings.json`,
 which is what registers the hook in the first place. `validation:shellcheck` is
 triggered by `SHELLCHECK_INPUTS`, which is wider: it covers shell the suites do
-not exercise. Both triggers also fire on any changed `*.sh` path, wherever it
-lives — a new script outside the directory lists is exactly the case the
-coverage assertions exist to flag, and keyed on directories alone they never
-ran for it.
+not exercise. Both triggers also fire on any changed shell file, wherever it lives —
+identified by extension or shebang, the same predicate the lint and the coverage
+scan use. A new script outside the directory lists is exactly the case the
+coverage assertions exist to flag, and keyed on a narrower proxy they never ran
+for it. The changed files enter the cache key too, so a warm cache cannot report
+a hit for a check that was only just triggered.
 
 The hook's predicate lives in `.claude/hooks/lib/is-git-commit.sh` and is
 sourced by both the hook and the test, so there is one definition rather than

@@ -385,22 +385,31 @@ fi
 # same treatment as any other source: touching one runs the suite that covers
 # them before the gate reopens. The hook in particular is what enforces
 # everything else, and was previously the one file nothing validated.
-# `|\.sh$` on both triggers: the coverage assertions live in these checks, and
-# a new script outside the directory lists is exactly the case they exist to
-# flag. Keyed on the directory constants alone, a shellcheck-failing
-# packages/mobile/scripts/foo.sh registered neither check and shipped.
-SHELL_TRIGGER="$(paths_to_regex "$SHELL_INPUTS")|\.sh$"
-SHELLCHECK_TRIGGER="$(paths_to_regex "$SHELLCHECK_INPUTS")|\.sh$"
+# Any changed shell file also triggers these checks, wherever it lives: the
+# coverage assertions live in them, and a new script outside the directory lists
+# is exactly the case they exist to flag. is_shell_file is the same predicate
+# the lint and the coverage scan use — keying the trigger on a narrower proxy
+# (a directory list, then a file extension) is how this hole reopened twice.
+#
+# The changed files go into CHECK_PATHS as well as the trigger. Widening only
+# the trigger leaves the cache key unchanged, so a stored PASS stays valid and
+# the check that was just triggered is skipped as a hit.
+CHANGED_SHELL=""
+while IFS= read -r f; do
+  [ -n "$f" ] && is_shell_file "$f" && CHANGED_SHELL="$CHANGED_SHELL$f"$'\n'
+done <<<"$CHANGED"
 
-if matches "$SHELL_TRIGGER"; then
+if [ -n "$CHANGED_SHELL" ] || matches "$(paths_to_regex "$SHELL_INPUTS")"; then
   # One check per suite. CHECK_CMD is exec'd as argv, never through a shell, so
   # a composite `a && b` would pass `&&` as a positional argument and silently
   # run only the first — which is exactly what it did. Composite commands need a
   # sentinel handled by name in run_check (see __format__, __web_build__).
-  register_check "validation:test" "test" "$ROOT_DIR" \
-    "bash scripts/validation-lib.test.sh" "$SHELL_INPUTS"
-  register_check "validation:registry" "test" "$ROOT_DIR" \
-    "bash scripts/validate.test.sh" "$SHELL_INPUTS"
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  SHELL_KEY="$(printf '%s\n' $SHELL_INPUTS)"$'\n'"$CHANGED_SHELL"
+  register_check_files "validation:test" "test" "$ROOT_DIR" \
+    "bash scripts/validation-lib.test.sh" "$SHELL_KEY" ""
+  register_check_files "validation:registry" "test" "$ROOT_DIR" \
+    "bash scripts/validate.test.sh" "$SHELL_KEY" ""
 fi
 
 # Shell linting runs locally when the binary is available, and always in CI
@@ -410,10 +419,12 @@ fi
 
 # Keyed on SHELLCHECK_INPUTS, which is what the lint reads — wider than
 # SHELL_INPUTS, because it also covers scripts this suite does not exercise.
-if matches "$SHELLCHECK_TRIGGER"; then
+if [ -n "$CHANGED_SHELL" ] || matches "$(paths_to_regex "$SHELLCHECK_INPUTS")"; then
   if command -v shellcheck >/dev/null 2>&1; then
-    register_check "validation:shellcheck" "lint" "$ROOT_DIR" \
-      "bash scripts/shellcheck.sh" "$SHELLCHECK_INPUTS"
+    # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+    SHELLCHECK_KEY="$(printf '%s\n' $SHELLCHECK_INPUTS)"$'\n'"$CHANGED_SHELL"
+    register_check_files "validation:shellcheck" "lint" "$ROOT_DIR" \
+      "bash scripts/shellcheck.sh" "$SHELLCHECK_KEY" ""
   else
     # stderr, not say(): in gate mode say() is silenced, and "the gate has no
     # shell-lint opinion on this machine" is exactly when that matters.
