@@ -38,10 +38,20 @@ NC='\033[0m'
 # package-wide (`eslint .`, `vitest run`), so they see untracked and unstaged
 # files whether or not validation was told about them; scoping detection to the
 # index would only hide work the checks are already doing.
+# `-c core.quotePath=false` on every listing: with the default, git C-quotes any
+# path containing a non-ASCII byte, so `packages/web/src/café.ts` comes back as
+# `"packages/web/src/caf\303\251.ts"`. Every consumer here matches raw path
+# strings — the anchored package regex, the format extension filter, the literal
+# divergence comparison — so a quoted path matched nothing and the gate opened
+# with zero checks run. In a de/fr/it codebase that is not a hypothetical.
+#
+# Known limit: paths containing a literal quote, backslash or newline stay
+# quoted regardless, and a newline-separated stream cannot represent them at
+# all. Such a path is skipped rather than mis-parsed.
 changed_files() {
   {
     if git rev-parse --verify -q HEAD >/dev/null 2>&1; then
-      git diff --name-only HEAD 2>/dev/null || true
+      git -c core.quotePath=false diff --name-only HEAD 2>/dev/null || true
     fi
     # The index is unioned in unconditionally, not as the no-HEAD fallback.
     # A path staged with one content and then restored on disk differs from
@@ -49,8 +59,8 @@ changed_files() {
     # run would exit as "no changes" and the gate would open on a blob no check
     # ever saw. Listing it here registers its checks and lets the divergence
     # rule report it.
-    git diff --name-only --cached 2>/dev/null || true
-    git ls-files -o --exclude-standard 2>/dev/null || true
+    git -c core.quotePath=false diff --name-only --cached 2>/dev/null || true
+    git -c core.quotePath=false ls-files -o --exclude-standard 2>/dev/null || true
   } | sed '/^$/d' | sort -u
 }
 
@@ -64,9 +74,9 @@ changed_files() {
 # that was validated.
 staged_worktree_divergence() {
   local staged dirty
-  staged=$(git diff --cached --name-only 2>/dev/null || true)
+  staged=$(git -c core.quotePath=false diff --cached --name-only 2>/dev/null || true)
   [ -z "$staged" ] && return 0
-  dirty=$(git diff --name-only 2>/dev/null || true)
+  dirty=$(git -c core.quotePath=false diff --name-only 2>/dev/null || true)
   [ -z "$dirty" ] && return 0
   comm -12 <(printf '%s\n' "$staged" | sort -u) <(printf '%s\n' "$dirty" | sort -u)
 }

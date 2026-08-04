@@ -62,7 +62,7 @@ Each check's key is a content hash of its declared input paths plus a root set:
 | Second commit with no edits between       | Everything still cached                           |
 | Changed `pnpm-lock.yaml`                  | Everything invalidates                            |
 | Changed `scripts/validate.sh`             | Everything invalidates                            |
-| Changed `.prettierignore`                 | `format` re-checks every tracked formattable file |
+| Changed `.prettierignore`                 | `format` widens to every formattable file         |
 
 Stored in `.validation-cache/` (gitignored). No expiry — correctness comes from
 the hash, not a timer. `--no-cache` forces a full re-run.
@@ -101,7 +101,9 @@ Two suites, both run by the `validation:test` check:
   the commit hook's predicate.
 - `scripts/validate.test.sh` — the registry itself, against a scratch monorepo
   with `pnpm` stubbed: a table of _changed path -> expected `--gate` records_.
-  Add a check or a trigger, add a row.
+  The scratch layout is derived from `PKG_INPUTS`, so a package added there with
+  a path that exists nowhere fails rather than passing silently. Add a check or
+  a trigger, add a row.
 
 The check is triggered by any edit to `SHELL_INPUTS` — the scripts,
 `.claude/hooks/`, and `.claude/settings.json`, which is what registers the hook

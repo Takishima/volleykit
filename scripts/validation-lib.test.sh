@@ -219,6 +219,10 @@ assert_gated "--git-dir quoted" "git --git-dir=\"/p q/.git\" $C"
 assert_gated "-C single-quoted" "git -C '/p q' $C -m x"
 assert_gated "several options then commit" "git -C /r -c a=b $C"
 
+assert_gated "double-quoted subcommand" "git \"$C\" -m x"
+assert_gated "single-quoted subcommand" "git '$C' -m x"
+assert_gated "option then quoted subcommand" "git -c a=b \"$C\""
+
 assert_not_gated "git grep commit" "git grep $C"
 assert_not_gated "git log" "git log --oneline"
 assert_not_gated "unrelated" "ls -la"

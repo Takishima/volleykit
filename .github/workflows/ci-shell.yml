@@ -30,9 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
-
+      # shellcheck ships on ubuntu-latest; no install step needed.
       # `info` is included because SC2086 (unquoted expansion) lives there, and
       # that is the class this code has tripped on repeatedly. Only two rules
       # are excluded repo-wide, both structural: SC1091 cannot follow a sourced

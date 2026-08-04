@@ -39,6 +39,11 @@ _IGC_OPT='(-[Cc][[:space:]]+'"$_IGC_VAL"'|--(git-dir|work-tree|namespace|exec-pa
 # shellcheck disable=SC2034
 _IGC_SP='([[:space:]]|\\[[:space:]])+'
 
+# The subcommand may be quoted (`git "commit" -m x`). `git grep commit` stays
+# out because `grep` is neither an option nor the subcommand.
+# shellcheck disable=SC2034
+_IGC_Q='["'"'"']?'
+
 is_git_commit() {
-  [[ $1 =~ (^|[^[:alnum:]_.-])git(${_IGC_SP}${_IGC_OPT})*${_IGC_SP}commit([^[:alnum:]_-]|$) ]]
+  [[ $1 =~ (^|[^[:alnum:]_.-])git(${_IGC_SP}${_IGC_OPT})*${_IGC_SP}${_IGC_Q}commit${_IGC_Q}([^[:alnum:]_-]|$) ]]
 }

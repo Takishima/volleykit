@@ -279,10 +279,18 @@ FORMAT_EXT='\.(ts|tsx|js|jsx|mjs|json|css|astro|md)$'
 # never been formatted. So a config edit widens the check to every tracked
 # formattable file rather than the changed ones. Without this, a lone
 # .prettierignore edit registered no check at all and the gate opened on it.
+FORMAT_CANDIDATES=$(echo "$CHANGED" | grep -E "$FORMAT_EXT" || true)
 if matches "$(paths_to_regex "$FORMAT_ROOT")"; then
-  FORMAT_CANDIDATES=$(git ls-files 2>/dev/null | grep -E "$FORMAT_EXT" || true)
-else
-  FORMAT_CANDIDATES=$(echo "$CHANGED" | grep -E "$FORMAT_EXT" || true)
+  # Union, not replace. $CHANGED includes untracked files; `git ls-files` alone
+  # is tracked-only, so replacing dropped every newly added file — a batch that
+  # added one file and touched prettier config stopped checking that file.
+  # `-c -o --exclude-standard` is the same listing fingerprint() uses.
+  FORMAT_CANDIDATES=$(
+    {
+      git -c core.quotePath=false ls-files -c -o --exclude-standard 2>/dev/null || true
+      printf '%s\n' "$FORMAT_CANDIDATES"
+    } | grep -E "$FORMAT_EXT" | sed '/^$/d' | sort -u || true
+  )
 fi
 
 FORMAT_FILES=$(printf '%s\n' "$FORMAT_CANDIDATES" | while IFS= read -r f; do
@@ -340,9 +348,14 @@ fi
 # them before the gate reopens. The hook in particular is what enforces
 # everything else, and was previously the one file nothing validated.
 if matches "$(paths_to_regex "$SHELL_INPUTS")"; then
+  # One check per suite. CHECK_CMD is exec'd as argv, never through a shell, so
+  # a composite `a && b` would pass `&&` as a positional argument and silently
+  # run only the first — which is exactly what it did. Composite commands need a
+  # sentinel handled by name in run_check (see __format__, __web_build__).
   register_check "validation:test" "test" "$ROOT_DIR" \
-    "bash scripts/validation-lib.test.sh && bash scripts/validate.test.sh" \
-    "$SHELL_INPUTS"
+    "bash scripts/validation-lib.test.sh" "$SHELL_INPUTS"
+  register_check "validation:registry" "test" "$ROOT_DIR" \
+    "bash scripts/validate.test.sh" "$SHELL_INPUTS"
 fi
 
 # =============================================================================
