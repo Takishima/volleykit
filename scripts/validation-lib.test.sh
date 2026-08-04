@@ -312,6 +312,8 @@ assert_decision "a unicode-escaped subcommand is not approved" "block" \
   '{"tool_input":{"command":"git \u0063ommit -m x"}}'
 assert_decision "a fully escaped subcommand is not approved" "block" \
   '{"tool_input":{"command":"git \u0063\u006f\u006d\u006d\u0069\u0074 -m x"}}'
+assert_decision "a \\U-escaped subcommand is not approved" "block" \
+  '{"tool_input":{"command":"git \U0000063ommit -m x"}}'
 
 # Without jq the hook cannot read the command — but it is registered on every
 # Bash call, so it must still let through what cannot be one. Blocking those
@@ -351,8 +353,8 @@ assert_decision "with the lib missing, a literal commit is still gated" "block" 
   "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$PATH" "$NOLIB_HOOK"
 assert_decision "with the lib missing, a \\u-escaped subcommand is still gated" "block" \
   '{"tool_input":{"command":"git \\u0063ommit -m x"}}' "$PATH" "$NOLIB_HOOK"
-assert_decision "with the lib missing, a \\U-escaped payload is still gated" "block" \
-  '{"tool_input":{"command":"git \\U0001F600 commit -m x"}}' "$PATH" "$NOLIB_HOOK"
+assert_decision "with the lib missing, a \\U-escaped subcommand is still gated" "block" \
+  '{"tool_input":{"command":"git \\U0000063ommit -m x"}}' "$PATH" "$NOLIB_HOOK"
 
 # The other direction, which has actually shipped broken: widening the fallback
 # blocks the whole session. `git grep <subcommand>` and friends are deliberately

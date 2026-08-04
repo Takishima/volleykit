@@ -19,6 +19,12 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 
+# Set only by this suite's own self-spawn rows, never from the environment.
+case "${1:-}" in
+  --no-respawn) NO_RESPAWN=true ;;
+  *) NO_RESPAWN=false ;;
+esac
+
 # Sourced up front: the scratch fixture is built from SHELLCHECK_INPUTS, and
 # is_shell_file / shellcheck_files / all_shell_files are read by rows below.
 # shellcheck source=./test-lib.sh
@@ -198,6 +204,36 @@ assert_absent() {
   esac
   reset_tree
 }
+
+# --- the scratch guard ----------------------------------------------------------
+#
+# require_scratch is the only thing between a failed mktemp and the working repo.
+# Its containment and .git branches were added without a lever; called directly
+# here, so no subprocess and no fork.
+
+require_scratch "" "probe" "$REPO" 2>/dev/null &&
+  not_ok "an empty scratch path is refused" || ok "an empty scratch path is refused"
+
+# An existing directory inside the repo, with no .git of its own — otherwise the
+# empty/not-a-directory branch or the .git branch answers first and the
+# containment test is never reached.
+require_scratch "$REPO/scripts" "probe" "$REPO" 2>/dev/null &&
+  not_ok "a scratch path inside the repo is refused" || ok "a scratch path inside the repo is refused"
+
+mkdir -p "$CACHE/probe-repo/.git"
+require_scratch "$CACHE/probe-repo" "probe" "$REPO" 2>/dev/null &&
+  not_ok "a scratch path that is already a repository is refused" ||
+  ok "a scratch path that is already a repository is refused"
+rm -rf "$CACHE/probe-repo"
+
+require_scratch "$CACHE" "probe" "$REPO" 2>/dev/null &&
+  ok "a real scratch path is accepted" || not_ok "a real scratch path is accepted"
+
+require_temp_file "" "probe" "$REPO" 2>/dev/null &&
+  not_ok "an empty temp-file path is refused" || ok "an empty temp-file path is refused"
+
+require_temp_file "$CACHE" "probe" "$REPO" 2>/dev/null &&
+  not_ok "a directory is refused as a temp file" || ok "a directory is refused as a temp file"
 
 # --- the table describes the real repo ------------------------------------------
 #
@@ -508,10 +544,7 @@ assert_records "a file under no package and no root selects nothing" ""
 # The backup lives outside the repo: an untracked file inside it would itself
 # be a change, and `git clean` in reset_tree would delete the cache directory.
 BACKUP="$(mktemp)"
-[ -n "$BACKUP" ] && [ -f "$BACKUP" ] || {
-  echo "$(basename "$0"): could not create a temp file; refusing to run" >&2
-  exit 1
-}
+require_temp_file "$BACKUP" "$(basename "$0") (backup)" "$REPO" || exit 1
 
 # Prime the cache against the exact worktree content asserted on below.
 echo 'export const a = 42' >packages/web/src/index.ts
@@ -784,9 +817,12 @@ chmod +x "$MTFAIL/mktemp"
 # validate.test.sh, so with the guard regressed the child would reach this same
 # block and spawn two more, forever — the row could never report, and the
 # failure would be a hung parallel wave rather than a red row.
-if [ -z "${VOLLEYKIT_TEST_NO_RESPAWN:-}" ]; then
+# argv, not an environment variable: a marker whose job is to suppress
+# assertions must not be settable from the ambient environment, where it would
+# delete both rows and leave only a count nobody compares.
+if [ "$NO_RESPAWN" = false ]; then
   for suite in validation-lib.test.sh validate.test.sh; do
-    OUT=$(VOLLEYKIT_TEST_NO_RESPAWN=1 PATH="$MTFAIL:$PATH" bash "$HERE/$suite" 2>&1)
+    OUT=$(PATH="$MTFAIL:$PATH" bash "$HERE/$suite" --no-respawn 2>&1)
     case "$OUT" in
       *"refusing to run"*) ok "$suite refuses to run without a scratch directory" ;;
       *) not_ok "$suite refuses to run without a scratch directory" \

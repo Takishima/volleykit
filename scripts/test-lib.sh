@@ -35,3 +35,22 @@ require_scratch() {
   fi
   return 0
 }
+
+# Same, for a temp FILE. Separate entry point rather than a mode flag, because
+# every caller wants one or the other and a wrong flag would be silent. It
+# exists so the third mktemp site stops open-coding a weaker copy of the checks.
+require_temp_file() {
+  local path=$1 label=$2 repo=$3
+
+  if [ -z "$path" ] || [ ! -f "$path" ]; then
+    echo "$label: could not create a temp file; refusing to run" >&2
+    return 1
+  fi
+  case "$path" in
+    "$repo" | "$repo"/*)
+      echo "$label: temp file $path is inside the repository; refusing to run" >&2
+      return 1
+      ;;
+  esac
+  return 0
+}
