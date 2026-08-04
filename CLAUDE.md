@@ -34,23 +34,21 @@ VolleyKit is a multi-platform app suite for Swiss volleyball referee management 
 1. **Implement** - Complete the work
 2. **Add changeset** - For `feat:`/`fix:` commits, create `.changeset/*.md` (see below)
 3. **Validate** - Run `scripts/validate.sh` (streaming output)
-4. **Commit** - Pre-commit hook confirms every check passed for the current file contents (instant approve)
+4. **Commit** - The hook approves instantly if validation is green
 5. **Push** - Push to remote
-
-**Validate whatever you want, whenever you want — nothing is ever run twice.**
-Results are cached by the content hash of the files each check reads, so a
-check that already passed is skipped at commit time, and fixing one package
-does not re-run the others.
 
 ```bash
 scripts/validate.sh          # everything the commit gate requires
-scripts/validate.sh lint     # only lint, across every affected package
+scripts/validate.sh lint     # one class, across every affected package
 scripts/validate.sh --gate   # what is still missing (runs nothing)
 ```
 
-Never run raw `pnpm run lint` / `pnpm test` / `pnpm run build` for validation —
-those results are not cached and will be re-run at commit time. Use
-`scripts/validate.sh` (or `/lint`, `/test`, `/build`) instead.
+Every pass is cached by content hash, so **nothing is ever run twice** — validate
+as often as you like, and after a failure only the affected package re-runs.
+
+Never validate with raw `pnpm run lint` / `pnpm test` / `pnpm run build`; those
+results are not cached and get re-run at commit time. Use `scripts/validate.sh`
+(or `/lint`, `/test`, `/build`).
 
 Use `/pr-review` to create PR and auto-fix Claude Code Review issues.
 

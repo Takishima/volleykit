@@ -93,26 +93,20 @@ done <<<"$RECORDS"
 
 REASON=""
 if [ -n "$CHECKS" ]; then
-  REASON="These checks have not passed for the current changes:
+  REASON="Not yet validated:
 
 ${CHECKS}
-Run validation — results stream as each check finishes, and anything already green is skipped:
-
-scripts/validate.sh
-
-Then retry the commit."
+Run \`scripts/validate.sh\` (anything already green is skipped), then retry."
 fi
 
 if [ -n "$UNSTAGED" ]; then
   [ -n "$REASON" ] && REASON="$REASON
 
 "
-  REASON="${REASON}Validation passed, but these files have staged content that differs from the worktree, so the commit would record something that was not validated:
+  REASON="${REASON}Staged content differs from the worktree, so the commit would record something unvalidated:
 
 ${UNSTAGED}
-Stage them and retry — the cache is staging-independent, so nothing re-runs:
-
-git add -A"
+Run \`git add -A\`, then retry. Nothing re-runs."
 fi
 
 block "$REASON"
