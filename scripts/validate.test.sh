@@ -180,6 +180,9 @@ assert_absent() {
 # Scraped by naming convention, not by name: an earlier version listed the
 # constants literally, so a sixth one was asserted by nothing — the same
 # covers-what-existed-when-it-was-written shape as the package list.
+# shellcheck source=./shellcheck.sh
+source "$HERE/shellcheck.sh" || exit 1
+
 mapfile -t PATH_CONSTS < <(
   sed -n 's/^\([A-Z_]*\(INPUTS\|ROOT\)\)=.*/\1/p' "$HERE/validate.sh" "$HERE/shellcheck.sh" | sort -u
 )
@@ -210,17 +213,28 @@ for pkg in "${PKG_NAMES[@]}"; do
   check_paths_exist "PKG_INPUTS[$pkg]" ${PKG_INPUTS[$pkg]}
 done
 for const in "${PATH_CONSTS[@]}"; do
-  # SHELLCHECK_EXCLUDED names paths that may legitimately not exist yet.
-  [ "$const" = "SHELLCHECK_EXCLUDED" ] && continue
   # shellcheck disable=SC2086  # the constants are space-separated, split on purpose
   check_paths_exist "$const" ${!const}
 done
 
+# SHELLCHECK_EXCLUDED is not scraped by the convention above, and it *widens*
+# the coverage row below — an exclusion that grows silently excuses whatever it
+# names from the only assertion guarding lint coverage. So it is checked for
+# existence, and capped: growing it is a deliberate edit here, not a side effect.
+# shellcheck disable=SC2086
+check_paths_exist "SHELLCHECK_EXCLUDED" $SHELLCHECK_EXCLUDED
+# shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+EXCLUDED_COUNT=$(printf '%s\n' $SHELLCHECK_EXCLUDED | sed '/^$/d' | wc -l)
+if [ "$EXCLUDED_COUNT" -le 1 ]; then
+  ok "the shell-lint exclusion list is still minimal ($EXCLUDED_COUNT entry)"
+else
+  not_ok "the shell-lint exclusion list is still minimal" \
+    "$EXCLUDED_COUNT entries — each one excuses its tree from the coverage row"
+fi
+
 # The lint's argv and its cache key are the same constant, but only if every
 # file the lint actually reads sits under it. Anything outside is linted in CI
 # and invisible to the gate, and a stored PASS survives that file breaking.
-# shellcheck source=./shellcheck.sh
-source "$HERE/shellcheck.sh"
 # `git ls-files` over the whole repo, not a list of directories to look in —
 # naming the scan roots is the same covers-what-existed-when-it-was-written
 # shape, one level up, and it left six tracked scripts linted by nothing.
@@ -233,7 +247,15 @@ while IFS= read -r f; do
     case "$f" in "$path"/* | "$path") covered=true; break ;; esac
   done
   [ "$covered" = true ] || UNCOVERED="$UNCOVERED $f"
-done < <(cd "$REPO" && git ls-files '*.sh' | sort)
+done < <(
+  cd "$REPO" && git ls-files | while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    case "$f" in *.sh) printf '%s\n' "$f"; continue ;; esac
+    # Extension alone is a proxy: .envrc is tracked bash and was invisible to a
+    # `git ls-files '*.sh'` scan.
+    head -1 "$f" 2>/dev/null | grep -qE '^#!.*(bash|/sh|zsh|dash)' && printf '%s\n' "$f"
+  done | sort
+)
 
 if [ "$SHELL_FILE_COUNT" -ge 10 ]; then
   ok "the shell-file scan found the repo's scripts ($SHELL_FILE_COUNT)"
@@ -257,9 +279,19 @@ WORKFLOW="$REPO/.github/workflows/ci-shell.yml"
 # independent filters, and a union of the two would report green while one of
 # them had a hole.
 workflow_paths() {
+  # The second-level key is tracked, not just the block: matching any list item
+  # under `push:` also reads `branches:`, and — the case that matters — renaming
+  # `paths:` to `paths-ignore:` inverts the filter while leaving the entries
+  # untouched, which a block-only parser reports as still covered.
+  #
+  # The list marker and the quotes are stripped separately; eating one character
+  # on each side assumes every entry is quoted, and fails on a valid unquoted one.
   awk -v want="$1" '
-    /^  [a-z_]+:/ { block = $1; sub(":", "", block) }
-    block == want && /^ *- / { gsub(/^ *- .|.$/, ""); print }
+    /^  [a-z_]+:/ { block = $1; sub(":", "", block); key = "" }
+    /^    [a-z_-]+:/ { key = $1; sub(":", "", key) }
+    block == want && key == "paths" && /^ *- / {
+      gsub(/^ *- */, ""); gsub(/^["\047]|["\047]$/, ""); print
+    }
   ' "$WORKFLOW" | sed 's|/\*\*$||;s|/\*$||' | sort -u
 }
 

@@ -14,6 +14,8 @@ on:
       - '.claude/skills/**'
       - '.claude/settings.json'
       - 'packages/web/scripts/**'
+      - '**.sh'
+      - '.envrc'
       - '.github/workflows/ci-shell.yml'
   pull_request:
     paths:
@@ -22,6 +24,8 @@ on:
       - '.claude/skills/**'
       - '.claude/settings.json'
       - 'packages/web/scripts/**'
+      - '**.sh'
+      - '.envrc'
       - '.github/workflows/ci-shell.yml'
 
 permissions:

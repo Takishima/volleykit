@@ -16,7 +16,7 @@
 # Directories and files the lint covers. This is also the check's cache key, so
 # it must name everything the lint reads.
 # shellcheck disable=SC2034  # consumed by validate.sh
-SHELLCHECK_INPUTS="scripts .claude/hooks .claude/skills packages/web/scripts"
+SHELLCHECK_INPUTS="scripts .claude/hooks .claude/skills packages/web/scripts .envrc"
 
 # Tracked shell that is deliberately NOT linted. Stated rather than left out of
 # the scan: validate.test.sh asserts every tracked .sh is either under
@@ -34,19 +34,32 @@ SHELLCHECK_ARGS=(-x --severity=info -e SC1091 -e SC2015)
 # empty directory stays literal and shellcheck then errors on a path that does
 # not exist, failing the check for a reason unrelated to shell quality.
 #
-# find's status is honoured — a deleted or mistyped input path must fail the
-# lint rather than silently narrowing it to whatever still resolves.
+# find's status is checked per input. `find a b | sort` returns sort's status and
+# a process substitution's status is not observable at all, so an earlier version
+# claimed to fail on a missing path and silently linted a narrower set instead.
 shellcheck_files() {
-  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
-  find $SHELLCHECK_INPUTS -name '*.sh' -type f | sort
+  local path found all=""
+  for path in $SHELLCHECK_INPUTS; do
+    if [ -f "$path" ]; then
+      all="$all$path"$'\n'
+      continue
+    fi
+    found=$(find "$path" -name '*.sh' -type f) || return 1
+    all="$all$found"$'\n'
+  done
+  printf '%s' "$all" | sed '/^$/d' | sort
 }
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   set -uo pipefail
   cd "$(git rev-parse --show-toplevel 2>/dev/null || echo .)" || exit 1
 
-  mapfile -t files < <(shellcheck_files)
-  if [ ${#files[@]} -eq 0 ]; then
+  if ! files_list=$(shellcheck_files); then
+    echo "shellcheck.sh: an entry in SHELLCHECK_INPUTS could not be read" >&2
+    exit 1
+  fi
+  mapfile -t files <<<"$files_list"
+  if [ ${#files[@]} -eq 0 ] || [ -z "${files[0]}" ]; then
     echo "shellcheck.sh: no shell files found under $SHELLCHECK_INPUTS" >&2
     exit 1
   fi

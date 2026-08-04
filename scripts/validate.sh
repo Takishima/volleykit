@@ -385,7 +385,14 @@ fi
 # same treatment as any other source: touching one runs the suite that covers
 # them before the gate reopens. The hook in particular is what enforces
 # everything else, and was previously the one file nothing validated.
-if matches "$(paths_to_regex "$SHELL_INPUTS")"; then
+# `|\.sh$` on both triggers: the coverage assertions live in these checks, and
+# a new script outside the directory lists is exactly the case they exist to
+# flag. Keyed on the directory constants alone, a shellcheck-failing
+# packages/mobile/scripts/foo.sh registered neither check and shipped.
+SHELL_TRIGGER="$(paths_to_regex "$SHELL_INPUTS")|\.sh$"
+SHELLCHECK_TRIGGER="$(paths_to_regex "$SHELLCHECK_INPUTS")|\.sh$"
+
+if matches "$SHELL_TRIGGER"; then
   # One check per suite. CHECK_CMD is exec'd as argv, never through a shell, so
   # a composite `a && b` would pass `&&` as a positional argument and silently
   # run only the first — which is exactly what it did. Composite commands need a
@@ -403,7 +410,7 @@ fi
 
 # Keyed on SHELLCHECK_INPUTS, which is what the lint reads — wider than
 # SHELL_INPUTS, because it also covers scripts this suite does not exercise.
-if matches "$(paths_to_regex "$SHELLCHECK_INPUTS")"; then
+if matches "$SHELLCHECK_TRIGGER"; then
   if command -v shellcheck >/dev/null 2>&1; then
     register_check "validation:shellcheck" "lint" "$ROOT_DIR" \
       "bash scripts/shellcheck.sh" "$SHELLCHECK_INPUTS"
