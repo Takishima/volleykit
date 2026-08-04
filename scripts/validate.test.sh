@@ -80,17 +80,17 @@ mkdir -p scripts .claude/hooks/lib docs/api
 # and reset_tree's `git clean -qfd` removes it — after which shellcheck_files
 # returns non-zero on the missing path and every row reading it sees an empty
 # set, passing for the wrong reason.
+# Classified by what the real repo has, not by "contains a dot" — every
+# dotfile-rooted directory contains one, so `.claude/hooks` and `.claude/skills`
+# were both materialised as regular files.
 for path in $SHELLCHECK_INPUTS; do
-  case "$path" in
-    *.*)
-      mkdir -p "$(dirname "$path")"
-      [ -e "$path" ] || printf '#!/usr/bin/env bash\ntrue\n' >"$path"
-      ;;
-    *)
-      mkdir -p "$path"
-      [ -e "$path/.keep.sh" ] || printf '#!/usr/bin/env bash\ntrue\n' >"$path/.keep.sh"
-      ;;
-  esac
+  if [ -d "$REPO/$path" ]; then
+    mkdir -p "$path"
+    [ -e "$path/.keep.sh" ] || printf '#!/usr/bin/env bash\ntrue\n' >"$path/.keep.sh"
+  else
+    mkdir -p "$(dirname "$path")"
+    [ -e "$path" ] || printf '#!/usr/bin/env bash\ntrue\n' >"$path"
+  fi
 done
 for pkg in "${PKG_NAMES[@]}"; do
   for path in ${PKG_INPUTS[$pkg]}; do
@@ -742,8 +742,17 @@ reset_tree
 # shellcheck disable=SC2016  # fixture content, deliberately not expanded here
 printf '#!/usr/bin/env bash\nrm -rf $SCRATCHVAR/*\n' >scripts/scratch-debug.sh
 echo 'scripts/scratch-debug.sh' >>.gitignore
+# The lint set's status is invisible on the left of a pipe, and the function
+# returns nothing when a SHELLCHECK_INPUTS path is missing from the scratch —
+# which made the lint half of this row pass whatever the filter did.
+if ! LINT_SET=$(cd "$SCRATCH" && shellcheck_files) || [ -z "$LINT_SET" ]; then
+  not_ok "the scratch covers every SHELLCHECK_INPUTS path" \
+    "the lint set came back empty, so every row reading it passes vacuously"
+else
+  ok "the scratch covers every SHELLCHECK_INPUTS path"
+fi
 IN_SCAN=$(cd "$SCRATCH" && all_shell_files | grep -c 'scratch-debug' || true)
-IN_LINT=$(cd "$SCRATCH" && shellcheck_files | grep -c 'scratch-debug' || true)
+IN_LINT=$(printf '%s\n' "$LINT_SET" | grep -c 'scratch-debug' || true)
 if [ "$IN_SCAN" -eq 0 ] && [ "$IN_LINT" -eq 0 ]; then
   ok "gitignoring a scratch script removes it from both the scan and the lint"
 else

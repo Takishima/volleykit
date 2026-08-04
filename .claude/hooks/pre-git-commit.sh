@@ -36,9 +36,21 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./lib/is-git-commit.sh
 if ! source "$HOOK_DIR/lib/is-git-commit.sh" 2>/dev/null ||
   ! declare -F is_git_commit >/dev/null || ! declare -F might_be_git_commit >/dev/null; then
+  # The predicate is gone, so this is the one place a second copy is
+  # unavoidable — might_be_git_commit is exactly what could not be loaded. It
+  # only has to be a superset of a superset, so it stays a bare literal test.
+  #
+  # Without this the hook is registered on every Bash call and a missing lib
+  # takes the whole session's shell with it, including the `mv` that would put
+  # the file back. Anything that cannot be a commit still runs.
+  case "$INPUT" in
+    *commit* | *'\u'* | *'\U'*) ;;
+    *) allow ;;
+  esac
   block "Commit gate is broken: .claude/hooks/lib/is-git-commit.sh did not load.
 
-Fix that file, or remove the hook from .claude/settings.json deliberately."
+Restore it (non-Bash tools still work), or remove the hook from
+.claude/settings.json deliberately."
 fi
 
 # This hook is registered on every Bash call, so scope the jq requirement to

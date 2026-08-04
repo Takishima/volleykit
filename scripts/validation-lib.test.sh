@@ -201,9 +201,11 @@ assert_gated() {
 }
 assert_not_gated() {
   if is_git_commit "$2"; then not_ok "passes through: $1" "$2"; else ok "passes through: $1"; fi
+  PASSTHROUGH_FIXTURES+=("$1"$'\x01'"$2")
 }
 
 declare -a GATED_FIXTURES=()
+declare -a PASSTHROUGH_FIXTURES=()
 
 # The word is spliced so this file's own fixtures do not trip the hook when the
 # test itself is edited and committed.
@@ -263,7 +265,12 @@ assert_decision() {
 
 # json_escape turns a fixture into a JSON string body the way a real caller would.
 json_escape() {
-  printf '%s' "$1" | jq -Rs . 2>/dev/null | sed 's/^"//;s/"$//'
+  local out
+  if ! out=$(printf '%s' "$1" | jq -Rs . 2>&1); then
+    echo "validation-lib.test.sh: jq is required to build hook payloads: $out" >&2
+    exit 1
+  fi
+  printf '%s' "$out" | sed 's/^"//;s/"$//'
 }
 
 for fixture in "${GATED_FIXTURES[@]}"; do
@@ -271,6 +278,15 @@ for fixture in "${GATED_FIXTURES[@]}"; do
   cmd=${fixture#*$'\x01'}
   payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
   assert_decision "reaches the predicate: $label" "block" "$payload"
+done
+
+# The mirror: without this, the hook could stop calling is_git_commit entirely
+# and every one of these commands would be blocked with the suite still green.
+for fixture in "${PASSTHROUGH_FIXTURES[@]}"; do
+  label=${fixture%%$'\x01'*}
+  cmd=${fixture#*$'\x01'}
+  payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
+  assert_decision "still passes through the hook: $label" "approve" "$payload"
 done
 
 assert_decision "an unrelated command is approved" "approve" '{"tool_input":{"command":"ls -la"}}'
@@ -281,6 +297,8 @@ assert_decision "malformed JSON is not approved" "block" \
 # its absence of the literal word as "not a commit".
 assert_decision "a unicode-escaped subcommand is not approved" "block" \
   '{"tool_input":{"command":"git \u0063ommit -m x"}}'
+assert_decision "a fully escaped subcommand is not approved" "block" \
+  '{"tool_input":{"command":"git \u0063\u006f\u006d\u006d\u0069\u0074 -m x"}}'
 
 # Without jq the hook cannot read the command — but it is registered on every
 # Bash call, so it must still let through what cannot be one. Blocking those
@@ -295,6 +313,22 @@ assert_decision "without jq, an unrelated command still runs" "approve" \
 assert_decision "without jq, a possible commit is blocked" "block" \
   "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$NOJQ_BIN"
 
+# The lib can go missing. That must not take the session's shell with it: the
+# hook runs on every Bash call, and the message's own remedy needs one. This
+# branch has shipped in two orderings, blocking everything in one of them, with
+# no row either time.
+LIB_DIR="$(dirname "$HOOK")/lib"
+LIB_AWAY="$SCRATCH/lib-away"
+if mv "$LIB_DIR" "$LIB_AWAY" 2>/dev/null; then
+  assert_decision "with the predicate lib missing, an unrelated command still runs" \
+    "approve" '{"tool_input":{"command":"ls -la"}}'
+  assert_decision "with the predicate lib missing, a possible commit is blocked" \
+    "block" "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")"
+  mv "$LIB_AWAY" "$LIB_DIR"
+else
+  not_ok "the predicate lib can be moved aside for the test" "$LIB_DIR"
+fi
+
 # --- commit-hook registration -------------------------------------------------
 #
 # The hook only runs because .claude/settings.json registers it. That file is a
@@ -307,12 +341,10 @@ if [ -f "$SETTINGS" ]; then
   else
     not_ok "settings.json registers the commit hook" "no reference to pre-git-commit.sh"
   fi
-  if command -v jq >/dev/null 2>&1; then
-    if [ "$(jq -r '[.hooks.PreToolUse[]?.hooks[]?.command // ""] | map(select(test("pre-git-commit"))) | length' "$SETTINGS" 2>/dev/null)" -ge 1 ]; then
-      ok "the registration is a PreToolUse hook"
-    else
-      not_ok "the registration is a PreToolUse hook" "not found under .hooks.PreToolUse"
-    fi
+  if [ "$(jq -r '[.hooks.PreToolUse[]?.hooks[]?.command // ""] | map(select(test("pre-git-commit"))) | length' "$SETTINGS" 2>/dev/null)" -ge 1 ]; then
+    ok "the registration is a PreToolUse hook"
+  else
+    not_ok "the registration is a PreToolUse hook" "not found under .hooks.PreToolUse"
   fi
 else
   not_ok "settings.json is present" "$SETTINGS"

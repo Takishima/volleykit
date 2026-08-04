@@ -110,8 +110,8 @@ Three checks cover the validation code itself:
   editing the suite. It also asserts that every tracked shell file is either
   linted or explicitly excluded, that the exclusion list stays minimal, and that
   `ci-shell.yml` triggers on everything the shell checks read. The scan covers
-  untracked files too, so a local scratch script fails it — gitignore it, which
-  the failure message says and which removes the file from the lint as well. Add a check or a
+  untracked files too, so a local scratch script fails it. Gitignore it — the
+  failure message says so, and an ignored file drops out of the lint as well. Add a check or a
   trigger, add a row.
 - `validation:shellcheck` — `scripts/shellcheck.sh`, the single definition of
   what is linted and how; `validate.sh` sources it so the trigger, the cache key
