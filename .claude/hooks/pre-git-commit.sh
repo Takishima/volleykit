@@ -30,11 +30,22 @@ block() {
 
 INPUT=$(cat)
 
-if command -v jq &>/dev/null; then
-  COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
-else
-  COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+# jq is required, and its absence fails CLOSED.
+#
+# The previous fallback was a grep that neither unescaped nor tolerated an
+# escaped quote, so it handed the predicate a mangled string: a `\n` survived as
+# two literal characters, putting an alphanumeric before `git`, and a quoted
+# option value truncated the command before the word `commit`. Every shape
+# is_git_commit was hardened for walked through that path. Extracting the
+# command wrongly and then deciding is worse than declining to decide.
+if ! command -v jq >/dev/null 2>&1; then
+  block "Commit gate is broken: jq is not installed, and the gate cannot read
+the command without it.
+
+Install jq, or remove the hook from .claude/settings.json deliberately."
 fi
+
+COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
 
 # The predicate lives in lib/ so this hook and the test suite share one
 # definition rather than two that must be kept in agreement.

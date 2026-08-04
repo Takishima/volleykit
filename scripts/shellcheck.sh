@@ -38,7 +38,12 @@ SHELLCHECK_ARGS=(-x --severity=info -e SC1091 -e SC2015)
 #
 # Extension OR shell shebang. `.envrc` is tracked bash with no extension;
 # `#!/usr/bin/env sh` and ksh are the same case.
-SHELL_SHEBANG_RE='^#!([^[:space:]]*/)?(env[[:space:]]+)?(ba|z|k|da|a)?sh([[:space:]]|$)'
+# `#! /bin/bash` (space after #!) and `#!/usr/bin/env -S bash -e` (env flags)
+# are both real and were both missed by a tighter earlier version. Since all
+# three consumers share this predicate, a file it misses is absent from every
+# side at once — not linted, not scanned, not triggered — so no row can fail on
+# it. The fixture table in validate.test.sh is what guards this regex.
+SHELL_SHEBANG_RE='^#![[:space:]]*([^[:space:]]*/)?(env[[:space:]]+(-[^[:space:]]+[[:space:]]+)*)?(ba|z|k|da|a)?sh([[:space:]]|$)'
 
 is_shell_file() {
   case "$1" in *.sh) return 0 ;; esac
@@ -46,13 +51,25 @@ is_shell_file() {
   head -1 "$1" 2>/dev/null | grep -qE "$SHELL_SHEBANG_RE"
 }
 
-# Every tracked shell file in the repo. `git grep` narrows to files carrying a
-# shebang at all, so only those are opened — reading the first line of all ~1150
-# tracked files took longer than the rest of the suite.
+# Every shell file in the repo, tracked or not.
+#
+# Untracked files are included deliberately: the check cache is
+# staging-independent, so an index-only scan answers differently before and
+# after `git add` while the fingerprint does not move — the stored PASS from
+# before the `git add` stays valid and the coverage row never re-runs. It also
+# keeps this set aligned with shellcheck_files, which walks the worktree.
+#
+# `git grep` narrows to files carrying a shebang at all, so only those are
+# opened — reading the first line of every tracked file cost more than the rest
+# of the suite.
 all_shell_files() {
   {
-    git ls-files '*.sh'
-    git grep -lE '^#!' -- ':!*.sh' 2>/dev/null | while IFS= read -r f; do
+    git -c core.quotePath=false ls-files -c -o --exclude-standard '*.sh'
+    {
+      git grep -lE '^#!' -- ':!*.sh' 2>/dev/null || true
+      git -c core.quotePath=false ls-files -o --exclude-standard
+    } | sed '/^$/d' | sort -u | while IFS= read -r f; do
+      case "$f" in *.sh) continue ;; esac
       is_shell_file "$f" && printf '%s\n' "$f"
     done
   } | sed '/^$/d' | sort -u

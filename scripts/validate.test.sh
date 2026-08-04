@@ -45,7 +45,7 @@ CACHE=$(mktemp -d)
 trap 'rm -rf "$SCRATCH" "$CACHE"' EXIT
 
 mkdir -p "$SCRATCH/bin"
-for tool in pnpm node; do
+for tool in pnpm node shellcheck; do
   printf '#!/bin/sh\nexit 0\n' >"$SCRATCH/bin/$tool"
   chmod +x "$SCRATCH/bin/$tool"
 done
@@ -238,7 +238,10 @@ fi
 # `git ls-files` over the whole repo, not a list of directories to look in —
 # naming the scan roots is the same covers-what-existed-when-it-was-written
 # shape, one level up, and it left six tracked scripts linted by nothing.
-LINTED_SET="|$(cd "$REPO" && shellcheck_files | tr '\n' '|')"
+# Newline-delimited, not `|`: a real filename can contain a pipe and match a
+# boundary that is not there — the same class as the escaped-regex membership
+# test divergence() was rewritten to avoid.
+LINTED_SET=$(cd "$REPO" && shellcheck_files)
 UNCOVERED=""
 SHELL_FILE_COUNT=0
 while IFS= read -r f; do
@@ -247,7 +250,9 @@ while IFS= read -r f; do
   # Membership in the linted set, not "sits under a directory the linter looks
   # in" — those differ for any file the lint's own filter skips, which is how an
   # extensionless script under scripts/ counted as covered and was never linted.
-  case "$LINTED_SET" in *"|$f|"*) covered=true ;; esac
+  while IFS= read -r linted; do
+    [ "$linted" = "$f" ] && { covered=true; break; }
+  done <<<"$LINTED_SET"
   if [ "$covered" = false ]; then
     for path in $SHELLCHECK_EXCLUDED; do
       case "$f" in "$path"/* | "$path") covered=true; break ;; esac
@@ -570,10 +575,12 @@ mkdir -p packages/mobile
 # shellcheck disable=SC2016  # fixture content, deliberately not expanded here
 printf '#!/usr/bin/env bash\nrm -rf $UNQUOTED/*\n' >packages/mobile/scripts_helper
 GOT=$(gate_records)
-case "$GOT" in
-  *"check validation:registry"*) ok "a shell file outside every directory list selects the registry check" ;;
-  *) not_ok "a shell file outside every directory list selects the registry check" "$GOT" ;;
-esac
+for want in validation:registry validation:shellcheck; do
+  case "$GOT" in
+    *"check $want"*) ok "a shell file outside every directory list selects $want" ;;
+    *) not_ok "a shell file outside every directory list selects $want" "$GOT" ;;
+  esac
+done
 rm -rf packages/mobile
 reset_tree
 
@@ -585,6 +592,67 @@ for block in push pull_request; do
       "no repo-wide shell glob in its paths filter"
   fi
 done
+
+# With the lint, the trigger and the scan all on one predicate, a file it fails
+# to recognise is absent from every side at once — not linted, not scanned, not
+# triggered — and no coverage row can go red on it. Its breadth is the coverage
+# claim, so it is asserted directly.
+PROBE="$SCRATCH/shebang-probe"
+shebang_is_shell() {
+  printf '%s\n' "$1" >"$PROBE"
+  is_shell_file "$PROBE"
+}
+while IFS='|' read -r want line; do
+  [ -z "$want" ] && continue
+  if shebang_is_shell "$line"; then got=yes; else got=no; fi
+  if [ "$got" = "$want" ]; then
+    ok "shebang recognised as shell=$want: $line"
+  else
+    not_ok "shebang recognised as shell=$want: $line" "got shell=$got"
+  fi
+done <<'TABLE'
+yes|#!/bin/bash
+yes|#!/bin/sh
+yes|#! /bin/bash
+yes|#!/usr/bin/env bash
+yes|#!/usr/bin/env sh
+yes|#!/usr/bin/env ksh
+yes|#!/usr/bin/env -S bash -e
+yes|#!/bin/dash
+yes|#!/bin/zsh
+no|#!/usr/bin/env python3
+no|#!/usr/bin/env node
+no|#!/usr/bin/perl
+no|not a shebang at all
+TABLE
+rm -f "$PROBE"
+
+# The trigger only helps if the cache key moved too. Every other row here is
+# `--gate`, which reports and never executes, so nothing in the suite ever
+# stores an entry — and a check whose key did not change is a hit, skipped, no
+# matter what selected it. This row warms the cache first.
+#
+# The two suite commands are stubbed out in the scratch before warming, or the
+# warming run re-enters this suite recursively.
+printf '#!/bin/sh\nexit 0\n' >"$SCRATCH/scripts/validate.test.sh"
+printf '#!/bin/sh\nexit 0\n' >"$SCRATCH/scripts/validation-lib.test.sh"
+echo 'export const a = 7' >packages/web/src/index.ts
+(cd "$SCRATCH" && bash scripts/validate.sh >/dev/null 2>&1)
+
+mkdir -p packages/mobile/tools
+# shellcheck disable=SC2016  # fixture content, deliberately not expanded here
+printf '#!/usr/bin/env bash\nrm -rf $UNQUOTED/*\n' >packages/mobile/tools/helper.sh
+GOT=$(gate_records)
+for want in validation:registry validation:shellcheck; do
+  case "$GOT" in
+    *"check $want"*) ok "a warm cache does not hide $want from a new shell file" ;;
+    *) not_ok "a warm cache does not hide $want from a new shell file" \
+      "cache hit: the trigger selected it and the key did not move — $GOT" ;;
+  esac
+done
+rm -rf packages/mobile
+cp "$HERE/validate.test.sh" "$HERE/validation-lib.test.sh" "$SCRATCH/scripts/"
+reset_tree
 
 # --- guards -------------------------------------------------------------------
 

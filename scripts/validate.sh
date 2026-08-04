@@ -112,10 +112,12 @@ FORMAT_ROOT=".prettierrc.json .prettierignore"
 # list feeding both the trigger and the check's inputs — stating it twice is
 # how .claude/settings.json ended up in neither.
 #
-# .github/workflows/ci-shell.yml must trigger on at least these: CI is the only
-# enforcer a settings.json change cannot switch off. The shell lint's own scope
-# is wider and lives in scripts/shellcheck.sh.
-SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh scripts/shellcheck.sh"
+# The workflow file is in this list because narrowing its `paths:` filter
+# narrows the only enforcement a machine without shellcheck has, and it is
+# matched by no other constant and by no shell predicate — editing it registered
+# nothing. CI is the only enforcer a settings.json change cannot switch off; the
+# shell lint's own scope is wider and lives in scripts/shellcheck.sh.
+SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
 
 # The design-token check compares the two generated files. Its trigger used to
 # be hand-written while its inputs were listed separately, so editing the

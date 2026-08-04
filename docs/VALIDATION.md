@@ -122,7 +122,9 @@ which is what registers the hook in the first place. `validation:shellcheck` is
 triggered by `SHELLCHECK_INPUTS`, which is wider: it covers shell the suites do
 not exercise. Both triggers also fire on any changed shell file, wherever it lives —
 identified by extension or shebang, the same predicate the lint and the coverage
-scan use. A new script outside the directory lists is exactly the case the
+scan use. `ci-shell.yml`'s own `paths:` filter can only express globs, so CI
+sees `**.sh` but not an extensionless script; that asymmetry is why the local
+trigger is the shebang-aware one. A new script outside the directory lists is exactly the case the
 coverage assertions exist to flag, and keyed on a narrower proxy they never ran
 for it. The changed files enter the cache key too, so a warm cache cannot report
 a hit for a check that was only just triggered.
