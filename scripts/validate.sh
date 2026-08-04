@@ -101,7 +101,11 @@ if ! echo "$CHANGED" | grep -qvE '\.md$'; then
   exit 0
 fi
 
-SOURCE_PATTERN='\.(ts|tsx|js|jsx|mjs|astro)$'
+# `css` is here because the design-token check reads design-tokens.css, and `sh`
+# because the validation scripts and their test are themselves checked. Leaving
+# either out makes a registered check unreachable for the very edit it exists to
+# catch.
+SOURCE_PATTERN='\.(ts|tsx|js|jsx|mjs|astro|css|sh)$'
 CONFIG_PATTERN='(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vite\.config|eslint\.config|\.prettierrc|\.prettierignore|volleymanager-openapi\.yaml)'
 
 if ! matches "$SOURCE_PATTERN" && ! matches "$CONFIG_PATTERN"; then
@@ -113,10 +117,13 @@ fi
 # API TYPE GENERATION
 # =============================================================================
 #
-# Must happen before any fingerprint is taken: it writes
-# packages/shared/src/api/schema.ts, which is an input of web, shared and
-# mobile. Generating afterwards would store cache entries keyed on
-# pre-generation content and miss on every subsequent run.
+# Runs before any check does, because typecheck and build read the generated
+# packages/shared/src/api/schema.ts.
+#
+# It is NOT a cache input: packages/shared/.gitignore excludes src/api/schema.ts,
+# so no fingerprint ever contains it. Invalidation comes from
+# docs/api/volleymanager-openapi.yaml being in PKG_INPUTS — the spec is the
+# tracked file, the schema is its derivative.
 #
 # Gate mode never mutates the worktree; if the spec changed without the schema
 # being regenerated, the gate simply reports the checks as missing.
@@ -163,6 +170,10 @@ affected() { [ -n "${AFFECTED[$1]:-}" ]; }
 declare -a CHECK_NAMES=()
 declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=()
 
+# CHECK_PATHS is always newline-separated. The format check's paths are real
+# filenames, which may contain spaces; splitting them on IFS would turn
+# "my file.ts" into two pathspecs matching nothing, quietly dropping the file
+# out of that check's cache key.
 register_check() {
   local name=$1 class=$2 dir=$3 cmd=$4 paths=$5
   CHECK_NAMES+=("$name")
@@ -172,10 +183,25 @@ register_check() {
   CHECK_PATHS["$name"]=$paths
 }
 
-fingerprint_for_check() {
-  # shellcheck disable=SC2086  # pathspecs are intentionally word-split
-  fingerprint $ROOT_PATHS ${CHECK_PATHS[$1]}
+# Split a whitespace-separated constant (our own path lists, never filenames)
+# into the newline form register_check expects.
+nl_paths() { printf '%s\n' $1; }
+
+read_paths() {
+  local -a out=()
+  mapfile -t out <<<"$1"
+  local p
+  for p in "${out[@]}"; do [ -n "$p" ] && printf '%s\n' "$p"; done
 }
+
+fingerprint_for_check() {
+  local -a paths=()
+  mapfile -t paths < <(read_paths "$ROOT_PATHS_NL"; read_paths "${CHECK_PATHS[$1]}")
+  fingerprint "${paths[@]}"
+}
+
+# shellcheck disable=SC2086  # ROOT_PATHS is our own constant, split on purpose
+ROOT_PATHS_NL=$(nl_paths "$ROOT_PATHS")
 
 # --- format: prettier over the changed files, minus any that were deleted ---
 # (prettier exits non-zero on a path that is not there, which would leave the
@@ -191,37 +217,45 @@ fi
 if matches '^packages/shared/styles/'; then
   register_check "tokens" "tokens" "$ROOT_DIR" \
     "node scripts/sync-style-tokens.js --check" \
-    "packages/shared/styles scripts/sync-style-tokens.js"
+    "$(nl_paths "packages/shared/styles scripts/sync-style-tokens.js")"
 fi
 
 if affected web; then
-  register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
-  register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
+  register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[web]}")"
+  register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "$(nl_paths "${PKG_INPUTS[web]}")"
   # `build` is `tsc -b && vite build`, so it covers typecheck. `size` is folded
   # in because it can only run against a fresh build.
-  register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "${PKG_INPUTS[web]}"
+  register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "$(nl_paths "${PKG_INPUTS[web]}")"
 fi
 
 if affected shared; then
-  register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "${PKG_INPUTS[shared]}"
-  register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "${PKG_INPUTS[shared]}"
-  register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "${PKG_INPUTS[shared]}"
-  register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "${PKG_INPUTS[shared]}"
+  register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[shared]}")"
+  register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "$(nl_paths "${PKG_INPUTS[shared]}")"
+  register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "$(nl_paths "${PKG_INPUTS[shared]}")"
+  register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "$(nl_paths "${PKG_INPUTS[shared]}")"
 fi
 
 if affected mobile; then
-  register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "${PKG_INPUTS[mobile]}"
-  register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "${PKG_INPUTS[mobile]}"
-  register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "${PKG_INPUTS[mobile]}"
+  register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[mobile]}")"
+  register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "$(nl_paths "${PKG_INPUTS[mobile]}")"
+  register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "$(nl_paths "${PKG_INPUTS[mobile]}")"
 fi
 
 if affected worker; then
-  register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "${PKG_INPUTS[worker]}"
-  register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "${PKG_INPUTS[worker]}"
+  register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[worker]}")"
+  register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "$(nl_paths "${PKG_INPUTS[worker]}")"
 fi
 
 if affected help-site; then
-  register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "${PKG_INPUTS[help-site]}"
+  register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "$(nl_paths "${PKG_INPUTS[help-site]}")"
+fi
+
+# The validation scripts gate every commit, so they get the same treatment as
+# any other source: touching one runs its test suite before the gate reopens.
+if matches '^scripts/validate\.sh$|^scripts/validation-lib(\.test)?\.sh$'; then
+  register_check "validation:test" "test" "$ROOT_DIR" \
+    "bash scripts/validation-lib.test.sh" \
+    "$(nl_paths "scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.sh")"
 fi
 
 # =============================================================================
@@ -237,48 +271,75 @@ wanted_class() {
   return 1
 }
 
-declare -a SELECTED=() CACHED=()
-declare -A FP=()
+declare -a SELECTED=() CACHED=() OUT_OF_SCOPE=()
+declare -A FP=() HIT=()
 
 if [ ${#CHECK_NAMES[@]} -eq 0 ]; then
   say "${YELLOW}Changes touch no validated package, nothing to validate.${NC}"
   exit 0
 fi
 
+# Fingerprint every registered check, not just the ones this run will execute.
+# A class-filtered run can then report what the gate is still waiting on from
+# its own state, instead of re-invoking itself to ask.
 for name in "${CHECK_NAMES[@]}"; do
-  wanted_class "${CHECK_CLASS[$name]}" || continue
   FP["$name"]=$(fingerprint_for_check "$name")
-  if cache_hit "$name" "${FP[$name]}"; then
-    CACHED+=("$name")
-  else
-    SELECTED+=("$name")
+  if cache_hit "$name" "${FP[$name]}"; then HIT["$name"]=1; else HIT["$name"]=0; fi
+done
+
+for name in "${CHECK_NAMES[@]}"; do
+  if wanted_class "${CHECK_CLASS[$name]}"; then
+    if [ "${HIT[$name]}" = 1 ]; then CACHED+=("$name"); else SELECTED+=("$name"); fi
+  elif [ "${HIT[$name]}" = 0 ]; then
+    OUT_OF_SCOPE+=("$name")
   fi
 done
+
+# Paths that are both staged and dirty. The checks read the worktree but a
+# commit records the index, so for these two the content that passed is not the
+# content being committed — a broken staged blob fixed only on disk would
+# otherwise sail through. Everything else the fingerprint already covers.
+divergence() {
+  local all=""
+  for pkg in "${!AFFECTED[@]}"; do all="$all ${PKG_INPUTS[$pkg]}"; done
+  # shellcheck disable=SC2086  # our own pathspec constants, split on purpose
+  staged_worktree_divergence | grep -E "$(paths_to_regex "$ROOT_PATHS$all")" || true
+}
 
 # =============================================================================
 # GATE MODE
 # =============================================================================
+#
+# stdout is machine-readable: one "<kind> <value>" record per line, where kind
+# is `check` or `unstaged`. Callers must not have to string-match prose to tell
+# a check name from a file path.
+#
+#   exit 0  gate open
+#   exit 1  work outstanding (records on stdout)
+#   other   the gate itself failed
 
 if [ "$GATE_MODE" = true ]; then
-  [ ${#SELECTED[@]} -gt 0 ] && printf '%s\n' "${SELECTED[@]}"
+  MISSING_COUNT=0
 
-  # The checks read the worktree; a commit records the index. If any validated
-  # file differs between the two, what is about to be committed is not what was
-  # validated — a broken staged blob fixed only in the worktree would otherwise
-  # sail through. Reported only when something is actually staged.
-  DIVERGED=""
-  if ! git diff --cached --quiet 2>/dev/null; then
-    ALL_PATHS="$ROOT_PATHS"
-    for pkg in "${!AFFECTED[@]}"; do ALL_PATHS="$ALL_PATHS ${PKG_INPUTS[$pkg]}"; done
-    # shellcheck disable=SC2086  # pathspecs are intentionally word-split
-    DIVERGED=$(staged_worktree_divergence $ALL_PATHS)
-  fi
-  if [ -n "$DIVERGED" ]; then
-    echo "unstaged changes in validated files (stage them, then re-validate):"
-    echo "$DIVERGED" | sed 's/^/    /'
+  for name in "${CHECK_NAMES[@]}"; do
+    if [ "${HIT[$name]}" = 0 ]; then
+      echo "check $name"
+      MISSING_COUNT=$((MISSING_COUNT + 1))
+    fi
+  done
+
+  # Only meaningful once every check is otherwise green: while checks are
+  # outstanding the worktree fingerprint has already missed, so divergence adds
+  # nothing but noise.
+  if [ "$MISSING_COUNT" -eq 0 ]; then
+    while IFS= read -r p; do
+      [ -n "$p" ] || continue
+      echo "unstaged $p"
+      MISSING_COUNT=$((MISSING_COUNT + 1))
+    done < <(divergence)
   fi
 
-  { [ ${#SELECTED[@]} -eq 0 ] && [ -z "$DIVERGED" ]; } && exit 0
+  [ "$MISSING_COUNT" -eq 0 ] && exit 0
   exit 1
 fi
 
@@ -291,19 +352,36 @@ if [ ${#CACHED[@]} -gt 0 ]; then
   echo -e "  ${DIM}cached (skipped): ${CACHED[*]}${NC}"
 fi
 
-# For a partial run, say whether the gate as a whole is open.
+# Say whether the gate as a whole is open. Everything needed is already in this
+# process: OUT_OF_SCOPE holds the checks a class filter excluded that are still
+# missing, and every check this run executed has just been cached.
 report_gate_status() {
-  local remaining
-  remaining=$(VOLLEYKIT_NO_CACHE=0 "$SCRIPT_DIR/validate.sh" --gate 2>/dev/null | tr '\n' ' ' || true)
-  if [ -z "${remaining// /}" ]; then
+  local diverged
+  diverged=$(divergence)
+
+  if [ ${#OUT_OF_SCOPE[@]} -eq 0 ] && [ -z "$diverged" ]; then
     echo -e "${GREEN}All checks pass. Commit gate is open.${NC}"
-  else
-    echo -e "${GREEN}Passed.${NC} Still required before commit:${YELLOW} $remaining${NC}"
+    return
+  fi
+
+  if [ ${#OUT_OF_SCOPE[@]} -gt 0 ]; then
+    echo -e "${GREEN}Passed.${NC} Still required before commit:${YELLOW} ${OUT_OF_SCOPE[*]}${NC}"
+  fi
+
+  # `git add` alone reopens the gate here — the fingerprint is
+  # staging-independent, so nothing re-runs.
+  if [ -n "$diverged" ]; then
+    echo -e "${YELLOW}Staged content differs from the worktree; stage these to commit what was validated:${NC}"
+    echo "$diverged" | sed 's/^/    /'
   fi
 }
 
 if [ ${#SELECTED[@]} -eq 0 ]; then
-  echo -e "${GREEN}All checks already passed for the current changes.${NC}"
+  if [ ${#CACHED[@]} -gt 0 ]; then
+    echo -e "${GREEN}All checks already passed for the current changes.${NC}"
+  else
+    echo -e "${YELLOW}No checks match that filter.${NC}"
+  fi
   report_gate_status
   exit 0
 fi

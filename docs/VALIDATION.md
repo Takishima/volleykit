@@ -33,12 +33,16 @@ scripts/validate.sh
 the current file contents. If yes, the commit is approved instantly. If not,
 the block message names the exact checks that are missing.
 
+`--gate` writes one `<kind> <value>` record per line (`check <name>` or
+`unstaged <path>`) and exits 0 when the gate is open, 1 when work is
+outstanding, and anything else if the gate itself failed.
+
 ### The Check Cache
 
 Each check declares the paths it depends on. Its cache key is a hash of the
 **worktree contents** of every file under those paths — tracked or untracked,
 staged or not — plus the root set (`package.json`, `pnpm-lock.yaml`,
-`pnpm-workspace.yaml`, `.prettierrc.json`, `.prettierignore`, and the two
+`pnpm-workspace.yaml`, `.prettierrc.json`, `.prettierignore`, and the
 validation scripts themselves).
 
 Hashing the worktree uniformly is what makes the key staging-independent:
@@ -67,7 +71,9 @@ scripts/validate.sh --clear      # drop the cache
 ```
 
 `scripts/validation-lib.test.sh` asserts these invariants against a scratch
-repository. Run it after touching either validation script.
+repository. It is registered as the `validation:test` check, so editing any of
+the three validation scripts runs it automatically — and since those scripts are
+in the root set, that edit also invalidates every other cache entry.
 
 ### Two Things the Gate Deliberately Does
 
@@ -78,19 +84,26 @@ it. Scoping change detection to staged files would only hide that. The practical
 effect: a broken scratch file blocks commits of unrelated staged work until it is
 fixed, moved out of the package, or gitignored.
 
-**It blocks when the index and the worktree disagree.** The checks read the
-worktree; a commit records the index. If a validated file has staged content
-that differs from what is on disk, the thing about to be committed is not the
-thing that passed — so the gate lists those paths and asks you to stage them and
-re-validate. This is the case where a broken staged blob, fixed only in the
-worktree, would otherwise sail through.
+**It blocks when a file is both staged and dirty.** The checks read the
+worktree; a commit records the index. A path that appears in _both_
+`git diff --cached` and `git diff` has staged content that is not the content
+that passed — a broken staged blob, fixed only on disk, would otherwise sail
+through. The gate names those paths; `git add` alone clears it, because the
+fingerprint is staging-independent and nothing needs to re-run.
+
+The intersection is deliberate. A file that is merely dirty is not part of the
+next commit and does not block it, so partial commits (`git add one-file` while
+other work is in progress) keep working. And the check only runs once everything
+else is green — while any check is outstanding the worktree fingerprint has
+already missed, so reporting divergence too would just be noise.
 
 ### What Validation Does
 
 1. **Detect changes** - staged + unstaged + untracked vs `HEAD` (no `git add` required)
 2. **Skip trivial changes** - docs-only, or nothing matching source/config patterns
-3. **Generate API types** - if `volleymanager-openapi.yaml` changed (before any
-   fingerprint is taken, since it writes an input file)
+3. **Generate API types** - if `volleymanager-openapi.yaml` changed, before any
+   check runs. The generated `schema.ts` is gitignored and so is not itself a
+   cache input; invalidation comes from the spec, which is tracked
 4. **Detect affected packages** - a package is affected when a changed path falls
    under its input paths, or when a root file changed
 5. **Check design token sync** - `colors.js` vs `design-tokens.css`, when style files changed
@@ -110,6 +123,9 @@ resolves its subpath exports to `./src/*.ts` and nothing consumes
 
 `scripts/validate.sh <class>` runs one class across every affected package:
 `format`, `tokens`, `lint`, `typecheck`, `test`, `build`.
+
+A class-filtered run reports what the gate is still waiting on, so a partial run
+never leaves you guessing whether you can commit.
 
 Slash commands `/lint`, `/test`, `/build` are thin wrappers over these, so their
 results also count towards the commit gate.
@@ -222,18 +238,9 @@ pnpm run size
 
 ### Size Limits (gzipped)
 
-Source of truth is the `size-limit` key in `packages/web/package.json`.
-
-| Component                | Limit  |
-| ------------------------ | ------ |
-| Main App Bundle          | 70 kB  |
-| Vendor Chunks (combined) | 115 kB |
-| PDF Library (lazy)       | 185 kB |
-| Image Cropper (lazy)     | 11 kB  |
-| CSS                      | 13 kB  |
-| Total JS                 | 700 kB |
-
-CI builds the merge commit and typically lands ~10-15 kB above a local build.
+The limits live in the `size-limit` key of `packages/web/package.json` — read
+them there rather than from a copy that goes stale. `scripts/validate.sh` folds
+the check into `web:build`, and prints the CI tolerance when it fails.
 
 ### Bundle Analysis
 

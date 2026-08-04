@@ -105,7 +105,8 @@ assert_ne "different pathspecs -> different hashes" "$(fingerprint pkg-a)" "$(fi
 
 # --- change detection ---------------------------------------------------------
 
-git add -A && git commit -qm settle2
+git add -A
+git commit -qm settle2 >/dev/null 2>&1 || true
 assert_eq "clean tree -> no changed files" "$(changed_files)" ""
 
 echo 'export const a = 9' >pkg-a/src/index.ts
@@ -117,9 +118,27 @@ assert_eq "staged edit is still detected" "$(changed_files)" "pkg-a/src/index.ts
 echo 'x' >pkg-b/src/new.ts
 assert_eq "untracked file is detected" "$(changed_files | tr '\n' ' ')" "pkg-a/src/index.ts pkg-b/src/new.ts "
 
-assert_eq "divergence is empty once everything is staged" "$(git add -A && staged_worktree_divergence pkg-a pkg-b)" ""
+git add -A
+assert_eq "divergence is empty once everything is staged" "$(staged_worktree_divergence)" ""
+
 echo 'export const a = 10' >pkg-a/src/index.ts
-assert_eq "divergence reports a staged file edited afterwards" "$(staged_worktree_divergence pkg-a pkg-b)" "pkg-a/src/index.ts"
+assert_eq "divergence reports a staged file edited afterwards" "$(staged_worktree_divergence)" "pkg-a/src/index.ts"
+
+# The intersection matters: a merely-dirty file is not part of the next commit
+# and must not block it, or partial commits become impossible.
+git add -A
+git commit -qm settle-divergence >/dev/null 2>&1 || true
+echo 'export const a = 20' >pkg-a/src/index.ts
+echo 'export const b = 20' >pkg-b/src/index.ts
+git add pkg-a/src/index.ts
+assert_eq "a dirty-but-unstaged file does not count as divergence" "$(staged_worktree_divergence)" ""
+
+echo 'export const a = 21' >pkg-a/src/index.ts
+assert_eq "only the staged-and-dirty file is reported" "$(staged_worktree_divergence)" "pkg-a/src/index.ts"
+
+git reset -q --hard HEAD
+rm -f pkg-b/src/new.ts
+assert_eq "nothing staged -> no divergence" "$(staged_worktree_divergence)" ""
 
 # --- cache --------------------------------------------------------------------
 

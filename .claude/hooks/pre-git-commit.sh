@@ -36,17 +36,25 @@ else
   COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 fi
 
-# Only gate git commit.
-if [[ $COMMAND != *"git commit"* ]]; then
+# Gate only an actual `git commit` invocation. A plain substring test also fires
+# on commands that merely mention the phrase — `grep "git commit" file`,
+# `echo "run git commit"` — and blocks them for no reason.
+#
+# `git` must start a command (beginning of line, or after a separator), and only
+# git's own global options may sit between it and `commit`. The value-taking
+# ones are spelled out so `git -C dir commit` matches while `git grep commit`
+# does not.
+GIT_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)([=[:space:]])[^[:space:]]+|-[^[:space:]]+)'
+if ! [[ $COMMAND =~ (^|[\;\&\|])[[:space:]]*git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([[:space:]]|$) ]]; then
   allow
 fi
 
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -z "$ROOT_DIR" ] && allow
 
-# stderr is kept out of $MISSING on purpose: anything the gate writes there is a
-# crash, not a check name, and would otherwise be rendered as a missing check.
-MISSING=$("$ROOT_DIR/scripts/validate.sh" --gate 2>/dev/null)
+# stderr is kept out of $RECORDS on purpose: anything the gate writes there is a
+# crash, not a record, and would otherwise be rendered as outstanding work.
+RECORDS=$("$ROOT_DIR/scripts/validate.sh" --gate 2>/dev/null)
 STATUS=$?
 
 # 0 = gate open. 1 = work outstanding. Anything else = the gate itself broke.
@@ -54,7 +62,7 @@ if [ $STATUS -eq 0 ]; then
   allow
 fi
 
-if [ $STATUS -ne 1 ] || [ -z "$MISSING" ]; then
+if [ $STATUS -ne 1 ] || [ -z "$RECORDS" ]; then
   ERR=$("$ROOT_DIR/scripts/validate.sh" --gate 2>&1 >/dev/null)
   block "Validation gate could not run (scripts/validate.sh exited $STATUS).
 
@@ -63,12 +71,38 @@ ${ERR:-(no error output)}
 Run it manually: scripts/validate.sh"
 fi
 
-block "Validation is not complete for the current changes:
+# stdout is "<kind> <value>" per line, kind being `check` or `unstaged`.
+CHECKS=""
+UNSTAGED=""
+while IFS=' ' read -r kind value; do
+  case "$kind" in
+    check) CHECKS="$CHECKS  - $value"$'\n' ;;
+    unstaged) UNSTAGED="$UNSTAGED  - $value"$'\n' ;;
+  esac
+done <<<"$RECORDS"
 
-$(echo "$MISSING" | sed 's/^/  /')
+REASON=""
+if [ -n "$CHECKS" ]; then
+  REASON="These checks have not passed for the current changes:
 
+${CHECKS}
 Run validation — results stream as each check finishes, and anything already green is skipped:
 
 scripts/validate.sh
 
 Then retry the commit."
+fi
+
+if [ -n "$UNSTAGED" ]; then
+  [ -n "$REASON" ] && REASON="$REASON
+
+"
+  REASON="${REASON}Validation passed, but these files have staged content that differs from the worktree, so the commit would record something that was not validated:
+
+${UNSTAGED}
+Stage them and retry — the cache is staging-independent, so nothing re-runs:
+
+git add -A"
+fi
+
+block "$REASON"

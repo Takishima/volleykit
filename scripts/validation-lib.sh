@@ -49,12 +49,21 @@ changed_files() {
   } | sed '/^$/d' | sort -u
 }
 
-# Tracked paths whose worktree content differs from the index, restricted to
-# the given pathspecs. Used by the commit gate: the checks read the worktree,
-# but a commit records the index, so any divergence means the thing being
-# committed is not the thing that was validated.
+# Paths that are BOTH staged and modified in the worktree — the intersection of
+# `git diff --cached --name-only` and `git diff --name-only`.
+#
+# The intersection is the point. A path that is merely dirty is not part of the
+# next commit and must not block it, or partial commits become impossible:
+# staging one file would arm the gate against every other file in progress.
+# A path in both sets is the real hazard — its staged content is not the content
+# that was validated.
 staged_worktree_divergence() {
-  git diff --name-only -- "$@" 2>/dev/null || true
+  local staged dirty
+  staged=$(git diff --cached --name-only 2>/dev/null || true)
+  [ -z "$staged" ] && return 0
+  dirty=$(git diff --name-only 2>/dev/null || true)
+  [ -z "$dirty" ] && return 0
+  comm -12 <(printf '%s\n' "$staged" | sort -u) <(printf '%s\n' "$dirty" | sort -u)
 }
 
 # =============================================================================

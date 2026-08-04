@@ -199,16 +199,12 @@
       excludes = [ "tsconfig.*\\.json$" ];
     };
 
-    # Pre-commit validation (lint, knip, test, build)
-    # Only runs in Claude Code web environment (CLAUDE_CODE_REMOTE=true)
-    pre-commit-validate = {
-      enable = true;
-      name = "pre-commit-validate";
-      entry = "${config.devenv.root}/scripts/pre-commit-validate.sh";
-      language = "script";
-      stages = [ "pre-commit" ];
-      pass_filenames = false;
-      always_run = true;
-    };
+    # Validation (lint, typecheck, test, build) is not wired in here.
+    # scripts/pre-commit-validate.sh used to be, but it exited immediately
+    # unless CLAUDE_CODE_REMOTE=true, so it never did anything on a human
+    # commit. Human developers rely on CI; the Claude Code commit gate lives in
+    # .claude/hooks/pre-git-commit.sh.
+    #
+    # To run it by hand: scripts/validate.sh
   };
 }
