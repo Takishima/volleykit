@@ -7,19 +7,7 @@ import { preloadDateLocales } from '@/common/hooks/useDateFormat'
 import { preloadTranslations } from '@/i18n'
 
 import { server } from './msw/server'
-
-/**
- * Timeout for waitFor/findBy* assertions.
- *
- * Testing Library defaults to 1s, which several suites that render lazy()
- * trees can exceed on a loaded CI runner purely from chunk resolution —
- * a timeout, not a real failure. Cold resolution was measured at ~1.2s under
- * heavy CPU contention, so 3s gives that headroom while staying below the
- * 10s testTimeout in vite.config.ts. Keeping RTL's timeout the shorter of the
- * two means it wins the race and reports the DOM instead of Vitest reporting
- * a bare test timeout.
- */
-const ASYNC_UTIL_TIMEOUT_MS = 3000
+import { ASYNC_UTIL_TIMEOUT_MS } from './timeouts'
 
 configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS })
 

@@ -175,13 +175,10 @@ describe('Auth Integration', () => {
 
       // Demo store should be initialized after auth
       // Note: Demo store initialization may happen asynchronously
-      await waitFor(
-        () => {
-          const demoState = useDemoStore.getState()
-          expect(demoState.activeAssociationCode).toBe('SV')
-        },
-        { timeout: 2000 }
-      )
+      await waitFor(() => {
+        const demoState = useDemoStore.getState()
+        expect(demoState.activeAssociationCode).toBe('SV')
+      })
     })
   })
 

@@ -13,6 +13,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 import packageJson from './package.json' with { type: 'json' }
 import { normalizeBasePath } from './src/common/utils/basePath'
+import { TEST_TIMEOUT_MS } from './src/test/timeouts'
 
 // Plugin to exclude Zod v4 locale files from the bundle.
 // Zod v4 includes ~50 locale files for i18n error messages that we don't use.
@@ -556,11 +557,9 @@ export default defineConfig(({ mode }) => {
         './src/test/setup-auth-actions.ts',
       ],
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
-      // Must stay above asyncUtilTimeout in src/test/setup.ts, with room for
-      // whatever a test does before its first waitFor. If the two are equal,
-      // the test times out before waitFor can exhaust its budget and the
-      // failure loses the DOM dump that makes it diagnosable.
-      testTimeout: 10000,
+      // Derived from asyncUtilTimeout so the two cannot drift into equality.
+      // See src/test/timeouts.ts.
+      testTimeout: TEST_TIMEOUT_MS,
       // Performance: vmThreads is much faster than default forks
       pool: 'vmThreads',
       // Fix react-router ESM/CJS compatibility with vmThreads
