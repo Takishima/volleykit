@@ -109,4 +109,5 @@ echo ""
 
 # List captured screenshots
 echo "📂 Captured files:"
+# shellcheck disable=SC2012  # cosmetic listing of our own generated filenames
 ls -la ../help-site/public/images/screenshots/*.png 2>/dev/null | awk '{print "   " $NF}'

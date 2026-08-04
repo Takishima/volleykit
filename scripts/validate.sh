@@ -125,7 +125,7 @@ TOKENS_INPUTS="packages/shared/styles scripts/sync-style-tokens.js"
 # SHELLCHECK_INPUTS comes from the script that runs the lint, so the trigger,
 # the cache key and the argv cannot disagree.
 # shellcheck source=./shellcheck.sh
-source "$SCRIPT_DIR/shellcheck.sh"
+source "$SCRIPT_DIR/shellcheck.sh" || exit 1
 
 # =============================================================================
 # CHANGE DETECTION

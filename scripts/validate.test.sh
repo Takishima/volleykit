@@ -210,7 +210,8 @@ for pkg in "${PKG_NAMES[@]}"; do
   check_paths_exist "PKG_INPUTS[$pkg]" ${PKG_INPUTS[$pkg]}
 done
 for const in "${PATH_CONSTS[@]}"; do
-  [ "$const" = "PKG_INPUTS" ] && continue
+  # SHELLCHECK_EXCLUDED names paths that may legitimately not exist yet.
+  [ "$const" = "SHELLCHECK_EXCLUDED" ] && continue
   # shellcheck disable=SC2086  # the constants are space-separated, split on purpose
   check_paths_exist "$const" ${!const}
 done
@@ -220,18 +221,72 @@ done
 # and invisible to the gate, and a stored PASS survives that file breaking.
 # shellcheck source=./shellcheck.sh
 source "$HERE/shellcheck.sh"
+# `git ls-files` over the whole repo, not a list of directories to look in —
+# naming the scan roots is the same covers-what-existed-when-it-was-written
+# shape, one level up, and it left six tracked scripts linted by nothing.
 UNCOVERED=""
+SHELL_FILE_COUNT=0
 while IFS= read -r f; do
+  SHELL_FILE_COUNT=$((SHELL_FILE_COUNT + 1))
   covered=false
-  for path in $SHELLCHECK_INPUTS; do
+  for path in $SHELLCHECK_INPUTS $SHELLCHECK_EXCLUDED; do
     case "$f" in "$path"/* | "$path") covered=true; break ;; esac
   done
   [ "$covered" = true ] || UNCOVERED="$UNCOVERED $f"
-done < <(cd "$REPO" && find scripts .claude -name '*.sh' -type f 2>/dev/null | sort)
-if [ -z "$UNCOVERED" ]; then
-  ok "every shell file in the repo is under SHELLCHECK_INPUTS"
+done < <(cd "$REPO" && git ls-files '*.sh' | sort)
+
+if [ "$SHELL_FILE_COUNT" -ge 10 ]; then
+  ok "the shell-file scan found the repo's scripts ($SHELL_FILE_COUNT)"
 else
-  not_ok "every shell file in the repo is under SHELLCHECK_INPUTS" "uncovered:$UNCOVERED"
+  not_ok "the shell-file scan found the repo's scripts" "found $SHELL_FILE_COUNT, expected at least 10"
+fi
+if [ -z "$UNCOVERED" ]; then
+  ok "every tracked shell file is linted or explicitly excluded"
+else
+  not_ok "every tracked shell file is linted or explicitly excluded" \
+    "neither under SHELLCHECK_INPUTS nor named in SHELLCHECK_EXCLUDED:$UNCOVERED"
+fi
+
+# ci-shell.yml's `paths:` filter is the last hand-maintained copy of these
+# lists, and it decides whether CI runs at all — which is the only enforcement
+# on a machine without shellcheck. A SHELLCHECK_INPUTS entry missing from it
+# means a push touching only that directory gets no shell lint from either side.
+WORKFLOW="$REPO/.github/workflows/ci-shell.yml"
+
+# Each trigger block is checked separately: `push` and `pull_request` are
+# independent filters, and a union of the two would report green while one of
+# them had a hole.
+workflow_paths() {
+  awk -v want="$1" '
+    /^  [a-z_]+:/ { block = $1; sub(":", "", block) }
+    block == want && /^ *- / { gsub(/^ *- .|.$/, ""); print }
+  ' "$WORKFLOW" | sed 's|/\*\*$||;s|/\*$||' | sort -u
+}
+
+if [ -f "$WORKFLOW" ]; then
+  for block in push pull_request; do
+    mapfile -t WF_PATHS < <(workflow_paths "$block")
+    MISSING=""
+    if [ ${#WF_PATHS[@]} -eq 0 ]; then
+      MISSING=" (no paths parsed for $block)"
+    else
+      for path in $SHELLCHECK_INPUTS $SHELL_INPUTS; do
+        covered=false
+        for wf in "${WF_PATHS[@]}"; do
+          case "$path" in "$wf" | "$wf"/*) covered=true; break ;; esac
+        done
+        [ "$covered" = true ] || MISSING="$MISSING $path"
+      done
+    fi
+    if [ -z "$MISSING" ]; then
+      ok "ci-shell.yml $block triggers on every path the shell checks read"
+    else
+      not_ok "ci-shell.yml $block triggers on every path the shell checks read" \
+        "not covered by its paths filter:$MISSING"
+    fi
+  done
+else
+  not_ok "ci-shell.yml is present" "$WORKFLOW"
 fi
 
 # --- affectedness -------------------------------------------------------------
@@ -451,20 +506,29 @@ reset_tree
 # fixed twice and come back twice: once by dropping `export`, which does not
 # strip the attribute from a variable that arrived exported.
 printf 'export const a = 3\n' >packages/web/src/index.ts
-cat >"$SCRATCH/bin/pnpm" <<'STUB'
+# The stub writes to a file, not stdout: run_check redirects a check's output
+# and prints it only on failure, so a passing stub's stdout is discarded and the
+# row could never have failed.
+LEAK_LOG="$CACHE/leak.log"
+: >"$LEAK_LOG"
+cat >"$SCRATCH/bin/pnpm" <<STUB
 #!/bin/sh
-echo "NO_CACHE=[${VOLLEYKIT_NO_CACHE:-unset}]"
+echo "NO_CACHE=[\${VOLLEYKIT_NO_CACHE:-unset}]" >>"$LEAK_LOG"
 exit 0
 STUB
 chmod +x "$SCRATCH/bin/pnpm"
-LEAK=$( (cd "$SCRATCH" && VOLLEYKIT_NO_CACHE=1 bash scripts/validate.sh lint 2>&1) || true)
+(cd "$SCRATCH" && VOLLEYKIT_NO_CACHE=1 bash scripts/validate.sh lint >/dev/null 2>&1) || true
 printf '#!/bin/sh\nexit 0\n' >"$SCRATCH/bin/pnpm"
 chmod +x "$SCRATCH/bin/pnpm"
-case "$LEAK" in
-  *"NO_CACHE=[1]"*) not_ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess" \
-    "the check saw the runner-internal flag" ;;
-  *) ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess" ;;
-esac
+if [ ! -s "$LEAK_LOG" ]; then
+  not_ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess" \
+    "the stub never ran, so the row proves nothing"
+elif grep -q 'NO_CACHE=\[1\]' "$LEAK_LOG"; then
+  not_ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess" \
+    "the check saw the runner-internal flag"
+else
+  ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess"
+fi
 reset_tree
 
 # --- guards -------------------------------------------------------------------

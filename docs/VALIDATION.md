@@ -107,15 +107,19 @@ Three checks cover the validation code itself:
   (`PKG_INPUTS`, `CORE_ROOT`, `SHELL_INPUTS`, `TOKENS_INPUTS`, `FORMAT_ROOT`)
   exists in the real repo, and every package in the table registers a check. The
   constants are scraped by naming convention (`*_INPUTS`, `*_ROOT`), so a new one
-  is covered without editing the suite. Add a check or a trigger, add a row.
+  is covered without editing the suite. It also asserts that every tracked `.sh`
+  is either linted or explicitly excluded, and that `ci-shell.yml` triggers on
+  everything the shell checks read. Add a check or a trigger, add a row.
 - `validation:shellcheck` — `scripts/shellcheck.sh`, the single definition of
   what is linted and how; `validate.sh` sources it so the trigger, the cache key
   and the argv cannot disagree. Registered when `shellcheck` is on `PATH`, and
   reported on stderr as skipped when it is not. Always runs in CI.
 
-All three are triggered by any edit to `SHELL_INPUTS` — the scripts,
-`.claude/hooks/`, and `.claude/settings.json`, which is what registers the hook
-in the first place.
+`validation:test` and `validation:registry` are triggered by any edit to
+`SHELL_INPUTS` — the scripts, `.claude/hooks/`, and `.claude/settings.json`,
+which is what registers the hook in the first place. `validation:shellcheck` is
+triggered by `SHELLCHECK_INPUTS`, which is wider: it covers shell the suites do
+not exercise.
 
 The hook's predicate lives in `.claude/hooks/lib/is-git-commit.sh` and is
 sourced by both the hook and the test, so there is one definition rather than
