@@ -390,6 +390,10 @@ fi
 #
 # See validate.test.sh: the per-block counts cannot see their own block being
 # deleted, so the total is pinned outside all of them.
+#
+# A plain literal is right here, unlike there: every data-driven loop in this
+# file reads an array built in this file, so nothing outside it can move the
+# count. `+ 1` is this row counting itself.
 assert_eq "the suite ran every row it defines" "$((PASS + FAIL + 1))" 111
 
 # --- result -------------------------------------------------------------------

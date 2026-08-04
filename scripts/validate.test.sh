@@ -853,11 +853,20 @@ reset_tree
 # deleting that block whole takes its own lever with it. Only a total pinned
 # outside all of them catches a block disappearing entirely.
 #
-# Yes, adding a row means updating this line in the same commit. That is the
-# cost of the lever, and a stale total fails loudly next to the change that
-# caused it.
-EXPECTED_ROWS=91
-[ "$NO_RESPAWN" = false ] || EXPECTED_ROWS=89
+# Only the rows this file writes are pinned by hand. Fifteen more are generated
+# per entry of PKG_NAMES and PATH_CONSTS, which are scraped out of validate.sh
+# and shellcheck.sh — a literal covering those would put back the constant the
+# scrape exists to remove, one layer up: adding a package correctly would redden
+# the suite at a row naming neither the package nor the registry. A loop that
+# stops iterating still moves the delta, because the array size does not change
+# when the loop is deleted.
+#
+# The refusal delta is read from the variable that already computes it rather
+# than re-encoded as a second literal.
+#
+# `+ 1` is this row counting itself, so the expectation equals the number report
+# prints.
+EXPECTED_ROWS=$((74 + 2 * ${#PKG_NAMES[@]} + ${#PATH_CONSTS[@]} + EXPECTED_REFUSAL_ROWS))
 assert_eq "the suite ran every row it defines" "$((PASS + FAIL + 1))" "$EXPECTED_ROWS"
 
 # --- result -------------------------------------------------------------------
