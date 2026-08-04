@@ -51,23 +51,37 @@ is_shell_file() {
   head -1 "$1" 2>/dev/null | grep -qE "$SHELL_SHEBANG_RE"
 }
 
-# Every shell file in the repo, tracked or not.
+# Every shell file in the worktree, tracked or not.
 #
-# Untracked files are included deliberately: the check cache is
-# staging-independent, so an index-only scan answers differently before and
-# after `git add` while the fingerprint does not move — the stored PASS from
-# before the `git add` stays valid and the coverage row never re-runs. It also
-# keeps this set aligned with shellcheck_files, which walks the worktree.
+# Untracked files are included deliberately, and repo-wide rather than under the
+# linted directories only. The check cache is staging-independent, so any scan
+# that answers differently before and after `git add` leaves a window where the
+# fingerprint has not moved and the PASS stored before the add is still valid —
+# the coverage row never re-runs. Restricting the untracked half to
+# SHELLCHECK_INPUTS would reintroduce exactly that window for a file added
+# outside it, which is the case the row exists for.
 #
-# `git grep` narrows to files carrying a shebang at all, so only those are
-# opened — reading the first line of every tracked file cost more than the rest
-# of the suite.
+# The cost is that an untracked scratch script does fail the coverage row. The
+# escape hatch is gitignore — `--exclude-standard` skips ignored files — and the
+# row's failure message says so.
+#
+# `git grep` narrows the tracked side to files carrying a shebang at all;
+# `xargs grep -l` does the same for the untracked side in one pass.
 all_shell_files() {
   {
-    git -c core.quotePath=false ls-files -c -o --exclude-standard '*.sh'
+    # Existence-filtered: is_shell_file answers on the name alone for *.sh, and
+    # the index lists a tracked file that has been deleted from disk. Without
+    # this, `rm scripts/foo.sh` reported the file as outside the lint's scope —
+    # asserting its absence and calling it a coverage gap.
+    git -c core.quotePath=false ls-files -c -o --exclude-standard '*.sh' |
+      while IFS= read -r f; do [ -f "$f" ] && printf '%s\n' "$f"; done
     {
       git grep -lE '^#!' -- ':!*.sh' 2>/dev/null || true
-      git -c core.quotePath=false ls-files -o --exclude-standard
+      # One grep pass over untracked files rather than opening each in turn.
+      git -c core.quotePath=false ls-files -o --exclude-standard |
+        grep -v '\.sh$' |
+        tr '\n' '\0' |
+        xargs -0 -r grep -lI -m1 '^#!' 2>/dev/null || true
     } | sed '/^$/d' | sort -u | while IFS= read -r f; do
       case "$f" in *.sh) continue ;; esac
       is_shell_file "$f" && printf '%s\n' "$f"

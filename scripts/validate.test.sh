@@ -267,10 +267,20 @@ else
   not_ok "the shell-file scan found the repo's scripts" "found $SHELL_FILE_COUNT, expected at least 10"
 fi
 if [ -z "$UNCOVERED" ]; then
-  ok "every tracked shell file is linted or explicitly excluded"
+  ok "every shell file in the worktree is linted or explicitly excluded"
 else
-  not_ok "every tracked shell file is linted or explicitly excluded" \
-    "neither under SHELLCHECK_INPUTS nor named in SHELLCHECK_EXCLUDED:$UNCOVERED"
+  UNTRACKED_HINT=""
+  for f in $UNCOVERED; do
+    (cd "$REPO" && git ls-files --error-unmatch "$f" >/dev/null 2>&1) ||
+      UNTRACKED_HINT="$UNTRACKED_HINT $f"
+  done
+  HINT="neither under SHELLCHECK_INPUTS nor named in SHELLCHECK_EXCLUDED:$UNCOVERED"
+  [ -n "$UNTRACKED_HINT" ] && HINT="$HINT
+
+         Untracked, so probably a local scratch script:$UNTRACKED_HINT
+         gitignore it (ignored files are skipped) or move it under a linted path.
+         Editing SHELLCHECK_INPUTS/EXCLUDED is the wrong remedy for those."
+  not_ok "every shell file in the worktree is linted or explicitly excluded" "$HINT"
 fi
 
 # ci-shell.yml's `paths:` filter is the last hand-maintained copy of these
@@ -651,7 +661,42 @@ for want in validation:registry validation:shellcheck; do
   esac
 done
 rm -rf packages/mobile
-cp "$HERE/validate.test.sh" "$HERE/validation-lib.test.sh" "$SCRATCH/scripts/"
+reset_tree
+
+# The scan must answer the same before and after `git add`. The fingerprint is
+# staging-independent, so a scan that is not leaves a window where the key has
+# not moved and the PASS stored before the add is still valid.
+mkdir -p packages/mobile/tools
+# shellcheck disable=SC2016  # fixture content, deliberately not expanded here
+printf '#!/usr/bin/env bash\nrm -rf $UNQUOTED/*\n' >packages/mobile/tools/helper.sh
+BEFORE_ADD=$(cd "$SCRATCH" && all_shell_files)
+(cd "$SCRATCH" && git add packages/mobile/tools/helper.sh)
+AFTER_ADD=$(cd "$SCRATCH" && all_shell_files)
+if [ "$BEFORE_ADD" = "$AFTER_ADD" ]; then
+  ok "the shell-file scan answers the same before and after git add"
+else
+  not_ok "the shell-file scan answers the same before and after git add" \
+    "an index-only scan moves while the cache key does not, so the stale PASS survives"
+fi
+case "$BEFORE_ADD" in
+  *packages/mobile/tools/helper.sh*) ok "an untracked shell file is in the scan" ;;
+  *) not_ok "an untracked shell file is in the scan" "not found before git add" ;;
+esac
+(cd "$SCRATCH" && git reset -q)
+rm -rf packages/mobile
+reset_tree
+
+# 50b: the workflow file is in SHELL_INPUTS so that editing it registers a check
+mkdir -p .github/workflows
+cp "$REPO/.github/workflows/ci-shell.yml" .github/workflows/ci-shell.yml 2>/dev/null || true
+printf '\n# t\n' >>.github/workflows/ci-shell.yml
+GOT=$(gate_records)
+case "$GOT" in
+  *"check validation:registry"*) ok "editing ci-shell.yml selects the registry check" ;;
+  *) not_ok "editing ci-shell.yml selects the registry check" \
+    "narrowing its paths filter narrows the only enforcement a machine without shellcheck has — $GOT" ;;
+esac
+rm -rf .github
 reset_tree
 
 # --- guards -------------------------------------------------------------------

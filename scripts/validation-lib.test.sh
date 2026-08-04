@@ -235,6 +235,48 @@ assert_not_gated "unrelated" "ls -la"
 assert_not_gated "commitizen" "npx ${C}izen"
 assert_not_gated "a path containing the word" "cat docs/git-${C}s.md"
 
+# --- commit-hook end to end -----------------------------------------------------
+#
+# Everything above tables is_git_commit. The hook also has to extract the command
+# from its JSON input and decide what to do when it cannot — the part that had no
+# row, and the part where two defects shipped: a grep fallback that mangled
+# multi-line commands, and a jq requirement placed ahead of the is-this-a-commit
+# question, which blocked every Bash call in the session.
+
+hook_decision() {
+  printf '%s' "$1" | PATH="${2:-$PATH}" CLAUDE_CODE_REMOTE=true bash "$HOOK" 2>/dev/null |
+    sed -n 's/.*"decision"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p'
+}
+
+assert_decision() {
+  local label=$1 want=$2 got
+  got=$(hook_decision "$3" "${4:-$PATH}")
+  if [ "$got" = "$want" ]; then ok "hook: $label"; else not_ok "hook: $label" "expected $want, got '${got:-<none>}'"; fi
+}
+
+assert_decision "a multi-line command is not approved" "block" \
+  "$(printf '{"tool_input":{"command":"cd packages/web\\ngit %s -m x"}}' "$C")"
+assert_decision "a quoted-option command is not approved" "block" \
+  "$(printf '{"tool_input":{"command":"git -C \\"/p q\\" %s"}}' "$C")"
+assert_decision "an unrelated command is approved" "approve" '{"tool_input":{"command":"ls -la"}}'
+assert_decision "malformed JSON is not approved" "block" \
+  "$(printf '{"tool_input":{"command":"git %s' "$C")"
+
+# Without jq the hook cannot read the command — but it is registered on every
+# Bash call, so it must still let through what cannot be one. Blocking those
+# blocks the remedies the message itself names.
+NOJQ_BIN="$SCRATCH/nojq"
+mkdir -p "$NOJQ_BIN"
+for b in bash sh cat sed grep git head sort find tr xargs; do
+  bp=$(command -v "$b" 2>/dev/null) && ln -sf "$bp" "$NOJQ_BIN/$b"
+done
+if command -v jq >/dev/null 2>&1; then
+  assert_decision "without jq, an unrelated command still runs" "approve" \
+    '{"tool_input":{"command":"ls -la"}}' "$NOJQ_BIN"
+  assert_decision "without jq, a possible commit is blocked" "block" \
+    "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$NOJQ_BIN"
+fi
+
 # --- commit-hook registration -------------------------------------------------
 #
 # The hook only runs because .claude/settings.json registers it. That file is a

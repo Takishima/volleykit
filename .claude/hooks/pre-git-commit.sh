@@ -30,7 +30,18 @@ block() {
 
 INPUT=$(cat)
 
-# jq is required, and its absence fails CLOSED.
+# This hook is registered on every Bash call, so scope the jq requirement to
+# commands that could be commits. No escaping scheme turns a payload with no
+# `commit` substring into a commit, so that case is knowably not a commit
+# without parsing — and requiring jq ahead of this check blocked `ls`, and with
+# it both remedies the block message names.
+case "$INPUT" in
+  *commit*) ;;
+  *) allow ;;
+esac
+
+# For anything that could be a commit, jq is required and its absence fails
+# CLOSED.
 #
 # The previous fallback was a grep that neither unescaped nor tolerated an
 # escaped quote, so it handed the predicate a mangled string: a `\n` survived as
@@ -45,7 +56,14 @@ the command without it.
 Install jq, or remove the hook from .claude/settings.json deliberately."
 fi
 
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null)
+# `// empty` already returns 0 for a legitimately absent key, so a non-zero
+# status here is a real parse failure — which is the same "I do not know" the
+# missing-jq branch refuses to answer approve.
+if ! COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>&1); then
+  block "Commit gate is broken: the hook input is not JSON jq can read.
+
+$COMMAND"
+fi
 
 # The predicate lives in lib/ so this hook and the test suite share one
 # definition rather than two that must be kept in agreement.
