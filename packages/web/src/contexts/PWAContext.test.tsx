@@ -1,5 +1,5 @@
 import { render, screen, act, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest'
 
 import { PWAProvider, usePWA } from './PWAContext'
 
@@ -44,6 +44,15 @@ function TestConsumer() {
 }
 
 describe('PWAContext', () => {
+  // PWAProvider reaches registerSW through two dynamic imports: the lazy()
+  // chunk for PWAProviderInternal, then virtual:pwa-register inside its effect.
+  // Resolving those cold costs more than waitFor's 1s default on a loaded
+  // runner, so warm the module registry up front and keep that cost out of
+  // the timed assertions.
+  beforeAll(async () => {
+    await Promise.all([import('./PWAProviderInternal'), import('virtual:pwa-register')])
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     // Set PWA as enabled for tests

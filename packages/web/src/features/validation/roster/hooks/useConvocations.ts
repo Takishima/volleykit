@@ -6,11 +6,7 @@
  * - useAssignments.ts - Assignment queries and mutations
  * - useCompensations.ts - Compensation queries and mutations
  * - useExchanges.ts - Exchange queries and mutations
- * - useSettings.ts - Association settings and season hooks
- * - usePaginatedQuery.ts - Shared pagination utilities
  */
-
-// Re-export query keys for backwards compatibility
 
 // Assignment hooks and types
 export { useAssignments, useAssignmentDetails } from '@/features/assignments/hooks/useAssignments'
@@ -20,5 +16,3 @@ export { useCompensations } from '@/features/compensations/hooks/useCompensation
 
 // Exchange hooks and types
 export { useGameExchanges, useApplyForExchange } from '@/features/exchanges/hooks/useExchanges'
-
-// Settings hooks

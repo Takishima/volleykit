@@ -22,8 +22,6 @@ import { hasRosterModifications } from '../api/api-helpers'
 // Re-export types for consumers
 export type { UseValidationStateResult } from './types'
 
-// Re-export for consumers of this hook
-
 /**
  * Hook to manage validation state across all panels in the ValidateGameModal.
  *

@@ -7,7 +7,7 @@
  *
  * Usage:
  * ```typescript
- * import { unifiedNotificationService } from '@/common/services/notifications';
+ * import { unifiedNotificationService } from '@/common/services/notifications/unified-notification-service';
  *
  * // Show notification (auto-selects channel based on availability)
  * await unifiedNotificationService.notify({
