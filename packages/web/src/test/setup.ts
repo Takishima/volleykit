@@ -13,10 +13,13 @@ import { server } from './msw/server'
  *
  * Testing Library defaults to 1s, which several suites that render lazy()
  * trees can exceed on a loaded CI runner purely from chunk resolution —
- * a timeout, not a real failure. 5s keeps genuine hangs failing fast while
- * removing that class of flake.
+ * a timeout, not a real failure. Cold resolution was measured at ~1.2s under
+ * heavy CPU contention, so 3s gives that headroom while staying below the
+ * 10s testTimeout in vite.config.ts. Keeping RTL's timeout the shorter of the
+ * two means it wins the race and reports the DOM instead of Vitest reporting
+ * a bare test timeout.
  */
-const ASYNC_UTIL_TIMEOUT_MS = 5000
+const ASYNC_UTIL_TIMEOUT_MS = 3000
 
 configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS })
 

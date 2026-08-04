@@ -556,6 +556,11 @@ export default defineConfig(({ mode }) => {
         './src/test/setup-auth-actions.ts',
       ],
       include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      // Must stay above asyncUtilTimeout in src/test/setup.ts, with room for
+      // whatever a test does before its first waitFor. If the two are equal,
+      // the test times out before waitFor can exhaust its budget and the
+      // failure loses the DOM dump that makes it diagnosable.
+      testTimeout: 10000,
       // Performance: vmThreads is much faster than default forks
       pool: 'vmThreads',
       // Fix react-router ESM/CJS compatibility with vmThreads
