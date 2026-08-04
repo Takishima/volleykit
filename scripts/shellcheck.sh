@@ -81,7 +81,7 @@ all_shell_files() {
       git -c core.quotePath=false ls-files -o --exclude-standard |
         grep -v '\.sh$' |
         tr '\n' '\0' |
-        xargs -0 -r grep -lI -m1 '^#!' 2>/dev/null || true
+        xargs -0 -r grep -lI -m1 '^#!' -- 2>/dev/null || true
     } | sed '/^$/d' | sort -u | while IFS= read -r f; do
       case "$f" in *.sh) continue ;; esac
       is_shell_file "$f" && printf '%s\n' "$f"
@@ -105,7 +105,14 @@ shellcheck_files() {
     fi
     found=$(find "$path" -type f) || return 1
     while IFS= read -r f; do
-      [ -n "$f" ] && is_shell_file "$f" && all="$all$f"$'\n'
+      [ -z "$f" ] && continue
+      is_shell_file "$f" || continue
+      # Ignored files are skipped, so gitignore means the same thing here as in
+      # all_shell_files. Without it the coverage row told a developer to ignore
+      # a scratch script and the lint then failed on the same file — both
+      # remedies the message offers landed in a linted directory.
+      git check-ignore -q "$f" 2>/dev/null && continue
+      all="$all$f"$'\n'
     done <<<"$found"
   done
   printf '%s' "$all" | sed '/^$/d' | sort

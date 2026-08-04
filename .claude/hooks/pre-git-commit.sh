@@ -30,15 +30,21 @@ block() {
 
 INPUT=$(cat)
 
+# The predicate lives in lib/ so this hook and the test suite share one
+# definition rather than two that must be kept in agreement.
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./lib/is-git-commit.sh
+if ! source "$HOOK_DIR/lib/is-git-commit.sh" 2>/dev/null ||
+  ! declare -F is_git_commit >/dev/null || ! declare -F might_be_git_commit >/dev/null; then
+  block "Commit gate is broken: .claude/hooks/lib/is-git-commit.sh did not load.
+
+Fix that file, or remove the hook from .claude/settings.json deliberately."
+fi
+
 # This hook is registered on every Bash call, so scope the jq requirement to
-# commands that could be commits. No escaping scheme turns a payload with no
-# `commit` substring into a commit, so that case is knowably not a commit
-# without parsing — and requiring jq ahead of this check blocked `ls`, and with
-# it both remedies the block message names.
-case "$INPUT" in
-  *commit*) ;;
-  *) allow ;;
-esac
+# input that could be a commit. Requiring jq ahead of this blocked `ls`, and
+# with it both remedies the block message names.
+might_be_git_commit "$INPUT" || allow
 
 # For anything that could be a commit, jq is required and its absence fails
 # CLOSED.
@@ -63,23 +69,6 @@ if ! COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty' 2>&1)
   block "Commit gate is broken: the hook input is not JSON jq can read.
 
 $COMMAND"
-fi
-
-# The predicate lives in lib/ so this hook and the test suite share one
-# definition rather than two that must be kept in agreement.
-#
-# Failing to load it fails CLOSED. Extracting the predicate made the enforcement
-# path depend on a file that can go missing, and `|| allow` would have made the
-# whole gate removable with one `mv`, silently — stderr is discarded. If the
-# predicate cannot load, the hook does not know whether this is a commit, and
-# "I do not know" must not answer approve. Requiring the symbol as well as the
-# source covers a file that loads but defines nothing.
-HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./lib/is-git-commit.sh
-if ! source "$HOOK_DIR/lib/is-git-commit.sh" 2>/dev/null || ! declare -F is_git_commit >/dev/null; then
-  block "Commit gate is broken: .claude/hooks/lib/is-git-commit.sh did not load.
-
-Fix that file, or remove the hook from .claude/settings.json deliberately."
 fi
 
 is_git_commit "$COMMAND" || allow

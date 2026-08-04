@@ -191,12 +191,19 @@ cache_clear
 # shellcheck source=../.claude/hooks/lib/is-git-commit.sh
 source "$HERE/../.claude/hooks/lib/is-git-commit.sh"
 
+# Every gated fixture is asserted twice: against the predicate, and end to end
+# through the hook. The hook applies might_be_git_commit to the raw JSON first,
+# so a table that stopped at the predicate could not see that pre-filter
+# narrowing past it — which is how a \u-escaped payload walked through.
 assert_gated() {
   if is_git_commit "$2"; then ok "gates: $1"; else not_ok "gates: $1" "$2"; fi
+  GATED_FIXTURES+=("$1"$'\x01'"$2")
 }
 assert_not_gated() {
   if is_git_commit "$2"; then not_ok "passes through: $1" "$2"; else ok "passes through: $1"; fi
 }
+
+declare -a GATED_FIXTURES=()
 
 # The word is spliced so this file's own fixtures do not trip the hook when the
 # test itself is edited and committed.
@@ -254,28 +261,39 @@ assert_decision() {
   if [ "$got" = "$want" ]; then ok "hook: $label"; else not_ok "hook: $label" "expected $want, got '${got:-<none>}'"; fi
 }
 
-assert_decision "a multi-line command is not approved" "block" \
-  "$(printf '{"tool_input":{"command":"cd packages/web\\ngit %s -m x"}}' "$C")"
-assert_decision "a quoted-option command is not approved" "block" \
-  "$(printf '{"tool_input":{"command":"git -C \\"/p q\\" %s"}}' "$C")"
+# json_escape turns a fixture into a JSON string body the way a real caller would.
+json_escape() {
+  printf '%s' "$1" | jq -Rs . 2>/dev/null | sed 's/^"//;s/"$//'
+}
+
+for fixture in "${GATED_FIXTURES[@]}"; do
+  label=${fixture%%$'\x01'*}
+  cmd=${fixture#*$'\x01'}
+  payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
+  assert_decision "reaches the predicate: $label" "block" "$payload"
+done
+
 assert_decision "an unrelated command is approved" "approve" '{"tool_input":{"command":"ls -la"}}'
 assert_decision "malformed JSON is not approved" "block" \
   "$(printf '{"tool_input":{"command":"git %s' "$C")"
+
+# A \u escape decodes to anything, so the raw-input pre-filter must not treat
+# its absence of the literal word as "not a commit".
+assert_decision "a unicode-escaped subcommand is not approved" "block" \
+  '{"tool_input":{"command":"git \u0063ommit -m x"}}'
 
 # Without jq the hook cannot read the command — but it is registered on every
 # Bash call, so it must still let through what cannot be one. Blocking those
 # blocks the remedies the message itself names.
 NOJQ_BIN="$SCRATCH/nojq"
 mkdir -p "$NOJQ_BIN"
-for b in bash sh cat sed grep git head sort find tr xargs; do
+for b in bash sh cat sed grep git head sort find tr xargs dirname; do
   bp=$(command -v "$b" 2>/dev/null) && ln -sf "$bp" "$NOJQ_BIN/$b"
 done
-if command -v jq >/dev/null 2>&1; then
-  assert_decision "without jq, an unrelated command still runs" "approve" \
-    '{"tool_input":{"command":"ls -la"}}' "$NOJQ_BIN"
-  assert_decision "without jq, a possible commit is blocked" "block" \
-    "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$NOJQ_BIN"
-fi
+assert_decision "without jq, an unrelated command still runs" "approve" \
+  '{"tool_input":{"command":"ls -la"}}' "$NOJQ_BIN"
+assert_decision "without jq, a possible commit is blocked" "block" \
+  "$(printf '{"tool_input":{"command":"git %s -m x"}}' "$C")" "$NOJQ_BIN"
 
 # --- commit-hook registration -------------------------------------------------
 #

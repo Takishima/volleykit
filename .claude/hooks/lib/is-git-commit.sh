@@ -44,6 +44,25 @@ _IGC_SP='([[:space:]]|\\[[:space:]])+'
 # shellcheck disable=SC2034
 _IGC_Q='["'"'"']?'
 
+# Cheap pre-filter over the RAW hook input, before it is parsed.
+#
+# It lives here rather than in the hook because it is the same question as
+# is_git_commit and must stay a superset of it — a second predicate in another
+# file is exactly the drift this file exists to prevent. The suite drives every
+# gated fixture through the hook end to end, so a pre-filter that narrows past
+# the predicate fails there.
+#
+# A `\u` escape decodes to anything, including the subcommand itself
+# (`git \u0063ommit`), so it is treated as unknowable and sent down the parsing
+# path rather than approved. A literal backslash-u in a payload takes the same
+# route, which is the fail-closed direction.
+might_be_git_commit() {
+  case "$1" in
+    *commit* | *'\u'* | *'\U'*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 is_git_commit() {
   [[ $1 =~ (^|[^[:alnum:]_.-])git(${_IGC_SP}${_IGC_OPT})*${_IGC_SP}${_IGC_Q}commit${_IGC_Q}([^[:alnum:]_-]|$) ]]
 }

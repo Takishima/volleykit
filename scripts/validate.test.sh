@@ -19,6 +19,11 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 
+# Sourced up front: the scratch fixture is built from SHELLCHECK_INPUTS, and
+# is_shell_file / shellcheck_files / all_shell_files are read by rows below.
+# shellcheck source=./shellcheck.sh
+source "$HERE/shellcheck.sh" || exit 1
+
 PASS=0
 FAIL=0
 
@@ -67,6 +72,26 @@ eval "$(sed -n '/^declare -a PKG_NAMES=(/p' "$HERE/validate.sh")"
 eval "$(sed -n '/^declare -A PKG_INPUTS=(/,/^)/p' "$HERE/validate.sh")"
 
 mkdir -p scripts .claude/hooks/lib docs/api
+
+# The scratch has to contain every SHELLCHECK_INPUTS path, or shellcheck_files
+# returns non-zero on the first missing one and any row reading it sees a
+# truncated set — passing for the wrong reason.
+# Each directory gets a committed placeholder. An empty directory is untracked,
+# and reset_tree's `git clean -qfd` removes it — after which shellcheck_files
+# returns non-zero on the missing path and every row reading it sees an empty
+# set, passing for the wrong reason.
+for path in $SHELLCHECK_INPUTS; do
+  case "$path" in
+    *.*)
+      mkdir -p "$(dirname "$path")"
+      [ -e "$path" ] || printf '#!/usr/bin/env bash\ntrue\n' >"$path"
+      ;;
+    *)
+      mkdir -p "$path"
+      [ -e "$path/.keep.sh" ] || printf '#!/usr/bin/env bash\ntrue\n' >"$path/.keep.sh"
+      ;;
+  esac
+done
 for pkg in "${PKG_NAMES[@]}"; do
   for path in ${PKG_INPUTS[$pkg]}; do
     case "$path" in
@@ -180,9 +205,6 @@ assert_absent() {
 # Scraped by naming convention, not by name: an earlier version listed the
 # constants literally, so a sixth one was asserted by nothing — the same
 # covers-what-existed-when-it-was-written shape as the package list.
-# shellcheck source=./shellcheck.sh
-source "$HERE/shellcheck.sh" || exit 1
-
 mapfile -t PATH_CONSTS < <(
   sed -n 's/^\([A-Z_]*\(INPUTS\|ROOT\)\)=.*/\1/p' "$HERE/validate.sh" "$HERE/shellcheck.sh" | sort -u
 )
@@ -243,6 +265,7 @@ fi
 # test divergence() was rewritten to avoid.
 LINTED_SET=$(cd "$REPO" && shellcheck_files)
 UNCOVERED=""
+UNCOVERED_LIST=""
 SHELL_FILE_COUNT=0
 while IFS= read -r f; do
   SHELL_FILE_COUNT=$((SHELL_FILE_COUNT + 1))
@@ -258,7 +281,10 @@ while IFS= read -r f; do
       case "$f" in "$path"/* | "$path") covered=true; break ;; esac
     done
   fi
-  [ "$covered" = true ] || UNCOVERED="$UNCOVERED $f"
+  if [ "$covered" != true ]; then
+    UNCOVERED="$UNCOVERED $f"
+    UNCOVERED_LIST="$UNCOVERED_LIST$f"$'\n'
+  fi
 done < <(cd "$REPO" && all_shell_files)
 
 if [ "$SHELL_FILE_COUNT" -ge 10 ]; then
@@ -270,10 +296,12 @@ if [ -z "$UNCOVERED" ]; then
   ok "every shell file in the worktree is linted or explicitly excluded"
 else
   UNTRACKED_HINT=""
-  for f in $UNCOVERED; do
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
     (cd "$REPO" && git ls-files --error-unmatch "$f" >/dev/null 2>&1) ||
-      UNTRACKED_HINT="$UNTRACKED_HINT $f"
-  done
+      UNTRACKED_HINT="$UNTRACKED_HINT
+           $f"
+  done <<<"$UNCOVERED_LIST"
   HINT="neither under SHELLCHECK_INPUTS nor named in SHELLCHECK_EXCLUDED:$UNCOVERED"
   [ -n "$UNTRACKED_HINT" ] && HINT="$HINT
 
@@ -669,8 +697,11 @@ reset_tree
 mkdir -p packages/mobile/tools
 # shellcheck disable=SC2016  # fixture content, deliberately not expanded here
 printf '#!/usr/bin/env bash\nrm -rf $UNQUOTED/*\n' >packages/mobile/tools/helper.sh
+# No extension: the only path to this one is the untracked-shebang branch, and
+# it is the shape (.envrc-like) the shared predicate was introduced for.
+printf '#!/bin/bash\necho scratch\n' >packages/mobile/tools/helper
 BEFORE_ADD=$(cd "$SCRATCH" && all_shell_files)
-(cd "$SCRATCH" && git add packages/mobile/tools/helper.sh)
+(cd "$SCRATCH" && git add packages/mobile/tools/helper.sh packages/mobile/tools/helper)
 AFTER_ADD=$(cd "$SCRATCH" && all_shell_files)
 if [ "$BEFORE_ADD" = "$AFTER_ADD" ]; then
   ok "the shell-file scan answers the same before and after git add"
@@ -679,8 +710,13 @@ else
     "an index-only scan moves while the cache key does not, so the stale PASS survives"
 fi
 case "$BEFORE_ADD" in
-  *packages/mobile/tools/helper.sh*) ok "an untracked shell file is in the scan" ;;
-  *) not_ok "an untracked shell file is in the scan" "not found before git add" ;;
+  *packages/mobile/tools/helper.sh*) ok "an untracked .sh file is in the scan" ;;
+  *) not_ok "an untracked .sh file is in the scan" "not found before git add" ;;
+esac
+case "$BEFORE_ADD" in
+  *"packages/mobile/tools/helper"$'\n'*) ok "an untracked extensionless shell file is in the scan" ;;
+  *) not_ok "an untracked extensionless shell file is in the scan" \
+    "only the .sh branch answers; the shebang branch is unexercised" ;;
 esac
 (cd "$SCRATCH" && git reset -q)
 rm -rf packages/mobile
@@ -697,6 +733,24 @@ case "$GOT" in
     "narrowing its paths filter narrows the only enforcement a machine without shellcheck has — $GOT" ;;
 esac
 rm -rf .github
+reset_tree
+
+# The coverage row tells a developer to gitignore a scratch script. That remedy
+# has to work on both sides: an earlier version filtered ignored files out of the
+# scan but not out of the lint, so following the message moved the failure from
+# one check to another with no mention of why.
+# shellcheck disable=SC2016  # fixture content, deliberately not expanded here
+printf '#!/usr/bin/env bash\nrm -rf $SCRATCHVAR/*\n' >scripts/scratch-debug.sh
+echo 'scripts/scratch-debug.sh' >>.gitignore
+IN_SCAN=$(cd "$SCRATCH" && all_shell_files | grep -c 'scratch-debug' || true)
+IN_LINT=$(cd "$SCRATCH" && shellcheck_files | grep -c 'scratch-debug' || true)
+if [ "$IN_SCAN" -eq 0 ] && [ "$IN_LINT" -eq 0 ]; then
+  ok "gitignoring a scratch script removes it from both the scan and the lint"
+else
+  not_ok "gitignoring a scratch script removes it from both the scan and the lint" \
+    "scan=$IN_SCAN lint=$IN_LINT — the remedy the failure message names must work on both"
+fi
+rm -f scripts/scratch-debug.sh
 reset_tree
 
 # --- guards -------------------------------------------------------------------
