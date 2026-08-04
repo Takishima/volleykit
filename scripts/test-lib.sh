@@ -133,6 +133,9 @@ assert_guard_rows() {
   fi
   rmdir "$scratch/guard-probe-ok"
 
+  # Both of the next two land on the same `! -f` branch — require_temp_file has
+  # no directory-specific case, and does not need one. Two names for one lever,
+  # kept because the pair documents which inputs the branch is meant to cover.
   out=$(require_temp_file "" "probe" "$repo" 2>&1)
   case "$out" in
     *"could not create a temp file"*) ok "an empty temp-file path is refused" ;;

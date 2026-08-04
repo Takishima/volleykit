@@ -54,7 +54,14 @@ source "$LIB" || exit 1
 
 echo "test-lib.sh"
 
+# Counted at the call site: the guard rows are defined in the same file as the
+# guards they cover, so neutering that function would delete a branch and its
+# only lever together — seven rows vanish and the tally is a number nobody
+# compares.
+GUARD_BEFORE=$((PASS + FAIL))
 assert_guard_rows "$SCRATCH" "$REPO"
+assert_eq "the guard block contributed every row it defines" \
+  "$((PASS + FAIL - GUARD_BEFORE))" 7
 
 echo "validation-lib.sh"
 
@@ -381,6 +388,4 @@ fi
 
 # --- result -------------------------------------------------------------------
 
-echo ""
-echo "$PASS passed, $FAIL failed"
-[ "$FAIL" -eq 0 ] || exit 1
+report
