@@ -105,10 +105,13 @@ Three checks cover the validation code itself:
   scratch monorepo with `pnpm` stubbed — a table of _changed path -> expected
   `--gate` records_. Two directions are asserted: every path constant
   (`PKG_INPUTS`, `CORE_ROOT`, `SHELL_INPUTS`, `TOKENS_INPUTS`, `FORMAT_ROOT`)
-  exists in the real repo, and every package in the table registers a check. Add
-  a check or a trigger, add a row.
-- `validation:shellcheck` — registered when `shellcheck` is on `PATH`, and
-  printed as skipped when it is not. Always runs in CI.
+  exists in the real repo, and every package in the table registers a check. The
+  constants are scraped by naming convention (`*_INPUTS`, `*_ROOT`), so a new one
+  is covered without editing the suite. Add a check or a trigger, add a row.
+- `validation:shellcheck` — `scripts/shellcheck.sh`, the single definition of
+  what is linted and how; `validate.sh` sources it so the trigger, the cache key
+  and the argv cannot disagree. Registered when `shellcheck` is on `PATH`, and
+  reported on stderr as skipped when it is not. Always runs in CI.
 
 All three are triggered by any edit to `SHELL_INPUTS` — the scripts,
 `.claude/hooks/`, and `.claude/settings.json`, which is what registers the hook
@@ -122,8 +125,8 @@ not "yes, go ahead". It errs towards gating: it fires on anything resembling a
 commit invocation, including one quoted inside another command. A false positive
 costs one re-run; a false negative is an unvalidated commit.
 
-`.github/workflows/ci-shell.yml` runs both suites plus shellcheck, so the
-linting is enforced even where the binary is not installed locally.
+`.github/workflows/ci-shell.yml` runs both suites plus `scripts/shellcheck.sh`,
+so the linting is enforced even where the binary is not installed locally.
 
 ## Auto-Fix Commands
 

@@ -56,6 +56,12 @@ echo '{}' >package.json
 git add -A
 git commit -qm init
 
+# Both suites assert cache-hit behaviour, so an ambient VOLLEYKIT_NO_CACHE
+# would fail them for a reason unrelated to what they test. This is not the
+# leak fix — validate.sh no longer exports the flag — it is the same isolation
+# as VOLLEYKIT_CACHE_DIR below. The rows that want a forced miss set it
+# explicitly per-invocation.
+unset VOLLEYKIT_NO_CACHE
 export VOLLEYKIT_CACHE_DIR="$SCRATCH/.cache"
 # shellcheck source=./validation-lib.sh
 source "$LIB" || exit 1

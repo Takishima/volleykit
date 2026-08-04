@@ -87,7 +87,7 @@ for pkg in "${PKG_NAMES[@]}"; do
 done
 
 cp "$HERE/validate.sh" "$HERE/validation-lib.sh" "$HERE/validation-lib.test.sh" \
-  "$HERE/validate.test.sh" scripts/
+  "$HERE/validate.test.sh" "$HERE/shellcheck.sh" scripts/
 cp "$HERE/../.claude/hooks/pre-git-commit.sh" .claude/hooks/
 cp "$HERE/../.claude/hooks/lib/is-git-commit.sh" .claude/hooks/lib/
 printf '{"hooks":{"PreToolUse":[{"hooks":[{"command":".claude/hooks/pre-git-commit.sh"}]}]}}\n' >.claude/settings.json
@@ -111,6 +111,12 @@ echo 'openapi: 3.0.0' >docs/api/volleymanager-openapi.yaml
 git add -A
 git commit -qm init
 
+# Both suites assert cache-hit behaviour, so an ambient VOLLEYKIT_NO_CACHE
+# would fail them for a reason unrelated to what they test. This is not the
+# leak fix — validate.sh no longer exports the flag — it is the same isolation
+# as VOLLEYKIT_CACHE_DIR below. The rows that want a forced miss set it
+# explicitly per-invocation.
+unset VOLLEYKIT_NO_CACHE
 export VOLLEYKIT_CACHE_DIR="$CACHE"
 
 echo "validate.sh"
@@ -171,7 +177,19 @@ assert_absent() {
 # failure — the package looks registered and validates nothing — so it is
 # checked against the source tree directly.
 
-eval "$(sed -n '/^CORE_ROOT=/p;/^FORMAT_ROOT=/p;/^SHELL_INPUTS=/p;/^TOKENS_INPUTS=/p' "$HERE/validate.sh")"
+# Scraped by naming convention, not by name: an earlier version listed the
+# constants literally, so a sixth one was asserted by nothing — the same
+# covers-what-existed-when-it-was-written shape as the package list.
+mapfile -t PATH_CONSTS < <(
+  sed -n 's/^\([A-Z_]*\(INPUTS\|ROOT\)\)=.*/\1/p' "$HERE/validate.sh" "$HERE/shellcheck.sh" | sort -u
+)
+eval "$(sed -n '/^[A-Z_]*\(INPUTS\|ROOT\)=/p' "$HERE/validate.sh" "$HERE/shellcheck.sh")"
+
+if [ "${#PATH_CONSTS[@]}" -ge 5 ]; then
+  ok "path constants are scraped from the scripts (${#PATH_CONSTS[@]} found)"
+else
+  not_ok "path constants are scraped from the scripts" "found ${#PATH_CONSTS[@]}, expected at least 5"
+fi
 
 check_paths_exist() {
   local label=$1 missing=""
@@ -191,14 +209,30 @@ for pkg in "${PKG_NAMES[@]}"; do
   # shellcheck disable=SC2086  # the table is space-separated, split on purpose
   check_paths_exist "PKG_INPUTS[$pkg]" ${PKG_INPUTS[$pkg]}
 done
-# shellcheck disable=SC2086
-check_paths_exist "CORE_ROOT" $CORE_ROOT
-# shellcheck disable=SC2086
-check_paths_exist "FORMAT_ROOT" $FORMAT_ROOT
-# shellcheck disable=SC2086
-check_paths_exist "SHELL_INPUTS" $SHELL_INPUTS
-# shellcheck disable=SC2086
-check_paths_exist "TOKENS_INPUTS" $TOKENS_INPUTS
+for const in "${PATH_CONSTS[@]}"; do
+  [ "$const" = "PKG_INPUTS" ] && continue
+  # shellcheck disable=SC2086  # the constants are space-separated, split on purpose
+  check_paths_exist "$const" ${!const}
+done
+
+# The lint's argv and its cache key are the same constant, but only if every
+# file the lint actually reads sits under it. Anything outside is linted in CI
+# and invisible to the gate, and a stored PASS survives that file breaking.
+# shellcheck source=./shellcheck.sh
+source "$HERE/shellcheck.sh"
+UNCOVERED=""
+while IFS= read -r f; do
+  covered=false
+  for path in $SHELLCHECK_INPUTS; do
+    case "$f" in "$path"/* | "$path") covered=true; break ;; esac
+  done
+  [ "$covered" = true ] || UNCOVERED="$UNCOVERED $f"
+done < <(cd "$REPO" && find scripts .claude -name '*.sh' -type f 2>/dev/null | sort)
+if [ -z "$UNCOVERED" ]; then
+  ok "every shell file in the repo is under SHELLCHECK_INPUTS"
+else
+  not_ok "every shell file in the repo is under SHELLCHECK_INPUTS" "uncovered:$UNCOVERED"
+fi
 
 # --- affectedness -------------------------------------------------------------
 #
@@ -412,6 +446,26 @@ reset_tree
 (cd "$SCRATCH" && bash scripts/validate.sh bogus >/dev/null 2>&1)
 [ $? -eq 2 ] && ok "an unknown argument is rejected" ||
   not_ok "an unknown argument is rejected"
+
+# A runner-internal flag must not reach the check subprocess. This has been
+# fixed twice and come back twice: once by dropping `export`, which does not
+# strip the attribute from a variable that arrived exported.
+printf 'export const a = 3\n' >packages/web/src/index.ts
+cat >"$SCRATCH/bin/pnpm" <<'STUB'
+#!/bin/sh
+echo "NO_CACHE=[${VOLLEYKIT_NO_CACHE:-unset}]"
+exit 0
+STUB
+chmod +x "$SCRATCH/bin/pnpm"
+LEAK=$( (cd "$SCRATCH" && VOLLEYKIT_NO_CACHE=1 bash scripts/validate.sh lint 2>&1) || true)
+printf '#!/bin/sh\nexit 0\n' >"$SCRATCH/bin/pnpm"
+chmod +x "$SCRATCH/bin/pnpm"
+case "$LEAK" in
+  *"NO_CACHE=[1]"*) not_ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess" \
+    "the check saw the runner-internal flag" ;;
+  *) ok "VOLLEYKIT_NO_CACHE does not reach a check subprocess" ;;
+esac
+reset_tree
 
 # --- guards -------------------------------------------------------------------
 

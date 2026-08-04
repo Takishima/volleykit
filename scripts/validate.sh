@@ -29,8 +29,14 @@ cd "$ROOT_DIR"
 
 GATE_MODE=false
 declare -a CLASS_FILTER=()
+# Runner-internal: cache_hit reads it in this process, and nothing downstream of
+# run_check should. `export -n` is required, not just declining to export — a
+# plain assignment to a name that arrived exported keeps the attribute, so
+# `VOLLEYKIT_NO_CACHE=1 scripts/validate.sh` shipped it into every check's
+# environment and the two checks that are validation code failed on it.
 # shellcheck disable=SC2034  # read by cache_hit in validation-lib.sh
 VOLLEYKIT_NO_CACHE="${VOLLEYKIT_NO_CACHE:-}"
+export -n VOLLEYKIT_NO_CACHE
 
 for arg in "$@"; do
   case "$arg" in
@@ -106,15 +112,20 @@ FORMAT_ROOT=".prettierrc.json .prettierignore"
 # list feeding both the trigger and the check's inputs — stating it twice is
 # how .claude/settings.json ended up in neither.
 #
-# .github/workflows/ci-shell.yml lists these plus every other scripts/*.sh,
-# because shellcheck covers files this check does not. It must not list fewer:
-# CI is the only enforcer a settings.json change cannot switch off.
-SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh"
+# .github/workflows/ci-shell.yml must trigger on at least these: CI is the only
+# enforcer a settings.json change cannot switch off. The shell lint's own scope
+# is wider and lives in scripts/shellcheck.sh.
+SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh scripts/shellcheck.sh"
 
 # The design-token check compares the two generated files. Its trigger used to
 # be hand-written while its inputs were listed separately, so editing the
 # generator invalidated the cache but never registered the check.
 TOKENS_INPUTS="packages/shared/styles scripts/sync-style-tokens.js"
+
+# SHELLCHECK_INPUTS comes from the script that runs the lint, so the trigger,
+# the cache key and the argv cannot disagree.
+# shellcheck source=./shellcheck.sh
+source "$SCRIPT_DIR/shellcheck.sh"
 
 # =============================================================================
 # CHANGE DETECTION
@@ -383,16 +394,23 @@ if matches "$(paths_to_regex "$SHELL_INPUTS")"; then
     "bash scripts/validation-lib.test.sh" "$SHELL_INPUTS"
   register_check "validation:registry" "test" "$ROOT_DIR" \
     "bash scripts/validate.test.sh" "$SHELL_INPUTS"
+fi
 
-  # Shell linting runs locally when the binary is available, and always in CI
-  # (.github/workflows/ci-shell.yml). It is not silently skipped: without it the
-  # gate would go green on a shellcheck error and only fail after the push,
-  # which is how two malformed `# shellcheck disable` directives reached CI.
+# Shell linting runs locally when the binary is available, and always in CI
+# (.github/workflows/ci-shell.yml). Without it the gate goes green on a lint
+# error and only fails after the push, which is how two malformed suppression
+# directives reached CI in consecutive commits.
+
+# Keyed on SHELLCHECK_INPUTS, which is what the lint reads — wider than
+# SHELL_INPUTS, because it also covers scripts this suite does not exercise.
+if matches "$(paths_to_regex "$SHELLCHECK_INPUTS")"; then
   if command -v shellcheck >/dev/null 2>&1; then
     register_check "validation:shellcheck" "lint" "$ROOT_DIR" \
-      "__shellcheck__" "$SHELL_INPUTS"
+      "bash scripts/shellcheck.sh" "$SHELLCHECK_INPUTS"
   else
-    say "${DIM}shellcheck not installed — that check runs in CI only.${NC}"
+    # stderr, not say(): in gate mode say() is silenced, and "the gate has no
+    # shell-lint opinion on this machine" is exactly when that matters.
+    echo "shellcheck not installed — validation:shellcheck runs in CI only." >&2
   fi
 fi
 
@@ -565,10 +583,6 @@ run_check() {
 
   local ok=1
   case "${CHECK_CMD[$name]}" in
-    __shellcheck__)
-      shellcheck -x --severity=info -e SC1091,SC2015 \
-        scripts/*.sh .claude/hooks/*.sh .claude/hooks/lib/*.sh >"$out" 2>&1 && ok=0
-      ;;
     __format__)
       # Newline-separated so paths containing spaces survive.
       local -a files=()
