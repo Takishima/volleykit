@@ -62,7 +62,7 @@ Each check's key is a content hash of its declared input paths plus a root set:
 | Second commit with no edits between       | Everything still cached                           |
 | Changed `pnpm-lock.yaml`                  | Everything invalidates                            |
 | Changed `scripts/validate.sh`             | Everything invalidates                            |
-| Changed `.prettierignore`                 | Only `format` invalidates                         |
+| Changed `.prettierignore`                 | `format` re-checks every tracked formattable file |
 
 Stored in `.validation-cache/` (gitignored). No expiry — correctness comes from
 the hash, not a timer. `--no-cache` forces a full re-run.
@@ -95,14 +95,23 @@ runs that package's checks rather than being silently skipped.
 
 ## Changing the Validation Scripts
 
-`scripts/validation-lib.test.sh` covers the fingerprint, cache, change-detection
-and commit-hook invariants. It is the `validation:test` check, triggered by any
-edit to `SHELL_INPUTS` — the scripts, `.claude/hooks/`, and
-`.claude/settings.json`, which is what registers the hook in the first place.
+Two suites, both run by the `validation:test` check:
+
+- `scripts/validation-lib.test.sh` — fingerprint, cache, change detection, and
+  the commit hook's predicate.
+- `scripts/validate.test.sh` — the registry itself, against a scratch monorepo
+  with `pnpm` stubbed: a table of _changed path -> expected `--gate` records_.
+  Add a check or a trigger, add a row.
+
+The check is triggered by any edit to `SHELL_INPUTS` — the scripts,
+`.claude/hooks/`, and `.claude/settings.json`, which is what registers the hook
+in the first place.
 
 The hook's predicate lives in `.claude/hooks/lib/is-git-commit.sh` and is
 sourced by both the hook and the test, so there is one definition rather than
-two that must agree. It errs towards gating: it fires on anything resembling a
+two that must agree. If it cannot be loaded the hook blocks rather than
+approves — it cannot tell whether the command is a commit, and that answer is
+not "yes, go ahead". It errs towards gating: it fires on anything resembling a
 commit invocation, including one quoted inside another command. A false positive
 costs one re-run; a false negative is an unvalidated commit.
 

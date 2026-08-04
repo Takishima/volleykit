@@ -213,6 +213,12 @@ assert_gated "absolute path" "/usr/bin/git $C -m x"
 assert_gated "tab separated" "$(printf 'git\t%s -m x' "$C")"
 assert_gated "backslash continuation" "$(printf 'git \\\n  %s -m x' "$C")"
 
+assert_gated "-C quoted path with space" "git -C \"/path with space\" $C"
+assert_gated "-c quoted value with space" "git -c user.name=\"A B\" $C"
+assert_gated "--git-dir quoted" "git --git-dir=\"/p q/.git\" $C"
+assert_gated "-C single-quoted" "git -C '/p q' $C -m x"
+assert_gated "several options then commit" "git -C /r -c a=b $C"
+
 assert_not_gated "git grep commit" "git grep $C"
 assert_not_gated "git log" "git log --oneline"
 assert_not_gated "unrelated" "ls -la"

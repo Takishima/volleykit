@@ -25,10 +25,18 @@
 # the value-taking ones spelled out. That is what keeps `git grep commit` — a
 # real, different command — from being gated.
 
+# An option value is either bare, or single/double quoted — quoted because paths
+# contain spaces, and a bare `[^[:space:]]+` stops at the first one, which left
+# `git -C "/path with space" commit` ungated.
 # shellcheck disable=SC2034  # consumed by the regex in is_git_commit
-_IGC_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)[=[:space:]][^[:space:]]+|-[^[:space:]]+)'
+# A quoted section may carry a bare prefix (`user.name="A B"`), so the quoted
+# alternative allows non-space text on either side of it.
+_IGC_VAL='([^[:space:]]*("[^"]*"|'"'"'[^'"'"']*'"'"')[^[:space:]]*|[^[:space:]]+)'
+# shellcheck disable=SC2034
+_IGC_OPT='(-[Cc][[:space:]]+'"$_IGC_VAL"'|--(git-dir|work-tree|namespace|exec-path)[=[:space:]]'"$_IGC_VAL"'|-[^[:space:]]+)'
 
 # `\\[[:space:]]` covers a backslash-newline line continuation between tokens.
+# shellcheck disable=SC2034
 _IGC_SP='([[:space:]]|\\[[:space:]])+'
 
 is_git_commit() {

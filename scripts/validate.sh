@@ -101,9 +101,15 @@ FORMAT_ROOT=".prettierrc.json .prettierignore"
 # list feeding both the trigger and the check's inputs — stating it twice is
 # how .claude/settings.json ended up in neither.
 #
-# .github/workflows/ci-shell.yml deliberately uses a broader filter
-# (every scripts/*.sh) because shellcheck covers files this check does not.
-SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh"
+# .github/workflows/ci-shell.yml lists these plus every other scripts/*.sh,
+# because shellcheck covers files this check does not. It must not list fewer:
+# CI is the only enforcer a settings.json change cannot switch off.
+SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh"
+
+# The design-token check compares the two generated files. Its trigger used to
+# be hand-written while its inputs were listed separately, so editing the
+# generator invalidated the cache but never registered the check.
+TOKENS_INPUTS="packages/shared/styles scripts/sync-style-tokens.js"
 
 # =============================================================================
 # CHANGE DETECTION
@@ -266,8 +272,21 @@ CORE_ROOT_NL=$(printf '%s\n' $CORE_ROOT)
 # --- format: prettier over the changed files, minus any that were deleted ---
 # (prettier exits non-zero on a path that is not there, which would leave the
 # gate permanently closed until the deletion was committed)
-FORMAT_FILES=$(echo "$CHANGED" | grep -E '\.(ts|tsx|js|jsx|mjs|json|css|astro|md)$' | while IFS= read -r f; do
-  [ -f "$f" ] && printf '%s\n' "$f"
+FORMAT_EXT='\.(ts|tsx|js|jsx|mjs|json|css|astro|md)$'
+
+# Changing prettier's own config changes the verdict for files that did not
+# change — removing a line from .prettierignore exposes a directory that has
+# never been formatted. So a config edit widens the check to every tracked
+# formattable file rather than the changed ones. Without this, a lone
+# .prettierignore edit registered no check at all and the gate opened on it.
+if matches "$(paths_to_regex "$FORMAT_ROOT")"; then
+  FORMAT_CANDIDATES=$(git ls-files 2>/dev/null | grep -E "$FORMAT_EXT" || true)
+else
+  FORMAT_CANDIDATES=$(echo "$CHANGED" | grep -E "$FORMAT_EXT" || true)
+fi
+
+FORMAT_FILES=$(printf '%s\n' "$FORMAT_CANDIDATES" | while IFS= read -r f; do
+  [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"
 done || true)
 
 if [ -n "$FORMAT_FILES" ]; then
@@ -280,10 +299,10 @@ if [ -n "$FORMAT_FILES" ]; then
     "$FORMAT_FILES$(printf '\n%s' $FORMAT_ROOT)" "$FORMAT_FILES"
 fi
 
-if matches '^packages/shared/styles/'; then
+if matches "$(paths_to_regex "$TOKENS_INPUTS")"; then
   register_check "tokens" "tokens" "$ROOT_DIR" \
     "node scripts/sync-style-tokens.js --check" \
-    "packages/shared/styles scripts/sync-style-tokens.js"
+    "$TOKENS_INPUTS"
 fi
 
 if affected web; then
@@ -322,7 +341,7 @@ fi
 # everything else, and was previously the one file nothing validated.
 if matches "$(paths_to_regex "$SHELL_INPUTS")"; then
   register_check "validation:test" "test" "$ROOT_DIR" \
-    "bash scripts/validation-lib.test.sh" \
+    "bash scripts/validation-lib.test.sh && bash scripts/validate.test.sh" \
     "$SHELL_INPUTS"
 fi
 
