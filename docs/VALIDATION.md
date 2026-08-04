@@ -97,18 +97,20 @@ runs that package's checks rather than being silently skipped.
 
 ## Changing the Validation Scripts
 
-Two suites, both run by the `validation:test` check:
+Three checks cover the validation code itself:
 
-- `scripts/validation-lib.test.sh` — fingerprint, cache, change detection, and
-  the commit hook's predicate.
-- `scripts/validate.test.sh` — the registry itself, against a scratch monorepo
-  with `pnpm` stubbed: a table of _changed path -> expected `--gate` records_.
-  The scratch layout is derived from `PKG_INPUTS` and seeded with real files, and
-  one row per package is generated from the table — so a package added there with
-  a path that exists nowhere, or with no `register_check` block, fails. Add a
-  check or a trigger, add a row.
+- `validation:test` — `scripts/validation-lib.test.sh`: fingerprint, cache,
+  change detection, and the commit hook's predicate.
+- `validation:registry` — `scripts/validate.test.sh`: the registry, against a
+  scratch monorepo with `pnpm` stubbed — a table of _changed path -> expected
+  `--gate` records_. Two directions are asserted: every path constant
+  (`PKG_INPUTS`, `CORE_ROOT`, `SHELL_INPUTS`, `TOKENS_INPUTS`, `FORMAT_ROOT`)
+  exists in the real repo, and every package in the table registers a check. Add
+  a check or a trigger, add a row.
+- `validation:shellcheck` — registered when `shellcheck` is on `PATH`, and
+  printed as skipped when it is not. Always runs in CI.
 
-The check is triggered by any edit to `SHELL_INPUTS` — the scripts,
+All three are triggered by any edit to `SHELL_INPUTS` — the scripts,
 `.claude/hooks/`, and `.claude/settings.json`, which is what registers the hook
 in the first place.
 
@@ -120,7 +122,8 @@ not "yes, go ahead". It errs towards gating: it fires on anything resembling a
 commit invocation, including one quoted inside another command. A false positive
 costs one re-run; a false negative is an unvalidated commit.
 
-`.github/workflows/ci-shell.yml` runs the suite plus shellcheck.
+`.github/workflows/ci-shell.yml` runs both suites plus shellcheck, so the
+linting is enforced even where the binary is not installed locally.
 
 ## Auto-Fix Commands
 

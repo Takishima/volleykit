@@ -17,6 +17,7 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$HERE/.." && pwd)"
 
 PASS=0
 FAIL=0
@@ -55,11 +56,13 @@ git init -q .
 git config user.email test@example.com
 git config user.name Test
 
-# The package layout is derived from validate.sh's own table. `mkdir -p` alone
-# would not be a guard — git does not track empty directories, so a package
-# added to the table with a path that exists nowhere would still fail nothing.
-# Each derived path gets a real committed file, and a generated row below
-# asserts the package is reachable from it.
+# The package layout is derived from validate.sh's own table, and each derived
+# path gets a real committed file so the generated rows below can assert that a
+# package is reachable from its own inputs.
+#
+# The fixture cannot check the table against the REAL repo — `mkdir -p` creates
+# whatever the table names, so the scratch and the table agree by construction.
+# That direction is asserted separately, against $REPO, in the block below.
 eval "$(sed -n '/^declare -a PKG_NAMES=(/p' "$HERE/validate.sh")"
 eval "$(sed -n '/^declare -A PKG_INPUTS=(/,/^)/p' "$HERE/validate.sh")"
 
@@ -108,10 +111,6 @@ echo 'openapi: 3.0.0' >docs/api/volleymanager-openapi.yaml
 git add -A
 git commit -qm init
 
-# These suites run as checks inside validate.sh, which exports VOLLEYKIT_NO_CACHE
-# for --no-cache. Inheriting it forces every cache_hit false, so `validate.sh
-# --no-cache` would fail its own suites and blame the validation code.
-unset VOLLEYKIT_NO_CACHE
 export VOLLEYKIT_CACHE_DIR="$CACHE"
 
 echo "validate.sh"
@@ -163,6 +162,43 @@ assert_absent() {
   esac
   reset_tree
 }
+
+# --- the table describes the real repo ------------------------------------------
+#
+# Every path constant in validate.sh is a promise about the filesystem. The
+# scratch monorepo cannot test that promise: it is built from the same table, so
+# the two agree no matter what the table says. A typo here is the original
+# failure — the package looks registered and validates nothing — so it is
+# checked against the source tree directly.
+
+eval "$(sed -n '/^CORE_ROOT=/p;/^FORMAT_ROOT=/p;/^SHELL_INPUTS=/p;/^TOKENS_INPUTS=/p' "$HERE/validate.sh")"
+
+check_paths_exist() {
+  local label=$1 missing=""
+  shift
+  local path
+  for path in "$@"; do
+    [ -e "$REPO/$path" ] || missing="$missing $path"
+  done
+  if [ -z "$missing" ]; then
+    ok "every path in $label exists in the repo"
+  else
+    not_ok "every path in $label exists in the repo" "missing:$missing"
+  fi
+}
+
+for pkg in "${PKG_NAMES[@]}"; do
+  # shellcheck disable=SC2086  # the table is space-separated, split on purpose
+  check_paths_exist "PKG_INPUTS[$pkg]" ${PKG_INPUTS[$pkg]}
+done
+# shellcheck disable=SC2086
+check_paths_exist "CORE_ROOT" $CORE_ROOT
+# shellcheck disable=SC2086
+check_paths_exist "FORMAT_ROOT" $FORMAT_ROOT
+# shellcheck disable=SC2086
+check_paths_exist "SHELL_INPUTS" $SHELL_INPUTS
+# shellcheck disable=SC2086
+check_paths_exist "TOKENS_INPUTS" $TOKENS_INPUTS
 
 # --- affectedness -------------------------------------------------------------
 #
@@ -356,7 +392,7 @@ echo 'export const a = 97' >packages/web/src/index.ts
 (cd "$SCRATCH" && bash scripts/validate.sh >/dev/null 2>&1)
 (cd "$SCRATCH" && git add packages/web/src/index.ts)
 echo 'export const a = 96' >packages/web/src/index.ts
-(cd "$SCRATCH" && bash scripts/validate.sh >/dev/null 2>&1)
+(cd "$SCRATCH" && bash scripts/validate.sh >/dev/null 2>&1) # re-prime for the new content
 GOT=$(gate_records)
 GOT=${GOT% }
 if [ "$GOT" = "unstaged packages/web/src/index.ts" ]; then

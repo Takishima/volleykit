@@ -36,7 +36,10 @@ jobs:
       # are excluded repo-wide, both structural: SC1091 cannot follow a sourced
       # path it was not given, and SC2015 flags the `a && b || c` the test
       # helpers use deliberately. SC2016 is a real defect class elsewhere, so it
-      # is disabled inline at the two constants that need it.
+      # is disabled inline where a pattern genuinely matches a literal `$`.
+      #
+      # scripts/validate.sh runs the same command as a local check when
+      # shellcheck is installed; this job is what enforces it when it is not.
       - name: Lint shell scripts
         run: shellcheck -x --severity=info -e SC1091,SC2015 scripts/*.sh .claude/hooks/*.sh .claude/hooks/lib/*.sh
 

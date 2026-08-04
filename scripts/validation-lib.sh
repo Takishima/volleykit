@@ -78,10 +78,26 @@ changed_files() {
 }
 
 # Every file under the given pathspecs that git knows about, tracked or not.
-# Shares changed_files' quoting rationale; kept here so a new listing in
-# validate.sh does not have to rediscover the flag.
+#
+# Refuses an unrepresentable path for the same reason changed_files does. It
+# cannot lean on that check: this listing exists to cover files that did NOT
+# change, so changed_files never sees them. Skipping instead would drop such a
+# file out of the widened format set silently — the quoted form ends in `"`, so
+# no extension filter matches it — and the check would pass having never looked.
+#
+# fingerprint() reads the same listing and does not use this primitive: it is
+# NUL-delimited (`-z`), which is immune to quoting, and it hashes rather than
+# filters so it has no extension test to fall through.
 tracked_and_untracked_files() {
-  git -c core.quotePath=false ls-files -c -o --exclude-standard 2>/dev/null -- "$@" || true
+  local out
+  out=$(git -c core.quotePath=false ls-files -c -o --exclude-standard 2>/dev/null -- "$@" || true)
+  if printf '%s\n' "$out" | grep -q '^"'; then
+    echo "validation: git cannot list this path unquoted, so the file set" >&2
+    echo "cannot be trusted. Rename it (no quote, backslash or newline):" >&2
+    printf '%s\n' "$out" | grep '^"' | sed 's/^/  /' >&2
+    return 1
+  fi
+  printf '%s\n' "$out"
 }
 
 # Paths that are BOTH staged and modified in the worktree — the intersection of

@@ -13,6 +13,8 @@
     git
     curl
     jq
+    # scripts/validate.sh registers a shellcheck check when this is present.
+    shellcheck
   ];
 
   # Node.js for React web app, React Native mobile, and Cloudflare Worker

@@ -29,11 +29,16 @@ cd "$ROOT_DIR"
 
 GATE_MODE=false
 declare -a CLASS_FILTER=()
+# shellcheck disable=SC2034  # read by cache_hit in validation-lib.sh
+VOLLEYKIT_NO_CACHE="${VOLLEYKIT_NO_CACHE:-}"
 
 for arg in "$@"; do
   case "$arg" in
     --gate) GATE_MODE=true ;;
-    --no-cache) export VOLLEYKIT_NO_CACHE=1 ;;
+    # Not exported: the only reader is cache_hit, in this process. Exporting
+    # sent a runner-internal flag into every check's environment, and the two
+    # checks that are themselves validation code broke on it.
+    --no-cache) VOLLEYKIT_NO_CACHE=1 ;;
     --clear)
       cache_clear
       echo "Validation cache cleared."
@@ -238,8 +243,8 @@ _register() {
   # shellcheck disable=SC2016  # the patterns match literal metacharacters
   case "$cmd" in
     __*) ;;
-    *[\&\|\;\<\>\`]* | *'$('*)
-      echo "register_check: $name: shell metacharacter in command." >&2
+    *[\&\|\;\<\>\`\"\']* | *'$('*)
+      echo "register_check: $name: shell metacharacter or quote in command." >&2
       echo "run_check execs argv, not a shell line. Use a sentinel." >&2
       exit 3
       ;;
@@ -304,9 +309,12 @@ if matches "$(paths_to_regex "$FORMAT_ROOT")"; then
   # is tracked-only, so replacing dropped every newly added file — a batch that
   # added one file and touched prettier config stopped checking that file.
   # `-c -o --exclude-standard` is the same listing fingerprint() uses.
+  if ! WIDENED=$(tracked_and_untracked_files); then
+    exit 3
+  fi
   FORMAT_CANDIDATES=$(
     {
-      tracked_and_untracked_files
+      printf '%s\n' "$WIDENED"
       printf '%s\n' "$FORMAT_CANDIDATES"
     } | grep -E "$FORMAT_EXT" | sed '/^$/d' | sort -u || true
   )
@@ -375,6 +383,17 @@ if matches "$(paths_to_regex "$SHELL_INPUTS")"; then
     "bash scripts/validation-lib.test.sh" "$SHELL_INPUTS"
   register_check "validation:registry" "test" "$ROOT_DIR" \
     "bash scripts/validate.test.sh" "$SHELL_INPUTS"
+
+  # Shell linting runs locally when the binary is available, and always in CI
+  # (.github/workflows/ci-shell.yml). It is not silently skipped: without it the
+  # gate would go green on a shellcheck error and only fail after the push,
+  # which is how two malformed `# shellcheck disable` directives reached CI.
+  if command -v shellcheck >/dev/null 2>&1; then
+    register_check "validation:shellcheck" "lint" "$ROOT_DIR" \
+      "__shellcheck__" "$SHELL_INPUTS"
+  else
+    say "${DIM}shellcheck not installed — that check runs in CI only.${NC}"
+  fi
 fi
 
 # =============================================================================
@@ -546,6 +565,10 @@ run_check() {
 
   local ok=1
   case "${CHECK_CMD[$name]}" in
+    __shellcheck__)
+      shellcheck -x --severity=info -e SC1091,SC2015 \
+        scripts/*.sh .claude/hooks/*.sh .claude/hooks/lib/*.sh >"$out" 2>&1 && ok=0
+      ;;
     __format__)
       # Newline-separated so paths containing spaces survive.
       local -a files=()
