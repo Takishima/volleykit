@@ -42,9 +42,14 @@ changed_files() {
   {
     if git rev-parse --verify -q HEAD >/dev/null 2>&1; then
       git diff --name-only HEAD 2>/dev/null || true
-    else
-      git diff --name-only --cached 2>/dev/null || true
     fi
+    # The index is unioned in unconditionally, not as the no-HEAD fallback.
+    # A path staged with one content and then restored on disk differs from
+    # HEAD only in the index, so `git diff HEAD` says nothing about it — the
+    # run would exit as "no changes" and the gate would open on a blob no check
+    # ever saw. Listing it here registers its checks and lets the divergence
+    # rule report it.
+    git diff --name-only --cached 2>/dev/null || true
     git ls-files -o --exclude-standard 2>/dev/null || true
   } | sed '/^$/d' | sort -u
 }

@@ -41,9 +41,14 @@ outstanding, and anything else if the gate itself failed.
 
 Each check declares the paths it depends on. Its cache key is a hash of the
 **worktree contents** of every file under those paths — tracked or untracked,
-staged or not — plus the root set (`package.json`, `pnpm-lock.yaml`,
-`pnpm-workspace.yaml`, `.prettierrc.json`, `.prettierignore`, and the
-validation scripts themselves).
+staged or not — plus a root set.
+
+The root set is split by who reads it. `package.json`, `pnpm-lock.yaml`,
+`pnpm-workspace.yaml` and the validation scripts are in every check's key and
+also mark every package affected. Prettier's config (`.prettierrc.json`,
+`.prettierignore`) is in the `format` key only — it has nothing to do with
+whether the mobile tests still pass, and treating it as repo-wide re-ran the
+whole monorepo for it.
 
 Hashing the worktree uniformly is what makes the key staging-independent:
 `git add` moves a file between git's internal representations without changing
@@ -61,6 +66,8 @@ Consequences that matter in practice:
 | Second commit with no edits in between    | Everything still cached                            |
 | Changed `pnpm-lock.yaml`                  | Everything invalidates                             |
 | Changed `scripts/validate.sh`             | Everything invalidates                             |
+| Changed `.prettierignore`                 | Only `format` invalidates                          |
+| Staged one file, others left dirty        | Partial commit still allowed                       |
 
 Cache lives in `.validation-cache/` (gitignored). There is no expiry —
 correctness comes from the content hash, not from a timer.
@@ -71,9 +78,18 @@ scripts/validate.sh --clear      # drop the cache
 ```
 
 `scripts/validation-lib.test.sh` asserts these invariants against a scratch
-repository. It is registered as the `validation:test` check, so editing any of
-the three validation scripts runs it automatically — and since those scripts are
-in the root set, that edit also invalidates every other cache entry.
+repository, plus the commit hook's dispatch predicate — the hook is what enforces
+everything else, so every command shape that reaches a commit is a test case. It
+is registered as the `validation:test` check, covering `scripts/validate.sh`,
+`scripts/validation-lib.sh`, the test itself and `.claude/hooks/`.
+
+`.github/workflows/ci-shell.yml` runs that suite plus shellcheck in CI, since
+shellcheck is not available in the Claude Code web container.
+
+The hook's matcher deliberately errs towards gating: it fires on any command
+containing something that looks like a commit invocation, including one merely
+quoted inside another command. A false positive costs one re-run once validation
+is green; a false negative is an unvalidated commit.
 
 ### Two Things the Gate Deliberately Does
 
@@ -99,7 +115,11 @@ already missed, so reporting divergence too would just be noise.
 
 ### What Validation Does
 
-1. **Detect changes** - staged + unstaged + untracked vs `HEAD` (no `git add` required)
+1. **Detect changes** - the union of `git diff HEAD`, `git diff --cached` and
+   untracked files (no `git add` required). The index is unioned in on its own
+   because a path staged with one content and then restored on disk differs from
+   `HEAD` only in the index — without it the run would exit as "no changes" and
+   the gate would open on a blob no check ever saw
 2. **Skip trivial changes** - docs-only, or nothing matching source/config patterns
 3. **Generate API types** - if `volleymanager-openapi.yaml` changed, before any
    check runs. The generated `schema.ts` is gitignored and so is not itself a

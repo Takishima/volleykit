@@ -36,16 +36,26 @@ else
   COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 fi
 
-# Gate only an actual `git commit` invocation. A plain substring test also fires
-# on commands that merely mention the phrase — `grep "git commit" file`,
-# `echo "run git commit"` — and blocks them for no reason.
+# Decide whether this command runs `git commit`.
 #
-# `git` must start a command (beginning of line, or after a separator), and only
-# git's own global options may sit between it and `commit`. The value-taking
-# ones are spelled out so `git -C dir commit` matches while `git grep commit`
-# does not.
-GIT_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)([=[:space:]])[^[:space:]]+|-[^[:space:]]+)'
-if ! [[ $COMMAND =~ (^|[\;\&\|])[[:space:]]*git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([[:space:]]|$) ]]; then
+# This deliberately errs towards matching. Shell syntax cannot be parsed
+# reliably with a regex, and the two failure directions are not symmetric: a
+# false positive costs one command that has to run again once validation is
+# green, while a false negative is an unvalidated commit — the thing the gate
+# exists to stop. An earlier version anchored on an explicit separator list and
+# let `(git commit ...)`, `then git commit`, `FOO=1 git commit` and — because
+# bash `=~` has no multiline mode, so `^` is start-of-string — every multi-line
+# command straight through.
+#
+# So `git` only has to be preceded by something that is not part of a longer
+# word: start of string, whitespace, newline, quote, paren, semicolon, pipe.
+# `grep "git commit" file` matches too, and that is the acceptable direction.
+#
+# Between `git` and `commit`, only git's own global options are allowed, with
+# the value-taking ones spelled out. That is what keeps `git grep commit` — a
+# real, different command — from being gated.
+GIT_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)[=[:space:]][^[:space:]]+|-[^[:space:]]+)'
+if ! [[ $COMMAND =~ (^|[^[:alnum:]_.-])git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([^[:alnum:]_-]|$) ]]; then
   allow
 fi
 

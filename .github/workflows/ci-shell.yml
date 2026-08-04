@@ -1,0 +1,44 @@
+name: CI Shell
+
+# The validation scripts and the commit hook decide whether every Claude Code
+# commit proceeds, so they get the same static analysis as the rest of the repo.
+# shellcheck is not available in the Claude Code web container, so this runs in
+# CI rather than as a registered check in scripts/validate.sh.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**.sh'
+      - '.claude/hooks/**'
+      - '.github/workflows/ci-shell.yml'
+  pull_request:
+    paths:
+      - 'scripts/**.sh'
+      - '.claude/hooks/**'
+      - '.github/workflows/ci-shell.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Lint shell scripts
+        run: shellcheck --severity=warning scripts/*.sh .claude/hooks/*.sh
+
+  validation-lib-test:
+    name: validation-lib tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run validation library tests
+        run: bash scripts/validation-lib.test.sh

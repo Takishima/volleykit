@@ -52,7 +52,15 @@ for arg in "$@"; do
   esac
 done
 
-# Gate mode is machine-readable: it prints missing check names and nothing else.
+# The gate is always the whole required set; narrowing it to one class would
+# report an open gate that is not open.
+if [ "$GATE_MODE" = true ] && [ ${#CLASS_FILTER[@]} -gt 0 ]; then
+  echo "--gate reports the whole required set and cannot be combined with a class filter." >&2
+  exit 2
+fi
+
+# Gate mode's stdout is a machine-readable record stream (see the GATE MODE
+# block below); say() keeps human commentary off it.
 say() { [ "$GATE_MODE" = true ] || echo -e "$@"; }
 
 # =============================================================================
@@ -77,10 +85,16 @@ declare -A PKG_INPUTS=(
   [help-site]="help-site"
 )
 
-# Files that invalidate every check in the repo. The validation scripts are
-# included on purpose: changing a check's command or input paths must not leave
-# stale PASS entries behind.
-ROOT_PATHS="package.json pnpm-lock.yaml pnpm-workspace.yaml .prettierrc.json .prettierignore scripts/validate.sh scripts/validation-lib.sh"
+# Root files, split by who actually reads them. One list cannot answer both
+# "does this invalidate every check" and "does this invalidate the formatter":
+# a prettier config change has nothing to do with whether the mobile tests still
+# pass, and treating it as repo-wide re-runs the entire monorepo for it.
+#
+# CORE_ROOT also drives ROOT_CHANGED, which marks every package affected. The
+# validation scripts are in it on purpose: changing a check's command or input
+# paths must not leave stale PASS entries behind.
+CORE_ROOT="package.json pnpm-lock.yaml pnpm-workspace.yaml scripts/validate.sh scripts/validation-lib.sh"
+FORMAT_ROOT=".prettierrc.json .prettierignore"
 
 # =============================================================================
 # CHANGE DETECTION
@@ -138,19 +152,32 @@ fi
 # AFFECTED PACKAGES
 # =============================================================================
 
-# Turn a space-separated pathspec list into an anchored regex matching those
-# paths and anything beneath them.
-paths_to_regex() {
+# Anchored regex matching the given paths and anything beneath them.
+paths_to_regex_arr() {
   local out="" p
-  for p in $1; do
+  for p in "$@"; do
+    p=${p//\\/\\\\}
     p=${p//./\\.}
+    p=${p//+/\\+}
+    p=${p//\{/\\\{}
+    p=${p//(/\\(}
+    p=${p//)/\\)}
+    p=${p//[/\\[}
+    p=${p//\*/\\*}
+    p=${p//\?/\\?}
     out="${out:+$out|}$p"
   done
   printf '^(%s)(/|$)' "$out"
 }
 
+# Same, for a whitespace-separated constant.
+paths_to_regex() {
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  paths_to_regex_arr $1
+}
+
 ROOT_CHANGED=false
-matches "$(paths_to_regex "$ROOT_PATHS")" && ROOT_CHANGED=true
+matches "$(paths_to_regex "$CORE_ROOT")" && ROOT_CHANGED=true
 
 declare -A AFFECTED=()
 AFFECTED_LIST=""
@@ -168,40 +195,62 @@ affected() { [ -n "${AFFECTED[$1]:-}" ]; }
 # =============================================================================
 
 declare -a CHECK_NAMES=()
-declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=()
+declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
 
-# CHECK_PATHS is always newline-separated. The format check's paths are real
-# filenames, which may contain spaces; splitting them on IFS would turn
-# "my file.ts" into two pathspecs matching nothing, quietly dropping the file
-# out of that check's cache key.
-register_check() {
-  local name=$1 class=$2 dir=$3 cmd=$4 paths=$5
+# CHECK_PATHS is stored newline-separated so filenames containing spaces survive
+# — splitting "my file.ts" on IFS would produce two pathspecs matching nothing,
+# silently dropping the file from that check's cache key and, because the hash
+# of an empty listing is a constant, leaving the check green forever.
+#
+# Normalising here rather than at the call sites is the point: a caller that
+# forgot to convert would hit exactly that permanently-green failure, with no
+# output distinguishing it from a real pass.
+
+_register() {
+  local name=$1 class=$2 dir=$3 cmd=$4 paths=$5 args=${6-}
   CHECK_NAMES+=("$name")
   CHECK_CLASS["$name"]=$class
   CHECK_DIR["$name"]=$dir
   CHECK_CMD["$name"]=$cmd
   CHECK_PATHS["$name"]=$paths
+  CHECK_ARGS["$name"]=$args
 }
 
-# Split a whitespace-separated constant (our own path lists, never filenames)
-# into the newline form register_check expects.
-nl_paths() { printf '%s\n' $1; }
+# Paths given as a whitespace-separated constant (our own lists, never filenames).
+register_check() {
+  local paths_nl
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  paths_nl=$(printf '%s\n' $5)
+  _register "$1" "$2" "$3" "$4" "$paths_nl"
+}
+
+# Paths given as newline-separated real filenames, which may contain anything.
+#
+# CHECK_ARGS is what the command receives; CHECK_PATHS is what the cache key is
+# built from. They are not the same list: prettier must be handed only files it
+# can parse, while its config files still have to invalidate the result.
+register_check_files() {
+  _register "$1" "$2" "$3" "$4" "$5" "${6-$5}"
+}
 
 read_paths() {
-  local -a out=()
-  mapfile -t out <<<"$1"
+  local -a lines=()
+  mapfile -t lines <<<"$1"
   local p
-  for p in "${out[@]}"; do [ -n "$p" ] && printf '%s\n' "$p"; done
+  for p in "${lines[@]}"; do [ -n "$p" ] && printf '%s\n' "$p"; done
 }
 
 fingerprint_for_check() {
   local -a paths=()
-  mapfile -t paths < <(read_paths "$ROOT_PATHS_NL"; read_paths "${CHECK_PATHS[$1]}")
+  mapfile -t paths < <(
+    read_paths "$CORE_ROOT_NL"
+    read_paths "${CHECK_PATHS[$1]}"
+  )
   fingerprint "${paths[@]}"
 }
 
-# shellcheck disable=SC2086  # ROOT_PATHS is our own constant, split on purpose
-ROOT_PATHS_NL=$(nl_paths "$ROOT_PATHS")
+# shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+CORE_ROOT_NL=$(printf '%s\n' $CORE_ROOT)
 
 # --- format: prettier over the changed files, minus any that were deleted ---
 # (prettier exits non-zero on a path that is not there, which would leave the
@@ -211,51 +260,59 @@ FORMAT_FILES=$(echo "$CHANGED" | grep -E '\.(ts|tsx|js|jsx|mjs|json|css|astro|md
 done || true)
 
 if [ -n "$FORMAT_FILES" ]; then
-  register_check "format" "format" "$ROOT_DIR" "__format__" "$FORMAT_FILES"
+  # FORMAT_ROOT rides along here rather than sitting in CORE_ROOT: prettier
+  # config is the formatter's input and nobody else's.
+  # Cache inputs: the files plus prettier's config. Command arguments: the
+  # files only — prettier cannot parse .prettierignore and errors on it.
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  register_check_files "format" "format" "$ROOT_DIR" "__format__" \
+    "$FORMAT_FILES$(printf '\n%s' $FORMAT_ROOT)" "$FORMAT_FILES"
 fi
 
 if matches '^packages/shared/styles/'; then
   register_check "tokens" "tokens" "$ROOT_DIR" \
     "node scripts/sync-style-tokens.js --check" \
-    "$(nl_paths "packages/shared/styles scripts/sync-style-tokens.js")"
+    "packages/shared/styles scripts/sync-style-tokens.js"
 fi
 
 if affected web; then
-  register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[web]}")"
-  register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "$(nl_paths "${PKG_INPUTS[web]}")"
+  register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
+  register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
   # `build` is `tsc -b && vite build`, so it covers typecheck. `size` is folded
   # in because it can only run against a fresh build.
-  register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "$(nl_paths "${PKG_INPUTS[web]}")"
+  register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "${PKG_INPUTS[web]}"
 fi
 
 if affected shared; then
-  register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[shared]}")"
-  register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "$(nl_paths "${PKG_INPUTS[shared]}")"
-  register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "$(nl_paths "${PKG_INPUTS[shared]}")"
-  register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "$(nl_paths "${PKG_INPUTS[shared]}")"
+  register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "${PKG_INPUTS[shared]}"
+  register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "${PKG_INPUTS[shared]}"
+  register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "${PKG_INPUTS[shared]}"
+  register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "${PKG_INPUTS[shared]}"
 fi
 
 if affected mobile; then
-  register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[mobile]}")"
-  register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "$(nl_paths "${PKG_INPUTS[mobile]}")"
-  register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "$(nl_paths "${PKG_INPUTS[mobile]}")"
+  register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "${PKG_INPUTS[mobile]}"
+  register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "${PKG_INPUTS[mobile]}"
+  register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "${PKG_INPUTS[mobile]}"
 fi
 
 if affected worker; then
-  register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "$(nl_paths "${PKG_INPUTS[worker]}")"
-  register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "$(nl_paths "${PKG_INPUTS[worker]}")"
+  register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "${PKG_INPUTS[worker]}"
+  register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "${PKG_INPUTS[worker]}"
 fi
 
 if affected help-site; then
-  register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "$(nl_paths "${PKG_INPUTS[help-site]}")"
+  register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "${PKG_INPUTS[help-site]}"
 fi
 
-# The validation scripts gate every commit, so they get the same treatment as
-# any other source: touching one runs its test suite before the gate reopens.
-if matches '^scripts/validate\.sh$|^scripts/validation-lib(\.test)?\.sh$'; then
+# The validation scripts and the commit hook gate every commit, so they get the
+# same treatment as any other source: touching one runs the suite that covers
+# them before the gate reopens. The hook in particular is what enforces
+# everything else, and was previously the one file nothing validated.
+if matches '^scripts/validate\.sh$|^scripts/validation-lib(\.test)?\.sh$|^\.claude/hooks/'; then
   register_check "validation:test" "test" "$ROOT_DIR" \
     "bash scripts/validation-lib.test.sh" \
-    "$(nl_paths "scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.sh")"
+    "scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.sh .claude/hooks"
 fi
 
 # =============================================================================
@@ -296,14 +353,24 @@ for name in "${CHECK_NAMES[@]}"; do
 done
 
 # Paths that are both staged and dirty. The checks read the worktree but a
-# commit records the index, so for these two the content that passed is not the
+# commit records the index, so for these the content that passed is not the
 # content being committed — a broken staged blob fixed only on disk would
 # otherwise sail through. Everything else the fingerprint already covers.
+#
+# The filter is the union of every registered check's own paths, not the package
+# table: `format` checks arbitrary changed files, `tokens` reads
+# sync-style-tokens.js, `validation:test` reads the hooks — none of which sit
+# under a package input. Restating the validated set instead of deriving it is
+# how those fell through the filter.
 divergence() {
-  local all=""
-  for pkg in "${!AFFECTED[@]}"; do all="$all ${PKG_INPUTS[$pkg]}"; done
-  # shellcheck disable=SC2086  # our own pathspec constants, split on purpose
-  staged_worktree_divergence | grep -E "$(paths_to_regex "$ROOT_PATHS$all")" || true
+  local -a paths=()
+  mapfile -t paths < <(
+    read_paths "$CORE_ROOT_NL"
+    local n
+    for n in "${CHECK_NAMES[@]}"; do read_paths "${CHECK_PATHS[$n]}"; done
+  )
+  [ ${#paths[@]} -eq 0 ] && return 0
+  staged_worktree_divergence | grep -E "$(paths_to_regex_arr "${paths[@]}")" || true
 }
 
 # =============================================================================
@@ -406,7 +473,7 @@ run_check() {
     __format__)
       # Newline-separated so paths containing spaces survive.
       local -a files=()
-      mapfile -t files <<<"${CHECK_PATHS[$name]}"
+      mapfile -t files <<<"${CHECK_ARGS[$name]}"
       pnpm exec prettier --check "${files[@]}" >"$out" 2>&1 && ok=0
       ;;
     __web_build__)

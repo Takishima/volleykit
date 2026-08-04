@@ -10,7 +10,9 @@
 
 set -uo pipefail
 
-LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/validation-lib.sh"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB="$HERE/validation-lib.sh"
+HOOK="$HERE/../.claude/hooks/pre-git-commit.sh"
 
 PASS=0
 FAIL=0
@@ -24,6 +26,9 @@ not_ok() {
   FAIL=$((FAIL + 1))
   echo "  FAIL - $1"
   [ $# -gt 1 ] && echo "         $2"
+  # Must return 0: the `cond && not_ok X || ok X` call sites would otherwise run
+  # both branches when this returns non-zero, counting one result twice.
+  return 0
 }
 
 assert_eq() {
@@ -39,7 +44,7 @@ assert_ne() {
 SCRATCH=$(mktemp -d)
 trap 'rm -rf "$SCRATCH"' EXIT
 
-cd "$SCRATCH"
+cd "$SCRATCH" || exit 1
 git init -q .
 git config user.email test@example.com
 git config user.name Test
@@ -165,6 +170,59 @@ cache_hit "demo" "$(fingerprint pkg-a)" && not_ok "cache_drop removes the entry"
 cache_store "demo" "$(fingerprint pkg-a)"
 cache_clear
 [ -d "$VOLLEYKIT_CACHE_DIR" ] && not_ok "cache_clear removes the directory" || ok "cache_clear removes the directory"
+
+# --- commit-hook dispatch predicate -------------------------------------------
+#
+# The hook decides whether a Bash command is a `git commit`. Getting this wrong
+# in the permissive direction costs one re-run; getting it wrong in the strict
+# direction is an unvalidated commit, so every shape that reaches a commit must
+# be listed here.
+
+# Mirrors the predicate in pre-git-commit.sh. Kept in sync by asserting the
+# regex line below is present verbatim in the hook.
+gates() {
+  local COMMAND=$1
+  local GIT_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)[=[:space:]][^[:space:]]+|-[^[:space:]]+)'
+  [[ $COMMAND =~ (^|[^[:alnum:]_.-])git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([^[:alnum:]_-]|$) ]]
+}
+
+assert_gated() {
+  if gates "$2"; then ok "gates: $1"; else not_ok "gates: $1" "$2"; fi
+}
+assert_not_gated() {
+  if gates "$2"; then not_ok "passes through: $1" "$2"; else ok "passes through: $1"; fi
+}
+
+C="com""mit"
+assert_gated "plain" "git $C -m x"
+assert_gated "after &&" "git add -A && git $C -m x"
+assert_gated "after ;" "git add -A; git $C -m x"
+assert_gated "after newline" "$(printf 'git add -A\ngit %s -m x' "$C")"
+assert_gated "after cd + newline" "$(printf 'cd packages/web\ngit %s -m x' "$C")"
+assert_gated "in a subshell" "(git $C -m x)"
+assert_gated "inside if/then" "if true; then git $C -m x; fi"
+assert_gated "env-var prefix" "GIT_EDITOR=true git $C"
+assert_gated "-C with a path" "git -C /repo $C -m x"
+assert_gated "-c with a config" "git -c user.name=x $C -m y"
+assert_gated "--git-dir=" "git --git-dir=/r/.git $C -m x"
+assert_gated "--amend" "git $C --amend --no-edit"
+assert_gated "heredoc body" "$(printf 'git %s -F - <<EOF\nmsg\nEOF' "$C")"
+
+assert_not_gated "git grep commit" "git grep $C"
+assert_not_gated "git log" "git log --oneline"
+assert_not_gated "unrelated" "ls -la"
+assert_not_gated "commitizen" "npx ${C}izen"
+assert_not_gated "a path containing the word" "cat docs/git-${C}s.md"
+
+if [ -f "$HOOK" ]; then
+  if grep -qF 'COMMAND =~ (^|[^[:alnum:]_.-])git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([^[:alnum:]_-]|$)' "$HOOK"; then
+    ok "hook uses the predicate asserted above"
+  else
+    not_ok "hook uses the predicate asserted above" "pre-git-commit.sh regex drifted from this test"
+  fi
+else
+  not_ok "hook is present" "$HOOK"
+fi
 
 # --- result -------------------------------------------------------------------
 
