@@ -10,11 +10,17 @@
  * Deriving one from the other keeps that structural rather than editorial, so
  * editing a single number cannot silently reintroduce the equality.
  *
- * Keep this module import-free. tsconfig.app.json excludes src/test/**, and
- * tsconfig.node.json includes only vite.config.ts, so this file is typechecked
- * solely as a followed import of the node project — no DOM lib, no vitest
- * types. Importing @testing-library/react or a vitest type here fails
- * `tsc -b` with an error pointing at the build config rather than at this file.
+ * Nothing in this file may name a DOM or vitest ambient type. tsconfig.app.json
+ * excludes src/test/**, and tsconfig.node.json includes only vite.config.ts, so
+ * this module is typechecked solely as a followed import of the node project:
+ * lib ES2023, types node, no DOM.
+ *
+ * Importing is not the constraint — skipLibCheck hides what
+ * @testing-library/react and vitest need inside their own .d.ts, and both
+ * import clean. What breaks is this file's own source naming a type it has no
+ * lib for: `export type E = HTMLElement` is TS2304 "Cannot find name
+ * 'HTMLElement'", reported here at the line that names it. (Verified by
+ * running `tsc -b` against each case.)
  */
 
 /**
@@ -46,8 +52,9 @@ export const TEST_TIMEOUT_MS = ASYNC_UTIL_TIMEOUT_MS + TEST_TIMEOUT_HEADROOM_MS
  * budget wants the headroom the assertion budget was measured against.
  *
  * Nothing is broken at the current values (6s assertion, 10s hook default).
- * This is preventive: a waitFor inside a hook spends the assertion budget
- * against this one, so a later raise of ASYNC_UTIL_TIMEOUT_MS to the 10s
- * default would recreate the equality above, silently and only for hooks.
+ * This is preventive, and the derivation is what makes it so: a waitFor inside
+ * a hook spends the assertion budget against the hook budget, so had this been
+ * left at Vitest's 10s default, a later raise of ASYNC_UTIL_TIMEOUT_MS to 10000
+ * would have recreated the equality above — silently, and only for hooks.
  */
 export const HOOK_TIMEOUT_MS = TEST_TIMEOUT_MS
