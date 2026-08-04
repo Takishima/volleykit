@@ -61,7 +61,7 @@ echo "test-lib.sh"
 GUARD_BEFORE=$((PASS + FAIL))
 assert_guard_rows "$SCRATCH" "$REPO"
 assert_eq "the guard block contributed every row it defines" \
-  "$((PASS + FAIL - GUARD_BEFORE))" 7
+  "$((PASS + FAIL - GUARD_BEFORE))" "$GUARD_ROW_COUNT"
 
 echo "validation-lib.sh"
 

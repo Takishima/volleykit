@@ -84,11 +84,16 @@ assert_ne() {
   if [ "$2" != "$3" ]; then ok "$1"; else not_ok "$1" "expected different, both '$2'"; fi
 }
 
-# Print the tally and set the suite's exit status.
+# Print the tally and terminate with the suite's status.
+#
+# `|| exit 1` rather than falling off the end with the test's status: as the
+# latter, the exit code held only while `report` was the caller's last
+# statement, so any line added after it — a cleanup, a cd, an echo — would have
+# turned a red suite green.
 report() {
   echo
   echo "$PASS passed, $FAIL failed"
-  [ "$FAIL" -eq 0 ]
+  [ "$FAIL" -eq 0 ] || exit 1
 }
 
 # --- guard coverage ------------------------------------------------------------
@@ -101,6 +106,12 @@ report() {
 # fixture that stops at the wrong one satisfies a status check while asserting
 # nothing about the branch it is named for.
 #
+# The call sites assert this many rows arrived, so neutering the function below
+# cannot silently delete its own coverage. It lives here, next to the rows it
+# counts, rather than as a literal in each caller.
+# shellcheck disable=SC2034  # read by the suites that call assert_guard_rows
+GUARD_ROW_COUNT=7
+
 # $1 is a usable scratch directory outside the repo, $2 the repo root.
 assert_guard_rows() {
   local scratch=$1 repo=$2 out

@@ -204,7 +204,7 @@ assert_absent() {
 GUARD_BEFORE=$((PASS + FAIL))
 assert_guard_rows "$CACHE" "$REPO"
 assert_eq "the guard block contributed every row it defines" \
-  "$((PASS + FAIL - GUARD_BEFORE))" 7
+  "$((PASS + FAIL - GUARD_BEFORE))" "$GUARD_ROW_COUNT"
 
 # --- the table describes the real repo ------------------------------------------
 #
@@ -791,6 +791,7 @@ chmod +x "$MTFAIL/mktemp"
 # argv, not an environment variable: a marker whose job is to suppress
 # assertions must not be settable from the ambient environment, where it would
 # delete both rows and leave only a count nobody compares.
+RESPAWN_BEFORE=$((PASS + FAIL))
 if [ "$NO_RESPAWN" = false ]; then
   for suite in validation-lib.test.sh validate.test.sh; do
     OUT=$(PATH="$MTFAIL:$PATH" bash "$HERE/$suite" --no-respawn 2>&1)
@@ -800,6 +801,13 @@ if [ "$NO_RESPAWN" = false ]; then
         "it would have run against the working repo — ${OUT%%$'\n'*}" ;;
     esac
   done
+
+  # The last conditional block whose rows nobody counted: under --no-respawn it
+  # legitimately contributes none, so the tally alone cannot tell "skipped
+  # deliberately" from "silently stopped asserting". Counted on the normal path,
+  # which is the only one a regression would travel.
+  assert_eq "the refusal block contributed a row per suite" \
+    "$((PASS + FAIL - RESPAWN_BEFORE))" 2
 fi
 
 # --- guards -------------------------------------------------------------------
