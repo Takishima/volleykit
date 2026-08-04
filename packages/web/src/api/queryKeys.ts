@@ -6,9 +6,4 @@
  */
 
 export { queryKeys } from '@volleykit/shared/api'
-export type {
-  SearchConfiguration,
-  PropertyFilter,
-  PropertyOrdering,
-  PersonSearchFilter,
-} from '@volleykit/shared/api'
+export type { SearchConfiguration } from '@volleykit/shared/api'

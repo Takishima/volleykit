@@ -539,8 +539,7 @@ describe('useDemoStore', () => {
       const updatedComp = findCompensationById(compensationId!)
       // Cast to access correctionReason which is in ConvocationCompensationDetailed, not ConvocationCompensation
       const compensation = updatedComp?.convocationCompensation as
-        | { correctionReason?: string | null }
-        | undefined
+        { correctionReason?: string | null } | undefined
 
       expect(compensation?.correctionReason).toBe(testReason)
     })

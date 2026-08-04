@@ -39,7 +39,6 @@ export { Circle } from 'lucide-react'
 export { X } from 'lucide-react'
 export { Plus } from 'lucide-react'
 export { MapPin } from 'lucide-react'
-export { Home } from 'lucide-react'
 export { Car } from 'lucide-react'
 export { TrainFront } from 'lucide-react'
 export { Navigation } from 'lucide-react'
@@ -48,7 +47,6 @@ export { RotateCcw } from 'lucide-react'
 export { RotateCw } from 'lucide-react'
 export { Eye } from 'lucide-react'
 export { EyeOff } from 'lucide-react'
-export { GripHorizontal } from 'lucide-react'
 
 // Status icons
 export { CheckCircle } from 'lucide-react'
@@ -60,7 +58,6 @@ export { Lock } from 'lucide-react'
 export { Inbox } from 'lucide-react'
 export { Info } from 'lucide-react'
 export { WifiOff } from 'lucide-react'
-export { Wifi } from 'lucide-react'
 export { CloudUpload } from 'lucide-react'
 
 // App branding

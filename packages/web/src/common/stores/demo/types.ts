@@ -14,7 +14,7 @@ import { generateDemoUuid } from '@/common/utils/demo-uuid'
 import type { MockNominationLists } from '../demo-generators'
 
 // Re-export generator types for consumers
-export type { DemoAssociationCode, MockNominationLists } from '../demo-generators'
+export type { MockNominationLists } from '../demo-generators'
 
 // Validated game data stored after finalization
 export interface ValidatedGameData {

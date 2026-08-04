@@ -30,8 +30,7 @@ export function isCompensationEditable(compensation: CompensationRecord): boolea
   }
 
   const cc = compensation.convocationCompensation as
-    | ConvocationCompensationWithLockFlags
-    | undefined
+    ConvocationCompensationWithLockFlags | undefined
   if (!cc) return false
 
   // Already paid - not editable

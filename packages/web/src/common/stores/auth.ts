@@ -18,8 +18,6 @@ import { useSettingsStore, DEMO_HOME_LOCATION } from './settings'
 
 // Re-export types so existing consumers still work
 export type { AttributeValue, RoleDefinition } from '@/common/types/active-party'
-export type { AuthActions } from './auth-actions-registry'
-export { registerAuthActions } from './auth-actions-registry'
 
 /**
  * Callback function to clear the React Query cache.

@@ -4,7 +4,7 @@ import {
   DEFAULT_TOAST_DURATION_MS,
 } from '@volleykit/shared/stores'
 
-export type { Toast, ToastType } from '@volleykit/shared/stores'
+export type { Toast } from '@volleykit/shared/stores'
 export { DEFAULT_TOAST_DURATION_MS }
 
 /** @deprecated Use DEFAULT_TOAST_DURATION_MS instead */

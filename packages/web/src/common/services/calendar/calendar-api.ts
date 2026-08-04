@@ -20,7 +20,7 @@ import { HttpStatus } from '@/common/utils/constants'
 import { parseCalendarFeed, type CalendarAssignment, type ParseResult } from './ical'
 
 // Re-export types for consumers
-export type { CalendarAssignment, ParseResult } from './ical'
+export type { CalendarAssignment } from './ical'
 
 /** Calendar codes are exactly 6 alphanumeric characters */
 const CALENDAR_CODE_PATTERN = /^[a-zA-Z0-9]{6}$/

@@ -20,18 +20,9 @@ import { useValidationActions } from './useValidationActions'
 import { hasRosterModifications } from '../api/api-helpers'
 
 // Re-export types for consumers
-export type {
-  RosterPanelState,
-  ScorerPanelState,
-  ScoresheetPanelState,
-  ValidationState,
-  PanelCompletionStatus,
-  ValidatedGameInfo,
-  UseValidationStateResult,
-} from './types'
+export type { UseValidationStateResult } from './types'
 
 // Re-export for consumers of this hook
-export type { PendingScorerData as PendingScorerInfo } from '@/common/stores/demo'
 
 /**
  * Hook to manage validation state across all panels in the ValidateGameModal.
@@ -103,8 +94,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     if (!scoresheet?.closedAt) return null
     // Cast to include birthday which is available in demo mode
     const writerPerson = scoresheet.writerPerson as
-      | { displayName?: string; birthday?: string }
-      | undefined
+      { displayName?: string; birthday?: string } | undefined
     return {
       validatedAt: scoresheet.closedAt,
       scorerName: writerPerson?.displayName ?? 'Unknown',
@@ -117,8 +107,7 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     if (isValidated) return null
     // Cast to include birthday which is available in demo mode
     const writerPerson = gameDetailsQuery.data?.scoresheet?.writerPerson as
-      | { __identity?: string; displayName?: string; birthday?: string }
-      | undefined
+      { __identity?: string; displayName?: string; birthday?: string } | undefined
     if (!writerPerson?.__identity) return null
     return {
       __identity: writerPerson.__identity,

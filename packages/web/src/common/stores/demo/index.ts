@@ -33,14 +33,7 @@ import {
 import { createValidationSlice } from './validation'
 
 // Re-export types and constants for consumers
-export type {
-  DemoState,
-  DemoAssociationCode,
-  MockNominationLists,
-  ValidatedGameData,
-  PendingScorerData,
-  AssignmentCompensationEdit,
-} from './types'
+export type { DemoState, PendingScorerData, AssignmentCompensationEdit } from './types'
 
 export { DEMO_USER_PERSON_IDENTITY } from './types'
 
