@@ -178,22 +178,24 @@ cache_clear
 # direction is an unvalidated commit, so every shape that reaches a commit must
 # be listed here.
 
-# Mirrors the predicate in pre-git-commit.sh. Kept in sync by asserting the
-# regex line below is present verbatim in the hook.
-gates() {
-  local COMMAND=$1
-  local GIT_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)[=[:space:]][^[:space:]]+|-[^[:space:]]+)'
-  [[ $COMMAND =~ (^|[^[:alnum:]_.-])git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([^[:alnum:]_-]|$) ]]
-}
+# One definition, sourced from the same file the hook sources. An earlier
+# version copied the predicate here and used a `grep` guard to detect drift;
+# the guard pinned only the match expression, so mutating the option list in
+# the hook left this suite green while the gate was bypassable.
+# shellcheck source=../.claude/hooks/lib/is-git-commit.sh
+source "$HERE/../.claude/hooks/lib/is-git-commit.sh"
 
 assert_gated() {
-  if gates "$2"; then ok "gates: $1"; else not_ok "gates: $1" "$2"; fi
+  if is_git_commit "$2"; then ok "gates: $1"; else not_ok "gates: $1" "$2"; fi
 }
 assert_not_gated() {
-  if gates "$2"; then not_ok "passes through: $1" "$2"; else ok "passes through: $1"; fi
+  if is_git_commit "$2"; then not_ok "passes through: $1" "$2"; else ok "passes through: $1"; fi
 }
 
+# The word is spliced so this file's own fixtures do not trip the hook when the
+# test itself is edited and committed.
 C="com""mit"
+
 assert_gated "plain" "git $C -m x"
 assert_gated "after &&" "git add -A && git $C -m x"
 assert_gated "after ;" "git add -A; git $C -m x"
@@ -207,6 +209,9 @@ assert_gated "-c with a config" "git -c user.name=x $C -m y"
 assert_gated "--git-dir=" "git --git-dir=/r/.git $C -m x"
 assert_gated "--amend" "git $C --amend --no-edit"
 assert_gated "heredoc body" "$(printf 'git %s -F - <<EOF\nmsg\nEOF' "$C")"
+assert_gated "absolute path" "/usr/bin/git $C -m x"
+assert_gated "tab separated" "$(printf 'git\t%s -m x' "$C")"
+assert_gated "backslash continuation" "$(printf 'git \\\n  %s -m x' "$C")"
 
 assert_not_gated "git grep commit" "git grep $C"
 assert_not_gated "git log" "git log --oneline"
@@ -214,14 +219,33 @@ assert_not_gated "unrelated" "ls -la"
 assert_not_gated "commitizen" "npx ${C}izen"
 assert_not_gated "a path containing the word" "cat docs/git-${C}s.md"
 
-if [ -f "$HOOK" ]; then
-  if grep -qF 'COMMAND =~ (^|[^[:alnum:]_.-])git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([^[:alnum:]_-]|$)' "$HOOK"; then
-    ok "hook uses the predicate asserted above"
+# --- commit-hook registration -------------------------------------------------
+#
+# The hook only runs because .claude/settings.json registers it. That file is a
+# gate input like any other; without the entry, validation is advisory.
+
+SETTINGS="$HERE/../.claude/settings.json"
+if [ -f "$SETTINGS" ]; then
+  if grep -q 'pre-git-commit\.sh' "$SETTINGS"; then
+    ok "settings.json registers the commit hook"
   else
-    not_ok "hook uses the predicate asserted above" "pre-git-commit.sh regex drifted from this test"
+    not_ok "settings.json registers the commit hook" "no reference to pre-git-commit.sh"
+  fi
+  if command -v jq >/dev/null 2>&1; then
+    if [ "$(jq -r '[.hooks.PreToolUse[]?.hooks[]?.command // ""] | map(select(test("pre-git-commit"))) | length' "$SETTINGS" 2>/dev/null)" -ge 1 ]; then
+      ok "the registration is a PreToolUse hook"
+    else
+      not_ok "the registration is a PreToolUse hook" "not found under .hooks.PreToolUse"
+    fi
   fi
 else
-  not_ok "hook is present" "$HOOK"
+  not_ok "settings.json is present" "$SETTINGS"
+fi
+
+if [ -x "$HOOK" ]; then
+  ok "the hook is executable"
+else
+  not_ok "the hook is executable" "chmod +x .claude/hooks/pre-git-commit.sh"
 fi
 
 # --- result -------------------------------------------------------------------

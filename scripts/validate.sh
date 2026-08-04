@@ -96,6 +96,15 @@ declare -A PKG_INPUTS=(
 CORE_ROOT="package.json pnpm-lock.yaml pnpm-workspace.yaml scripts/validate.sh scripts/validation-lib.sh"
 FORMAT_ROOT=".prettierrc.json .prettierignore"
 
+# Everything that decides whether the commit gate runs and what it decides:
+# the hook, the file that registers the hook, and the scripts behind it. One
+# list feeding both the trigger and the check's inputs — stating it twice is
+# how .claude/settings.json ended up in neither.
+#
+# .github/workflows/ci-shell.yml deliberately uses a broader filter
+# (every scripts/*.sh) because shellcheck covers files this check does not.
+SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh"
+
 # =============================================================================
 # CHANGE DETECTION
 # =============================================================================
@@ -115,17 +124,17 @@ if ! echo "$CHANGED" | grep -qvE '\.md$'; then
   exit 0
 fi
 
-# `css` is here because the design-token check reads design-tokens.css, and `sh`
-# because the validation scripts and their test are themselves checked. Leaving
-# either out makes a registered check unreachable for the very edit it exists to
-# catch.
-SOURCE_PATTERN='\.(ts|tsx|js|jsx|mjs|astro|css|sh)$'
-CONFIG_PATTERN='(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vite\.config|eslint\.config|\.prettierrc|\.prettierignore|volleymanager-openapi\.yaml)'
-
-if ! matches "$SOURCE_PATTERN" && ! matches "$CONFIG_PATTERN"; then
-  say "${YELLOW}No source or config changes, nothing to validate.${NC}"
-  exit 0
-fi
+# Deliberately no source/config extension filter here. There used to be one, and
+# it was a second copy of "does this change validate to anything" — a question
+# the registry below already answers by ending up empty. The two copies drifted
+# twice: the pattern omitted `css`, making the design-token check unreachable for
+# the very file it watches, and it matched `tsconfig.json` but not
+# `tsconfig.app.json`, which is what `tsc -b` reads for the web build. Both
+# commits passed the gate with nothing run.
+#
+# The cost of dropping it is that an asset-only change under a package now runs
+# that package's checks. That is the conservative direction, it is cached, and
+# it cannot silently skip.
 
 # =============================================================================
 # API TYPE GENERATION
@@ -152,10 +161,15 @@ fi
 # AFFECTED PACKAGES
 # =============================================================================
 
-# Anchored regex matching the given paths and anything beneath them.
-paths_to_regex_arr() {
+# Anchored regex matching the given paths and anything beneath them. Callers
+# pass our own constants, never arbitrary filenames — divergence() compares
+# literally instead, precisely because filenames can contain metacharacters.
+# The escape chain covers every ERE metacharacter anyway so that adding a path
+# with one cannot quietly change what matches.
+paths_to_regex() {
   local out="" p
-  for p in "$@"; do
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  for p in $1; do
     p=${p//\\/\\\\}
     p=${p//./\\.}
     p=${p//+/\\+}
@@ -165,15 +179,12 @@ paths_to_regex_arr() {
     p=${p//[/\\[}
     p=${p//\*/\\*}
     p=${p//\?/\\?}
+    p=${p//|/\\|}
+    p=${p//^/\\^}
+    p=${p//\$/\\\$}
     out="${out:+$out|}$p"
   done
   printf '^(%s)(/|$)' "$out"
-}
-
-# Same, for a whitespace-separated constant.
-paths_to_regex() {
-  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
-  paths_to_regex_arr $1
 }
 
 ROOT_CHANGED=false
@@ -309,10 +320,10 @@ fi
 # same treatment as any other source: touching one runs the suite that covers
 # them before the gate reopens. The hook in particular is what enforces
 # everything else, and was previously the one file nothing validated.
-if matches '^scripts/validate\.sh$|^scripts/validation-lib(\.test)?\.sh$|^\.claude/hooks/'; then
+if matches "$(paths_to_regex "$SHELL_INPUTS")"; then
   register_check "validation:test" "test" "$ROOT_DIR" \
     "bash scripts/validation-lib.test.sh" \
-    "scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.sh .claude/hooks"
+    "$SHELL_INPUTS"
 fi
 
 # =============================================================================
@@ -362,6 +373,11 @@ done
 # sync-style-tokens.js, `validation:test` reads the hooks — none of which sit
 # under a package input. Restating the validated set instead of deriving it is
 # how those fell through the filter.
+# Membership is tested literally, not with a regex. These are real filenames:
+# a path containing `|`, `$` or `^` either drops out of an escaped-regex filter
+# silently — and `divergence()` ends in `|| true`, so the record vanishes and
+# the gate opens — or, for `|`, opens an alternation that matches unrelated
+# paths.
 divergence() {
   local -a paths=()
   mapfile -t paths < <(
@@ -369,8 +385,17 @@ divergence() {
     local n
     for n in "${CHECK_NAMES[@]}"; do read_paths "${CHECK_PATHS[$n]}"; done
   )
-  [ ${#paths[@]} -eq 0 ] && return 0
-  staged_worktree_divergence | grep -E "$(paths_to_regex_arr "${paths[@]}")" || true
+
+  local file p
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    for p in "${paths[@]}"; do
+      if [ "$file" = "$p" ] || [ "${file##"$p"/}" != "$file" ]; then
+        printf '%s\n' "$file"
+        break
+      fi
+    done
+  done < <(staged_worktree_divergence)
 }
 
 # =============================================================================

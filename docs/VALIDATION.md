@@ -89,15 +89,24 @@ Non-build checks run in parallel, then all builds in parallel. The web build
 includes `tsc -b` and the bundle-size check. API types regenerate first if
 `volleymanager-openapi.yaml` changed.
 
-**Skipped entirely**: docs-only changes, or nothing matching the source
-(`.ts .tsx .js .jsx .mjs .astro .css .sh`) or config patterns.
+**Skipped entirely**: docs-only changes, and changes that register no check at
+all. There is no extension allowlist — an asset-only change under a package
+runs that package's checks rather than being silently skipped.
 
 ## Changing the Validation Scripts
 
 `scripts/validation-lib.test.sh` covers the fingerprint, cache, change-detection
 and commit-hook invariants. It is the `validation:test` check, triggered by any
-edit to `scripts/validate.sh`, `scripts/validation-lib.sh`, itself, or
-`.claude/hooks/`. `.github/workflows/ci-shell.yml` also runs it plus shellcheck.
+edit to `SHELL_INPUTS` — the scripts, `.claude/hooks/`, and
+`.claude/settings.json`, which is what registers the hook in the first place.
+
+The hook's predicate lives in `.claude/hooks/lib/is-git-commit.sh` and is
+sourced by both the hook and the test, so there is one definition rather than
+two that must agree. It errs towards gating: it fires on anything resembling a
+commit invocation, including one quoted inside another command. A false positive
+costs one re-run; a false negative is an unvalidated commit.
+
+`.github/workflows/ci-shell.yml` runs the suite plus shellcheck.
 
 ## Auto-Fix Commands
 

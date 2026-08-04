@@ -31,8 +31,13 @@ jobs:
       - name: Install shellcheck
         run: sudo apt-get update && sudo apt-get install -y shellcheck
 
+      # `info` is included because SC2086 (unquoted expansion) lives there, and
+      # that is the class this code has tripped on repeatedly. The three
+      # exclusions are style notes, not defects: SC1091 cannot follow a sourced
+      # path it was not given, SC2015 flags the `a && b || c` the test helpers
+      # use deliberately, SC2016 flags single-quoted `$` in regex constants.
       - name: Lint shell scripts
-        run: shellcheck --severity=warning scripts/*.sh .claude/hooks/*.sh
+        run: shellcheck -x --severity=info -e SC1091,SC2015,SC2016 scripts/*.sh .claude/hooks/*.sh .claude/hooks/lib/*.sh
 
   validation-lib-test:
     name: validation-lib tests

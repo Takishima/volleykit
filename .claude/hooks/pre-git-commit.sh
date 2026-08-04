@@ -36,28 +36,13 @@ else
   COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
 fi
 
-# Decide whether this command runs `git commit`.
-#
-# This deliberately errs towards matching. Shell syntax cannot be parsed
-# reliably with a regex, and the two failure directions are not symmetric: a
-# false positive costs one command that has to run again once validation is
-# green, while a false negative is an unvalidated commit — the thing the gate
-# exists to stop. An earlier version anchored on an explicit separator list and
-# let `(git commit ...)`, `then git commit`, `FOO=1 git commit` and — because
-# bash `=~` has no multiline mode, so `^` is start-of-string — every multi-line
-# command straight through.
-#
-# So `git` only has to be preceded by something that is not part of a longer
-# word: start of string, whitespace, newline, quote, paren, semicolon, pipe.
-# `grep "git commit" file` matches too, and that is the acceptable direction.
-#
-# Between `git` and `commit`, only git's own global options are allowed, with
-# the value-taking ones spelled out. That is what keeps `git grep commit` — a
-# real, different command — from being gated.
-GIT_OPT='(-[Cc][[:space:]]+[^[:space:]]+|--(git-dir|work-tree|namespace|exec-path)[=[:space:]][^[:space:]]+|-[^[:space:]]+)'
-if ! [[ $COMMAND =~ (^|[^[:alnum:]_.-])git([[:space:]]+$GIT_OPT)*[[:space:]]+commit([^[:alnum:]_-]|$) ]]; then
-  allow
-fi
+# The predicate lives in lib/ so this hook and the test suite share one
+# definition rather than two that must be kept in agreement.
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./lib/is-git-commit.sh
+source "$HOOK_DIR/lib/is-git-commit.sh" || allow
+
+is_git_commit "$COMMAND" || allow
 
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -z "$ROOT_DIR" ] && allow
