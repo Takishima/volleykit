@@ -1,11 +1,24 @@
 // Polyfills must be imported first (via setupFiles order in vite.config.ts)
 import '@testing-library/jest-dom'
+import { configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 
 import { preloadDateLocales } from '@/common/hooks/useDateFormat'
 import { preloadTranslations } from '@/i18n'
 
 import { server } from './msw/server'
+
+/**
+ * Timeout for waitFor/findBy* assertions.
+ *
+ * Testing Library defaults to 1s, which several suites that render lazy()
+ * trees can exceed on a loaded CI runner purely from chunk resolution —
+ * a timeout, not a real failure. 5s keeps genuine hangs failing fast while
+ * removing that class of flake.
+ */
+const ASYNC_UTIL_TIMEOUT_MS = 5000
+
+configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS })
 
 // Start MSW server before all tests
 beforeAll(() => {
