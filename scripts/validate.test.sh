@@ -69,6 +69,10 @@ git config user.name Test
 # The fixture cannot check the table against the REAL repo — `mkdir -p` creates
 # whatever the table names, so the scratch and the table agree by construction.
 # That direction is asserted separately, against $REPO, in the block below.
+# Defaulted so a scrape that misses is a red row rather than a `set -u` abort
+# with no tally at all — the single-line sed does not match a reformatted
+# multi-line declaration, which is a valid edit to validate.sh.
+declare -a PKG_NAMES=()
 eval "$(sed -n '/^declare -a PKG_NAMES=(/p' "$HERE/validate.sh")"
 eval "$(sed -n '/^declare -A PKG_INPUTS=(/,/^)/p' "$HERE/validate.sh")"
 
@@ -222,11 +226,24 @@ mapfile -t PATH_CONSTS < <(
 )
 eval "$(sed -n '/^[A-Z_]*\(INPUTS\|ROOT\)=/p' "$HERE/validate.sh" "$HERE/shellcheck.sh")"
 
-if [ "${#PATH_CONSTS[@]}" -ge 5 ]; then
-  ok "path constants are scraped from the scripts (${#PATH_CONSTS[@]} found)"
-else
-  not_ok "path constants are scraped from the scripts" "found ${#PATH_CONSTS[@]}, expected at least 5"
-fi
+# Each scrape is compared against a count it did not produce. A floor was not
+# enough: EXPECTED_ROWS is now derived from these array sizes, so a scrape that
+# under-collects drops the rows and the expectation together and the total —
+# the outside lever everywhere else — is inside this one.
+#
+# The declaration count is matched with a looser pattern than the scrape, so a
+# constant written `readonly FOO_INPUTS=` is counted here and missed there,
+# which is the direction that goes unasserted otherwise. PKG_INPUTS comes from a
+# separate range expression, so it survives the single-line failure above.
+mapfile -t PATH_CONST_DECLS < <(
+  grep -hE '^[[:space:]]*(readonly |export )?[A-Z][A-Z_]*(INPUTS|ROOT)=' \
+    "$HERE/validate.sh" "$HERE/shellcheck.sh" |
+    sed -E 's/^[[:space:]]*(readonly |export )?([A-Z_]+)=.*/\2/' | sort -u
+)
+assert_eq "every path constant in the scripts is scraped" \
+  "${#PATH_CONSTS[@]}" "${#PATH_CONST_DECLS[@]}"
+assert_eq "the package table is scraped" \
+  "${#PKG_NAMES[@]}" "${#PKG_INPUTS[@]}"
 
 check_paths_exist() {
   local label=$1 missing=""
@@ -853,7 +870,7 @@ reset_tree
 # deleting that block whole takes its own lever with it. Only a total pinned
 # outside all of them catches a block disappearing entirely.
 #
-# Only the rows this file writes are pinned by hand. Fifteen more are generated
+# Only the rows this file writes are pinned by hand. The rest are generated
 # per entry of PKG_NAMES and PATH_CONSTS, which are scraped out of validate.sh
 # and shellcheck.sh — a literal covering those would put back the constant the
 # scrape exists to remove, one layer up: adding a package correctly would redden
@@ -866,7 +883,7 @@ reset_tree
 #
 # `+ 1` is this row counting itself, so the expectation equals the number report
 # prints.
-EXPECTED_ROWS=$((74 + 2 * ${#PKG_NAMES[@]} + ${#PATH_CONSTS[@]} + EXPECTED_REFUSAL_ROWS))
+EXPECTED_ROWS=$((75 + 2 * ${#PKG_NAMES[@]} + ${#PATH_CONSTS[@]} + EXPECTED_REFUSAL_ROWS))
 assert_eq "the suite ran every row it defines" "$((PASS + FAIL + 1))" "$EXPECTED_ROWS"
 
 # --- result -------------------------------------------------------------------
