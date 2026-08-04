@@ -17,41 +17,17 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_GUARD="$(cd "$HERE/.." && pwd)"
+REPO="$(cd "$HERE/.." && pwd)"
 LIB="$HERE/validation-lib.sh"
 # shellcheck source=./test-lib.sh
 source "$HERE/test-lib.sh" || exit 1
 HOOK="$HERE/../.claude/hooks/pre-git-commit.sh"
 
-PASS=0
-FAIL=0
-
-ok() {
-  PASS=$((PASS + 1))
-  echo "  ok   - $1"
-}
-
-not_ok() {
-  FAIL=$((FAIL + 1))
-  echo "  FAIL - $1"
-  [ $# -gt 1 ] && echo "         $2"
-  # Must return 0: the `cond && not_ok X || ok X` call sites would otherwise run
-  # both branches when this returns non-zero, counting one result twice.
-  return 0
-}
-
-assert_eq() {
-  if [ "$2" = "$3" ]; then ok "$1"; else not_ok "$1" "expected equal, got '$2' vs '$3'"; fi
-}
-
-assert_ne() {
-  if [ "$2" != "$3" ]; then ok "$1"; else not_ok "$1" "expected different, both '$2'"; fi
-}
 
 # --- scratch repository -------------------------------------------------------
 
 SCRATCH=$(mktemp -d)
-require_scratch "$SCRATCH" "$(basename "$0")" "$REPO_GUARD" || exit 1
+require_scratch "$SCRATCH" "$(basename "$0")" "$REPO" || exit 1
 trap 'rm -rf "$SCRATCH"' EXIT
 
 cd "$SCRATCH" || exit 1
@@ -76,24 +52,9 @@ export VOLLEYKIT_CACHE_DIR="$SCRATCH/.cache"
 # shellcheck source=./validation-lib.sh
 source "$LIB" || exit 1
 
-# --- the scratch guard ----------------------------------------------------------
-#
-# Both suites source test-lib.sh and both are protected by it, so both assert it.
-# Pinned in only one, a change made while running the other reads as green.
+echo "test-lib.sh"
 
-require_scratch "$REPO_GUARD/scripts" "probe" "$REPO_GUARD" 2>/dev/null &&
-  not_ok "a scratch path inside the repo is refused" || ok "a scratch path inside the repo is refused"
-
-# A fresh subdirectory, not $SCRATCH itself — by this point that is a git repo,
-# which the .git branch correctly refuses.
-mkdir -p "$SCRATCH/probe-ok"
-require_scratch "$SCRATCH/probe-ok" "probe" "$REPO_GUARD" 2>/dev/null &&
-  ok "a real scratch path is accepted" || not_ok "a real scratch path is accepted"
-rmdir "$SCRATCH/probe-ok"
-
-require_temp_file "$REPO_GUARD/package.json" "probe" "$REPO_GUARD" 2>/dev/null &&
-  not_ok "a temp-file path inside the repo is refused" ||
-  ok "a temp-file path inside the repo is refused"
+assert_guard_rows "$SCRATCH" "$REPO"
 
 echo "validation-lib.sh"
 

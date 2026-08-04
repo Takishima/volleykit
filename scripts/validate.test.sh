@@ -33,20 +33,6 @@ source "$HERE/test-lib.sh" || exit 1
 # shellcheck source=./shellcheck.sh
 source "$HERE/shellcheck.sh" || exit 1
 
-PASS=0
-FAIL=0
-
-ok() {
-  PASS=$((PASS + 1))
-  echo "  ok   - $1"
-}
-
-not_ok() {
-  FAIL=$((FAIL + 1))
-  echo "  FAIL - $1"
-  [ $# -gt 1 ] && echo "         $2"
-  return 0
-}
 
 # --- scratch monorepo ---------------------------------------------------------
 
@@ -210,39 +196,8 @@ assert_absent() {
 }
 
 # --- the scratch guard ----------------------------------------------------------
-#
-# require_scratch is the only thing between a failed mktemp and the working repo.
-# Its containment and .git branches were added without a lever; called directly
-# here, so no subprocess and no fork.
 
-require_scratch "" "probe" "$REPO" 2>/dev/null &&
-  not_ok "an empty scratch path is refused" || ok "an empty scratch path is refused"
-
-# An existing directory inside the repo, with no .git of its own — otherwise the
-# empty/not-a-directory branch or the .git branch answers first and the
-# containment test is never reached.
-require_scratch "$REPO/scripts" "probe" "$REPO" 2>/dev/null &&
-  not_ok "a scratch path inside the repo is refused" || ok "a scratch path inside the repo is refused"
-
-mkdir -p "$CACHE/probe-repo/.git"
-require_scratch "$CACHE/probe-repo" "probe" "$REPO" 2>/dev/null &&
-  not_ok "a scratch path that is already a repository is refused" ||
-  ok "a scratch path that is already a repository is refused"
-rm -rf "$CACHE/probe-repo"
-
-require_scratch "$CACHE" "probe" "$REPO" 2>/dev/null &&
-  ok "a real scratch path is accepted" || not_ok "a real scratch path is accepted"
-
-require_temp_file "" "probe" "$REPO" 2>/dev/null &&
-  not_ok "an empty temp-file path is refused" || ok "an empty temp-file path is refused"
-
-require_temp_file "$CACHE" "probe" "$REPO" 2>/dev/null &&
-  not_ok "a directory is refused as a temp file" || ok "a directory is refused as a temp file"
-
-# A real file inside the repo, so the not-a-file branch does not answer first.
-require_temp_file "$REPO/package.json" "probe" "$REPO" 2>/dev/null &&
-  not_ok "a temp-file path inside the repo is refused" ||
-  ok "a temp-file path inside the repo is refused"
+assert_guard_rows "$CACHE" "$REPO"
 
 # --- the table describes the real repo ------------------------------------------
 #
@@ -874,6 +829,4 @@ reset_tree
 
 # --- result -------------------------------------------------------------------
 
-echo
-echo "$PASS passed, $FAIL failed"
-[ "$FAIL" -eq 0 ]
+report
