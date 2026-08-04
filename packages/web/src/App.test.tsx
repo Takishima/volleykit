@@ -631,12 +631,9 @@ describe('ProtectedRoute', () => {
 
     render(<App />)
 
-    await waitFor(
-      () => {
-        expect(mockInitializeDemoData).toHaveBeenCalledWith('SV')
-      },
-      { timeout: 2000 }
-    )
+    await waitFor(() => {
+      expect(mockInitializeDemoData).toHaveBeenCalledWith('SV')
+    })
   })
 
   it('does not reinitialize demo data when assignments exist', async () => {

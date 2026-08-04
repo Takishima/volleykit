@@ -33,9 +33,6 @@ import type { ZodLikeSchema } from '@volleykit/shared/api'
 export {
   // Field schemas
   dateSchema,
-  refereePositionSchema,
-  convocationStatusSchema,
-  exchangeStatusSchema,
   // Entity schemas
   assignmentSchema,
   compensationRecordSchema,
@@ -58,17 +55,8 @@ export {
   associationSettingsSchema,
   seasonSchema,
   possibleNominationsResponseSchema,
-  // Referee backup schemas
-  refereeBackupEntrySchema,
   refereeBackupResponseSchema,
-  // Types
-  type Assignment,
-  type CompensationRecord,
-  type GameExchange,
   type ValidatedPersonSearchResult,
-  type AssignmentsResponse,
-  type CompensationsResponse,
-  type ExchangesResponse,
   type ZodLikeSchema,
 } from '@volleykit/shared/api'
 

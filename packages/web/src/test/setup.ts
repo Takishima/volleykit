@@ -1,11 +1,15 @@
 // Polyfills must be imported first (via setupFiles order in vite.config.ts)
 import '@testing-library/jest-dom'
+import { configure } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll } from 'vitest'
 
 import { preloadDateLocales } from '@/common/hooks/useDateFormat'
 import { preloadTranslations } from '@/i18n'
 
 import { server } from './msw/server'
+import { ASYNC_UTIL_TIMEOUT_MS } from './timeouts'
+
+configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS })
 
 // Start MSW server before all tests
 beforeAll(() => {

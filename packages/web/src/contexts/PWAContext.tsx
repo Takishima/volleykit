@@ -18,6 +18,13 @@ function PWAProviderPassthrough({ children }: PWAProviderProps) {
  * Lazy-loaded PWA Provider.
  * Uses conditional lazy loading to prevent the virtual:pwa-register import
  * from being resolved when PWA is disabled (PR preview builds).
+ *
+ * lazy() resolves its factory once per module registry and caches the result,
+ * so __PWA_ENABLED__ is read only on the first PWAProvider render. That is
+ * fine in the app, where the flag is build-time constant, but in tests it
+ * means the first render decides the branch for the whole file: rendering
+ * PWAProvider once with the flag stubbed false caches the passthrough for
+ * every later test, with no local signal.
  */
 const LazyPWAProvider = lazy(() =>
   __PWA_ENABLED__

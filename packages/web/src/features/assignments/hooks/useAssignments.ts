@@ -29,7 +29,6 @@ export { getDateRangeForPeriod, type DatePeriod } from '../utils/date-range'
 
 // Re-export calendar assignments hook for calendar mode
 export { useCalendarAssignments } from './useCalendarAssignments'
-export type { CalendarAssignment } from './useCalendarAssignments'
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 // Using `|| []` creates a new array reference on each render, while this constant

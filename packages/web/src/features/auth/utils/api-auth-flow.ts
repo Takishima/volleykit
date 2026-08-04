@@ -35,10 +35,7 @@ import {
   isDashboardHtmlContent,
 } from '@/features/auth/utils/auth-parsers'
 import { extractCalendarCodeFromHtml } from '@/features/auth/utils/calendar-code-extractor'
-import {
-  filterRefereeOccupations,
-  parseOccupationsFromActiveParty,
-} from '@/features/auth/utils/parseOccupations'
+import { parseOccupationsFromActiveParty } from '@/features/auth/utils/parseOccupations'
 
 function getLoginPageUrl() {
   return `${getApiBaseUrl()}/login`
@@ -499,5 +496,4 @@ export async function performApiSessionCheck(
 }
 
 // Re-export for use by auth store
-export { filterRefereeOccupations }
 export { SESSION_CHECK_GRACE_PERIOD_MS }

@@ -6,45 +6,13 @@
  * - useAssignments.ts - Assignment queries and mutations
  * - useCompensations.ts - Compensation queries and mutations
  * - useExchanges.ts - Exchange queries and mutations
- * - useSettings.ts - Association settings and season hooks
- * - usePaginatedQuery.ts - Shared pagination utilities
  */
 
-// Re-export query keys for backwards compatibility
-export { queryKeys } from '@/api/queryKeys'
-
 // Assignment hooks and types
-export {
-  type DatePeriod,
-  getDateRangeForPeriod,
-  useAssignments,
-  useUpcomingAssignments,
-  usePastAssignments,
-  useValidationClosedAssignments,
-  useAssignmentDetails,
-  useCalendarAssignments,
-  type CalendarAssignment,
-} from '@/features/assignments/hooks/useAssignments'
+export { useAssignments, useAssignmentDetails } from '@/features/assignments/hooks/useAssignments'
 
 // Compensation hooks and types
-export {
-  type CompensationUpdateData,
-  type CompensationErrorKey,
-  COMPENSATION_ERROR_KEYS,
-  useCompensations,
-  usePaidCompensations,
-  useUnpaidCompensations,
-  useUpdateCompensation,
-  useUpdateAssignmentCompensation,
-} from '@/features/compensations/hooks/useCompensations'
+export { useCompensations } from '@/features/compensations/hooks/useCompensations'
 
 // Exchange hooks and types
-export {
-  type ExchangeStatus,
-  useGameExchanges,
-  useApplyForExchange,
-  useRemoveOwnExchange,
-} from '@/features/exchanges/hooks/useExchanges'
-
-// Settings hooks
-export { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
+export { useGameExchanges, useApplyForExchange } from '@/features/exchanges/hooks/useExchanges'

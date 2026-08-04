@@ -216,8 +216,7 @@ describe('PWAContext', () => {
       const mockRegistration = { update: vi.fn() }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -321,8 +320,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -359,8 +357,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -397,8 +394,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -441,8 +437,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -492,8 +487,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -542,8 +536,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
@@ -587,8 +580,7 @@ describe('PWAContext', () => {
       }
 
       let onRegisteredSWCallback:
-        | ((url: string, reg: ServiceWorkerRegistration) => void)
-        | undefined
+        ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
       const mockRegisterSW = vi.fn((options) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()

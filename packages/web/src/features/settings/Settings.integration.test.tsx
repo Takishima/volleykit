@@ -226,12 +226,9 @@ describe('Settings Integration', () => {
     it('displays home location section', async () => {
       renderSettingsPage()
 
-      await waitFor(
-        () => {
-          expect(screen.getByText('Home Location')).toBeInTheDocument()
-        },
-        { timeout: 3000 }
-      )
+      await waitFor(() => {
+        expect(screen.getByText('Home Location')).toBeInTheDocument()
+      })
     })
 
     it('setting home location invalidates travel time cache', async () => {
@@ -511,12 +508,9 @@ describe('Settings Integration', () => {
     it('displays preferences section', async () => {
       renderSettingsPage()
 
-      await waitFor(
-        () => {
-          expect(screen.getByRole('heading', { name: /Preferences/i })).toBeInTheDocument()
-        },
-        { timeout: 3000 }
-      )
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: /Preferences/i })).toBeInTheDocument()
+      })
     })
 
     it('prevent zoom toggle updates settings store', () => {

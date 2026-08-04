@@ -3,13 +3,4 @@
  *
  * Re-exports from @volleykit/shared for cross-platform consistency.
  */
-export {
-  type AppError,
-  type ErrorType,
-  classifyError,
-  isNetworkError,
-  getErrorMessage,
-  createAppError,
-  isError,
-  ensureError,
-} from '@volleykit/shared/utils'
+export { type ErrorType, classifyError } from '@volleykit/shared/utils'

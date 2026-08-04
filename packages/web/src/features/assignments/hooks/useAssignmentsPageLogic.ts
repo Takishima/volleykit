@@ -27,8 +27,7 @@ import { isGameReportEligible, isValidationEligible } from '../utils/assignment-
  * Allows mixing regular assignments with on-call assignments inline.
  */
 export type DisplayItem =
-  | { type: 'assignment'; item: Assignment }
-  | { type: 'onCall'; item: OnCallAssignment }
+  { type: 'assignment'; item: Assignment } | { type: 'onCall'; item: OnCallAssignment }
 
 /** Extract date from a display item for sorting/grouping */
 function getDisplayItemDate(item: DisplayItem): string | undefined {

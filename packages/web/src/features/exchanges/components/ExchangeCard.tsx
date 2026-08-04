@@ -26,10 +26,7 @@ import { buildMapsUrls } from '@/common/utils/maps-url'
 import { getPositionLabel } from '@/common/utils/position-labels'
 
 type RoleLabelKey =
-  | 'positions.head-one'
-  | 'positions.head-two'
-  | 'positions.linesman-one'
-  | 'positions.linesman-two'
+  'positions.head-one' | 'positions.head-two' | 'positions.linesman-one' | 'positions.linesman-two'
 
 interface RoleEntry {
   labelKey: RoleLabelKey
