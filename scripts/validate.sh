@@ -73,7 +73,7 @@ if ! echo "$CHANGED" | grep -qvE '\.md$'; then
 fi
 
 SOURCE_PATTERN='\.(ts|tsx|js|jsx|mjs|astro)$'
-CONFIG_PATTERN='(package\.json|pnpm-lock\.yaml|tsconfig\.json|vite\.config|eslint\.config)'
+CONFIG_PATTERN='(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vite\.config|eslint\.config)'
 
 if ! matches "$SOURCE_PATTERN" && ! matches "$CONFIG_PATTERN"; then
   say "${YELLOW}No source or config changes, nothing to validate.${NC}"
@@ -132,7 +132,10 @@ WORKER_INPUTS="packages/worker"
 HELP_INPUTS="help-site"
 
 # Files prettier should check: everything changed with a formattable extension.
-FORMAT_FILES=$(echo "$CHANGED" | grep -E '\.(ts|tsx|js|jsx|mjs|json|css|astro|md)$' || true)
+# Deleted paths are dropped — prettier errors on a path that is not there.
+FORMAT_FILES=$(echo "$CHANGED" | grep -E '\.(ts|tsx|js|jsx|mjs|json|css|astro|md)$' | while IFS= read -r f; do
+  [ -f "$f" ] && printf '%s\n' "$f"
+done || true)
 
 if [ -n "$FORMAT_FILES" ]; then
   register_check "format" "format" "$ROOT_DIR" "__format__" "$(echo "$FORMAT_FILES" | tr '\n' ' ')"
@@ -236,8 +239,24 @@ if [ ${#CACHED[@]} -gt 0 ]; then
   echo -e "  ${DIM}cached (skipped): ${CACHED[*]}${NC}"
 fi
 
+# For a partial run, say whether the gate as a whole is open.
+report_gate_status() {
+  [ ${#CLASS_FILTER[@]} -gt 0 ] || {
+    echo -e "${GREEN}All checks passed. Commit gate is open.${NC}"
+    return
+  }
+  local remaining
+  remaining=$(VOLLEYKIT_NO_CACHE=0 "$SCRIPT_DIR/validate.sh" --gate 2>/dev/null | tr '\n' ' ' || true)
+  if [ -z "${remaining// /}" ]; then
+    echo -e "${GREEN}All checks pass. Commit gate is open.${NC}"
+  else
+    echo -e "${GREEN}Passed.${NC} Still required before commit:${YELLOW} $remaining${NC}"
+  fi
+}
+
 if [ ${#SELECTED[@]} -eq 0 ]; then
   echo -e "${GREEN}All checks already passed for the current changes.${NC}"
+  report_gate_status
   exit 0
 fi
 
@@ -250,7 +269,11 @@ run_check() {
   local out="$TEMP_DIR/$name.out"
   local res="$TEMP_DIR/$name.result"
 
-  cd "${CHECK_DIR[$name]}"
+  if ! cd "${CHECK_DIR[$name]}"; then
+    echo "Cannot enter ${CHECK_DIR[$name]}" >"$out"
+    echo 1 >"$res"
+    return
+  fi
 
   local ok=1
   case "${CHECK_CMD[$name]}" in
@@ -260,7 +283,13 @@ run_check() {
       ;;
     __web_build__)
       if pnpm run build >"$out" 2>&1; then
-        pnpm run size >>"$out" 2>&1 && ok=0
+        if pnpm run size >>"$out" 2>&1; then
+          ok=0
+        else
+          echo "" >>"$out"
+          echo "Bundle size exceeded the limits in packages/web/package.json (\"size-limit\")." >>"$out"
+          echo "Note: CI builds the merge commit and lands ~10-15 kB above a local build." >>"$out"
+        fi
       fi
       ;;
     *)
@@ -376,14 +405,4 @@ if [ "$FAILED" = true ]; then
   exit 1
 fi
 
-# A partial run (class filter) is not enough to open the commit gate; say so.
-if [ ${#CLASS_FILTER[@]} -gt 0 ]; then
-  if VOLLEYKIT_NO_CACHE=0 "$SCRIPT_DIR/validate.sh" --gate >/dev/null 2>&1; then
-    echo -e "${GREEN}All checks pass. Commit gate is open.${NC}"
-  else
-    REMAINING=$(VOLLEYKIT_NO_CACHE=0 "$SCRIPT_DIR/validate.sh" --gate 2>/dev/null | tr '\n' ' ' || true)
-    echo -e "${GREEN}Passed.${NC} Still required before commit:${YELLOW} $REMAINING${NC}"
-  fi
-else
-  echo -e "${GREEN}All checks passed. Commit gate is open.${NC}"
-fi
+report_gate_status

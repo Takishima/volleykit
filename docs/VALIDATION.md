@@ -190,14 +190,18 @@ pnpm run size
 
 ### Size Limits (gzipped)
 
-| Component            | Limit  |
-| -------------------- | ------ |
-| Main App Bundle      | 145 KB |
-| Vendor Chunks (each) | 50 KB  |
-| PDF Library (lazy)   | 185 KB |
-| Image Cropper (lazy) | 10 KB  |
-| CSS                  | 12 KB  |
-| Total JS             | 600 KB |
+Source of truth is the `size-limit` key in `packages/web/package.json`.
+
+| Component                | Limit  |
+| ------------------------ | ------ |
+| Main App Bundle          | 70 kB  |
+| Vendor Chunks (combined) | 115 kB |
+| PDF Library (lazy)       | 185 kB |
+| Image Cropper (lazy)     | 11 kB  |
+| CSS                      | 13 kB  |
+| Total JS                 | 700 kB |
+
+CI builds the merge commit and typically lands ~10-15 kB above a local build.
 
 ### Bundle Analysis
 
