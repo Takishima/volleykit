@@ -1,28 +1,23 @@
 #!/usr/bin/env bash
-# Shared library for VolleyKit validation.
+# Primitives for VolleyKit validation: change detection, content fingerprinting
+# and the check cache. Project policy (which packages exist, which checks they
+# run) lives in scripts/validate.sh.
 #
-# Provides three things:
-#   1. Change detection  - what changed vs HEAD (staged + unstaged + untracked)
-#   2. Fingerprinting    - content hash of a check's input files
-#   3. Check cache       - "this exact input already passed this check"
+# This file is meant to be sourced. It does not set shell options, does not
+# change the caller's working directory and does not exit the caller — it only
+# defines functions and exports ROOT_DIR. Source it from a directory inside the
+# repository; every function below assumes the caller has cd'd to ROOT_DIR.
 #
-# The cache is content-addressed, so a result stays valid until the files the
-# check actually reads change. That means a check run mid-work (e.g. via
-# `scripts/validate.sh lint`) is NOT re-run at commit time, and a failure in
-# one package does not invalidate checks for the other packages.
-#
-# Cache location: $ROOT_DIR/.validation-cache (gitignored)
+#   source scripts/validation-lib.sh || exit 1
+#   cd "$ROOT_DIR"
 
-# shellcheck disable=SC2034  # variables are consumed by sourcing scripts
+# shellcheck disable=SC2034  # colors are consumed by sourcing scripts
 
-set -euo pipefail
-
-ROOT_DIR="$(git rev-parse --show-toplevel)"
-if [ -z "$ROOT_DIR" ]; then
-  echo "Error: not inside a git repository" >&2
-  exit 1
+if ! ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null) || [ -z "$ROOT_DIR" ]; then
+  echo "validation-lib.sh: not inside a git repository" >&2
+  return 1
 fi
-cd "$ROOT_DIR"
+export ROOT_DIR
 
 CACHE_DIR="${VOLLEYKIT_CACHE_DIR:-$ROOT_DIR/.validation-cache}"
 
@@ -37,51 +32,66 @@ NC='\033[0m'
 # CHANGE DETECTION
 # =============================================================================
 
-# All files that differ from HEAD: staged, unstaged, and untracked.
-# Superset of the staged set, so validation no longer depends on `git add`
-# having been run first.
+# Every path that differs from HEAD: staged, unstaged and untracked.
+#
+# This is deliberately a superset of the staged set. The checks themselves are
+# package-wide (`eslint .`, `vitest run`), so they see untracked and unstaged
+# files whether or not validation was told about them; scoping detection to the
+# index would only hide work the checks are already doing.
 changed_files() {
   {
-    if git rev-parse --verify -q HEAD >/dev/null; then
-      git diff --name-only HEAD
+    if git rev-parse --verify -q HEAD >/dev/null 2>&1; then
+      git diff --name-only HEAD 2>/dev/null || true
     else
-      git diff --name-only --cached
+      git diff --name-only --cached 2>/dev/null || true
     fi
-    git ls-files -o --exclude-standard
-  } 2>/dev/null | sed '/^$/d' | sort -u
+    git ls-files -o --exclude-standard 2>/dev/null || true
+  } | sed '/^$/d' | sort -u
+}
+
+# Tracked paths whose worktree content differs from the index, restricted to
+# the given pathspecs. Used by the commit gate: the checks read the worktree,
+# but a commit records the index, so any divergence means the thing being
+# committed is not the thing that was validated.
+staged_worktree_divergence() {
+  git diff --name-only -- "$@" 2>/dev/null || true
 }
 
 # =============================================================================
 # FINGERPRINTING
 # =============================================================================
 
-# Content hash of every tracked file under the given pathspecs, plus the
-# contents of any file modified in the worktree but not yet staged.
+# Content hash of every file under the given pathspecs — tracked or untracked,
+# staged or not.
 #
-# `git ls-files -s` returns the index blob hash without reading file contents,
-# which makes the common case cheap. Only worktree-dirty files are hashed.
+# Staging-independence is the point: `git add` moves a file between git's
+# internal representations without changing a byte of it, so a fingerprint that
+# mixed index blob hashes with worktree hashes would change on `git add` alone
+# and throw away a valid cache entry. Everything here is hashed from the
+# worktree, uniformly.
+#
+# Files tracked but deleted from the worktree simply drop out of the listing,
+# which changes the hash — that is the intended signal.
 fingerprint() {
-  {
-    git ls-files -s -- "$@" 2>/dev/null || true
+  local listing
+  # `|| true`: sha256sum exits non-zero for a tracked path deleted from the
+  # worktree, and under `pipefail` that would abort the caller. The path simply
+  # dropping out of the listing is the signal we want.
+  listing=$(
     {
-      git ls-files -m -o --exclude-standard -- "$@" 2>/dev/null || true
-    } | sort -u | while IFS= read -r f; do
-      if [ -f "$f" ]; then
-        printf 'dirty %s %s\n' "$(sha256sum "$f" | cut -d' ' -f1)" "$f"
-      else
-        printf 'deleted %s\n' "$f"
-      fi
-    done
-  } | sha256sum | cut -d' ' -f1
+      git ls-files -c -o --exclude-standard -z -- "$@" 2>/dev/null || true
+    } | sort -z -u | xargs -0 -r sha256sum 2>/dev/null || true
+  )
+  printf '%s' "$listing" | sha256sum | cut -d' ' -f1
 }
 
 # =============================================================================
 # CHECK CACHE
 # =============================================================================
 
-# A cache entry is an empty file named "<check>.<fingerprint>". Presence means
-# "this check passed for exactly this input". Storing a result drops any older
-# entry for the same check so the directory stays small.
+# A cache entry is an empty file named "<check>.<fingerprint>". Its presence
+# means "this check passed for exactly this input". Storing a result drops any
+# older entry for the same check, so the directory stays small.
 
 cache_hit() {
   [ "${VOLLEYKIT_NO_CACHE:-}" != "1" ] && [ -f "$CACHE_DIR/$1.$2" ]
@@ -99,38 +109,4 @@ cache_drop() {
 
 cache_clear() {
   rm -rf "$CACHE_DIR"
-}
-
-# =============================================================================
-# CHECK REGISTRY
-# =============================================================================
-#
-# A check is: name | class | working dir | command | input pathspecs
-#
-# `class` groups checks so a targeted run (`validate.sh lint`) can select every
-# lint check across the affected packages in one go — the same set the full run
-# would use, so the cache entries it writes are hits at commit time.
-
-declare -a CHECK_NAMES=()
-declare -A CHECK_CLASS=()
-declare -A CHECK_DIR=()
-declare -A CHECK_CMD=()
-declare -A CHECK_PATHS=()
-
-register_check() {
-  local name=$1 class=$2 dir=$3 cmd=$4 paths=$5
-  CHECK_NAMES+=("$name")
-  CHECK_CLASS["$name"]=$class
-  CHECK_DIR["$name"]=$dir
-  CHECK_CMD["$name"]=$cmd
-  CHECK_PATHS["$name"]=$paths
-}
-
-# Files that invalidate every check in the repo.
-ROOT_PATHS="package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json eslint.config.js eslint.config.mjs .prettierrc .prettierrc.json"
-
-fingerprint_for_check() {
-  local name=$1
-  # shellcheck disable=SC2086  # pathspecs are intentionally word-split
-  fingerprint $ROOT_PATHS ${CHECK_PATHS[$name]}
 }

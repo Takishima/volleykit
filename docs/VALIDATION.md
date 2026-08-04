@@ -35,12 +35,16 @@ the block message names the exact checks that are missing.
 
 ### The Check Cache
 
-Each check declares the paths it depends on. Its cache key is a hash of:
+Each check declares the paths it depends on. Its cache key is a hash of the
+**worktree contents** of every file under those paths — tracked or untracked,
+staged or not — plus the root set (`package.json`, `pnpm-lock.yaml`,
+`pnpm-workspace.yaml`, `.prettierrc.json`, `.prettierignore`, and the two
+validation scripts themselves).
 
-- the index blob hashes of every tracked file under those paths, plus
-- the contents of any of those files modified in the working tree, plus
-- the root config set (`package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`,
-  `tsconfig.json`, `eslint.config.*`, prettier config)
+Hashing the worktree uniformly is what makes the key staging-independent:
+`git add` moves a file between git's internal representations without changing
+a byte of it, so a key built from index blob hashes would change on `git add`
+alone and throw away results that were still valid.
 
 Consequences that matter in practice:
 
@@ -49,9 +53,10 @@ Consequences that matter in practice:
 | Ran `/lint` mid-work, then commit         | Lint is **not** re-run                             |
 | Fixed a lint error in `web`, re-validated | Only `web` checks re-run; `shared`/`mobile` cached |
 | Edited a file's contents, same file set   | That package's cache correctly invalidates         |
-| `git add` of an extra file                | Does **not** invalidate anything on its own        |
+| `git add` / `git reset` with no edit      | Does **not** invalidate anything                   |
 | Second commit with no edits in between    | Everything still cached                            |
 | Changed `pnpm-lock.yaml`                  | Everything invalidates                             |
+| Changed `scripts/validate.sh`             | Everything invalidates                             |
 
 Cache lives in `.validation-cache/` (gitignored). There is no expiry —
 correctness comes from the content hash, not from a timer.
@@ -61,18 +66,45 @@ scripts/validate.sh --no-cache   # force a full re-run
 scripts/validate.sh --clear      # drop the cache
 ```
 
+`scripts/validation-lib.test.sh` asserts these invariants against a scratch
+repository. Run it after touching either validation script.
+
+### Two Things the Gate Deliberately Does
+
+**It looks at the whole worktree, not just the index.** The checks are
+package-wide (`eslint .`, `vitest run`), so an untracked or unstaged broken file
+under `packages/web/` fails `web:lint` whether or not validation was told about
+it. Scoping change detection to staged files would only hide that. The practical
+effect: a broken scratch file blocks commits of unrelated staged work until it is
+fixed, moved out of the package, or gitignored.
+
+**It blocks when the index and the worktree disagree.** The checks read the
+worktree; a commit records the index. If a validated file has staged content
+that differs from what is on disk, the thing about to be committed is not the
+thing that passed — so the gate lists those paths and asks you to stage them and
+re-validate. This is the case where a broken staged blob, fixed only in the
+worktree, would otherwise sail through.
+
 ### What Validation Does
 
 1. **Detect changes** - staged + unstaged + untracked vs `HEAD` (no `git add` required)
 2. **Skip trivial changes** - docs-only, or nothing matching source/config patterns
-3. **Detect affected packages** - web, shared, mobile, worker, help-site
-4. **Generate API types** - if `volleymanager-openapi.yaml` changed
+3. **Generate API types** - if `volleymanager-openapi.yaml` changed (before any
+   fingerprint is taken, since it writes an input file)
+4. **Detect affected packages** - a package is affected when a changed path falls
+   under its input paths, or when a root file changed
 5. **Check design token sync** - `colors.js` vs `design-tokens.css`, when style files changed
 6. **Run uncached checks in PARALLEL** - format on changed files + per-package lint, typecheck, test
-7. **Build** - `shared` first, then `web` + `help-site` in parallel (web build includes the size check)
+7. **Build** - all affected builds in parallel (the web build includes the size check)
 
-Shared package changes trigger web validation (always) and mobile validation
-(only when the exported API surface is touched).
+A package's input paths are the single source of truth for both _is it
+affected_ and _what invalidates its cache_. `packages/shared/src` is an input of
+web and mobile, so any change to it validates all three — there is no barrel-file
+heuristic deciding which shared edits "count".
+
+Builds run in parallel because none depends on another: `packages/shared`
+resolves its subpath exports to `./src/*.ts` and nothing consumes
+`packages/shared/dist`.
 
 ### Check Classes
 

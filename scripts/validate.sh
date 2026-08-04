@@ -13,12 +13,15 @@
 #
 # Classes: format, tokens, lint, typecheck, test, build
 #
-# Only runs in the Claude Code web environment (CLAUDE_CODE_REMOTE=true).
-# Human developers rely on CI.
+# The commit gate (.claude/hooks/pre-git-commit.sh) is active only in Claude
+# Code web sessions. This script itself runs anywhere.
+
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=./validation-lib.sh
-source "$SCRIPT_DIR/validation-lib.sh"
+source "$SCRIPT_DIR/validation-lib.sh" || exit 1
+cd "$ROOT_DIR"
 
 # =============================================================================
 # ARGUMENTS
@@ -37,7 +40,7 @@ for arg in "$@"; do
       exit 0
       ;;
     -h | --help)
-      sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     all) ;;
@@ -49,12 +52,39 @@ for arg in "$@"; do
   esac
 done
 
+# Gate mode is machine-readable: it prints missing check names and nothing else.
+say() { [ "$GATE_MODE" = true ] || echo -e "$@"; }
+
+# =============================================================================
+# PACKAGE TABLE
+# =============================================================================
+#
+# One table, two consumers. A package's input paths decide BOTH whether the
+# package is affected by the current changes AND what invalidates its cache
+# entries. Encoding those separately is how a package ends up unvalidated: the
+# earlier version tested affectedness against a hand-written list of shared
+# barrel files that omitted utils/, i18n/, adapters/ and offline/, so a change
+# to any of those skipped mobile's checks entirely while still claiming a pass.
+#
+# Adding a package means adding a row here and a register_check block below.
+
+declare -a PKG_NAMES=(web shared mobile worker help-site)
+declare -A PKG_INPUTS=(
+  [web]="packages/web packages/shared/src packages/shared/package.json docs/api/volleymanager-openapi.yaml"
+  [shared]="packages/shared docs/api/volleymanager-openapi.yaml"
+  [mobile]="packages/mobile packages/shared/src packages/shared/package.json docs/api/volleymanager-openapi.yaml"
+  [worker]="packages/worker"
+  [help-site]="help-site"
+)
+
+# Files that invalidate every check in the repo. The validation scripts are
+# included on purpose: changing a check's command or input paths must not leave
+# stale PASS entries behind.
+ROOT_PATHS="package.json pnpm-lock.yaml pnpm-workspace.yaml .prettierrc.json .prettierignore scripts/validate.sh scripts/validation-lib.sh"
+
 # =============================================================================
 # CHANGE DETECTION
 # =============================================================================
-
-# Gate mode is machine-readable: it prints missing check names and nothing else.
-say() { [ "$GATE_MODE" = true ] || echo -e "$@"; }
 
 CHANGED=$(changed_files)
 
@@ -63,7 +93,6 @@ if [ -z "$CHANGED" ]; then
   exit 0
 fi
 
-has_change_in() { echo "$CHANGED" | grep -q "^$1"; }
 matches() { echo "$CHANGED" | grep -qE "$1"; }
 
 # Docs-only changes need no validation.
@@ -73,7 +102,7 @@ if ! echo "$CHANGED" | grep -qvE '\.md$'; then
 fi
 
 SOURCE_PATTERN='\.(ts|tsx|js|jsx|mjs|astro)$'
-CONFIG_PATTERN='(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vite\.config|eslint\.config)'
+CONFIG_PATTERN='(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|vite\.config|eslint\.config|\.prettierrc|\.prettierignore|volleymanager-openapi\.yaml)'
 
 if ! matches "$SOURCE_PATTERN" && ! matches "$CONFIG_PATTERN"; then
   say "${YELLOW}No source or config changes, nothing to validate.${NC}"
@@ -81,100 +110,118 @@ if ! matches "$SOURCE_PATTERN" && ! matches "$CONFIG_PATTERN"; then
 fi
 
 # =============================================================================
+# API TYPE GENERATION
+# =============================================================================
+#
+# Must happen before any fingerprint is taken: it writes
+# packages/shared/src/api/schema.ts, which is an input of web, shared and
+# mobile. Generating afterwards would store cache entries keyed on
+# pre-generation content and miss on every subsequent run.
+#
+# Gate mode never mutates the worktree; if the spec changed without the schema
+# being regenerated, the gate simply reports the checks as missing.
+
+if [ "$GATE_MODE" = false ] && matches 'volleymanager-openapi\.yaml'; then
+  echo "OpenAPI spec changed, regenerating types..."
+  pnpm run generate:api
+  CHANGED=$(changed_files)
+fi
+
+# =============================================================================
 # AFFECTED PACKAGES
 # =============================================================================
 
-HAS_WEB=false
-HAS_SHARED=false
-HAS_MOBILE=false
-HAS_WORKER=false
-HAS_HELP=false
+# Turn a space-separated pathspec list into an anchored regex matching those
+# paths and anything beneath them.
+paths_to_regex() {
+  local out="" p
+  for p in $1; do
+    p=${p//./\\.}
+    out="${out:+$out|}$p"
+  done
+  printf '^(%s)(/|$)' "$out"
+}
 
-has_change_in "packages/web/" && HAS_WEB=true
-has_change_in "packages/shared/" && HAS_SHARED=true
-has_change_in "packages/mobile/" && HAS_MOBILE=true
-has_change_in "packages/worker/" && HAS_WORKER=true
-has_change_in "help-site/" && HAS_HELP=true
+ROOT_CHANGED=false
+matches "$(paths_to_regex "$ROOT_PATHS")" && ROOT_CHANGED=true
 
-# Shared changes always reach web; they reach mobile only when the exported
-# API surface moves (index barrels, types, hooks, stores, api).
-if [ "$HAS_SHARED" = true ]; then
-  HAS_WEB=true
-  if matches "^packages/shared/src/(index\.ts|[^/]+/index\.ts|types/|hooks/|stores/|api/)"; then
-    HAS_MOBILE=true
+declare -A AFFECTED=()
+AFFECTED_LIST=""
+for pkg in "${PKG_NAMES[@]}"; do
+  if [ "$ROOT_CHANGED" = true ] || matches "$(paths_to_regex "${PKG_INPUTS[$pkg]}")"; then
+    AFFECTED["$pkg"]=1
+    AFFECTED_LIST="$AFFECTED_LIST $pkg"
   fi
-fi
+done
 
-# Root config changes reach every package.
-if matches '^(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig\.json|eslint\.config)'; then
-  HAS_WEB=true
-  HAS_SHARED=true
-  HAS_MOBILE=true
-  HAS_WORKER=true
-  HAS_HELP=true
-fi
-
-AFFECTED=""
-[ "$HAS_WEB" = true ] && AFFECTED="$AFFECTED web"
-[ "$HAS_SHARED" = true ] && AFFECTED="$AFFECTED shared"
-[ "$HAS_MOBILE" = true ] && AFFECTED="$AFFECTED mobile"
-[ "$HAS_WORKER" = true ] && AFFECTED="$AFFECTED worker"
-[ "$HAS_HELP" = true ] && AFFECTED="$AFFECTED help-site"
+affected() { [ -n "${AFFECTED[$1]:-}" ]; }
 
 # =============================================================================
-# REGISTRY
+# CHECK REGISTRY
 # =============================================================================
 
-WEB_INPUTS="packages/web packages/shared/src"
-SHARED_INPUTS="packages/shared"
-MOBILE_INPUTS="packages/mobile packages/shared/src"
-WORKER_INPUTS="packages/worker"
-HELP_INPUTS="help-site"
+declare -a CHECK_NAMES=()
+declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=()
 
-# Files prettier should check: everything changed with a formattable extension.
-# Deleted paths are dropped — prettier errors on a path that is not there.
+register_check() {
+  local name=$1 class=$2 dir=$3 cmd=$4 paths=$5
+  CHECK_NAMES+=("$name")
+  CHECK_CLASS["$name"]=$class
+  CHECK_DIR["$name"]=$dir
+  CHECK_CMD["$name"]=$cmd
+  CHECK_PATHS["$name"]=$paths
+}
+
+fingerprint_for_check() {
+  # shellcheck disable=SC2086  # pathspecs are intentionally word-split
+  fingerprint $ROOT_PATHS ${CHECK_PATHS[$1]}
+}
+
+# --- format: prettier over the changed files, minus any that were deleted ---
+# (prettier exits non-zero on a path that is not there, which would leave the
+# gate permanently closed until the deletion was committed)
 FORMAT_FILES=$(echo "$CHANGED" | grep -E '\.(ts|tsx|js|jsx|mjs|json|css|astro|md)$' | while IFS= read -r f; do
   [ -f "$f" ] && printf '%s\n' "$f"
 done || true)
 
 if [ -n "$FORMAT_FILES" ]; then
-  register_check "format" "format" "$ROOT_DIR" "__format__" "$(echo "$FORMAT_FILES" | tr '\n' ' ')"
+  register_check "format" "format" "$ROOT_DIR" "__format__" "$FORMAT_FILES"
 fi
 
-if has_change_in "packages/shared/styles/"; then
+if matches '^packages/shared/styles/'; then
   register_check "tokens" "tokens" "$ROOT_DIR" \
     "node scripts/sync-style-tokens.js --check" \
     "packages/shared/styles scripts/sync-style-tokens.js"
 fi
 
-if [ "$HAS_WEB" = true ]; then
-  register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "$WEB_INPUTS"
-  register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "$WEB_INPUTS"
+if affected web; then
+  register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
+  register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
   # `build` is `tsc -b && vite build`, so it covers typecheck. `size` is folded
   # in because it can only run against a fresh build.
-  register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "$WEB_INPUTS"
+  register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "${PKG_INPUTS[web]}"
 fi
 
-if [ "$HAS_SHARED" = true ]; then
-  register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "$SHARED_INPUTS"
-  register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "$SHARED_INPUTS"
-  register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "$SHARED_INPUTS"
-  register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "$SHARED_INPUTS"
+if affected shared; then
+  register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "${PKG_INPUTS[shared]}"
+  register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "${PKG_INPUTS[shared]}"
+  register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "${PKG_INPUTS[shared]}"
+  register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "${PKG_INPUTS[shared]}"
 fi
 
-if [ "$HAS_MOBILE" = true ]; then
-  register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "$MOBILE_INPUTS"
-  register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "$MOBILE_INPUTS"
-  register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "$MOBILE_INPUTS"
+if affected mobile; then
+  register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "${PKG_INPUTS[mobile]}"
+  register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "${PKG_INPUTS[mobile]}"
+  register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "${PKG_INPUTS[mobile]}"
 fi
 
-if [ "$HAS_WORKER" = true ]; then
-  register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "$WORKER_INPUTS"
-  register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "$WORKER_INPUTS"
+if affected worker; then
+  register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "${PKG_INPUTS[worker]}"
+  register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "${PKG_INPUTS[worker]}"
 fi
 
-if [ "$HAS_HELP" = true ]; then
-  register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "$HELP_INPUTS"
+if affected help-site; then
+  register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "${PKG_INPUTS[help-site]}"
 fi
 
 # =============================================================================
@@ -190,8 +237,7 @@ wanted_class() {
   return 1
 }
 
-declare -a SELECTED=()
-declare -a CACHED=()
+declare -a SELECTED=() CACHED=()
 declare -A FP=()
 
 if [ ${#CHECK_NAMES[@]} -eq 0 ]; then
@@ -214,37 +260,39 @@ done
 # =============================================================================
 
 if [ "$GATE_MODE" = true ]; then
-  if [ ${#SELECTED[@]} -eq 0 ]; then
-    exit 0
+  [ ${#SELECTED[@]} -gt 0 ] && printf '%s\n' "${SELECTED[@]}"
+
+  # The checks read the worktree; a commit records the index. If any validated
+  # file differs between the two, what is about to be committed is not what was
+  # validated — a broken staged blob fixed only in the worktree would otherwise
+  # sail through. Reported only when something is actually staged.
+  DIVERGED=""
+  if ! git diff --cached --quiet 2>/dev/null; then
+    ALL_PATHS="$ROOT_PATHS"
+    for pkg in "${!AFFECTED[@]}"; do ALL_PATHS="$ALL_PATHS ${PKG_INPUTS[$pkg]}"; done
+    # shellcheck disable=SC2086  # pathspecs are intentionally word-split
+    DIVERGED=$(staged_worktree_divergence $ALL_PATHS)
   fi
-  printf '%s\n' "${SELECTED[@]}"
+  if [ -n "$DIVERGED" ]; then
+    echo "unstaged changes in validated files (stage them, then re-validate):"
+    echo "$DIVERGED" | sed 's/^/    /'
+  fi
+
+  { [ ${#SELECTED[@]} -eq 0 ] && [ -z "$DIVERGED" ]; } && exit 0
   exit 1
-fi
-
-# =============================================================================
-# API TYPE GENERATION
-# =============================================================================
-
-if matches 'volleymanager-openapi\.yaml'; then
-  echo "OpenAPI spec changed, regenerating types..."
-  (cd "$ROOT_DIR" && pnpm run generate:api)
 fi
 
 # =============================================================================
 # EXECUTION
 # =============================================================================
 
-echo -e "${BLUE}Validating:${NC}$AFFECTED"
+echo -e "${BLUE}Validating:${NC}$AFFECTED_LIST"
 if [ ${#CACHED[@]} -gt 0 ]; then
   echo -e "  ${DIM}cached (skipped): ${CACHED[*]}${NC}"
 fi
 
 # For a partial run, say whether the gate as a whole is open.
 report_gate_status() {
-  [ ${#CLASS_FILTER[@]} -gt 0 ] || {
-    echo -e "${GREEN}All checks passed. Commit gate is open.${NC}"
-    return
-  }
   local remaining
   remaining=$(VOLLEYKIT_NO_CACHE=0 "$SCRIPT_DIR/validate.sh" --gate 2>/dev/null | tr '\n' ' ' || true)
   if [ -z "${remaining// /}" ]; then
@@ -278,8 +326,10 @@ run_check() {
   local ok=1
   case "${CHECK_CMD[$name]}" in
     __format__)
-      # shellcheck disable=SC2086  # file list is intentionally word-split
-      pnpm exec prettier --check ${CHECK_PATHS[$name]} >"$out" 2>&1 && ok=0
+      # Newline-separated so paths containing spaces survive.
+      local -a files=()
+      mapfile -t files <<<"${CHECK_PATHS[$name]}"
+      pnpm exec prettier --check "${files[@]}" >"$out" 2>&1 && ok=0
       ;;
     __web_build__)
       if pnpm run build >"$out" 2>&1; then
@@ -302,8 +352,7 @@ run_check() {
   echo "$ok" >"$res"
 }
 
-declare -a WAVE_NAMES=()
-declare -a WAVE_PIDS=()
+declare -a WAVE_NAMES=() WAVE_PIDS=()
 
 launch() {
   run_check "$1" &
@@ -353,12 +402,6 @@ await_wave() {
   WAVE_PIDS=()
 }
 
-selected_has() {
-  local n
-  for n in "${SELECTED[@]}"; do [ "$n" = "$1" ] && return 0; done
-  return 1
-}
-
 # --- Wave 1: everything that is not a build, fully parallel ---
 for name in "${SELECTED[@]}"; do
   [ "${CHECK_CLASS[$name]}" = "build" ] && continue
@@ -367,16 +410,13 @@ done
 [ ${#WAVE_NAMES[@]} -gt 0 ] && echo -e "${DIM}running ${#WAVE_NAMES[@]} check(s)...${NC}"
 await_wave
 
-# --- Wave 2: shared build (dependency of web build) ---
-if [ "$FAILED" = false ] && selected_has "shared:build"; then
-  launch "shared:build"
-  await_wave
-fi
-
-# --- Wave 3: web + help-site builds, independent of each other ---
+# --- Wave 2: builds, all parallel ---
+# packages/shared exposes its subpath exports as ./src/*.ts and nothing
+# resolves packages/shared/dist, so web:build does not consume shared:build.
+# They are independent.
 if [ "$FAILED" = false ]; then
-  for name in "web:build" "help-site:build"; do
-    selected_has "$name" && launch "$name"
+  for name in "${SELECTED[@]}"; do
+    [ "${CHECK_CLASS[$name]}" = "build" ] && launch "$name"
   done
   [ ${#WAVE_NAMES[@]} -gt 0 ] && echo -e "${DIM}building...${NC}"
   await_wave

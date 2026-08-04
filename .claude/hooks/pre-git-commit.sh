@@ -44,22 +44,28 @@ fi
 ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null)
 [ -z "$ROOT_DIR" ] && allow
 
-MISSING=$("$ROOT_DIR/scripts/validate.sh" --gate 2>&1)
+# stderr is kept out of $MISSING on purpose: anything the gate writes there is a
+# crash, not a check name, and would otherwise be rendered as a missing check.
+MISSING=$("$ROOT_DIR/scripts/validate.sh" --gate 2>/dev/null)
 STATUS=$?
 
+# 0 = gate open. 1 = work outstanding. Anything else = the gate itself broke.
 if [ $STATUS -eq 0 ]; then
   allow
 fi
 
-if [ -z "$MISSING" ]; then
-  block "Validation gate could not run (scripts/validate.sh exited $STATUS). Run it manually:
+if [ $STATUS -ne 1 ] || [ -z "$MISSING" ]; then
+  ERR=$("$ROOT_DIR/scripts/validate.sh" --gate 2>&1 >/dev/null)
+  block "Validation gate could not run (scripts/validate.sh exited $STATUS).
 
-scripts/validate.sh"
+${ERR:-(no error output)}
+
+Run it manually: scripts/validate.sh"
 fi
 
-block "These checks have not passed for the current changes:
+block "Validation is not complete for the current changes:
 
-$(echo "$MISSING" | sed 's/^/  - /')
+$(echo "$MISSING" | sed 's/^/  /')
 
 Run validation — results stream as each check finishes, and anything already green is skipped:
 
