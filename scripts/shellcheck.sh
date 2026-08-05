@@ -29,4 +29,21 @@ if [ ${#files[@]} -eq 0 ]; then
 fi
 
 shellcheck -x --severity=warning "${files[@]}"
+
+# Exec-bit invariant, checked here because this is where the file list is
+# derived by walking git rather than reconstructed from settings command
+# strings (four review rounds of JSON-scraping each missed a registration
+# form). Everything in .claude/hooks/ is invoked by path by construction —
+# that is what the directory is — and scripts/validate.sh is invoked by
+# path via the permission allowlist. A dropped exec bit means the hook
+# never runs and never emits a decision: the one failure fail-closed
+# design cannot cover, and a mode change is neither content nor text, so
+# no other layer sees it.
+NONEXEC=$(git ls-files -s -- '.claude/hooks/*.sh' 'scripts/validate.sh' | awk '$1 != "100755" { print $4 }')
+if [ -n "$NONEXEC" ]; then
+  echo "shellcheck.sh: invoked by path but not tracked executable:" >&2
+  printf '  %s\n' "$NONEXEC" >&2
+  exit 1
+fi
+
 echo "shellcheck: ${#files[@]} files clean"

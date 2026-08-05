@@ -529,48 +529,27 @@ check "format:check covers the same set as format" \
 echo "# path-invoked files"
 # =============================================================================
 
-# Files invoked by path depend on their tracked exec bit: a dropped bit
-# means the hook never runs and never emits a decision — the one failure
-# fail-closed design cannot cover, because failing closed requires
-# executing. A mode change is neither content nor text, so no other layer
-# sees it. The set derives from the TRACKED settings files (the gitignored
-# settings.local.json holds per-developer hooks the repo must not gate on):
-# a command with no whitespace is a by-path invocation, anything else goes
-# through a tool, and both $CLAUDE_PROJECT_DIR spellings normalize. No
-# directory allowlist — a filter upstream of the untracked-sentinel would
-# drop exactly the repointed registration the sentinel exists to red — and
-# the derived half is asserted non-trivial separately, since the allowlist
-# entry below would otherwise keep an emptiness guard satisfied forever.
-SETTINGS_FILES=$(cd "$REAL_ROOT" && git ls-files -- '.claude/settings*.json' | grep -v '\.local\.json$')
-# The path is EXTRACTED from each command rather than the command being
-# stripped and filtered by shape: a registration that gains a flag or
-# quoting is still a by-path invocation, and three rounds of
-# strip-and-filter each left one such form behind (list, then filter, then
-# floor). Every command naming CLAUDE_PROJECT_DIR must yield exactly one
-# path — counted against the commands, so there is no literal floor to
-# hand-bump and no form can leave the set silently.
-# shellcheck disable=SC2086  # SETTINGS_FILES: newline list of our own paths
-HOOK_CMDS=$(cd "$REAL_ROOT" && jq -r '.. | objects | select(.type == "command") | .command' $SETTINGS_FILES | sort -u)
-REPO_CMDS=$(printf '%s\n' "$HOOK_CMDS" | grep -c 'CLAUDE_PROJECT_DIR')
-RAW_PATHS=$(printf '%s\n' "$HOOK_CMDS" | grep -oE '\$\{?CLAUDE_PROJECT_DIR\}?/[^"[:space:]]+' |
-  sed -E 's|^\$\{?CLAUDE_PROJECT_DIR\}?/||')
-check "every settings-registered repo path is pinned" \
-  "$([ "$REPO_CMDS" -gt 0 ] && [ "$(printf '%s\n' "$RAW_PATHS" | grep -c .)" = "$REPO_CMDS" ]; echo $?)" \
-  "cmds=$REPO_CMDS paths=$(printf '%s' "$RAW_PATHS" | tr '\n' ' ')"
-HOOK_PATHS=$(printf '%s\n' "$RAW_PATHS" | sort -u)
-# One-table-two-consumers: the derivation reads the tracked settings glob,
-# the policy must list the same files, or a new settings file registers
-# format only and validation:test keeps its cached PASS.
-POLICY_SETTINGS=$(read_policy 'printf "%s" "$SHELL_INPUTS"' | tr ' ' '\n' | grep '^\.claude/settings' | sort -u)
-check "SHELL_INPUTS lists every tracked settings file" \
-  "$([ "$POLICY_SETTINGS" = "$(printf '%s\n' "$SETTINGS_FILES" | sort -u)" ]; echo $?)" \
-  "policy=$POLICY_SETTINGS tracked=$SETTINGS_FILES"
-BY_PATH=$(printf '%s\nscripts/validate.sh\n' "$HOOK_PATHS" | sort -u)
-NONEXEC=$(cd "$REAL_ROOT" && while IFS= read -r f; do
-  git ls-files -s -- "$f" | awk -v f="$f" '$1 != "100755" { print f } END { if (NR == 0) print "untracked:" f }'
-done <<<"$BY_PATH")
-check "files invoked by path are tracked executable" \
-  "$([ -z "$NONEXEC" ]; echo $?)" "$NONEXEC"
+# The exec-bit invariant lives in scripts/shellcheck.sh, where the file
+# list is derived by walking git — four rounds of scraping the settings
+# JSON here each mis-classified a registration form (flags, quoting, cd
+# prefixes, argument paths), because "executed by path" is a property the
+# command text cannot answer reliably. Everything in .claude/hooks/ is
+# by-path by construction. This row pins that the invariant runs and reds:
+# a dropped bit on the commit hook must fail the shell lint.
+# Guarded on the binary: the suite's only dependencies are bash, git and
+# jq, and shellcheck.sh exits early without shellcheck installed. CI always
+# has it, so the row always runs where it is enforced. The probe drops the
+# bit in a scratch index (GIT_INDEX_FILE), never the real one.
+if command -v shellcheck >/dev/null 2>&1; then
+  SC_OUT=$( (cd "$REAL_ROOT" && GIT_INDEX_FILE="$WORK/exec-probe-index" bash -c '
+    cp "$(git rev-parse --git-dir)/index" "$GIT_INDEX_FILE"
+    git update-index --chmod=-x .claude/hooks/pre-git-commit.sh
+    bash scripts/shellcheck.sh
+  ') 2>&1 ) && SC_STATUS=0 || SC_STATUS=$?
+  check "a dropped hook exec bit fails the shell lint" \
+    "$([ "$SC_STATUS" -ne 0 ] && printf '%s' "$SC_OUT" | grep -q 'pre-git-commit.sh'; echo $?)" \
+    "status=$SC_STATUS out=$SC_OUT"
+fi
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
