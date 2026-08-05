@@ -216,7 +216,7 @@ mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
 # The probe set is exactly the declared set. It once unioned in tracked
 # convention-named scripts to give sourced-but-undeclared files a named
-# failure row, but record_load (exit 3, file named) and the traced-run
+# failure row, but record_load (fails the gate closed, file named) and the traced-run
 # audit now report that case precisely — the union's only remaining yield
 # was a false positive: a tracked validation-*.sh that nothing loads, a
 # normal state mid-split, blocked the gate.
@@ -542,11 +542,29 @@ echo "# path-invoked files"
 # the derived half is asserted non-trivial separately, since the allowlist
 # entry below would otherwise keep an emptiness guard satisfied forever.
 SETTINGS_FILES=$(cd "$REAL_ROOT" && git ls-files -- '.claude/settings*.json' | grep -v '\.local\.json$')
+# The path is EXTRACTED from each command rather than the command being
+# stripped and filtered by shape: a registration that gains a flag or
+# quoting is still a by-path invocation, and three rounds of
+# strip-and-filter each left one such form behind (list, then filter, then
+# floor). Every command naming CLAUDE_PROJECT_DIR must yield exactly one
+# path — counted against the commands, so there is no literal floor to
+# hand-bump and no form can leave the set silently.
 # shellcheck disable=SC2086  # SETTINGS_FILES: newline list of our own paths
-HOOK_PATHS=$(cd "$REAL_ROOT" && jq -r '.. | objects | select(.type == "command") | .command' $SETTINGS_FILES |
-  sed -E 's|^\$\{?CLAUDE_PROJECT_DIR\}?/||' | grep -v '[[:space:]]' | sort -u)
-check "hook registrations derive to by-path files" \
-  "$([ "$(printf '%s\n' "$HOOK_PATHS" | grep -c .)" -ge 4 ]; echo $?)" "$HOOK_PATHS"
+HOOK_CMDS=$(cd "$REAL_ROOT" && jq -r '.. | objects | select(.type == "command") | .command' $SETTINGS_FILES | sort -u)
+REPO_CMDS=$(printf '%s\n' "$HOOK_CMDS" | grep -c 'CLAUDE_PROJECT_DIR')
+RAW_PATHS=$(printf '%s\n' "$HOOK_CMDS" | grep -oE '\$\{?CLAUDE_PROJECT_DIR\}?/[^"[:space:]]+' |
+  sed -E 's|^\$\{?CLAUDE_PROJECT_DIR\}?/||')
+check "every settings-registered repo path is pinned" \
+  "$([ "$REPO_CMDS" -gt 0 ] && [ "$(printf '%s\n' "$RAW_PATHS" | grep -c .)" = "$REPO_CMDS" ]; echo $?)" \
+  "cmds=$REPO_CMDS paths=$(printf '%s' "$RAW_PATHS" | tr '\n' ' ')"
+HOOK_PATHS=$(printf '%s\n' "$RAW_PATHS" | sort -u)
+# One-table-two-consumers: the derivation reads the tracked settings glob,
+# the policy must list the same files, or a new settings file registers
+# format only and validation:test keeps its cached PASS.
+POLICY_SETTINGS=$(read_policy 'printf "%s" "$SHELL_INPUTS"' | tr ' ' '\n' | grep '^\.claude/settings' | sort -u)
+check "SHELL_INPUTS lists every tracked settings file" \
+  "$([ "$POLICY_SETTINGS" = "$(printf '%s\n' "$SETTINGS_FILES" | sort -u)" ]; echo $?)" \
+  "policy=$POLICY_SETTINGS tracked=$SETTINGS_FILES"
 BY_PATH=$(printf '%s\nscripts/validate.sh\n' "$HOOK_PATHS" | sort -u)
 NONEXEC=$(cd "$REAL_ROOT" && while IFS= read -r f; do
   git ls-files -s -- "$f" | awk -v f="$f" '$1 != "100755" { print f } END { if (NR == 0) print "untracked:" f }'
