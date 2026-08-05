@@ -199,15 +199,27 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-# The fixture copies exactly the declared load set, making VALIDATION_SCRIPTS
-# the one definition of "what validate.sh is built from": a script it sources
-# but does not declare is missing here and crashes every scratch run (bash
-# names the missing file), while an untracked scratch file in scripts/ is
-# not declared, not copied, and cannot close the gate. The invalidation
-# probes below iterate the same copied set.
+# The fixture copies the declared load set unioned with the tracked
+# convention-named scripts, and the invalidation probes below iterate the
+# same list. The union picks the better failure report per case: a tracked
+# script that is sourced but not declared is copied and fails its own named
+# probe row instead of crashing every scratch run; an untracked scratch file
+# in scripts/ is in neither half and cannot close the gate; an undeclared and
+# untracked sourced script is missing here, so bash names it in the crash.
+# Residual: a tracked validation-*.sh that is never loaded fails its probe —
+# self-evident from the row name. A cp failure is a red row, not a silent
+# shrink of the load set.
+DECLARED=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS' | sort)
+LOAD_SET=$(
+  {
+    printf '%s\n' "$DECLARED"
+    (cd "$REAL_ROOT" && git ls-files 'scripts/validate.sh' 'scripts/validation-*.sh' | grep -v '\.test\.sh$')
+  } | sort -u
+)
 while IFS= read -r s; do
-  cp "$REAL_ROOT/$s" "$M/scripts/"
-done < <(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS')
+  mkdir -p "$M/$(dirname "$s")"
+  cp "$REAL_ROOT/$s" "$M/$s" || not_ok "fixture copies $s" "missing from the repo"
+done <<<"$LOAD_SET"
 echo '{}' >"$M/package.json"
 echo '.validation-cache/' >"$M/.gitignore"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
@@ -326,6 +338,34 @@ run_validate
 git -C "$M" add -A
 commit_all "$M" "settle again"
 
+# Editing any script validate.sh is built from must invalidate every package
+# check — CORE_ROOT protects this and has no catch-all. Asserted behaviorally,
+# per file over the fixture's load set: review rounds kept finding source
+# syntaxes a textual scan missed (guarded, chained, dirname-based); the probe
+# never reads the text, so the property, not the syntax, is what is tested.
+# A file missing from CORE_ROOT fails its probe with the stale-PASS
+# signature: the edit registers validation:* only, no package check.
+#
+# The probe reads absolute gate state, so every iteration re-pins its
+# baseline: leaked dirty state from an earlier case, or a restore failure in
+# the previous iteration, would otherwise register package checks by itself
+# and turn the remaining probes into no-ops.
+while IFS= read -r rel; do
+  run_validate --gate
+  check "baseline before probing $rel: gate is open" "$V_STATUS" "$V_OUT"
+  printf '\n# invalidation probe\n' >>"$M/$rel"
+  run_validate --gate
+  # Every package, not a proxy: a script moved out of CORE_ROOT into one
+  # package's inputs would register that package alone while the rest keep
+  # stale PASS entries.
+  MISS=$(for c in web:lint shared:lint mobile:lint worker:lint help-site:build; do
+    printf '%s\n' "$V_OUT" | grep -qx "check $c" || echo "$c"
+  done)
+  check "editing $rel invalidates the package checks" \
+    "$([ "$V_STATUS" -eq 1 ] && [ -z "$MISS" ]; echo $?)" "exit=$V_STATUS missing=$MISS"
+  git -C "$M" checkout -q -- "$rel"
+done <<<"$LOAD_SET"
+
 check "--gate with a class filter is rejected" \
   "$( (cd "$M" && bash scripts/validate.sh --gate lint >/dev/null 2>&1); [ $? -eq 2 ]; echo $?)"
 
@@ -353,24 +393,45 @@ CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
 
-# Editing any script validate.sh is built from must invalidate every package
-# check — CORE_ROOT protects this and has no catch-all. Asserted behaviorally,
-# per file, in the scratch monorepo (whose scripts/ is exactly the load set:
-# a sourced file missing from the fixture cp crashes validate.sh there and
-# the suite goes red). Three review rounds each found a source syntax that a
-# textual scan of source statements missed — guarded, chained, dirname-based;
-# bash cannot be parsed with grep, and the property, not the text, is the
-# spec. A file missing from CORE_ROOT fails its probe here: the edit
-# registers no package check, so the gate reports validation:* only.
-for s in "$M"/scripts/*.sh; do
-  rel="scripts/$(basename "$s")"
-  printf '\n# invalidation probe\n' >>"$s"
-  run_validate --gate
-  check "editing $rel invalidates the package checks" \
-    "$([ "$V_STATUS" -eq 1 ] && printf '%s\n' "$V_OUT" | grep -qx "check web:lint"; echo $?)" \
-    "exit=$V_STATUS out=$V_OUT"
-  git -C "$M" checkout -q -- "$rel"
-done
+# Two complementary rows pin VALIDATION_SCRIPTS to what validate.sh loads;
+# with the behavioral probes in the scratch section they cover the class from
+# three sides. This textual row scans the DECLARED set (never a directory
+# glob — that is what let scratch files close the gate) and catches a
+# line-initial source in any arm, including arms no fixture run executes
+# (e.g. --clear). Guarded and dynamically-built sources are the audit row's
+# and the probes' job.
+# shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
+SOURCED=$(
+  {
+    echo scripts/validate.sh
+    (cd "$REAL_ROOT" && grep -hoE '^[[:space:]]*(source|\.)[[:space:]]+[^#]*/[A-Za-z0-9._-]+\.sh' $DECLARED /dev/null) |
+      grep -oE '[A-Za-z0-9._-]+\.sh$' | sed 's|^|scripts/|'
+  } | sort -u
+)
+check "VALIDATION_SCRIPTS lists every script sourced by name" \
+  "$([ "$DECLARED" = "$SOURCED" ]; echo $?)" "declared=$DECLARED sourced=$SOURCED"
+
+# The audit row asks bash itself: a DEBUG trap during a real-repo --gate run
+# records every file commands execute from, so any source that actually runs
+# — guarded, absence-tolerant, computed path — lands in LOADED no matter its
+# syntax. (BASH_SOURCE is a call stack, not a log; the trap accumulates it.)
+# Gate mode is read-only, so the run is safe and cheap. Residual: a source on
+# an arm this run does not take is the textual row's job.
+AUDIT="$WORK/audit.sh"
+cat >"$AUDIT" <<'EOF'
+set -T
+declare -A SEEN=()
+trap 'SEEN[${BASH_SOURCE[0]:-.}]=1' DEBUG
+trap 'printf "%s\n" "${!SEEN[@]}" >&3' EXIT
+source scripts/validate.sh --gate
+EOF
+LOADED=$(
+  (cd "$REAL_ROOT" && bash "$AUDIT" 3>&1 >/dev/null 2>&1 || true) |
+    sed "s|^$REAL_ROOT/||" | grep -E '^scripts/.*\.sh$' | sort -u
+)
+UNDECLARED=$(comm -23 <(printf '%s\n' "$LOADED") <(printf '%s\n' "$DECLARED"))
+check "every script a real gate run loads is declared" \
+  "$([ -n "$LOADED" ] && [ -z "$UNDECLARED" ]; echo $?)" "loaded=$LOADED undeclared=$UNDECLARED"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
