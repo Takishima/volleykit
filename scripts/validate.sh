@@ -59,7 +59,9 @@ for arg in "$@"; do
       ;;
     -h | --help)
       # The sentinel keeps header edits from silently truncating the help.
-      sed -n '2,/^# END HELP/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
+      # $SCRIPT_DIR, not $0: the script has already cd'd to the repo root, so
+      # a relative $0 no longer resolves.
+      sed -n '2,/^# END HELP/p' "$SCRIPT_DIR/validate.sh" | sed '$d' | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     all) ;;

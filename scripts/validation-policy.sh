@@ -75,7 +75,10 @@ FORMAT_ROOT=".prettierrc.json .prettierignore .editorconfig"
 # Everything that decides whether the commit gate runs and what it decides:
 # the hook, the file that registers the hook, and the scripts behind it. One
 # list feeds both the trigger and the check's cache key.
-SHELL_INPUTS=".claude/hooks .claude/settings.json $VALIDATION_SCRIPTS scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
+# package.json is here as well as in CORE_ROOT: the suite asserts FORMAT_EXT
+# against its format glob, so an edit to that glob must register the suite —
+# invalidation alone only matters once a check registers.
+SHELL_INPUTS=".claude/hooks .claude/settings.json package.json $VALIDATION_SCRIPTS scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
 
 # The design-token check compares the two generated files. Trigger and inputs
 # are the same constant so editing the generator both invalidates the cache

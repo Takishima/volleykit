@@ -328,14 +328,38 @@ echo "# policy agrees with package.json"
 # FORMAT_EXT is a declared constant; the root `format` script's glob is the
 # set `pnpm run format` actually writes. They must be the same set — a runtime
 # derivation was rejected (jq at every startup, silent narrowing on a second
-# brace group), so drift shows up here instead.
+# brace group), so drift shows up here instead. Sets, not strings: alternation
+# order is irrelevant to the ERE, so a reordered glob must stay green.
 POLICY_EXT=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s" "$FORMAT_EXT"')
-GLOBS=$(jq -r '.scripts.format // ""' "$REAL_ROOT/package.json" | grep -o '{[^}]*}' | tr -d '{}')
-EXPECTED_EXT="\\.($(printf '%s' "$GLOBS" | tr ',' '|'))\$"
+POLICY_SET=$(printf '%s' "$POLICY_EXT" | sed 's/^\\\.(//; s/)\$$//' | tr '|' '\n' | sort)
+glob_set() { # glob_set <package.json script name>
+  jq -r ".scripts.\"$1\" // \"\"" "$REAL_ROOT/package.json" | grep -o '{[^}]*}' | tr -d '{}'
+}
+GLOBS=$(glob_set format)
 check "root format script has exactly one extension glob" \
   "$([ -n "$GLOBS" ] && [ "$(printf '%s\n' "$GLOBS" | wc -l)" -eq 1 ]; echo $?)" "globs=$GLOBS"
+FORMAT_SET=$(printf '%s' "$GLOBS" | tr ',' '\n' | sort)
 check "FORMAT_EXT matches the root format script's glob" \
-  "$([ "$POLICY_EXT" = "$EXPECTED_EXT" ]; echo $?)" "policy=$POLICY_EXT package.json=$EXPECTED_EXT"
+  "$([ "$POLICY_SET" = "$FORMAT_SET" ]; echo $?)" "policy=$POLICY_SET package.json=$FORMAT_SET"
+CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
+check "format:check covers the same set as format" \
+  "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
+
+# VALIDATION_SCRIPTS must list every script validate.sh is built from —
+# CORE_ROOT has no catch-all, so a sourced script missing from the constant
+# would leave every package check's stored PASS intact across its edits.
+DECLARED=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS' | sort)
+ONDISK=$(cd "$REAL_ROOT" && git ls-files -c -o --exclude-standard -- 'scripts/validate.sh' 'scripts/validation-*.sh' | grep -v '\.test\.sh$' | sort)
+check "VALIDATION_SCRIPTS lists every validation script" \
+  "$([ "$DECLARED" = "$ONDISK" ]; echo $?)" "declared=$DECLARED ondisk=$ONDISK"
+
+# --help must stop at the END HELP sentinel; without it the sed range runs to
+# EOF and prints the whole script.
+H_OUT=$( (cd "$M" && bash scripts/validate.sh --help) 2>&1 )
+check "--help renders the usage block" \
+  "$(printf '%s' "$H_OUT" | grep -q 'Classes:'; echo $?)" "$H_OUT"
+check "--help stops at the sentinel" \
+  "$(printf '%s' "$H_OUT" | grep -q 'Layout:'; echo $((1 - $?)))" "$H_OUT"
 
 # =============================================================================
 echo "# is_git_commit"
