@@ -111,7 +111,9 @@ file is declared in `VALIDATION_SCRIPTS` (`scripts/validation-policy.sh`).
 `record_load` refuses undeclared recorded paths at runtime — exit 3, the
 commit gate fails closed — and the test suite audits xtrace-instrumented
 fixture runs: every file bash actually executed from must be declared,
-which no load syntax can evade. The convention: loads sit at top level in
+which no load syntax can evade (the audit's stated residuals are branches
+its runs do not execute — API regeneration, failure paths — and sourced
+files that execute no command). The convention: loads sit at top level in
 `validate.sh`, each `source` paired with `record_load` — a `source` inside
 a function frame silently localizes the sourced file's `declare`s, and an
 unpaired load, while still caught by the audit if undeclared, escapes the
