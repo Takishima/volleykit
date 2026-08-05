@@ -235,21 +235,26 @@ LOAD_SET=$(
 # does not declare — any name, any extension, either tree — exists here for
 # the traced-run audit below to observe. Untracked files are deliberately
 # not copied: a scratch file must not change fixture behavior.
-# The suite itself is excluded — by exact name, not a pattern: nothing
-# loads it, it is not declared, and a fixture full run with a dirty .sh
-# file would otherwise execute this suite recursively inside itself. A
-# pattern would carve a filename class out of the audit's sight.
+# The suite's own path is excluded from the copy — by exact name inside the
+# ls-files half, so a hypothetical *declared* .test.sh still reaches the
+# cp-failure guard — and then stubbed rather than left missing: the fixture
+# registry registers it as validation:test's command, and a missing file
+# would fail any fixture full run with a dirty script at 127, while copying
+# the real thing would recurse this suite into itself.
 COPY_SET=$(
   {
     printf '%s\n' "$DECLARED"
-    (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/)
-  } | grep -vxF 'scripts/validate.test.sh' | sort -u
+    (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/ | grep -vxF 'scripts/validate.test.sh')
+  } | sort -u
 )
 while IFS= read -r s; do
   mkdir -p "$M/$(dirname "$s")"
   cp "$REAL_ROOT/$s" "$M/$s" || not_ok "fixture copies $s" "missing from the repo"
 done <<<"$COPY_SET"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$M/scripts/validate.test.sh"
 echo '{}' >"$M/package.json"
+mkdir -p "$M/docs/api"
+echo 'openapi: 3.0.0' >"$M/docs/api/volleymanager-openapi.yaml"
 echo '.validation-cache/' >"$M/.gitignore"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
 echo 'export const s = 1' >"$M/packages/shared/src/index.ts"
@@ -447,23 +452,36 @@ set -x
 source scripts/validate.sh "$@"
 EOF
 : >"$TRACE"
+# The spec edit routes the full run through the API-regeneration branch
+# (pnpm stubbed); the web edit routes it through the registry and executor.
 echo 'export const a = 7' >"$M/packages/web/src/app.ts"
+echo '# regen probe' >>"$M/docs/api/volleymanager-openapi.yaml"
 ALL_OUT=""
 for arm in --gate --help --clear all; do
   ARM_OUT=$( (cd "$M" && VK_TRACE="$TRACE" PATH="$STUB_BIN:$PATH" \
     bash "$AUDIT" "$arm") 2>&1 ) || true
   [ "$arm" = all ] && ALL_OUT=$ARM_OUT
 done
+# One failing run traces the failure branch. --no-cache is required, not
+# cosmetic: the passing arm above has just cached every check, so without
+# it nothing is selected and nothing new is traced. The spec edit is
+# restored first — with the stub failing, set -e would kill the run at the
+# regeneration branch before it ever reached the failure path.
+git -C "$M" checkout -q -- docs
+touch "$STUB_FAIL"
+(cd "$M" && VK_TRACE="$TRACE" PATH="$STUB_BIN:$PATH" \
+  bash "$AUDIT" all --no-cache >/dev/null 2>&1) || true
+rm -f "$STUB_FAIL"
 git -C "$M" checkout -q -- packages
 # The declaration row below only means what it says if the runs got past
 # change detection: an arm that exits at "No changes" traces the top-of-file
 # loads and nothing else, silently — the coverage rests on the edit above,
 # and this row is what notices if that setup stops working.
-# [PASS] rows are printed only by print_summary after run_selected_checks —
-# "All checks pass" also appears on the all-cached early return, which would
-# make the row's verdict a property of cache state rather than the executor.
+# [PASS] rows are printed only after run_selected_checks — "All checks
+# pass" also appears on the all-cached early return, which would make the
+# row's verdict a property of cache state rather than the executor.
 check "the audited full run reaches the executor" \
-  "$(printf '%s' "$ALL_OUT" | grep -qF '[PASS]'; echo $?)" "$ALL_OUT"
+  "$(printf '%s' "$ALL_OUT" | grep -qE '\[PASS\].*web:build'; echo $?)" "$ALL_OUT"
 TRACED=$(grep -o 'VKSRC{[^}]*}' "$TRACE" | sed -e 's/^VKSRC{//' -e 's/}$//' \
   -e "s|^$M/||" | grep -vxF "$AUDIT" | grep -v '^$' | sort -u || true)
 UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))
@@ -496,6 +514,15 @@ check "FORMAT_EXT matches the root format script's glob" \
 CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
+
+# Files invoked by path — the hooks via .claude/settings.json, validate.sh
+# via the permission allowlist — depend on their tracked exec bit: a dropped
+# bit means the hook never runs, the one failure fail-closed design cannot
+# cover because failing closed requires executing. A mode change is neither
+# content nor text, so no other layer sees it.
+NONEXEC=$(cd "$REAL_ROOT" && git ls-files -s -- '.claude/hooks/*.sh' 'scripts/validate.sh' 'scripts/shellcheck.sh' |
+  awk '$1 != "100755" { print $4 }')
+check "files invoked by path are tracked executable" "$([ -z "$NONEXEC" ]; echo $?)" "$NONEXEC"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
