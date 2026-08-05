@@ -108,14 +108,14 @@ being silently skipped.
 
 Sourced scripts follow two rules, both enforced: the file is declared in
 `VALIDATION_SCRIPTS` (`scripts/validation-policy.sh`), and it is loaded in
-`validate.sh` by an unindented top-level `source` immediately followed by
-`record_load`. `record_load` refuses undeclared paths at runtime — exit 3,
-the commit gate fails closed — and the suite's pairing row rejects any
-`source` that is indented, guarded, chained, or not followed by its
-`record_load` (a load inside a function frame would also silently localize
-the sourced file's `declare`s). Declaring the file puts it in `CORE_ROOT`,
-so its edits invalidate every cached result: forgetting either rule is a
-loud failure, not a stale cache.
+`validate.sh` by a top-level `source` paired with `record_load`.
+`record_load` refuses undeclared paths at runtime — exit 3, the commit gate
+fails closed — and the test suite audits an xtrace-instrumented run: every
+file bash actually executed from must be declared, which no load syntax can
+evade (loads must also stay at top level — a `source` inside a function
+frame silently localizes the sourced file's `declare`s). Declaring the file
+puts it in `CORE_ROOT`, so its edits invalidate every cached result:
+forgetting either rule is a loud failure, not a stale cache.
 
 Touching the validation scripts, the hooks, `.claude/settings.json` or any
 `*.sh` file registers two more checks before the gate reopens:

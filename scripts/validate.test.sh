@@ -435,49 +435,40 @@ CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
 
-# record_load can only see the loads it is handed, so the pairing itself is
-# pinned here, and it is the pairing that is tested — not the load's form,
-# which a bypassing source can imitate. An unindented top-level source must
-# be immediately followed by its record_load; an indented, guarded or
-# chained source cannot be a sanctioned top-level load and is stray on
-# sight (a load moved into a function frame would also silently localize
-# the sourced file's declares). No whitelist, no path resolution — the
-# failure modes of every earlier form of this row came from one or the
-# other.
-# The record_load argument is pinned against the sourced path itself — two
-# hand-written spellings of one path would otherwise be checked against each
-# other by nothing, and a copy-paste pair could record a declared path while
-# loading an undeclared one.
-# shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
-STRAY=$(cd "$REAL_ROOT" && awk '
-  FNR == 1 { if (pend) print pend; pend = ""; want = "" }
-  # All rules below the pairing arm are an ALLOWLIST inversion: the
-  # unindented top-level form is the only sanctioned shape, so any other
-  # occurrence of source (or a dot/builtin/eval load) in command position is
-  # stray by construction — enumerating bypass prefixes missed one per
-  # round (builtin, then command, then a brace group). Matching runs on the
-  # line with any trailing comment stripped, so prose cannot red the row;
-  # the dot arm keeps a prefix class because an unanchored `.` fires on
-  # sentence text, and builtin/eval stay explicit to catch `builtin .`.
-  { code = $0; sub(/[[:space:]]#.*/, "", code) }
-  code !~ /^[[:space:]]*#/ && code ~ /(^|[^[:alnum:]_-])(builtin|eval)[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
-  /^(source|\.)[[:space:]]/ {
-    if (pend) print pend
-    pend = FILENAME ":" FNR ": " $0
-    want = ""
-    if (match($0, /\$SCRIPT_DIR\/[A-Za-z0-9._-]+\.sh/)) {
-      want = substr($0, RSTART, RLENGTH)
-      sub(/^\$SCRIPT_DIR\//, "scripts/", want)
-    }
-    next
-  }
-  code !~ /^[[:space:]]*#/ && code ~ /(^|[^[:alnum:]_-])source[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
-  code !~ /^[[:space:]]*#/ && code ~ /(^[[:space:]]+|[;&|{(][[:space:]]*)\.[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
-  pend { if (want == "" || $0 != "record_load " want) print pend; pend = ""; want = "" }
-  END { if (pend) print pend }
-' $DECLARED)
-check "every load is a top-level source paired with its own record_load" \
-  "$([ -z "$STRAY" ]; echo $?)" "stray=$STRAY"
+# The load-set audit asks bash which files a real run executed from, via an
+# xtrace prefix carrying BASH_SOURCE on a dedicated fd — no parsing of shell
+# text. Five review rounds each found a load form a lexical scan missed
+# (guarded, builtin-, command-, brace-prefixed, a # inside a string); the
+# trace is immune to all of them, including a 2>/dev/null on the load
+# itself, because BASH_XTRACEFD bypasses the redirected stderr. record_load
+# remains the runtime fail-closed guard for undeclared loads in every
+# environment; this row pins that no load — recorded or not — escapes
+# declaration. Stated residuals: a load on a branch none of the audited
+# arms executes, and a sourced file that executes no command, leave no
+# trace. All three arms are load-safe here: --gate is read-only, --help
+# exits in the argument loop, --clear points at a scratch cache.
+# BASH_XTRACEFD only takes effect when assigned inside the shell — from the
+# environment it is imported as an ordinary variable — so the setup lives in
+# a wrapper the traced shell runs first.
+TRACE="$WORK/xtrace.out"
+AUDIT="$WORK/xtrace-wrapper.sh"
+cat >"$AUDIT" <<'EOF'
+exec 9>>"$VK_TRACE"
+BASH_XTRACEFD=9
+PS4='+VKSRC{${BASH_SOURCE[0]}} '
+set -x
+source scripts/validate.sh "$@"
+EOF
+: >"$TRACE"
+for arm in --gate --help --clear; do
+  (cd "$REAL_ROOT" && VK_TRACE="$TRACE" VOLLEYKIT_CACHE_DIR="$WORK/audit-cache" \
+    PATH="$STUB_BIN:$PATH" bash "$AUDIT" "$arm" >/dev/null 2>&1) || true
+done
+TRACED=$(grep -o 'VKSRC{[^}]*}' "$TRACE" | sed -e 's/^VKSRC{//' -e 's/}$//' \
+  -e "s|^$REAL_ROOT/||" | grep -vxF "$AUDIT" | grep '\.sh$' | sort -u || true)
+UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))
+check "every file a traced run loads is declared" \
+  "$([ -n "$TRACED" ] && [ -z "$UNDECLARED" ]; echo $?)" "traced=$TRACED undeclared=$UNDECLARED"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
