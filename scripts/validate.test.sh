@@ -498,6 +498,15 @@ UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))
 check "every file the traced runs load is declared" \
   "$([ -n "$TRACED" ] && [ -z "$UNDECLARED" ]; echo $?)" "traced=$TRACED undeclared=$UNDECLARED"
 
+# A mode change is invisible to every fingerprint, so the exec-bit check
+# is uncached: it must red the gate even when every check is a cache hit.
+git -C "$M" update-index --chmod=-x .claude/hooks/pre-git-commit.sh
+run_validate --gate
+check "a dropped hook exec bit fails the gate closed uncached" \
+  "$([ "$V_STATUS" -eq 3 ] && printf '%s' "$V_OUT" | grep -q 'not tracked executable'; echo $?)" \
+  "exit=$V_STATUS out=$V_OUT"
+git -C "$M" update-index --chmod=+x .claude/hooks/pre-git-commit.sh
+
 check "--gate with a class filter is rejected" \
   "$( (cd "$M" && bash scripts/validate.sh --gate lint >/dev/null 2>&1); [ $? -eq 2 ]; echo $?)"
 
@@ -536,20 +545,39 @@ echo "# path-invoked files"
 # command text cannot answer reliably. Everything in .claude/hooks/ is
 # by-path by construction. This row pins that the invariant runs and reds:
 # a dropped bit on the commit hook must fail the shell lint.
-# Guarded on the binary: the suite's only dependencies are bash, git and
-# jq, and shellcheck.sh exits early without shellcheck installed. CI always
-# has it, so the row always runs where it is enforced. The probe drops the
+# The --exec-bits arm needs git only, so the probe runs everywhere the
+# suite does. Anchored on the invariant's own message, not the filename — a
+# lint finding in the same hook would print the filename too, and the probe
+# must not stay green when the block it tests is dead. The probe drops the
 # bit in a scratch index (GIT_INDEX_FILE), never the real one.
-if command -v shellcheck >/dev/null 2>&1; then
-  SC_OUT=$( (cd "$REAL_ROOT" && GIT_INDEX_FILE="$WORK/exec-probe-index" bash -c '
-    cp "$(git rev-parse --git-dir)/index" "$GIT_INDEX_FILE"
-    git update-index --chmod=-x .claude/hooks/pre-git-commit.sh
-    bash scripts/shellcheck.sh
-  ') 2>&1 ) && SC_STATUS=0 || SC_STATUS=$?
-  check "a dropped hook exec bit fails the shell lint" \
-    "$([ "$SC_STATUS" -ne 0 ] && printf '%s' "$SC_OUT" | grep -q 'pre-git-commit.sh'; echo $?)" \
-    "status=$SC_STATUS out=$SC_OUT"
-fi
+SC_OUT=$( (cd "$REAL_ROOT" && GIT_INDEX_FILE="$WORK/exec-probe-index" bash -c '
+  cp "$(git rev-parse --git-dir)/index" "$GIT_INDEX_FILE"
+  git update-index --chmod=-x .claude/hooks/pre-git-commit.sh
+  bash scripts/shellcheck.sh --exec-bits
+') 2>&1 ) && SC_STATUS=0 || SC_STATUS=$?
+check "a dropped hook exec bit fails the shell lint" \
+  "$([ "$SC_STATUS" -ne 0 ] && printf '%s' "$SC_OUT" | grep -q 'not tracked executable:'; echo $?)" \
+  "status=$SC_STATUS out=$SC_OUT"
+
+# The lint pins a directory; this row pins the converse — every by-path
+# registration resolves into that directory. One yes/no about SHAPE, on the
+# first word only: no file list is reconstructed, so no registration form
+# can be mis-derived (four rounds of per-file scraping each got one wrong),
+# and a renamed .claude/hooks/ reds here when the lint alone cannot see it.
+SETTINGS_FILES=$(cd "$REAL_ROOT" && git ls-files -- '.claude/settings*.json' | grep -v '\.local\.json$')
+# shellcheck disable=SC2086  # SETTINGS_FILES: newline list of our own paths
+OUTSIDE=$(cd "$REAL_ROOT" && jq -r '.. | objects | select(.type == "command") | .command' $SETTINGS_FILES |
+  awk '{ print $1 }' | tr -d '"' | grep 'CLAUDE_PROJECT_DIR' |
+  grep -vE '^\$\{?CLAUDE_PROJECT_DIR\}?/\.claude/hooks/[^/]+\.sh$' || true)
+check "every by-path registration sits where the lint pins exec bits" \
+  "$([ -z "$OUTSIDE" ]; echo $?)" "$OUTSIDE"
+# The shape row reads the tracked settings glob; the policy must list the
+# same files, or a new settings file is read here while invalidating
+# nothing.
+POLICY_SETTINGS=$(read_policy 'printf "%s" "$SHELL_INPUTS"' | tr ' ' '\n' | grep '^\.claude/settings' | sort -u)
+check "SHELL_INPUTS lists every tracked settings file" \
+  "$([ "$POLICY_SETTINGS" = "$(printf '%s\n' "$SETTINGS_FILES" | sort -u)" ]; echo $?)" \
+  "policy=$POLICY_SETTINGS tracked=$SETTINGS_FILES"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the

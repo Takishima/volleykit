@@ -95,6 +95,13 @@ fi
 # block below); say() keeps human commentary off it.
 say() { [ "$GATE_MODE" = true ] || echo -e "$@"; }
 
+# Uncached, every run, before any registration: a tracked mode is not
+# content, so no fingerprint can carry it and a cached PASS would report an
+# open gate over a hook that can no longer execute. shellcheck.sh owns the
+# definition of the set; this is the same call, keyed on nothing. Exit 3 so
+# the hook reports a broken gate, never an open one.
+bash "$ROOT_DIR/scripts/shellcheck.sh" --exec-bits || exit 3
+
 # =============================================================================
 # CHANGE DETECTION
 # =============================================================================

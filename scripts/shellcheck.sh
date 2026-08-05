@@ -13,6 +13,33 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
+# Exec-bit invariant, owned here because this is where the file list is
+# derived by walking git rather than reconstructed from settings command
+# strings. Everything directly in .claude/hooks/ is invoked by path — that
+# is what the directory is; lib/ is sourced, not executed, so it is
+# excluded — plus scripts/validate.sh (permission allowlist). A dropped
+# exec bit means the hook never runs and never emits a decision: the one
+# failure fail-closed design cannot cover. Needs git only, so it sits
+# above the shellcheck-binary guard, and validate.sh calls it UNCACHED on
+# every run via --exec-bits: a tracked mode is not content, so no
+# fingerprint can carry it and a cached PASS would open the gate over it.
+exec_bits() {
+  local nonexec
+  # :(glob) so * does not cross /: subdirectories (lib/) hold sourced
+  # helpers, which need no exec bit — 100644 is their ordinary spelling.
+  nonexec=$(git ls-files -s -- ':(glob).claude/hooks/*.sh' 'scripts/validate.sh' |
+    awk '$1 != "100755" { print $4 }')
+  [ -z "$nonexec" ] && return 0
+  echo "shellcheck.sh: invoked by path but not tracked executable:" >&2
+  printf '  %s\n' "$nonexec" >&2
+  return 1
+}
+
+if [ "${1-}" = "--exec-bits" ]; then
+  exec_bits
+  exit
+fi
+
 if ! command -v shellcheck >/dev/null 2>&1; then
   echo "shellcheck.sh: shellcheck is not installed" >&2
   exit 1
@@ -29,21 +56,5 @@ if [ ${#files[@]} -eq 0 ]; then
 fi
 
 shellcheck -x --severity=warning "${files[@]}"
-
-# Exec-bit invariant, checked here because this is where the file list is
-# derived by walking git rather than reconstructed from settings command
-# strings (four review rounds of JSON-scraping each missed a registration
-# form). Everything in .claude/hooks/ is invoked by path by construction —
-# that is what the directory is — and scripts/validate.sh is invoked by
-# path via the permission allowlist. A dropped exec bit means the hook
-# never runs and never emits a decision: the one failure fail-closed
-# design cannot cover, and a mode change is neither content nor text, so
-# no other layer sees it.
-NONEXEC=$(git ls-files -s -- '.claude/hooks/*.sh' 'scripts/validate.sh' | awk '$1 != "100755" { print $4 }')
-if [ -n "$NONEXEC" ]; then
-  echo "shellcheck.sh: invoked by path but not tracked executable:" >&2
-  printf '  %s\n' "$NONEXEC" >&2
-  exit 1
-fi
-
+exec_bits
 echo "shellcheck: ${#files[@]} files clean"
