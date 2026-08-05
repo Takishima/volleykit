@@ -199,8 +199,10 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-cp "$REAL_ROOT/scripts/validate.sh" "$REAL_ROOT/scripts/validation-lib.sh" "$M/scripts/"
-echo '{}' >"$M/package.json"
+cp "$REAL_ROOT/scripts/validate.sh" "$REAL_ROOT/scripts/validation-lib.sh" \
+  "$REAL_ROOT/scripts/validation-policy.sh" "$REAL_ROOT/scripts/validation-run.sh" "$M/scripts/"
+# The policy derives the format extension set from this glob.
+echo '{"scripts":{"format":"prettier --write \"**/*.{ts,tsx,js,json,css,md}\""}}' >"$M/package.json"
 echo '.validation-cache/' >"$M/.gitignore"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
 echo 'export const s = 1' >"$M/packages/shared/src/index.ts"
@@ -265,10 +267,30 @@ for record in "check shared:lint" "check web:lint" "check mobile:lint"; do
 done
 git -C "$M" checkout -q -- .
 
+# Docs-only changes register format (markdown is in the format glob and
+# nothing else gates it) but no package checks.
 echo 'notes' >"$M/docs/README.md"
 run_validate --gate
-check "docs-only change leaves the gate open" "$V_STATUS" "$V_OUT"
+check "docs-only change requires format" \
+  "$([ "$V_STATUS" -eq 1 ] && printf '%s\n' "$V_OUT" | grep -qx "check format"; echo $?)" \
+  "exit=$V_STATUS out=$V_OUT"
+check "docs-only change requires nothing else" \
+  "$(printf '%s\n' "$V_OUT" | grep -qv "^check format$"; echo $((1 - $?)))" "$V_OUT"
+run_validate
+run_validate --gate
+check "formatted docs-only change opens the gate" "$V_STATUS" "$V_OUT"
 rm "$M/docs/README.md"
+
+# A prettier-config edit widens format to every formattable file, so it must
+# register a check even when no formattable file changed.
+echo 'dist/' >"$M/.prettierignore"
+run_validate --gate
+check "a lone .prettierignore edit registers format" \
+  "$([ "$V_STATUS" -eq 1 ] && printf '%s\n' "$V_OUT" | grep -qx "check format"; echo $?)" \
+  "exit=$V_STATUS out=$V_OUT"
+run_validate
+check "widened format run passes" "$V_STATUS" "$V_OUT"
+rm "$M/.prettierignore"
 
 # Failure path: nothing is cached for a failing check.
 echo 'export const a = 4' >"$M/packages/web/src/app.ts"

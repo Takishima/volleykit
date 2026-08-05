@@ -52,8 +52,10 @@ Two consequences worth knowing:
 ## The Cache
 
 Each check's key is a content hash of its declared input paths plus a root
-set: `CORE_ROOT` (manifests, lockfile, validation scripts) is in every key;
-`FORMAT_ROOT` (prettier config) is in `format`'s key only.
+set: `CORE_ROOT` (manifests, lockfile, `.npmrc`, validation scripts) is in
+every key; `FORMAT_ROOT` (prettier config: `.prettierrc.json`,
+`.prettierignore`, `.editorconfig`) is in `format`'s key only. Both live in
+`scripts/validation-policy.sh`.
 
 | Situation                                 | Behaviour                                         |
 | ----------------------------------------- | ------------------------------------------------- |
@@ -72,10 +74,14 @@ from the hash, not a timer. `--no-cache` forces a full re-run.
 ## What Runs
 
 A package is affected when a changed path falls under its input paths (see
-`PKG_INPUTS` in `scripts/validate.sh`) or when a root file changed.
-`packages/shared/src` is an input of web and mobile, so any shared edit
-validates all three. `ocr-poc` is a throwaway proof of concept and is
-deliberately unvalidated.
+`PKG_INPUTS` in `scripts/validation-policy.sh`) or when a root file changed.
+`packages/shared/src` and `packages/shared/styles` are inputs of their
+consumers, so a shared edit validates web and mobile too. `ocr-poc` is a
+throwaway proof of concept and is deliberately unvalidated.
+
+Not every check is package-scoped: `format`, `tokens` and the `validation:*`
+checks register from their own constants in the policy file, not from the
+package table.
 
 | Package   | format¹ | lint | knip | typecheck  | test | build |
 | --------- | ------- | ---- | ---- | ---------- | ---- | ----- |
@@ -92,9 +98,11 @@ Non-build checks run in parallel, then all builds in parallel. The web build
 includes `tsc -b` and the bundle-size check. API types regenerate first if
 `volleymanager-openapi.yaml` changed.
 
-**Skipped entirely**: docs-only changes, and changes that register no check at
-all. There is no extension allowlist — an asset-only change under a package
-runs that package's checks rather than being silently skipped.
+**Docs-only changes** run `format` only — markdown is in the format glob and
+nothing else gates it — and skip every package check. Changes that register no
+check at all skip validation entirely. There is no extension allowlist — an
+asset-only change under a package runs that package's checks rather than
+being silently skipped.
 
 ## Changing the Validation Scripts
 
@@ -105,8 +113,9 @@ Touching the validation scripts, the hooks, `.claude/settings.json` or any
   fingerprint/cache primitives, the runner, the gate protocol and the commit
   hook, all against scratch repositories with `pnpm` stubbed. Needs only bash,
   git and jq.
-- `validation:shellcheck` — `scripts/shellcheck.sh`, which lints every tracked
-  `*.sh` file (minus vendored `.specify/`). Registered locally when
+- `validation:shellcheck` — `scripts/shellcheck.sh`, which lints every `*.sh`
+  file git knows about, tracked or untracked (minus vendored `.specify/`).
+  Registered locally when
   `shellcheck` is installed; `.github/workflows/ci-shell.yml` runs both this
   and the test suite on every push and PR, so the lint is enforced even where
   the binary is missing locally.

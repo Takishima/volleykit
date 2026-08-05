@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Lint every tracked shell script in the repository.
+# Lint every shell script git knows about, tracked or untracked.
 #
-# One definition of scope: tracked `*.sh` files, minus `.specify/` (vendored
-# speckit tooling, not ours to fix). Untracked scripts are linted too so a
-# local scratch script cannot rot unnoticed — gitignore it to exclude it.
+# One definition of scope: `*.sh` files from `git ls-files -c -o
+# --exclude-standard`, minus `.specify/` (vendored speckit tooling, not ours
+# to fix). Untracked scripts are included so a local scratch script cannot rot
+# unnoticed — gitignore it to exclude it.
 #
 # Used by scripts/validate.sh (when shellcheck is installed) and by CI
 # (.github/workflows/ci-shell.yml), which is the enforcing run.

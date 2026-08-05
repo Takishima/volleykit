@@ -112,6 +112,32 @@ staged_worktree_divergence() {
   comm -12 <(printf '%s\n' "$staged" | sort -u) <(printf '%s\n' "$dirty" | sort -u)
 }
 
+# Anchored ERE matching the given whitespace-separated paths and anything
+# beneath them. Callers pass our own policy constants, never arbitrary
+# filenames — divergence checks compare literally, precisely because filenames
+# can contain metacharacters. The escape chain covers every ERE metacharacter
+# anyway so that adding a path with one cannot quietly change what matches.
+paths_to_regex() {
+  local out="" p
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  for p in $1; do
+    p=${p//\\/\\\\}
+    p=${p//./\\.}
+    p=${p//+/\\+}
+    p=${p//\{/\\\{}
+    p=${p//(/\\(}
+    p=${p//)/\\)}
+    p=${p//[/\\[}
+    p=${p//\*/\\*}
+    p=${p//\?/\\?}
+    p=${p//|/\\|}
+    p=${p//^/\\^}
+    p=${p//\$/\\\$}
+    out="${out:+$out|}$p"
+  done
+  printf '^(%s)(/|$)' "$out"
+}
+
 # =============================================================================
 # FINGERPRINTING
 # =============================================================================
