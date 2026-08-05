@@ -6,6 +6,8 @@
 #
 # Everything runs against scratch repositories under mktemp with `pnpm`
 # stubbed, so the suite needs only bash, git and jq and finishes in seconds.
+# One exception touches the real repo: the load-set audit runs the real
+# validate.sh CLI arms in place — read-only, with the cache dir redirected.
 # CI runs it via .github/workflows/ci-shell.yml; locally it is the
 # `validation:test` check in scripts/validate.sh.
 
@@ -52,6 +54,18 @@ in_repo() {
   shift
   (cd "$dir" && bash -c "source '$REAL_ROOT/scripts/validation-lib.sh' || exit 99; $*")
 }
+
+# Evaluate a snippet with the real policy file loaded — the one idiom for
+# reading policy values, so the suite cannot drift from the table it tests.
+read_policy() {
+  (cd "$REAL_ROOT" && bash -c "source scripts/validation-policy.sh >/dev/null 2>&1; $1")
+}
+
+# Shared policy values, read once up front: both the scratch fixture and the
+# real-repo policy rows consume these, so they live above both sections
+# instead of one section reaching into the other's locals.
+DECLARED=$(read_policy 'printf "%s\n" $VALIDATION_SCRIPTS' | sort)
+PKG_LIST=$(read_policy 'printf "%s\n" "${PKG_NAMES[@]}"')
 
 # =============================================================================
 echo "# fingerprint"
@@ -209,7 +223,6 @@ mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
 # Residual: a tracked validation-*.sh that is never loaded fails its probe —
 # self-evident from the row name. A cp failure is a red row, not a silent
 # shrink of the load set.
-DECLARED=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS' | sort)
 LOAD_SET=$(
   {
     printf '%s\n' "$DECLARED"
@@ -355,12 +368,12 @@ while IFS= read -r rel; do
   check "baseline before probing $rel: gate is open" "$V_STATUS" "$V_OUT"
   printf '\n# invalidation probe\n' >>"$M/$rel"
   run_validate --gate
-  # Every package, not a proxy: a script moved out of CORE_ROOT into one
-  # package's inputs would register that package alone while the rest keep
-  # stale PASS entries.
-  MISS=$(for c in web:lint shared:lint mobile:lint worker:lint help-site:build; do
-    printf '%s\n' "$V_OUT" | grep -qx "check $c" || echo "$c"
-  done)
+  # Every package from the table, not a hand-copied list: a package added to
+  # PKG_NAMES is asserted here without editing the suite, and a script moved
+  # out of CORE_ROOT into one package's inputs cannot hide behind the others.
+  MISS=$(while IFS= read -r p; do
+    printf '%s\n' "$V_OUT" | grep -qE "^check $p:" || echo "$p"
+  done <<<"$PKG_LIST")
   check "editing $rel invalidates the package checks" \
     "$([ "$V_STATUS" -eq 1 ] && [ -z "$MISS" ]; echo $?)" "exit=$V_STATUS missing=$MISS"
   git -C "$M" checkout -q -- "$rel"
@@ -378,7 +391,7 @@ echo "# policy agrees with package.json"
 # derivation was rejected (jq at every startup, silent narrowing on a second
 # brace group), so drift shows up here instead. Sets, not strings: alternation
 # order is irrelevant to the ERE, so a reordered glob must stay green.
-POLICY_EXT=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s" "$FORMAT_EXT"')
+POLICY_EXT=$(read_policy 'printf "%s" "$FORMAT_EXT"')
 POLICY_SET=$(printf '%s' "$POLICY_EXT" | sed 's/^\\\.(//; s/)\$$//' | tr '|' '\n' | sort)
 glob_set() { # glob_set <package.json script name>
   jq -r ".scripts.\"$1\" // \"\"" "$REAL_ROOT/package.json" | grep -o '{[^}]*}' | tr -d '{}'
@@ -398,39 +411,47 @@ check "format:check covers the same set as format" \
 # three sides. This textual row scans the DECLARED set (never a directory
 # glob — that is what let scratch files close the gate) and catches a
 # line-initial source in any arm, including arms no fixture run executes
-# (e.g. --clear). Guarded and dynamically-built sources are the audit row's
-# and the probes' job.
+# (e.g. --clear). It compares basenames: source lines name paths through
+# variables the text cannot resolve, so reconstructing directories here would
+# just restate an assumption — the audit row below is path-exact. Guarded and
+# dynamically-built sources are the audit row's and the probes' job.
+DECLARED_BASE=$(printf '%s\n' "$DECLARED" | sed 's|.*/||' | sort -u)
 # shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
-SOURCED=$(
+SOURCED_BASE=$(
   {
-    echo scripts/validate.sh
+    echo validate.sh
     (cd "$REAL_ROOT" && grep -hoE '^[[:space:]]*(source|\.)[[:space:]]+[^#]*/[A-Za-z0-9._-]+\.sh' $DECLARED /dev/null) |
-      grep -oE '[A-Za-z0-9._-]+\.sh$' | sed 's|^|scripts/|'
+      grep -oE '[A-Za-z0-9._-]+\.sh$'
   } | sort -u
 )
 check "VALIDATION_SCRIPTS lists every script sourced by name" \
-  "$([ "$DECLARED" = "$SOURCED" ]; echo $?)" "declared=$DECLARED sourced=$SOURCED"
+  "$([ "$DECLARED_BASE" = "$SOURCED_BASE" ]; echo $?)" "declared=$DECLARED_BASE sourced=$SOURCED_BASE"
 
-# The audit row asks bash itself: a DEBUG trap during a real-repo --gate run
-# records every file commands execute from, so any source that actually runs
-# — guarded, absence-tolerant, computed path — lands in LOADED no matter its
-# syntax. (BASH_SOURCE is a call stack, not a log; the trap accumulates it.)
-# Gate mode is read-only, so the run is safe and cheap. Residual: a source on
-# an arm this run does not take is the textual row's job.
+# The audit row asks bash itself: a DEBUG trap during real-repo runs records
+# every file commands execute from, so any source that actually runs —
+# guarded, absence-tolerant, computed path, any directory — lands in LOADED
+# no matter its syntax. (BASH_SOURCE is a call stack, not a log; the trap
+# accumulates it.) Every CLI arm is audited: --gate is read-only, --help
+# exits in the argument loop, and --clear is pointed at a scratch cache via
+# VOLLEYKIT_CACHE_DIR, so no run mutates anything real. The filter excludes
+# only the audit script itself — a directory whitelist here would throw away
+# exactly the out-of-tree sources the row exists to catch.
 AUDIT="$WORK/audit.sh"
 cat >"$AUDIT" <<'EOF'
 set -T
 declare -A SEEN=()
 trap 'SEEN[${BASH_SOURCE[0]:-.}]=1' DEBUG
 trap 'printf "%s\n" "${!SEEN[@]}" >&3' EXIT
-source scripts/validate.sh --gate
+source scripts/validate.sh "$@"
 EOF
 LOADED=$(
-  (cd "$REAL_ROOT" && bash "$AUDIT" 3>&1 >/dev/null 2>&1 || true) |
-    sed "s|^$REAL_ROOT/||" | grep -E '^scripts/.*\.sh$' | sort -u
+  for arm in --gate --help --clear; do
+    (cd "$REAL_ROOT" && VOLLEYKIT_CACHE_DIR="$WORK/audit-cache" PATH="$STUB_BIN:$PATH" \
+      bash "$AUDIT" "$arm" 3>&1 >/dev/null 2>&1 || true)
+  done | sed "s|^$REAL_ROOT/||" | grep -vxF "$AUDIT" | grep -E '\.sh$' | sort -u
 )
 UNDECLARED=$(comm -23 <(printf '%s\n' "$LOADED") <(printf '%s\n' "$DECLARED"))
-check "every script a real gate run loads is declared" \
+check "every script the CLI arms load is declared" \
   "$([ -n "$LOADED" ] && [ -z "$UNDECLARED" ]; echo $?)" "loaded=$LOADED undeclared=$UNDECLARED"
 
 # --help must resolve its own file after the cd to the repo root (a relative
