@@ -235,11 +235,14 @@ LOAD_SET=$(
 # does not declare — any name, any extension, either tree — exists here for
 # the traced-run audit below to observe. Untracked files are deliberately
 # not copied: a scratch file must not change fixture behavior.
+# The suite itself is excluded: nothing loads it, it is not declared, and a
+# fixture full run with a dirty .sh file would otherwise execute this suite
+# recursively inside itself.
 COPY_SET=$(
   {
     printf '%s\n' "$DECLARED"
     (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/)
-  } | sort -u
+  } | grep -v '\.test\.sh$' | sort -u
 )
 while IFS= read -r s; do
   mkdir -p "$M/$(dirname "$s")"
@@ -444,11 +447,19 @@ source scripts/validate.sh "$@"
 EOF
 : >"$TRACE"
 echo 'export const a = 7' >"$M/packages/web/src/app.ts"
+ALL_OUT=""
 for arm in --gate --help --clear all; do
-  (cd "$M" && VK_TRACE="$TRACE" PATH="$STUB_BIN:$PATH" \
-    bash "$AUDIT" "$arm" >/dev/null 2>&1) || true
+  ARM_OUT=$( (cd "$M" && VK_TRACE="$TRACE" PATH="$STUB_BIN:$PATH" \
+    bash "$AUDIT" "$arm") 2>&1 ) || true
+  [ "$arm" = all ] && ALL_OUT=$ARM_OUT
 done
 git -C "$M" checkout -q -- packages
+# The declaration row below only means what it says if the runs got past
+# change detection: an arm that exits at "No changes" traces the top-of-file
+# loads and nothing else, silently — the coverage rests on the edit above,
+# and this row is what notices if that setup stops working.
+check "the audited full run reaches the executor" \
+  "$(printf '%s' "$ALL_OUT" | grep -q 'All checks pass'; echo $?)" "$ALL_OUT"
 TRACED=$(grep -o 'VKSRC{[^}]*}' "$TRACE" | sed -e 's/^VKSRC{//' -e 's/}$//' \
   -e "s|^$M/||" | grep -vxF "$AUDIT" | grep -v '^$' | sort -u || true)
 UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))

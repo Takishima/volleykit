@@ -106,16 +106,18 @@ being silently skipped.
 
 ## Changing the Validation Scripts
 
-Sourced scripts follow two rules, both enforced: the file is declared in
-`VALIDATION_SCRIPTS` (`scripts/validation-policy.sh`), and it is loaded in
-`validate.sh` by a top-level `source` paired with `record_load`.
-`record_load` refuses undeclared paths at runtime — exit 3, the commit gate
-fails closed — and the test suite audits an xtrace-instrumented run: every
-file bash actually executed from must be declared, which no load syntax can
-evade (loads must also stay at top level — a `source` inside a function
-frame silently localizes the sourced file's `declare`s). Declaring the file
-puts it in `CORE_ROOT`, so its edits invalidate every cached result:
-forgetting either rule is a loud failure, not a stale cache.
+Sourced scripts follow one enforced rule and one convention. The rule: the
+file is declared in `VALIDATION_SCRIPTS` (`scripts/validation-policy.sh`).
+`record_load` refuses undeclared recorded paths at runtime — exit 3, the
+commit gate fails closed — and the test suite audits xtrace-instrumented
+fixture runs: every file bash actually executed from must be declared,
+which no load syntax can evade. The convention: loads sit at top level in
+`validate.sh`, each `source` paired with `record_load` — a `source` inside
+a function frame silently localizes the sourced file's `declare`s, and an
+unpaired load, while still caught by the audit if undeclared, escapes the
+runtime guard. Declaring the file puts it in `CORE_ROOT`, so its edits
+invalidate every cached result: forgetting the rule is a loud failure, not
+a stale cache.
 
 Touching the validation scripts, the hooks, `.claude/settings.json` or any
 `*.sh` file registers two more checks before the gate reopens:
