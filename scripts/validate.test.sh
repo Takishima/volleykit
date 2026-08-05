@@ -353,10 +353,17 @@ check "format:check covers the same set as format" \
 # file in scripts/ close the commit gate), while the property the constant
 # must have is "what validate.sh is built from".
 DECLARED=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS' | sort)
+# `source` lines across the whole set, not just validate.sh's own —
+# validation-run.sh sources the lib itself, so the graph is two levels deep
+# and a transitively sourced script must be visible here too. Anchored on
+# source/. statements so a comment mentioning a script path cannot close the
+# gate, and matching any path form (validation-run.sh sources via
+# dirname/BASH_SOURCE, not $SCRIPT_DIR).
 SOURCED=$(
   {
     echo scripts/validate.sh
-    grep -o 'SCRIPT_DIR/[A-Za-z0-9._-]*\.sh' "$REAL_ROOT/scripts/validate.sh" | sed 's|^SCRIPT_DIR/|scripts/|'
+    (cd "$REAL_ROOT" && grep -hoE '^[[:space:]]*(source|\.)[[:space:]]+[^#]*/[A-Za-z0-9._-]+\.sh' scripts/validate.sh scripts/validation-*.sh) |
+      grep -oE '[A-Za-z0-9._-]+\.sh$' | sed 's|^|scripts/|'
   } | sort -u
 )
 check "VALIDATION_SCRIPTS lists validate.sh and everything it sources" \
@@ -368,8 +375,10 @@ check "VALIDATION_SCRIPTS lists validate.sh and everything it sources" \
 H_OUT=$( (cd "$M/packages/web" && bash ../../scripts/validate.sh --help) 2>&1 )
 check "--help renders the usage block from a subdirectory" \
   "$(printf '%s' "$H_OUT" | grep -q 'Classes:'; echo $?)" "$H_OUT"
+# Tied to the block having rendered: error output is non-empty and contains
+# no 'Layout:' either, so a bare negative would pass on a broken --help.
 check "--help stops at the sentinel" \
-  "$([ -n "$H_OUT" ] && ! printf '%s' "$H_OUT" | grep -q 'Layout:'; echo $?)" "$H_OUT"
+  "$(printf '%s' "$H_OUT" | grep -q 'Classes:' && ! printf '%s' "$H_OUT" | grep -q 'Layout:'; echo $?)" "$H_OUT"
 
 # =============================================================================
 echo "# is_git_commit"
