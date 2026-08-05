@@ -451,7 +451,16 @@ check "format:check covers the same set as format" \
 # shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
 STRAY=$(cd "$REAL_ROOT" && awk '
   FNR == 1 { if (pend) print pend; pend = ""; want = "" }
-  !/^[[:space:]]*#/ && /(^|[^[:alnum:]_-])(builtin|eval)[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
+  # All rules below the pairing arm are an ALLOWLIST inversion: the
+  # unindented top-level form is the only sanctioned shape, so any other
+  # occurrence of source (or a dot/builtin/eval load) in command position is
+  # stray by construction — enumerating bypass prefixes missed one per
+  # round (builtin, then command, then a brace group). Matching runs on the
+  # line with any trailing comment stripped, so prose cannot red the row;
+  # the dot arm keeps a prefix class because an unanchored `.` fires on
+  # sentence text, and builtin/eval stay explicit to catch `builtin .`.
+  { code = $0; sub(/[[:space:]]#.*/, "", code) }
+  code !~ /^[[:space:]]*#/ && code ~ /(^|[^[:alnum:]_-])(builtin|eval)[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
   /^(source|\.)[[:space:]]/ {
     if (pend) print pend
     pend = FILENAME ":" FNR ": " $0
@@ -462,7 +471,8 @@ STRAY=$(cd "$REAL_ROOT" && awk '
     }
     next
   }
-  /(^[[:space:]]+|[;&|][[:space:]]*)(source|\.)[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
+  code !~ /^[[:space:]]*#/ && code ~ /(^|[^[:alnum:]_-])source[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
+  code !~ /^[[:space:]]*#/ && code ~ /(^[[:space:]]+|[;&|{(][[:space:]]*)\.[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
   pend { if (want == "" || $0 != "record_load " want) print pend; pend = ""; want = "" }
   END { if (pend) print pend }
 ' $DECLARED)
