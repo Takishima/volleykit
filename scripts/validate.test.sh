@@ -451,6 +451,7 @@ check "format:check covers the same set as format" \
 # shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
 STRAY=$(cd "$REAL_ROOT" && awk '
   FNR == 1 { if (pend) print pend; pend = ""; want = "" }
+  !/^[[:space:]]*#/ && /(^|[^[:alnum:]_-])(builtin|eval)[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
   /^(source|\.)[[:space:]]/ {
     if (pend) print pend
     pend = FILENAME ":" FNR ": " $0
