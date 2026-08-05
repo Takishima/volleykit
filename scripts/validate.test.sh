@@ -199,7 +199,15 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-cp "$REAL_ROOT/scripts/validate.sh" "$REAL_ROOT"/scripts/validation-*.sh "$M/scripts/"
+# The fixture copies exactly the declared load set, making VALIDATION_SCRIPTS
+# the one definition of "what validate.sh is built from": a script it sources
+# but does not declare is missing here and crashes every scratch run (bash
+# names the missing file), while an untracked scratch file in scripts/ is
+# not declared, not copied, and cannot close the gate. The invalidation
+# probes below iterate the same copied set.
+while IFS= read -r s; do
+  cp "$REAL_ROOT/$s" "$M/scripts/"
+done < <(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS')
 echo '{}' >"$M/package.json"
 echo '.validation-cache/' >"$M/.gitignore"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
