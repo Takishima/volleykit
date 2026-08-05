@@ -38,7 +38,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # function frame silently makes the sourced file's bare `declare`s
 # function-local, so the loads stay at top level and the helper only checks.
 # The suite pins the pairing — a `source` without a record_load fails its
-# "no load bypasses record_load" row.
+# "every load is a top-level source paired with its own record_load" row.
 LOADED_SCRIPTS="scripts/validate.sh"
 record_load() {
   LOADED_SCRIPTS="$LOADED_SCRIPTS $1"

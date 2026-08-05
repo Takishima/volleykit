@@ -450,7 +450,9 @@ check "format:check covers the same set as format" \
 # loading an undeclared one.
 # shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
 STRAY=$(cd "$REAL_ROOT" && awk '
+  FNR == 1 { if (pend) print pend; pend = ""; want = "" }
   /^(source|\.)[[:space:]]/ {
+    if (pend) print pend
     pend = FILENAME ":" FNR ": " $0
     want = ""
     if (match($0, /\$SCRIPT_DIR\/[A-Za-z0-9._-]+\.sh/)) {
