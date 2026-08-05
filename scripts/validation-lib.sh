@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Primitives for VolleyKit validation: change detection, content fingerprinting
-# and the check cache. Project policy (which packages exist, which checks they
-# run) lives in scripts/validate.sh.
+# Primitives for VolleyKit validation: change detection, content
+# fingerprinting, path-set matching (paths_to_regex) and the check cache.
+# Project policy (which packages exist, which checks they run) lives in
+# scripts/validation-policy.sh; selection and the gate in scripts/validate.sh.
 #
 # This file is meant to be sourced. It does not set shell options, does not
 # change the caller's working directory and does not exit the caller — it only

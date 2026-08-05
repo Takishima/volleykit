@@ -9,6 +9,13 @@
 # nothing resolves packages/shared/dist, so web:build does not consume
 # shared:build — the builds are independent of each other.
 
+# The executor uses cache_store/cache_drop, so its dependency on the lib is
+# stated here rather than inherited from whatever the caller happened to
+# source first. Re-sourcing is harmless — the lib only defines functions and
+# recomputes two derivable variables.
+# shellcheck source=./validation-lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/validation-lib.sh" || return 1
+
 # Run one check. CHECK_CMD is space-separated argv; composite commands need a
 # shell and are handled by name (`__format__`, `__web_build__`).
 run_check() {

@@ -12,6 +12,7 @@
 # re-run at commit time, and fixing one package does not re-run the others.
 #
 # Classes: format, tokens, lint, typecheck, test, build
+# END HELP
 #
 # Layout: scripts/validation-lib.sh holds git/cache primitives,
 # scripts/validation-policy.sh the package/inputs tables, and
@@ -57,7 +58,8 @@ for arg in "$@"; do
       exit 0
       ;;
     -h | --help)
-      sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'
+      # The sentinel keeps header edits from silently truncating the help.
+      sed -n '2,/^# END HELP/p' "$0" | sed '$d' | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     all) ;;

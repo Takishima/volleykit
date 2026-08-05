@@ -5,7 +5,6 @@
 # (selection, registry, gate) and scripts/validation-run.sh (execution).
 #
 # Meant to be sourced by scripts/validate.sh with the cwd at the repo root.
-# Requires jq (already a hard dependency of the commit hook).
 #
 # shellcheck disable=SC2034  # every constant here is consumed by the sourcing script
 
@@ -56,12 +55,18 @@ declare -A PKG_INPUTS=(
 # config change has nothing to do with whether the mobile tests still pass,
 # and treating it as repo-wide re-runs the entire monorepo for it.
 
+# The validation scripts themselves, listed once and fed into both root sets
+# below: a script added to one list but not the other would either leave stale
+# PASS entries behind (missing from CORE_ROOT) or skip the suite that covers
+# it (missing from SHELL_INPUTS).
+VALIDATION_SCRIPTS="scripts/validate.sh scripts/validation-lib.sh scripts/validation-policy.sh scripts/validation-run.sh"
+
 # CORE_ROOT drives ROOT_CHANGED, which marks every package affected, and is in
 # every check's cache key. `.npmrc` is here because it controls pnpm's
 # resolution behaviour for every package. The validation scripts are here on
 # purpose: changing a check's command or input paths must not leave stale PASS
 # entries behind.
-CORE_ROOT="package.json .npmrc pnpm-lock.yaml pnpm-workspace.yaml scripts/validate.sh scripts/validation-lib.sh scripts/validation-policy.sh scripts/validation-run.sh"
+CORE_ROOT="package.json .npmrc pnpm-lock.yaml pnpm-workspace.yaml $VALIDATION_SCRIPTS"
 
 # Prettier's own inputs. `.editorconfig` is read by prettier 3 by default, so
 # editing it changes the verdict for files that did not change.
@@ -70,7 +75,7 @@ FORMAT_ROOT=".prettierrc.json .prettierignore .editorconfig"
 # Everything that decides whether the commit gate runs and what it decides:
 # the hook, the file that registers the hook, and the scripts behind it. One
 # list feeds both the trigger and the check's cache key.
-SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-policy.sh scripts/validation-run.sh scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
+SHELL_INPUTS=".claude/hooks .claude/settings.json $VALIDATION_SCRIPTS scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
 
 # The design-token check compares the two generated files. Trigger and inputs
 # are the same constant so editing the generator both invalidates the cache
@@ -81,13 +86,9 @@ TOKENS_INPUTS="packages/shared/styles scripts/sync-style-tokens.js"
 # FORMAT EXTENSIONS
 # =============================================================================
 #
-# Derived from the root `format` script's glob in package.json rather than
-# restated: the gate must check the same file set `pnpm run format` writes,
-# and two hand-maintained copies of that set will drift.
-FORMAT_GLOB=$(jq -r '.scripts.format // ""' package.json 2>/dev/null | sed -n 's/.*{\([^}]*\)}.*/\1/p')
-if [ -z "$FORMAT_GLOB" ]; then
-  echo "validation-policy: cannot derive the format extension set from the" >&2
-  echo "root package.json 'format' script (expected a \"**/*.{ext,...}\" glob)." >&2
-  return 1
-fi
-FORMAT_EXT="\\.($(printf '%s' "$FORMAT_GLOB" | tr ',' '|'))\$"
+# Must stay in agreement with the root `format` script's glob in package.json:
+# the gate has to check the same file set `pnpm run format` writes. The test
+# suite asserts the two agree (a runtime derivation was tried and rejected —
+# it made jq a dependency of every invocation and failed silently on a second
+# brace group; drift is better caught as a red test than parsed at startup).
+FORMAT_EXT='\.(ts|tsx|js|jsx|mjs|json|css|md|astro)$'

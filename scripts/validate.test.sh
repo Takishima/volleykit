@@ -199,10 +199,8 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-cp "$REAL_ROOT/scripts/validate.sh" "$REAL_ROOT/scripts/validation-lib.sh" \
-  "$REAL_ROOT/scripts/validation-policy.sh" "$REAL_ROOT/scripts/validation-run.sh" "$M/scripts/"
-# The policy derives the format extension set from this glob.
-echo '{"scripts":{"format":"prettier --write \"**/*.{ts,tsx,js,json,css,md}\""}}' >"$M/package.json"
+cp "$REAL_ROOT/scripts/validate.sh" "$REAL_ROOT"/scripts/validation-*.sh "$M/scripts/"
+echo '{}' >"$M/package.json"
 echo '.validation-cache/' >"$M/.gitignore"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
 echo 'export const s = 1' >"$M/packages/shared/src/index.ts"
@@ -322,6 +320,22 @@ commit_all "$M" "settle again"
 
 check "--gate with a class filter is rejected" \
   "$( (cd "$M" && bash scripts/validate.sh --gate lint >/dev/null 2>&1); [ $? -eq 2 ]; echo $?)"
+
+# =============================================================================
+echo "# policy agrees with package.json"
+# =============================================================================
+
+# FORMAT_EXT is a declared constant; the root `format` script's glob is the
+# set `pnpm run format` actually writes. They must be the same set — a runtime
+# derivation was rejected (jq at every startup, silent narrowing on a second
+# brace group), so drift shows up here instead.
+POLICY_EXT=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s" "$FORMAT_EXT"')
+GLOBS=$(jq -r '.scripts.format // ""' "$REAL_ROOT/package.json" | grep -o '{[^}]*}' | tr -d '{}')
+EXPECTED_EXT="\\.($(printf '%s' "$GLOBS" | tr ',' '|'))\$"
+check "root format script has exactly one extension glob" \
+  "$([ -n "$GLOBS" ] && [ "$(printf '%s\n' "$GLOBS" | wc -l)" -eq 1 ]; echo $?)" "globs=$GLOBS"
+check "FORMAT_EXT matches the root format script's glob" \
+  "$([ "$POLICY_EXT" = "$EXPECTED_EXT" ]; echo $?)" "policy=$POLICY_EXT package.json=$EXPECTED_EXT"
 
 # =============================================================================
 echo "# is_git_commit"

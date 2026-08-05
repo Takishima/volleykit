@@ -1,6 +1,7 @@
 name: Shell
 
-# Lints every tracked shell script and runs the validation-system test suite.
+# Lints every shell script git knows about (tracked or untracked) and runs
+# the validation-system test suite.
 # No `paths:` filter on purpose: the whole job takes seconds, and a filter is
 # one more list that must be kept in agreement with what the scripts read.
 
