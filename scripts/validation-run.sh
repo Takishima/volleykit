@@ -12,7 +12,7 @@
 # The executor uses cache_store/cache_drop from validation-lib.sh, which
 # validate.sh — the only consumer of this file — loads first. No standalone
 # self-source: every load lives in validate.sh's record_load-paired block,
-# and the suite's pairing row rejects any source outside it.
+# and the suite's traced-run audit rejects any load of an undeclared file.
 
 # Run one check. CHECK_CMD is space-separated argv; composite commands need a
 # shell and are handled by name (`__format__`, `__web_build__`).

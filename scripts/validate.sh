@@ -37,8 +37,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Recording is deliberately separate from sourcing: a `source` inside a
 # function frame silently makes the sourced file's bare `declare`s
 # function-local, so the loads stay at top level and the helper only checks.
-# The suite pins the pairing — a `source` without a record_load fails its
-# "every load is a top-level source paired with its own record_load" row.
+# The suite audits an xtrace-instrumented run: every file bash actually
+# executes from must be declared, whatever syntax loaded it — see the
+# "every file the traced runs load is declared" row.
 LOADED_SCRIPTS="scripts/validate.sh"
 record_load() {
   LOADED_SCRIPTS="$LOADED_SCRIPTS $1"

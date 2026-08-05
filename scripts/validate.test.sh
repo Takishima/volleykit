@@ -6,9 +6,9 @@
 #
 # Everything runs against scratch repositories under mktemp with `pnpm`
 # stubbed, so the suite needs only bash, git and jq and finishes in seconds.
-# The only real-repo touches are reads: policy constants via read_policy,
-# source-line scans, and sourcing the commit predicate. Nothing executes
-# against the real repository.
+# The only real-repo touches are reads: policy constants via read_policy
+# and sourcing the commit predicate. Nothing executes against the real
+# repository — the traced-run load audit runs against the fixture.
 # CI runs it via .github/workflows/ci-shell.yml; locally it is the
 # `validation:test` check in scripts/validate.sh.
 
@@ -230,10 +230,21 @@ LOAD_SET=$(
     (cd "$REAL_ROOT" && git ls-files 'scripts/validate.sh' 'scripts/validation-*.sh' | grep -v '\.test\.sh$')
   } | sort -u
 )
+# The fixture's copy set is wider than the probe set: every tracked file
+# under scripts/ and .claude/hooks/, so a script that validate.sh loads but
+# does not declare — any name, any extension, either tree — exists here for
+# the traced-run audit below to observe. Untracked files are deliberately
+# not copied: a scratch file must not change fixture behavior.
+COPY_SET=$(
+  {
+    printf '%s\n' "$DECLARED"
+    (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/)
+  } | sort -u
+)
 while IFS= read -r s; do
   mkdir -p "$M/$(dirname "$s")"
   cp "$REAL_ROOT/$s" "$M/$s" || not_ok "fixture copies $s" "missing from the repo"
-done <<<"$LOAD_SET"
+done <<<"$COPY_SET"
 echo '{}' >"$M/package.json"
 echo '.validation-cache/' >"$M/.gitignore"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
@@ -408,6 +419,42 @@ check "declaring the load is accepted" \
 git -C "$M" checkout -q -- scripts
 rm "$M/scripts/vk-guard-probe.sh"
 
+# The load-set audit asks bash which files traced runs executed from, via an
+# xtrace prefix carrying BASH_SOURCE on a dedicated fd — no parsing of shell
+# text, so no load syntax, extension, quoting or directory can hide from it,
+# including a 2>/dev/null on the load (BASH_XTRACEFD bypasses the redirected
+# stderr). It runs against the fixture with an edit in place, so --gate
+# traverses change detection, the registry and the gate block, and the full
+# run covers the executor — a clean real checkout (CI's state) would exit at
+# "no changes" and trace almost nothing. record_load remains the runtime
+# fail-closed guard everywhere; this row pins that no load — recorded or
+# not — escapes declaration. Residuals: a branch none of the traced runs
+# executes (e.g. API regeneration, failure paths), and a sourced file that
+# executes no command, leave no trace.
+# BASH_XTRACEFD only takes effect when assigned inside the shell — from the
+# environment it is imported as an ordinary variable — hence the wrapper.
+TRACE="$WORK/xtrace.out"
+AUDIT="$WORK/xtrace-wrapper.sh"
+cat >"$AUDIT" <<'EOF'
+exec 9>>"$VK_TRACE"
+BASH_XTRACEFD=9
+PS4='+VKSRC{${BASH_SOURCE[0]}} '
+set -x
+source scripts/validate.sh "$@"
+EOF
+: >"$TRACE"
+echo 'export const a = 7' >"$M/packages/web/src/app.ts"
+for arm in --gate --help --clear all; do
+  (cd "$M" && VK_TRACE="$TRACE" PATH="$STUB_BIN:$PATH" \
+    bash "$AUDIT" "$arm" >/dev/null 2>&1) || true
+done
+git -C "$M" checkout -q -- packages
+TRACED=$(grep -o 'VKSRC{[^}]*}' "$TRACE" | sed -e 's/^VKSRC{//' -e 's/}$//' \
+  -e "s|^$M/||" | grep -vxF "$AUDIT" | grep -v '^$' | sort -u || true)
+UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))
+check "every file the traced runs load is declared" \
+  "$([ -n "$TRACED" ] && [ -z "$UNDECLARED" ]; echo $?)" "traced=$TRACED undeclared=$UNDECLARED"
+
 check "--gate with a class filter is rejected" \
   "$( (cd "$M" && bash scripts/validate.sh --gate lint >/dev/null 2>&1); [ $? -eq 2 ]; echo $?)"
 
@@ -434,41 +481,6 @@ check "FORMAT_EXT matches the root format script's glob" \
 CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
-
-# The load-set audit asks bash which files a real run executed from, via an
-# xtrace prefix carrying BASH_SOURCE on a dedicated fd — no parsing of shell
-# text. Five review rounds each found a load form a lexical scan missed
-# (guarded, builtin-, command-, brace-prefixed, a # inside a string); the
-# trace is immune to all of them, including a 2>/dev/null on the load
-# itself, because BASH_XTRACEFD bypasses the redirected stderr. record_load
-# remains the runtime fail-closed guard for undeclared loads in every
-# environment; this row pins that no load — recorded or not — escapes
-# declaration. Stated residuals: a load on a branch none of the audited
-# arms executes, and a sourced file that executes no command, leave no
-# trace. All three arms are load-safe here: --gate is read-only, --help
-# exits in the argument loop, --clear points at a scratch cache.
-# BASH_XTRACEFD only takes effect when assigned inside the shell — from the
-# environment it is imported as an ordinary variable — so the setup lives in
-# a wrapper the traced shell runs first.
-TRACE="$WORK/xtrace.out"
-AUDIT="$WORK/xtrace-wrapper.sh"
-cat >"$AUDIT" <<'EOF'
-exec 9>>"$VK_TRACE"
-BASH_XTRACEFD=9
-PS4='+VKSRC{${BASH_SOURCE[0]}} '
-set -x
-source scripts/validate.sh "$@"
-EOF
-: >"$TRACE"
-for arm in --gate --help --clear; do
-  (cd "$REAL_ROOT" && VK_TRACE="$TRACE" VOLLEYKIT_CACHE_DIR="$WORK/audit-cache" \
-    PATH="$STUB_BIN:$PATH" bash "$AUDIT" "$arm" >/dev/null 2>&1) || true
-done
-TRACED=$(grep -o 'VKSRC{[^}]*}' "$TRACE" | sed -e 's/^VKSRC{//' -e 's/}$//' \
-  -e "s|^$REAL_ROOT/||" | grep -vxF "$AUDIT" | grep '\.sh$' | sort -u || true)
-UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))
-check "every file a traced run loads is declared" \
-  "$([ -n "$TRACED" ] && [ -z "$UNDECLARED" ]; echo $?)" "traced=$TRACED undeclared=$UNDECLARED"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
