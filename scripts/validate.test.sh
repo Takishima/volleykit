@@ -117,7 +117,7 @@ for pkg in "${PKG_NAMES[@]}"; do
 done
 
 cp "$HERE/validate.sh" "$HERE/validation-lib.sh" "$HERE/validation-lib.test.sh" \
-  "$HERE/validate.test.sh" "$HERE/shellcheck.sh" scripts/
+  "$HERE/commit-hook.test.sh" "$HERE/validate.test.sh" "$HERE/shellcheck.sh" scripts/
 cp "$HERE/../.claude/hooks/pre-git-commit.sh" .claude/hooks/
 cp "$HERE/../.claude/hooks/lib/is-git-commit.sh" .claude/hooks/lib/
 printf '{"hooks":{"PreToolUse":[{"hooks":[{"command":".claude/hooks/pre-git-commit.sh"}]}]}}\n' >.claude/settings.json
@@ -812,11 +812,11 @@ RESPAWN_BEFORE=$((PASS + FAIL))
 # The expectation is computed and asserted OUTSIDE the block, or deleting the
 # block takes its own lever with it — the shape the guard count was fixed for,
 # one level up.
-EXPECTED_REFUSAL_ROWS=2
+EXPECTED_REFUSAL_ROWS=3
 [ "$NO_RESPAWN" = false ] || EXPECTED_REFUSAL_ROWS=0
 
 if [ "$NO_RESPAWN" = false ]; then
-  for suite in validation-lib.test.sh validate.test.sh; do
+  for suite in validation-lib.test.sh commit-hook.test.sh validate.test.sh; do
     OUT=$(PATH="$MTFAIL:$PATH" bash "$HERE/$suite" --no-respawn 2>&1)
     case "$OUT" in
       *"refusing to run"*) ok "$suite refuses to run without a scratch directory" ;;
@@ -862,6 +862,7 @@ printf '#!/bin/sh\ntouch %s\n' "$ARGV_MARKER" >"$SCRATCH/scripts/probe check.sh"
 # the scratch, and its result would decide this row instead of the argv split.
 sed -e "s|\"bash scripts/validate.test.sh\"|\"bash\\nscripts/probe check.sh\"|" \
   -e "s|\"bash scripts/validation-lib.test.sh\"|\"true\"|" \
+  -e "s|\"bash scripts/commit-hook.test.sh\"|\"true\"|" \
   "$HERE/validate.sh" >"$SCRATCH/scripts/validate-argv.sh"
 printf '\n# t\n' >>.claude/settings.json
 (cd "$SCRATCH" && bash scripts/validate-argv.sh test >/dev/null 2>&1)

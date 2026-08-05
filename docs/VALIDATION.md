@@ -97,10 +97,12 @@ runs that package's checks rather than being silently skipped.
 
 ## Changing the Validation Scripts
 
-Three checks cover the validation code itself:
+Four checks cover the validation code itself:
 
-- `validation:test` — `scripts/validation-lib.test.sh`: fingerprint, cache,
-  change detection, and the commit hook's predicate.
+- `validation:test` — `scripts/validation-lib.test.sh`: fingerprint, cache and
+  change detection.
+- `validation:hook` — `scripts/commit-hook.test.sh`: the commit hook's
+  predicate, its JSON extraction, and its fail-closed branches.
 - `validation:registry` — `scripts/validate.test.sh`: the registry, against a
   scratch monorepo with `pnpm` stubbed — a table of _changed path -> expected
   `--gate` records_. Two directions are asserted: every path constant
@@ -118,8 +120,8 @@ Three checks cover the validation code itself:
   and the argv cannot disagree. Registered when `shellcheck` is on `PATH`, and
   reported on stderr as skipped when it is not. Always runs in CI.
 
-`validation:test` and `validation:registry` are triggered by any edit to
-`SHELL_INPUTS` — the scripts, `.claude/hooks/`, and `.claude/settings.json`,
+`validation:test`, `validation:hook` and `validation:registry` are triggered by
+any edit to `SHELL_INPUTS` — the scripts, `.claude/hooks/`, and `.claude/settings.json`,
 which is what registers the hook in the first place. `validation:shellcheck` is
 triggered by `SHELLCHECK_INPUTS`, which is wider: it covers shell the suites do
 not exercise. Both triggers also fire on any changed shell file, wherever it lives —
@@ -132,8 +134,8 @@ for it. The changed files enter the cache key too, so a warm cache cannot report
 a hit for a check that was only just triggered.
 
 The hook's predicate lives in `.claude/hooks/lib/is-git-commit.sh` and is
-sourced by both the hook and the test, so there is one definition rather than
-two that must agree. If it cannot be loaded the hook blocks rather than
+sourced by both the hook and `commit-hook.test.sh`, so there is one definition
+rather than two that must agree. If it cannot be loaded the hook blocks rather than
 approves — it cannot tell whether the command is a commit, and that answer is
 not "yes, go ahead". It errs towards gating: it fires on anything resembling a
 commit invocation, including one quoted inside another command. A false positive

@@ -117,7 +117,7 @@ FORMAT_ROOT=".prettierrc.json .prettierignore"
 # matched by no other constant and by no shell predicate — editing it registered
 # nothing. CI is the only enforcer a settings.json change cannot switch off; the
 # shell lint's own scope is wider and lives in scripts/shellcheck.sh.
-SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/validate.test.sh scripts/shellcheck.sh scripts/test-lib.sh .github/workflows/ci-shell.yml"
+SHELL_INPUTS=".claude/hooks .claude/settings.json scripts/validate.sh scripts/validation-lib.sh scripts/validation-lib.test.sh scripts/commit-hook.test.sh scripts/validate.test.sh scripts/shellcheck.sh scripts/test-lib.sh .github/workflows/ci-shell.yml"
 
 # The design-token check compares the two generated files. Its trigger used to
 # be hand-written while its inputs were listed separately, so editing the
@@ -423,6 +423,8 @@ if [ -n "$CHANGED_SHELL" ] || matches "$(paths_to_regex "$SHELL_INPUTS")"; then
   SHELL_KEY="$(printf '%s\n' $SHELL_INPUTS)"$'\n'"$CHANGED_SHELL"
   register_check_files "validation:test" "test" "$ROOT_DIR" \
     "bash scripts/validation-lib.test.sh" "$SHELL_KEY" ""
+  register_check_files "validation:hook" "test" "$ROOT_DIR" \
+    "bash scripts/commit-hook.test.sh" "$SHELL_KEY" ""
   register_check_files "validation:registry" "test" "$ROOT_DIR" \
     "bash scripts/validate.test.sh" "$SHELL_KEY" ""
 fi

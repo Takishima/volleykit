@@ -53,4 +53,5 @@ jobs:
       - name: Run the validation suites
         run: |
           bash scripts/validation-lib.test.sh
+          bash scripts/commit-hook.test.sh
           bash scripts/validate.test.sh
