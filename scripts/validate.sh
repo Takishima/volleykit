@@ -35,14 +35,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/validation-lib.sh" || exit 3
 # shellcheck disable=SC2034  # consumed by record_load in validation-lib.sh
 LOADED_SCRIPTS="scripts/validate.sh"
-record_load scripts/validation-lib.sh
+record_load "${VALIDATION_SCRIPTS:-}" scripts/validation-lib.sh || exit 3
 cd "$ROOT_DIR"
 # shellcheck source=./validation-policy.sh
 source "$SCRIPT_DIR/validation-policy.sh" || exit 3
-record_load scripts/validation-policy.sh
+record_load "${VALIDATION_SCRIPTS:-}" scripts/validation-policy.sh || exit 3
 # shellcheck source=./validation-run.sh
 source "$SCRIPT_DIR/validation-run.sh" || exit 3
-record_load scripts/validation-run.sh
+record_load "${VALIDATION_SCRIPTS:-}" scripts/validation-run.sh || exit 3
 
 # =============================================================================
 # ARGUMENTS

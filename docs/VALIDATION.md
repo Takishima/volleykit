@@ -117,7 +117,9 @@ files that execute no command). The convention: loads sit at top level in
 `validate.sh`, each `source` paired with `record_load` — a `source` inside
 a function frame silently localizes the sourced file's `declare`s, and an
 unpaired load, while still caught by the audit if undeclared, escapes the
-runtime guard. Declaring the file puts it in `CORE_ROOT`, so its edits
+runtime guard. The convention holds in both files that load —
+`validate.sh` and `validation-run.sh`. Declaring the file puts it in
+`CORE_ROOT`, so its edits
 invalidate every cached result: forgetting the rule is a loud failure, not
 a stale cache.
 

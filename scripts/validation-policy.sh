@@ -77,8 +77,10 @@ FORMAT_ROOT=".prettierrc.json .prettierignore .editorconfig"
 # list feeds both the trigger and the check's cache key.
 # package.json is here as well as in CORE_ROOT: the suite asserts FORMAT_EXT
 # against its format glob, so an edit to that glob must register the suite —
-# invalidation alone only matters once a check registers.
-SHELL_INPUTS=".claude/hooks .claude/settings.json package.json $VALIDATION_SCRIPTS scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
+# invalidation alone only matters once a check registers. All three tracked
+# settings files are here for the same reason: each registers hooks whose
+# exec bits the suite pins.
+SHELL_INPUTS=".claude/hooks .claude/settings.json .claude/settings-review.json .claude/settings-review-architecture.json package.json $VALIDATION_SCRIPTS scripts/validate.test.sh scripts/shellcheck.sh .github/workflows/ci-shell.yml"
 
 # The design-token check compares the two generated files. Trigger and inputs
 # are the same constant so editing the generator both invalidates the cache

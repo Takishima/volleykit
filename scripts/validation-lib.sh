@@ -26,31 +26,31 @@ CACHE_DIR="${VOLLEYKIT_CACHE_DIR:-$ROOT_DIR/.validation-cache}"
 # LOAD-SET GUARD
 # =============================================================================
 
-# Called by validate.sh after each of its top-level source lines. Records the
-# load and — as soon as the policy table is available — refuses any recorded
-# path not declared in VALIDATION_SCRIPTS: exit 3, the commit hook reports a
-# broken gate, never an open one. CORE_ROOT contains $VALIDATION_SCRIPTS, so
-# a declared load is by construction one whose edits invalidate every cached
-# result. Recording is deliberately separate from sourcing: a `source`
-# inside a function frame silently makes the sourced file's bare `declare`s
-# function-local, so the loads stay at the caller's top level and this
-# helper only checks. The suite's traced-run audit covers what no recording
-# convention can: every file bash actually executes from must be declared.
+# record_load <declared-set> <path> — called after each top-level source
+# line. Records the load and, once the declared set is non-empty, returns
+# non-zero for any recorded path not in it; the CALLER owns the fail-closed
+# exit (this layer is primitives and takes the policy as an argument rather
+# than reaching up for it). Recording is deliberately separate from
+# sourcing: a `source` inside a function frame silently makes the sourced
+# file's bare `declare`s function-local, so loads stay at the caller's top
+# level and this helper only checks. The suite's traced-run audit covers
+# what no recording convention can: every file bash actually executes from
+# must be declared.
 record_load() {
-  LOADED_SCRIPTS="${LOADED_SCRIPTS:-} $1"
-  [ -n "${VALIDATION_SCRIPTS:-}" ] || return 0
-  # Re-checked after every load once the policy is present, which covers the
-  # loads recorded before it (this lib and the policy itself).
+  LOADED_SCRIPTS="${LOADED_SCRIPTS:-} $2"
+  [ -n "$1" ] || return 0
+  # Re-checked against the full record on every call once the declared set
+  # is present, which covers the loads recorded before it.
   local s
   # shellcheck disable=SC2086  # our own constants: split on purpose
   for s in $LOADED_SCRIPTS; do
-    case " $VALIDATION_SCRIPTS " in
+    case " $1 " in
       *" $s "*) ;;
       *)
         echo "validation: loaded $s, which is not declared in VALIDATION_SCRIPTS" >&2
         echo "(scripts/validation-policy.sh). Declare it so its edits invalidate" >&2
         echo "cached results; the gate fails closed until then." >&2
-        exit 3
+        return 1
         ;;
     esac
   done

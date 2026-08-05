@@ -214,16 +214,6 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-# The fixture copies the declared load set unioned with the tracked
-# convention-named scripts, and the invalidation probes below iterate the
-# same list. The union picks the better failure report per case: a tracked
-# script that is sourced but not declared is copied and fails its own named
-# probe row instead of crashing every scratch run; an untracked scratch file
-# in scripts/ is in neither half and cannot close the gate; an undeclared and
-# untracked sourced script is missing here, so bash names it in the crash.
-# Residual: a tracked validation-*.sh that is never loaded fails its probe —
-# self-evident from the row name. A cp failure is a red row, not a silent
-# shrink of the load set.
 # The probe set is exactly the declared set. It once unioned in tracked
 # convention-named scripts to give sourced-but-undeclared files a named
 # failure row, but record_load (exit 3, file named) and the traced-run
@@ -232,13 +222,15 @@ mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
 # normal state mid-split, blocked the gate.
 LOAD_SET=$DECLARED
 # The fixture's copy set is wider than the probe set: every tracked file
-# under scripts/, so a script that validate.sh loads but does not declare —
-# any name, any extension — exists here for the traced-run audit below to
-# observe. Only scripts/: a validate.sh load out of .claude/hooks/ would be
-# a layering violation before it was an undeclared load (the sanctioned
-# direction is hook -> validate.sh as a subprocess), and the audit should
-# not stock the fixture to legitimize it. Untracked files are deliberately
-# not copied: a scratch file must not change fixture behavior.
+# under scripts/ and .claude/hooks/, so a script that validate.sh loads but
+# does not declare — any name, any extension, either tree — exists here for
+# the traced-run audit below to observe. Observing is not sanctioning: a
+# validate.sh load out of .claude/hooks/ is a layering violation (the
+# sanctioned direction is hook -> validate.sh as a subprocess), and
+# stocking the tree is what lets the audit red it by name as undeclared
+# instead of a guarded load skipping silently or an unguarded one crashing
+# dozens of unrelated rows. Untracked files are deliberately not copied: a
+# scratch file must not change fixture behavior.
 # The suite's own path is excluded from the copy — by exact name inside the
 # ls-files half, so a hypothetical *declared* .test.sh still reaches the
 # cp-failure guard — and then stubbed rather than left missing: the fixture
@@ -248,7 +240,7 @@ LOAD_SET=$DECLARED
 COPY_SET=$(
   {
     printf '%s\n' "$DECLARED"
-    (cd "$REAL_ROOT" && git ls-files -- scripts/ | grep -vxF 'scripts/validate.test.sh')
+    (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/ | grep -vxF 'scripts/validate.test.sh')
   } | sort -u
 )
 while IFS= read -r s; do
@@ -408,7 +400,7 @@ while IFS= read -r rel; do
   git -C "$M" checkout -q -- "$rel"
 done <<<"$LOAD_SET"
 
-# The load-set guard is runtime behavior in validate.sh itself (record_load):
+# The load-set guard is runtime behavior (record_load, validation-lib.sh):
 # an undeclared load exits 3 the first time its branch executes, on any arm,
 # in any environment — no test-time approximation of source syntax. These
 # rows exercise the guard's two directions in the scratch repo.
@@ -416,12 +408,14 @@ done <<<"$LOAD_SET"
 insert_after() { # insert_after <file> <exact line> <insertion, \n allowed>
   awk -v m="$2" -v ins="$3" '{ print; if ($0 == m) print ins }' "$1" >"$1.tmp" && mv "$1.tmp" "$1"
 }
-# The probe file's name deliberately does not match the LOAD_SET glob, so a
-# real file of the same name cannot be copied into the fixture and then
-# deleted mid-suite by the cleanup below.
+# The cleanup below deletes the probe path from the fixture, so a real repo
+# file at that path would be copied in and then destroyed mid-suite —
+# asserted, not assumed.
+check "the guard probe path is free in the repo" \
+  "$([ ! -e "$REAL_ROOT/scripts/vk-guard-probe.sh" ]; echo $?)"
 printf 'VK_EXTRA=1\n' >"$M/scripts/vk-guard-probe.sh"
-insert_after "$M/scripts/validate.sh" 'record_load scripts/validation-run.sh' \
-  'source "$SCRIPT_DIR/vk-guard-probe.sh" || exit 3\nrecord_load scripts/vk-guard-probe.sh'
+insert_after "$M/scripts/validate.sh" 'record_load "${VALIDATION_SCRIPTS:-}" scripts/validation-run.sh || exit 3' \
+  'source "$SCRIPT_DIR/vk-guard-probe.sh" || exit 3\nrecord_load "${VALIDATION_SCRIPTS:-}" scripts/vk-guard-probe.sh || exit 3'
 run_validate --gate
 check "an undeclared load fails the gate closed" \
   "$([ "$V_STATUS" -eq 3 ] && printf '%s' "$V_OUT" | grep -q 'vk-guard-probe.sh'; echo $?)" \
@@ -539,22 +533,26 @@ echo "# path-invoked files"
 # means the hook never runs and never emits a decision — the one failure
 # fail-closed design cannot cover, because failing closed requires
 # executing. A mode change is neither content nor text, so no other layer
-# sees it. The set derives from the settings files that register hooks
-# (filtered to repo paths — a 'bash foo' command is not by-path) plus the
-# allowlist's one by-path script; a hand list drifts. Per-file lookup so a
-# registered path that matches nothing is a red row, not a silent empty.
-BY_PATH=$(
-  {
-    jq -r '.. | objects | select(.type == "command") | .command' "$REAL_ROOT"/.claude/settings*.json |
-      sed 's|^\$CLAUDE_PROJECT_DIR/||' | grep -E '^(\.claude|scripts)/'
-    echo scripts/validate.sh
-  } | sort -u
-)
+# sees it. The set derives from the TRACKED settings files (the gitignored
+# settings.local.json holds per-developer hooks the repo must not gate on):
+# a command with no whitespace is a by-path invocation, anything else goes
+# through a tool, and both $CLAUDE_PROJECT_DIR spellings normalize. No
+# directory allowlist — a filter upstream of the untracked-sentinel would
+# drop exactly the repointed registration the sentinel exists to red — and
+# the derived half is asserted non-trivial separately, since the allowlist
+# entry below would otherwise keep an emptiness guard satisfied forever.
+SETTINGS_FILES=$(cd "$REAL_ROOT" && git ls-files -- '.claude/settings*.json' | grep -v '\.local\.json$')
+# shellcheck disable=SC2086  # SETTINGS_FILES: newline list of our own paths
+HOOK_PATHS=$(cd "$REAL_ROOT" && jq -r '.. | objects | select(.type == "command") | .command' $SETTINGS_FILES |
+  sed -E 's|^\$\{?CLAUDE_PROJECT_DIR\}?/||' | grep -v '[[:space:]]' | sort -u)
+check "hook registrations derive to by-path files" \
+  "$([ "$(printf '%s\n' "$HOOK_PATHS" | grep -c .)" -ge 4 ]; echo $?)" "$HOOK_PATHS"
+BY_PATH=$(printf '%s\nscripts/validate.sh\n' "$HOOK_PATHS" | sort -u)
 NONEXEC=$(cd "$REAL_ROOT" && while IFS= read -r f; do
   git ls-files -s -- "$f" | awk -v f="$f" '$1 != "100755" { print f } END { if (NR == 0) print "untracked:" f }'
 done <<<"$BY_PATH")
 check "files invoked by path are tracked executable" \
-  "$([ -n "$BY_PATH" ] && [ -z "$NONEXEC" ]; echo $?)" "$NONEXEC"
+  "$([ -z "$NONEXEC" ]; echo $?)" "$NONEXEC"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the

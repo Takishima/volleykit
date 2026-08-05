@@ -10,12 +10,15 @@
 # shared:build — the builds are independent of each other.
 
 # The executor uses cache_store/cache_drop, so its dependency on the lib is
-# stated here rather than inherited from the caller's source order. The lib
-# is declared, this load is top level in a top-level-sourced file (no
-# function-frame declare hazard), and re-sourcing is harmless — the lib
-# defines functions and recomputes two derivable variables.
+# stated here rather than inherited from the caller's source order. The
+# load is top level in a top-level-sourced file (no function-frame declare
+# hazard), and re-sourcing is harmless — the lib defines functions and
+# re-assigns its color constants and two derivable variables. Paired with
+# record_load like every load: the pairing convention holds at both load
+# sites, so the next load added here gets the same treatment.
 # shellcheck source=./validation-lib.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/validation-lib.sh" || return 1
+record_load "${VALIDATION_SCRIPTS:-}" scripts/validation-lib.sh || return 1
 
 # Run one check. CHECK_CMD is space-separated argv; composite commands need a
 # shell and are handled by name (`__format__`, `__web_build__`).
