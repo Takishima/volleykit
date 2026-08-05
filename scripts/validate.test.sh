@@ -379,6 +379,26 @@ while IFS= read -r rel; do
   git -C "$M" checkout -q -- "$rel"
 done <<<"$LOAD_SET"
 
+# The load-set guard is runtime behavior in validate.sh itself (load_script):
+# an undeclared load exits 3 the first time its branch executes, on any arm,
+# in any environment — no test-time approximation of source syntax. These
+# rows exercise the guard's two directions in the scratch repo.
+printf 'VK_EXTRA=1\n' >"$M/scripts/validation-extra.sh"
+sed -i 's|^load_script scripts/validation-run.sh$|load_script scripts/validation-run.sh\nload_script scripts/validation-extra.sh|' \
+  "$M/scripts/validate.sh"
+run_validate --gate
+check "an undeclared load fails the gate closed" \
+  "$([ "$V_STATUS" -eq 3 ] && printf '%s' "$V_OUT" | grep -q 'validation-extra.sh'; echo $?)" \
+  "exit=$V_STATUS out=$V_OUT"
+sed -i 's|^VALIDATION_SCRIPTS="|VALIDATION_SCRIPTS="scripts/validation-extra.sh |' \
+  "$M/scripts/validation-policy.sh"
+run_validate --gate
+check "declaring the load is accepted" \
+  "$([ "$V_STATUS" -eq 1 ] && ! printf '%s' "$V_OUT" | grep -q 'not declared'; echo $?)" \
+  "exit=$V_STATUS out=$V_OUT"
+git -C "$M" checkout -q -- scripts
+rm "$M/scripts/validation-extra.sh"
+
 check "--gate with a class filter is rejected" \
   "$( (cd "$M" && bash scripts/validate.sh --gate lint >/dev/null 2>&1); [ $? -eq 2 ]; echo $?)"
 
@@ -405,54 +425,6 @@ check "FORMAT_EXT matches the root format script's glob" \
 CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
-
-# Two complementary rows pin VALIDATION_SCRIPTS to what validate.sh loads;
-# with the behavioral probes in the scratch section they cover the class from
-# three sides. This textual row scans the DECLARED set (never a directory
-# glob — that is what let scratch files close the gate) and catches a
-# line-initial source in any arm, including arms no fixture run executes
-# (e.g. --clear). It compares basenames: source lines name paths through
-# variables the text cannot resolve, so reconstructing directories here would
-# just restate an assumption — the audit row below is path-exact. Guarded and
-# dynamically-built sources are the audit row's and the probes' job.
-DECLARED_BASE=$(printf '%s\n' "$DECLARED" | sed 's|.*/||' | sort -u)
-# shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
-SOURCED_BASE=$(
-  {
-    echo validate.sh
-    (cd "$REAL_ROOT" && grep -hoE '^[[:space:]]*(source|\.)[[:space:]]+[^#]*/[A-Za-z0-9._-]+\.sh' $DECLARED /dev/null) |
-      grep -oE '[A-Za-z0-9._-]+\.sh$'
-  } | sort -u
-)
-check "VALIDATION_SCRIPTS lists every script sourced by name" \
-  "$([ "$DECLARED_BASE" = "$SOURCED_BASE" ]; echo $?)" "declared=$DECLARED_BASE sourced=$SOURCED_BASE"
-
-# The audit row asks bash itself: a DEBUG trap during real-repo runs records
-# every file commands execute from, so any source that actually runs —
-# guarded, absence-tolerant, computed path, any directory — lands in LOADED
-# no matter its syntax. (BASH_SOURCE is a call stack, not a log; the trap
-# accumulates it.) Every CLI arm is audited: --gate is read-only, --help
-# exits in the argument loop, and --clear is pointed at a scratch cache via
-# VOLLEYKIT_CACHE_DIR, so no run mutates anything real. The filter excludes
-# only the audit script itself — a directory whitelist here would throw away
-# exactly the out-of-tree sources the row exists to catch.
-AUDIT="$WORK/audit.sh"
-cat >"$AUDIT" <<'EOF'
-set -T
-declare -A SEEN=()
-trap 'SEEN[${BASH_SOURCE[0]:-.}]=1' DEBUG
-trap 'printf "%s\n" "${!SEEN[@]}" >&3' EXIT
-source scripts/validate.sh "$@"
-EOF
-LOADED=$(
-  for arm in --gate --help --clear; do
-    (cd "$REAL_ROOT" && VOLLEYKIT_CACHE_DIR="$WORK/audit-cache" PATH="$STUB_BIN:$PATH" \
-      bash "$AUDIT" "$arm" 3>&1 >/dev/null 2>&1 || true)
-  done | sed "s|^$REAL_ROOT/||" | grep -vxF "$AUDIT" | grep -E '\.sh$' | sort -u
-)
-UNDECLARED=$(comm -23 <(printf '%s\n' "$LOADED") <(printf '%s\n' "$DECLARED"))
-check "every script the CLI arms load is declared" \
-  "$([ -n "$LOADED" ] && [ -z "$UNDECLARED" ]; echo $?)" "loaded=$LOADED undeclared=$UNDECLARED"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the

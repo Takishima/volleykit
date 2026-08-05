@@ -25,13 +25,45 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=./validation-lib.sh
-source "$SCRIPT_DIR/validation-lib.sh" || exit 1
+
+# Every file the validation system loads routes through this helper. It
+# records the load and — as soon as the policy table is available — refuses
+# any recorded path that is not declared in VALIDATION_SCRIPTS. That makes
+# "the declared set covers the loaded set" a property of every invocation,
+# on whatever arm or branch the load sits, rather than something a test can
+# only approximate from outside: an undeclared load exits 3 (the hook
+# reports a broken gate, never an open one) the first time it executes.
+# CORE_ROOT contains $VALIDATION_SCRIPTS, so a declared load is by
+# construction one whose edits invalidate every cached result.
+LOADED_SCRIPTS="scripts/validate.sh"
+load_script() {
+  local rel=$1
+  # shellcheck source=/dev/null
+  source "$SCRIPT_DIR/../$rel" || exit 3
+  LOADED_SCRIPTS="$LOADED_SCRIPTS $rel"
+  # Re-checked after every load once the policy is present, which covers the
+  # loads that happened before it (the lib and the policy itself).
+  if [ -n "${VALIDATION_SCRIPTS:-}" ]; then
+    local s
+    # shellcheck disable=SC2086  # our own constants: split on purpose
+    for s in $LOADED_SCRIPTS; do
+      case " scripts/validate.sh $VALIDATION_SCRIPTS " in
+        *" $s "*) ;;
+        *)
+          echo "validate.sh: loaded $s, which is not declared in VALIDATION_SCRIPTS" >&2
+          echo "(scripts/validation-policy.sh). Declare it so its edits invalidate" >&2
+          echo "cached results; the gate fails closed until then." >&2
+          exit 3
+          ;;
+      esac
+    done
+  fi
+}
+
+load_script scripts/validation-lib.sh
 cd "$ROOT_DIR"
-# shellcheck source=./validation-policy.sh
-source "$SCRIPT_DIR/validation-policy.sh" || exit 3
-# shellcheck source=./validation-run.sh
-source "$SCRIPT_DIR/validation-run.sh" || exit 3
+load_script scripts/validation-policy.sh
+load_script scripts/validation-run.sh
 
 # =============================================================================
 # ARGUMENTS
