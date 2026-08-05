@@ -345,29 +345,24 @@ CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
 
-# VALIDATION_SCRIPTS must cover validate.sh and everything it sources —
-# CORE_ROOT has no catch-all, so a sourced script missing from the constant
-# would leave every package check's stored PASS intact across its edits.
-# Compared against the actual `source` lines, not a filename glob: a glob
-# pinned a naming convention (and, listing untracked files, let any scratch
-# file in scripts/ close the commit gate), while the property the constant
-# must have is "what validate.sh is built from".
-DECLARED=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS' | sort)
-# `source` lines across the whole set, not just validate.sh's own —
-# validation-run.sh sources the lib itself, so the graph is two levels deep
-# and a transitively sourced script must be visible here too. Anchored on
-# source/. statements so a comment mentioning a script path cannot close the
-# gate, and matching any path form (validation-run.sh sources via
-# dirname/BASH_SOURCE, not $SCRIPT_DIR).
-SOURCED=$(
-  {
-    echo scripts/validate.sh
-    (cd "$REAL_ROOT" && grep -hoE '^[[:space:]]*(source|\.)[[:space:]]+[^#]*/[A-Za-z0-9._-]+\.sh' scripts/validate.sh scripts/validation-*.sh) |
-      grep -oE '[A-Za-z0-9._-]+\.sh$' | sed 's|^|scripts/|'
-  } | sort -u
-)
-check "VALIDATION_SCRIPTS lists validate.sh and everything it sources" \
-  "$([ "$DECLARED" = "$SOURCED" ]; echo $?)" "declared=$DECLARED sourced=$SOURCED"
+# Editing any script validate.sh is built from must invalidate every package
+# check — CORE_ROOT protects this and has no catch-all. Asserted behaviorally,
+# per file, in the scratch monorepo (whose scripts/ is exactly the load set:
+# a sourced file missing from the fixture cp crashes validate.sh there and
+# the suite goes red). Three review rounds each found a source syntax that a
+# textual scan of source statements missed — guarded, chained, dirname-based;
+# bash cannot be parsed with grep, and the property, not the text, is the
+# spec. A file missing from CORE_ROOT fails its probe here: the edit
+# registers no package check, so the gate reports validation:* only.
+for s in "$M"/scripts/*.sh; do
+  rel="scripts/$(basename "$s")"
+  printf '\n# invalidation probe\n' >>"$s"
+  run_validate --gate
+  check "editing $rel invalidates the package checks" \
+    "$([ "$V_STATUS" -eq 1 ] && printf '%s\n' "$V_OUT" | grep -qx "check web:lint"; echo $?)" \
+    "exit=$V_STATUS out=$V_OUT"
+  git -C "$M" checkout -q -- "$rel"
+done
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
