@@ -388,14 +388,17 @@ done <<<"$LOAD_SET"
 insert_after() { # insert_after <file> <exact line> <insertion, \n allowed>
   awk -v m="$2" -v ins="$3" '{ print; if ($0 == m) print ins }' "$1" >"$1.tmp" && mv "$1.tmp" "$1"
 }
-printf 'VK_EXTRA=1\n' >"$M/scripts/validation-extra.sh"
+# The probe file's name deliberately does not match the LOAD_SET glob, so a
+# real file of the same name cannot be copied into the fixture and then
+# deleted mid-suite by the cleanup below.
+printf 'VK_EXTRA=1\n' >"$M/scripts/vk-guard-probe.sh"
 insert_after "$M/scripts/validate.sh" 'record_load scripts/validation-run.sh' \
-  'source "$SCRIPT_DIR/validation-extra.sh" || exit 3\nrecord_load scripts/validation-extra.sh'
+  'source "$SCRIPT_DIR/vk-guard-probe.sh" || exit 3\nrecord_load scripts/vk-guard-probe.sh'
 run_validate --gate
 check "an undeclared load fails the gate closed" \
-  "$([ "$V_STATUS" -eq 3 ] && printf '%s' "$V_OUT" | grep -q 'validation-extra.sh'; echo $?)" \
+  "$([ "$V_STATUS" -eq 3 ] && printf '%s' "$V_OUT" | grep -q 'vk-guard-probe.sh'; echo $?)" \
   "exit=$V_STATUS out=$V_OUT"
-awk '{ sub(/^VALIDATION_SCRIPTS="/, "VALIDATION_SCRIPTS=\"scripts/validation-extra.sh "); print }' \
+awk '{ sub(/^VALIDATION_SCRIPTS="/, "VALIDATION_SCRIPTS=\"scripts/vk-guard-probe.sh "); print }' \
   "$M/scripts/validation-policy.sh" >"$M/scripts/validation-policy.sh.tmp" &&
   mv "$M/scripts/validation-policy.sh.tmp" "$M/scripts/validation-policy.sh"
 run_validate --gate
@@ -403,7 +406,7 @@ check "declaring the load is accepted" \
   "$([ "$V_STATUS" -eq 1 ] && ! printf '%s' "$V_OUT" | grep -q 'not declared'; echo $?)" \
   "exit=$V_STATUS out=$V_OUT"
 git -C "$M" checkout -q -- scripts
-rm "$M/scripts/validation-extra.sh"
+rm "$M/scripts/vk-guard-probe.sh"
 
 check "--gate with a class filter is rejected" \
   "$( (cd "$M" && bash scripts/validate.sh --gate lint >/dev/null 2>&1); [ $? -eq 2 ]; echo $?)"
@@ -433,15 +436,35 @@ check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
 
 # record_load can only see the loads it is handed, so the pairing itself is
-# pinned here: any source in the declared set that is not one of the two
-# sanctioned forms bypasses the declared-set check. Unanchored, so guarded
-# and chained sources match; no path resolution — the failure modes of the
-# earlier textual rows all came from resolving what a source line means.
+# pinned here, and it is the pairing that is tested — not the load's form,
+# which a bypassing source can imitate. An unindented top-level source must
+# be immediately followed by its record_load; an indented, guarded or
+# chained source cannot be a sanctioned top-level load and is stray on
+# sight (a load moved into a function frame would also silently localize
+# the sourced file's declares). No whitelist, no path resolution — the
+# failure modes of every earlier form of this row came from one or the
+# other.
+# The record_load argument is pinned against the sourced path itself — two
+# hand-written spellings of one path would otherwise be checked against each
+# other by nothing, and a copy-paste pair could record a declared path while
+# loading an undeclared one.
 # shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
-STRAY=$(cd "$REAL_ROOT" && grep -hE '(^[[:space:]]*|[;&|][[:space:]]*)(source|\.)[[:space:]]' $DECLARED /dev/null |
-  grep -vF 'source "$SCRIPT_DIR/validation-' |
-  grep -vF 'pwd)/validation-lib.sh"' || true)
-check "no load bypasses record_load" "$([ -z "$STRAY" ]; echo $?)" "stray=$STRAY"
+STRAY=$(cd "$REAL_ROOT" && awk '
+  /^(source|\.)[[:space:]]/ {
+    pend = FILENAME ":" FNR ": " $0
+    want = ""
+    if (match($0, /\$SCRIPT_DIR\/[A-Za-z0-9._-]+\.sh/)) {
+      want = substr($0, RSTART, RLENGTH)
+      sub(/^\$SCRIPT_DIR\//, "scripts/", want)
+    }
+    next
+  }
+  /(^[[:space:]]+|[;&|][[:space:]]*)(source|\.)[[:space:]]/ { print FILENAME ":" FNR ": " $0; next }
+  pend { if (want == "" || $0 != "record_load " want) print pend; pend = ""; want = "" }
+  END { if (pend) print pend }
+' $DECLARED)
+check "every load is a top-level source paired with its own record_load" \
+  "$([ -z "$STRAY" ]; echo $?)" "stray=$STRAY"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the
