@@ -848,6 +848,34 @@ fi
 rm -f 'packages/web/src/we"ird.ts'
 reset_tree
 
+# CHECK_CMD is newline-separated argv, so an argument containing a space
+# survives. Under the previous `read -ra` form this was inexpressible: spaces
+# always split, and _register rejects quotes. The probe script's name carries
+# the space, so a split would look for a file that does not exist.
+mkdir -p "$SCRATCH/scripts"
+# The probe writes a marker: a status alone does not discriminate, because a
+# split argv runs bare `bash`, which reads empty stdin and exits 0.
+ARGV_MARKER="$CACHE/argv-probe-ran"
+rm -f "$ARGV_MARKER"
+printf '#!/bin/sh\ntouch %s\n' "$ARGV_MARKER" >"$SCRATCH/scripts/probe check.sh"
+# Both suite commands are replaced: the other one would run a real suite inside
+# the scratch, and its result would decide this row instead of the argv split.
+sed -e "s|\"bash scripts/validate.test.sh\"|\"bash\\nscripts/probe check.sh\"|" \
+  -e "s|\"bash scripts/validation-lib.test.sh\"|\"true\"|" \
+  "$HERE/validate.sh" >"$SCRATCH/scripts/validate-argv.sh"
+printf '\n# t\n' >>.claude/settings.json
+(cd "$SCRATCH" && bash scripts/validate-argv.sh test >/dev/null 2>&1)
+ARGV_STATUS=$?
+rm -f "$SCRATCH/scripts/validate-argv.sh" "$SCRATCH/scripts/probe check.sh"
+if [ "$ARGV_STATUS" -eq 0 ] && [ -e "$ARGV_MARKER" ]; then
+  ok "an argv element containing a space reaches the command intact"
+else
+  not_ok "an argv element containing a space reaches the command intact" \
+    "exit $ARGV_STATUS, marker $([ -e "$ARGV_MARKER" ] && echo present || echo absent) — the argument was split"
+fi
+rm -f "$ARGV_MARKER"
+reset_tree
+
 # run_check execs argv, so a composite command must fail at registration.
 sed 's|"bash scripts/validate.test.sh"|"bash a.sh \&\& bash b.sh"|' \
   "$HERE/validate.sh" >"$SCRATCH/scripts/validate-composite.sh"
@@ -883,7 +911,7 @@ reset_tree
 #
 # `+ 1` is this row counting itself, so the expectation equals the number report
 # prints.
-EXPECTED_ROWS=$((75 + 2 * ${#PKG_NAMES[@]} + ${#PATH_CONSTS[@]} + EXPECTED_REFUSAL_ROWS))
+EXPECTED_ROWS=$((76 + 2 * ${#PKG_NAMES[@]} + ${#PATH_CONSTS[@]} + EXPECTED_REFUSAL_ROWS))
 assert_eq "the suite ran every row it defines" "$((PASS + FAIL + 1))" "$EXPECTED_ROWS"
 
 # --- result -------------------------------------------------------------------

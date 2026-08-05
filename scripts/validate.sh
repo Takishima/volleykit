@@ -248,19 +248,32 @@ declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
 
 _register() {
   local name=$1 class=$2 dir=$3 cmd=$4 paths=$5 args=${6-}
-  # run_check execs CHECK_CMD as argv with no shell, so a metacharacter is
-  # passed through as a literal argument and silently does nothing. That is how
-  # `a.sh && b.sh` came to run only a.sh while the check reported green.
-  # Composites need a sentinel handled by name in run_check (__format__,
-  # __web_build__). Fail at registration rather than pass at runtime.
-  # shellcheck disable=SC2016  # the patterns match literal metacharacters
+  # CHECK_CMD is stored as newline-separated argv, because run_check execs it
+  # with no shell. A caller passing the usual space-separated string gets it
+  # split here — the one normalisation point, same as the paths above. A caller
+  # that needs an argument CONTAINING a space passes the newline form itself,
+  # which the previous convention could not express at all: quotes were rejected
+  # and spaces always split.
+  #
+  # The metacharacter guard applies only to the split form, where a `&&` is
+  # passed through as a literal argument and silently does nothing — that is how
+  # `a.sh && b.sh` came to run only a.sh while the check reported green. In argv
+  # form each element is already one literal argument, so nothing is ambiguous.
+  # Composites still need a sentinel handled by name in run_check.
+  # SC2016: the patterns match literal metacharacters, not expansions.
+  # SC2086: the split below is deliberate — space-separated argv, no globs.
+  # Both codes on one directive above the `case`: a directive on an individual
+  # branch is a parse error, which is how this line broke three times.
+  # shellcheck disable=SC2016,SC2086
   case "$cmd" in
-    __*) ;;
+    __* | *$'\n'*) ;;
     *[\&\|\;\<\>\`\"\']* | *'$('*)
       echo "register_check: $name: shell metacharacter or quote in command." >&2
-      echo "run_check execs argv, not a shell line. Use a sentinel." >&2
+      echo "run_check execs argv, not a shell line. Use a sentinel, or pass" >&2
+      echo "newline-separated argv if you need an argument containing a space." >&2
       exit 3
       ;;
+    *) cmd=$(printf '%s\n' $cmd) ;;
   esac
   CHECK_NAMES+=("$name")
   CHECK_CLASS["$name"]=$class
@@ -589,7 +602,8 @@ fi
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-# Run one check. Two checks need composite commands and are handled by name.
+# Run one check. CHECK_CMD is newline-separated argv; two composite commands
+# need a shell and are handled by name.
 run_check() {
   local name=$1
   local out="$TEMP_DIR/$name.out"
@@ -621,8 +635,10 @@ run_check() {
       fi
       ;;
     *)
-      local -a cmd
-      read -ra cmd <<<"${CHECK_CMD[$name]}"
+      # Newline-separated argv, so an argument containing a space survives.
+      # `read -ra` split on IFS and could not represent one.
+      local -a cmd=()
+      mapfile -t cmd <<<"${CHECK_CMD[$name]}"
       "${cmd[@]}" >"$out" 2>&1 && ok=0
       ;;
   esac

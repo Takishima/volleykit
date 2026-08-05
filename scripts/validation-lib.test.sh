@@ -249,15 +249,37 @@ assert_not_gated "a path containing the word" "cat docs/git-${C}s.md"
 # multi-line commands, and a jq requirement placed ahead of the is-this-a-commit
 # question, which blocked every Bash call in the session.
 
-hook_decision() {
-  printf '%s' "$1" | PATH="${2:-$PATH}" CLAUDE_CODE_REMOTE=true bash "${3:-$HOOK}" 2>/dev/null |
-    sed -n 's/.*"decision"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p'
+hook_output() {
+  printf '%s' "$1" | PATH="${2:-$PATH}" CLAUDE_CODE_REMOTE=true bash "${3:-$HOOK}" 2>/dev/null
 }
 
+# $6, when given, is a substring the block reason must contain.
+#
+# A bare "block" is a weak oracle: the hook blocks for several distinct reasons,
+# and these rows run with cwd $SCRATCH, which has no scripts/validate.sh — so
+# every one of them lands on the gate-could-not-run branch. That branch is the
+# right oracle for "the payload passed both predicates and reached the gate
+# invocation", but only if the row says so; otherwise any hook that blocks after
+# the pre-filter satisfies all of them.
 assert_decision() {
-  local label=$1 want=$2 got
-  got=$(hook_decision "$3" "${4:-$PATH}" "${5:-$HOOK}")
-  if [ "$got" = "$want" ]; then ok "hook: $label"; else not_ok "hook: $label" "expected $want, got '${got:-<none>}'"; fi
+  local label=$1 want=$2 payload=$3 path=${4:-$PATH} hook=${5:-$HOOK} want_reason=${6-}
+  local out got
+  out=$(hook_output "$payload" "$path" "$hook")
+  got=$(printf '%s' "$out" | sed -n 's/.*"decision"[[:space:]]*:[[:space:]]*"\([a-z]*\)".*/\1/p')
+  if [ "$got" != "$want" ]; then
+    not_ok "hook: $label" "expected $want, got '${got:-<none>}'"
+    return 0
+  fi
+  if [ -n "$want_reason" ]; then
+    case "$out" in
+      *"$want_reason"*) ;;
+      *)
+        not_ok "hook: $label" "blocked, but not for the stated reason: $out"
+        return 0
+        ;;
+    esac
+  fi
+  ok "hook: $label"
 }
 
 # json_escape turns a fixture into a JSON string body the way a real caller would.
@@ -277,7 +299,8 @@ for fixture in "${GATED_FIXTURES[@]}"; do
   label=${fixture%%$'\x01'*}
   cmd=${fixture#*$'\x01'}
   payload=$(printf '{"tool_input":{"command":"%s"}}' "$(json_escape "$cmd")")
-  assert_decision "reaches the predicate: $label" "block" "$payload"
+  assert_decision "reaches the predicate: $label" "block" "$payload" "$PATH" "$HOOK" \
+    "Validation gate could not run"
 done
 
 # The mirror: without this, the hook could stop calling is_git_commit entirely
