@@ -224,16 +224,20 @@ mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
 # Residual: a tracked validation-*.sh that is never loaded fails its probe —
 # self-evident from the row name. A cp failure is a red row, not a silent
 # shrink of the load set.
-LOAD_SET=$(
-  {
-    printf '%s\n' "$DECLARED"
-    (cd "$REAL_ROOT" && git ls-files 'scripts/validate.sh' 'scripts/validation-*.sh' | grep -v '\.test\.sh$')
-  } | sort -u
-)
+# The probe set is exactly the declared set. It once unioned in tracked
+# convention-named scripts to give sourced-but-undeclared files a named
+# failure row, but record_load (exit 3, file named) and the traced-run
+# audit now report that case precisely — the union's only remaining yield
+# was a false positive: a tracked validation-*.sh that nothing loads, a
+# normal state mid-split, blocked the gate.
+LOAD_SET=$DECLARED
 # The fixture's copy set is wider than the probe set: every tracked file
-# under scripts/ and .claude/hooks/, so a script that validate.sh loads but
-# does not declare — any name, any extension, either tree — exists here for
-# the traced-run audit below to observe. Untracked files are deliberately
+# under scripts/, so a script that validate.sh loads but does not declare —
+# any name, any extension — exists here for the traced-run audit below to
+# observe. Only scripts/: a validate.sh load out of .claude/hooks/ would be
+# a layering violation before it was an undeclared load (the sanctioned
+# direction is hook -> validate.sh as a subprocess), and the audit should
+# not stock the fixture to legitimize it. Untracked files are deliberately
 # not copied: a scratch file must not change fixture behavior.
 # The suite's own path is excluded from the copy — by exact name inside the
 # ls-files half, so a hypothetical *declared* .test.sh still reaches the
@@ -244,7 +248,7 @@ LOAD_SET=$(
 COPY_SET=$(
   {
     printf '%s\n' "$DECLARED"
-    (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/ | grep -vxF 'scripts/validate.test.sh')
+    (cd "$REAL_ROOT" && git ls-files -- scripts/ | grep -vxF 'scripts/validate.test.sh')
   } | sort -u
 )
 while IFS= read -r s; do

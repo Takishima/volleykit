@@ -26,43 +26,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Every load below is paired with record_load, which — as soon as the policy
-# table is available — refuses any recorded path not declared in
+# Every load below is paired with record_load (defined in the lib — it is
+# mechanism, not policy), which refuses any recorded path not declared in
 # VALIDATION_SCRIPTS: exit 3, the hook reports a broken gate, never an open
-# one. That makes "the declared set covers the loaded set" a property of
-# every invocation, on whatever arm or branch the load sits. CORE_ROOT
-# contains $VALIDATION_SCRIPTS, so a declared load is by construction one
-# whose edits invalidate every cached result.
-#
-# Recording is deliberately separate from sourcing: a `source` inside a
-# function frame silently makes the sourced file's bare `declare`s
-# function-local, so the loads stay at top level and the helper only checks.
-# The suite audits an xtrace-instrumented run: every file bash actually
-# executes from must be declared, whatever syntax loaded it — see the
-# "every file the traced runs load is declared" row.
-LOADED_SCRIPTS="scripts/validate.sh"
-record_load() {
-  LOADED_SCRIPTS="$LOADED_SCRIPTS $1"
-  [ -n "${VALIDATION_SCRIPTS:-}" ] || return 0
-  # Re-checked after every load once the policy is present, which covers the
-  # loads recorded before it (the lib and the policy itself).
-  local s
-  # shellcheck disable=SC2086  # our own constants: split on purpose
-  for s in $LOADED_SCRIPTS; do
-    case " $VALIDATION_SCRIPTS " in
-      *" $s "*) ;;
-      *)
-        echo "validate.sh: loaded $s, which is not declared in VALIDATION_SCRIPTS" >&2
-        echo "(scripts/validation-policy.sh). Declare it so its edits invalidate" >&2
-        echo "cached results; the gate fails closed until then." >&2
-        exit 3
-        ;;
-    esac
-  done
-}
-
+# one. The suite additionally audits an xtrace-instrumented run: every file
+# bash actually executes from must be declared, whatever syntax loaded it.
 # shellcheck source=./validation-lib.sh
 source "$SCRIPT_DIR/validation-lib.sh" || exit 3
+# shellcheck disable=SC2034  # consumed by record_load in validation-lib.sh
+LOADED_SCRIPTS="scripts/validate.sh"
 record_load scripts/validation-lib.sh
 cd "$ROOT_DIR"
 # shellcheck source=./validation-policy.sh
