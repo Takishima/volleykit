@@ -1,35 +1,81 @@
 # Validation Guide
 
-Read this file before committing changes.
-
-## Pre-Commit Validation (Claude Code Web Only)
-
-Validation uses a two-part system in Claude Code web (`CLAUDE_CODE_REMOTE=true`). Human developers rely on CI instead.
-
-### How It Works
-
-**Step 1: Run validation** (streaming output — Claude sees results in real-time):
+## Commands
 
 ```bash
-CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh
+scripts/validate.sh          # everything the commit gate requires
+scripts/validate.sh lint     # one class, across every affected package
+scripts/validate.sh --gate   # list what is missing (runs nothing)
+scripts/validate.sh --clear  # drop the cache
 ```
 
-**Step 2: Commit** — the pre-commit hook checks the validation marker and approves instantly.
+Classes: `format`, `tokens`, `lint`, `typecheck`, `test`, `build`.
+`/lint`, `/test`, `/build` are wrappers over these.
 
-This replaces the old block-retry-block cycle. Claude gets immediate feedback from each check as it completes.
+## Rules
 
-### What Validation Does
+- Validate as often as you like. Every pass is cached by content hash, so
+  **nothing is ever run twice** and the commit gate reuses the results.
+- Never validate with raw `pnpm run lint` / `pnpm test` / `pnpm run build` —
+  those results are not cached and get re-run at commit time.
+- After a failure, fix and re-run the same command. Only the affected package
+  re-runs; everything else stays cached.
+- `git add` is not required before validating, and never invalidates anything.
 
-1. **Detect staged changes** - Skip validation for docs-only changes (`.md` files only)
-2. **Detect affected packages** - Determines which packages have changes (web, shared, mobile, worker, help-site)
-3. **Generate API types** - If `volleymanager-openapi.yaml` is staged
-4. **Check design token sync** - Verify `colors.js` matches `design-tokens.css` (when style files are staged)
-5. **Run checks in PARALLEL** - Single format check on staged files + per-package lint, typecheck, test
-5. **Build shared** then **web + help-site in parallel** - Build affected packages
+## The Commit Gate
 
-Shared package changes trigger web validation (always) and mobile validation (only when exported API surface is touched).
+Active in Claude Code web only (`CLAUDE_CODE_REMOTE=true`); human developers
+rely on CI. `scripts/validate.sh` itself runs anywhere.
 
-### Checks Per Package
+`.claude/hooks/pre-git-commit.sh` asks `--gate` whether every required check
+has a cached PASS for the current file contents, and approves instantly if so.
+
+`--gate` prints one `<kind> <value>` record per line:
+
+| Record            | Meaning                                           | Fix                   |
+| ----------------- | ------------------------------------------------- | --------------------- |
+| `check <name>`    | That check has not passed for the current content | `scripts/validate.sh` |
+| `unstaged <path>` | Staged content differs from the worktree copy     | `git add -A`          |
+
+Exit 0 = gate open, 1 = work outstanding, anything else = the gate itself
+failed and the hook blocks. A path git cannot list unquoted — one containing a
+quote, backslash or newline — is that third case: it would otherwise be
+invisible to every check and read as "no changes".
+
+Two consequences worth knowing:
+
+- Checks are package-wide (`eslint .`, `vitest run`), so an untracked broken
+  file under a package fails its checks even if you never staged it.
+- The gate reports `unstaged` only for files that are both staged **and**
+  dirty. A merely dirty file does not block a partial commit.
+
+## The Cache
+
+Each check's key is a content hash of its declared input paths plus a root
+set: `CORE_ROOT` (manifests, lockfile, validation scripts) is in every key;
+`FORMAT_ROOT` (prettier config) is in `format`'s key only.
+
+| Situation                                 | Behaviour                                         |
+| ----------------------------------------- | ------------------------------------------------- |
+| Ran `/lint` mid-work, then commit         | Lint is **not** re-run                            |
+| Fixed a lint error in `web`, re-validated | Only `web` re-runs; `shared`/`mobile` stay cached |
+| Edited file contents                      | That package's checks invalidate                  |
+| `git add` / `git reset` with no edit      | Nothing invalidates                               |
+| Second commit with no edits between       | Everything still cached                           |
+| Changed `pnpm-lock.yaml`                  | Everything invalidates                            |
+| Changed `scripts/validate.sh`             | Everything invalidates                            |
+| Changed `.prettierignore`                 | `format` widens to every formattable file         |
+
+Stored in `.validation-cache/` (gitignored). No expiry — correctness comes
+from the hash, not a timer. `--no-cache` forces a full re-run.
+
+## What Runs
+
+A package is affected when a changed path falls under its input paths (see
+`PKG_INPUTS` in `scripts/validate.sh`) or when a root file changed.
+`packages/shared/src` is an input of web and mobile, so any shared edit
+validates all three. `ocr-poc` is a throwaway proof of concept and is
+deliberately unvalidated.
 
 | Package   | format¹ | lint | knip | typecheck  | test | build |
 | --------- | ------- | ---- | ---- | ---------- | ---- | ----- |
@@ -39,121 +85,71 @@ Shared package changes trigger web validation (always) and mobile validation (on
 | worker    | ✓       | ✓    | –    | –          | ✓    | –     |
 | help-site | ✓       | –    | –    | –          | –    | ✓     |
 
-¹ Format runs once on all staged files (not per-package)
-² Knip (dead code detection) runs in CI only — too slow for pre-commit
+¹ Runs once over all changed files, not per-package
+² Knip runs in CI only — too slow for pre-commit
 
-### Manual Validation Commands
+Non-build checks run in parallel, then all builds in parallel. The web build
+includes `tsc -b` and the bundle-size check. API types regenerate first if
+`volleymanager-openapi.yaml` changed.
 
-Run from `packages/web/` directory:
+**Skipped entirely**: docs-only changes, and changes that register no check at
+all. There is no extension allowlist — an asset-only change under a package
+runs that package's checks rather than being silently skipped.
 
-```bash
-# Generate API types (if OpenAPI spec changed)
-pnpm run generate:api
+## Changing the Validation Scripts
 
-# Formatting
-pnpm run format:check  # Check only
-pnpm run format        # Auto-fix
+Touching the validation scripts, the hooks, `.claude/settings.json` or any
+`*.sh` file registers two more checks before the gate reopens:
 
-# Linting (0 warnings allowed)
-pnpm run lint          # Check only
-pnpm run lint:fix      # Auto-fix where possible
+- `validation:test` — `scripts/validate.test.sh`, a behavior suite over the
+  fingerprint/cache primitives, the runner, the gate protocol and the commit
+  hook, all against scratch repositories with `pnpm` stubbed. Needs only bash,
+  git and jq.
+- `validation:shellcheck` — `scripts/shellcheck.sh`, which lints every tracked
+  `*.sh` file (minus vendored `.specify/`). Registered locally when
+  `shellcheck` is installed; `.github/workflows/ci-shell.yml` runs both this
+  and the test suite on every push and PR, so the lint is enforced even where
+  the binary is missing locally.
 
-# Dead code detection
-pnpm run knip
+The hook's commit predicate lives in `.claude/hooks/lib/is-git-commit.sh` and
+is sourced by both the hook and the test suite — one definition rather than
+two that must agree. It errs towards gating: a false positive costs one
+re-run; a false negative is an unvalidated commit. If the lib cannot be loaded
+the hook blocks commits rather than approving them.
 
-# Tests
-pnpm test              # Run all tests
-pnpm run test:watch    # Watch mode
-pnpm run test:coverage # With coverage report
+## Auto-Fix Commands
 
-# Build
-pnpm run build         # Production build (includes tsc)
-```
-
-### When Validation Runs
-
-**Triggers validation**:
-
-- Adding, modifying, or deleting `.ts`, `.tsx`, `.js`, `.jsx` files
-- Modifying imports, exports, or dependencies
-- Changing type definitions or interfaces
-- Updating configuration files (`vite.config.ts`, `tsconfig.json`, etc.)
-
-**Skips validation**:
-
-- Changes to `.md` documentation files only
-- No source files changed
-
-## Mobile App Validation
-
-Run from `packages/mobile/` directory:
+Not cached, and they do not count towards the gate. Use them to fix, then
+validate.
 
 ```bash
-pnpm run typecheck     # TypeScript check
-pnpm run lint          # ESLint
-pnpm test              # Jest tests
-```
-
-## Worker Validation
-
-Run from `packages/worker/` directory:
-
-```bash
-pnpm run lint          # ESLint
-pnpm test              # Tests
+pnpm run format          # prettier --write
+pnpm run lint:fix        # eslint --fix        (web, mobile)
+pnpm run generate:api    # regenerate API types
+cd packages/web && pnpm run knip    # dead code
 ```
 
 ## E2E Tests (Web App)
 
-Run from `packages/web/` directory:
-
-```bash
-pnpm run test:e2e      # Run all E2E tests (headless)
-pnpm run test:e2e:ui   # Interactive Playwright UI mode
-```
-
-### E2E Configuration
-
-- **Browsers**: Chromium, Firefox, WebKit
-- **Mobile viewports**: Pixel 5, iPhone 12
-- **Timeouts**: Test 30s, Expect 10s
-- **Retries**: 2 on CI, 1 locally
-- **Artifacts**: Screenshots on failure, trace on first retry
-
-### Page Object Models
-
-E2E tests use POMs in `e2e/pages/` for maintainable selectors.
-
-## Bundle Size Check
+Not part of the commit gate.
 
 ```bash
 cd packages/web
-pnpm run build
-pnpm run size
+pnpm run test:e2e      # headless
+pnpm run test:e2e:ui   # Playwright UI
 ```
 
-### Size Limits (gzipped)
+Chromium/Firefox/WebKit plus Pixel 5 and iPhone 12 viewports. Test timeout
+30s, expect 10s. Retries 2 on CI, 1 locally. Screenshots on failure, trace on
+first retry. Selectors live in page objects under `e2e/pages/`.
 
-| Component            | Limit  |
-| -------------------- | ------ |
-| Main App Bundle      | 145 KB |
-| Vendor Chunks (each) | 50 KB  |
-| PDF Library (lazy)   | 185 KB |
-| Image Cropper (lazy) | 10 KB  |
-| CSS                  | 12 KB  |
-| Total JS             | 600 KB |
+## Bundle Size
 
-### Bundle Analysis
+Limits are the `size-limit` key of `packages/web/package.json` — read them
+there. Folded into `web:build`; open `stats.html` after a build to see chunk
+contents. CI builds the merge commit and lands ~10-15 kB above a local build.
 
-After build, open `stats.html` for detailed visualization of chunk contents.
+## Coverage Thresholds
 
-## Coverage Requirements
-
-Minimum thresholds enforced by Vitest (see `vite.config.ts`):
-
-| Metric     | Threshold |
-| ---------- | --------- |
-| Lines      | 50%       |
-| Functions  | 70%       |
-| Branches   | 70%       |
-| Statements | 50%       |
+Enforced by Vitest (see `vite.config.ts`): lines 50%, functions 70%,
+branches 70%, statements 50%.

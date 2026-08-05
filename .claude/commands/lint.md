@@ -1,9 +1,10 @@
 # Quick Lint Check
 
-Run lint only (fastest validation).
+Lint every package touched by the current changes. Cached — counts towards the
+commit gate, never re-run at commit time.
 
 ```bash
-cd packages/web && pnpm run lint
+scripts/validate.sh lint
 ```
 
-Output: `✓ Lint` or `✗ Lint: [first error]`
+Report `✓ Lint` or `✗ Lint: [first error]`.
