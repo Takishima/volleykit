@@ -345,21 +345,31 @@ CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
 
-# VALIDATION_SCRIPTS must list every script validate.sh is built from —
+# VALIDATION_SCRIPTS must cover validate.sh and everything it sources —
 # CORE_ROOT has no catch-all, so a sourced script missing from the constant
 # would leave every package check's stored PASS intact across its edits.
+# Compared against the actual `source` lines, not a filename glob: a glob
+# pinned a naming convention (and, listing untracked files, let any scratch
+# file in scripts/ close the commit gate), while the property the constant
+# must have is "what validate.sh is built from".
 DECLARED=$(cd "$REAL_ROOT" && bash -c 'source scripts/validation-policy.sh >/dev/null 2>&1; printf "%s\n" $VALIDATION_SCRIPTS' | sort)
-ONDISK=$(cd "$REAL_ROOT" && git ls-files -c -o --exclude-standard -- 'scripts/validate.sh' 'scripts/validation-*.sh' | grep -v '\.test\.sh$' | sort)
-check "VALIDATION_SCRIPTS lists every validation script" \
-  "$([ "$DECLARED" = "$ONDISK" ]; echo $?)" "declared=$DECLARED ondisk=$ONDISK"
+SOURCED=$(
+  {
+    echo scripts/validate.sh
+    grep -o 'SCRIPT_DIR/[A-Za-z0-9._-]*\.sh' "$REAL_ROOT/scripts/validate.sh" | sed 's|^SCRIPT_DIR/|scripts/|'
+  } | sort -u
+)
+check "VALIDATION_SCRIPTS lists validate.sh and everything it sources" \
+  "$([ "$DECLARED" = "$SOURCED" ]; echo $?)" "declared=$DECLARED sourced=$SOURCED"
 
-# --help must stop at the END HELP sentinel; without it the sed range runs to
-# EOF and prints the whole script.
-H_OUT=$( (cd "$M" && bash scripts/validate.sh --help) 2>&1 )
-check "--help renders the usage block" \
+# --help must resolve its own file after the cd to the repo root (a relative
+# $0 does not — hence the invocation from a subdirectory) and must stop at the
+# END HELP sentinel rather than printing the whole script.
+H_OUT=$( (cd "$M/packages/web" && bash ../../scripts/validate.sh --help) 2>&1 )
+check "--help renders the usage block from a subdirectory" \
   "$(printf '%s' "$H_OUT" | grep -q 'Classes:'; echo $?)" "$H_OUT"
 check "--help stops at the sentinel" \
-  "$(printf '%s' "$H_OUT" | grep -q 'Layout:'; echo $((1 - $?)))" "$H_OUT"
+  "$([ -n "$H_OUT" ] && ! printf '%s' "$H_OUT" | grep -q 'Layout:'; echo $?)" "$H_OUT"
 
 # =============================================================================
 echo "# is_git_commit"
