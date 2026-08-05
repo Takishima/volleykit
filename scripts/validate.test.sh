@@ -235,14 +235,15 @@ LOAD_SET=$(
 # does not declare — any name, any extension, either tree — exists here for
 # the traced-run audit below to observe. Untracked files are deliberately
 # not copied: a scratch file must not change fixture behavior.
-# The suite itself is excluded: nothing loads it, it is not declared, and a
-# fixture full run with a dirty .sh file would otherwise execute this suite
-# recursively inside itself.
+# The suite itself is excluded — by exact name, not a pattern: nothing
+# loads it, it is not declared, and a fixture full run with a dirty .sh
+# file would otherwise execute this suite recursively inside itself. A
+# pattern would carve a filename class out of the audit's sight.
 COPY_SET=$(
   {
     printf '%s\n' "$DECLARED"
     (cd "$REAL_ROOT" && git ls-files -- scripts/ .claude/hooks/)
-  } | grep -v '\.test\.sh$' | sort -u
+  } | grep -vxF 'scripts/validate.test.sh' | sort -u
 )
 while IFS= read -r s; do
   mkdir -p "$M/$(dirname "$s")"
@@ -458,8 +459,11 @@ git -C "$M" checkout -q -- packages
 # change detection: an arm that exits at "No changes" traces the top-of-file
 # loads and nothing else, silently — the coverage rests on the edit above,
 # and this row is what notices if that setup stops working.
+# [PASS] rows are printed only by print_summary after run_selected_checks —
+# "All checks pass" also appears on the all-cached early return, which would
+# make the row's verdict a property of cache state rather than the executor.
 check "the audited full run reaches the executor" \
-  "$(printf '%s' "$ALL_OUT" | grep -q 'All checks pass'; echo $?)" "$ALL_OUT"
+  "$(printf '%s' "$ALL_OUT" | grep -qF '[PASS]'; echo $?)" "$ALL_OUT"
 TRACED=$(grep -o 'VKSRC{[^}]*}' "$TRACE" | sed -e 's/^VKSRC{//' -e 's/}$//' \
   -e "s|^$M/||" | grep -vxF "$AUDIT" | grep -v '^$' | sort -u || true)
 UNDECLARED=$(comm -23 <(printf '%s\n' "$TRACED") <(printf '%s\n' "$DECLARED"))
