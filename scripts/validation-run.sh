@@ -60,10 +60,8 @@ run_check() {
   echo "$ok" >"$res"
 }
 
-# -g: sourced from inside validate.sh's load_script function, where a bare
-# declare would silently make these function-local.
-declare -ga WAVE_NAMES=() WAVE_PIDS=()
-declare -gA RESULT=()
+declare -a WAVE_NAMES=() WAVE_PIDS=()
+declare -A RESULT=()
 FAILED=false
 
 launch() {

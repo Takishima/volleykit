@@ -9,7 +9,7 @@
 # defines functions and exports ROOT_DIR. Source it from a directory inside the
 # repository; every function below assumes the caller has cd'd to ROOT_DIR.
 #
-#   source scripts/validation-lib.sh || exit 1
+#   source scripts/validation-lib.sh || exit 3
 #   cd "$ROOT_DIR"
 
 # shellcheck disable=SC2034  # colors are consumed by sourcing scripts

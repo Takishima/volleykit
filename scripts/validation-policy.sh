@@ -37,10 +37,8 @@
 # One constant so the two cannot drift.
 API_SPEC="docs/api/volleymanager-openapi.yaml"
 
-# -g: this file is sourced from inside validate.sh's load_script function,
-# and a bare declare there would silently make the tables function-local.
-declare -ga PKG_NAMES=(web shared mobile worker help-site)
-declare -gA PKG_INPUTS=(
+declare -a PKG_NAMES=(web shared mobile worker help-site)
+declare -A PKG_INPUTS=(
   [web]="packages/web packages/shared/src packages/shared/styles packages/shared/package.json $API_SPEC"
   [shared]="packages/shared $API_SPEC"
   [mobile]="packages/mobile packages/shared/src packages/shared/styles packages/shared/package.json $API_SPEC"

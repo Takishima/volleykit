@@ -26,44 +26,50 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Every file the validation system loads routes through this helper. It
-# records the load and — as soon as the policy table is available — refuses
-# any recorded path that is not declared in VALIDATION_SCRIPTS. That makes
-# "the declared set covers the loaded set" a property of every invocation,
-# on whatever arm or branch the load sits, rather than something a test can
-# only approximate from outside: an undeclared load exits 3 (the hook
-# reports a broken gate, never an open one) the first time it executes.
-# CORE_ROOT contains $VALIDATION_SCRIPTS, so a declared load is by
-# construction one whose edits invalidate every cached result.
+# Every load below is paired with record_load, which — as soon as the policy
+# table is available — refuses any recorded path not declared in
+# VALIDATION_SCRIPTS: exit 3, the hook reports a broken gate, never an open
+# one. That makes "the declared set covers the loaded set" a property of
+# every invocation, on whatever arm or branch the load sits. CORE_ROOT
+# contains $VALIDATION_SCRIPTS, so a declared load is by construction one
+# whose edits invalidate every cached result.
+#
+# Recording is deliberately separate from sourcing: a `source` inside a
+# function frame silently makes the sourced file's bare `declare`s
+# function-local, so the loads stay at top level and the helper only checks.
+# The suite pins the pairing — a `source` without a record_load fails its
+# "no load bypasses record_load" row.
 LOADED_SCRIPTS="scripts/validate.sh"
-load_script() {
-  local rel=$1
-  # shellcheck source=/dev/null
-  source "$SCRIPT_DIR/../$rel" || exit 3
-  LOADED_SCRIPTS="$LOADED_SCRIPTS $rel"
+record_load() {
+  LOADED_SCRIPTS="$LOADED_SCRIPTS $1"
+  [ -n "${VALIDATION_SCRIPTS:-}" ] || return 0
   # Re-checked after every load once the policy is present, which covers the
-  # loads that happened before it (the lib and the policy itself).
-  if [ -n "${VALIDATION_SCRIPTS:-}" ]; then
-    local s
-    # shellcheck disable=SC2086  # our own constants: split on purpose
-    for s in $LOADED_SCRIPTS; do
-      case " scripts/validate.sh $VALIDATION_SCRIPTS " in
-        *" $s "*) ;;
-        *)
-          echo "validate.sh: loaded $s, which is not declared in VALIDATION_SCRIPTS" >&2
-          echo "(scripts/validation-policy.sh). Declare it so its edits invalidate" >&2
-          echo "cached results; the gate fails closed until then." >&2
-          exit 3
-          ;;
-      esac
-    done
-  fi
+  # loads recorded before it (the lib and the policy itself).
+  local s
+  # shellcheck disable=SC2086  # our own constants: split on purpose
+  for s in $LOADED_SCRIPTS; do
+    case " $VALIDATION_SCRIPTS " in
+      *" $s "*) ;;
+      *)
+        echo "validate.sh: loaded $s, which is not declared in VALIDATION_SCRIPTS" >&2
+        echo "(scripts/validation-policy.sh). Declare it so its edits invalidate" >&2
+        echo "cached results; the gate fails closed until then." >&2
+        exit 3
+        ;;
+    esac
+  done
 }
 
-load_script scripts/validation-lib.sh
+# shellcheck source=./validation-lib.sh
+source "$SCRIPT_DIR/validation-lib.sh" || exit 3
+record_load scripts/validation-lib.sh
 cd "$ROOT_DIR"
-load_script scripts/validation-policy.sh
-load_script scripts/validation-run.sh
+# shellcheck source=./validation-policy.sh
+source "$SCRIPT_DIR/validation-policy.sh" || exit 3
+record_load scripts/validation-policy.sh
+# shellcheck source=./validation-run.sh
+source "$SCRIPT_DIR/validation-run.sh" || exit 3
+record_load scripts/validation-run.sh
 
 # =============================================================================
 # ARGUMENTS

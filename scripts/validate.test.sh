@@ -6,8 +6,9 @@
 #
 # Everything runs against scratch repositories under mktemp with `pnpm`
 # stubbed, so the suite needs only bash, git and jq and finishes in seconds.
-# One exception touches the real repo: the load-set audit runs the real
-# validate.sh CLI arms in place — read-only, with the cache dir redirected.
+# The only real-repo touches are reads: policy constants via read_policy,
+# source-line scans, and sourcing the commit predicate. Nothing executes
+# against the real repository.
 # CI runs it via .github/workflows/ci-shell.yml; locally it is the
 # `validation:test` check in scripts/validate.sh.
 
@@ -379,19 +380,24 @@ while IFS= read -r rel; do
   git -C "$M" checkout -q -- "$rel"
 done <<<"$LOAD_SET"
 
-# The load-set guard is runtime behavior in validate.sh itself (load_script):
+# The load-set guard is runtime behavior in validate.sh itself (record_load):
 # an undeclared load exits 3 the first time its branch executes, on any arm,
 # in any environment — no test-time approximation of source syntax. These
 # rows exercise the guard's two directions in the scratch repo.
+# (awk-and-move instead of sed -i, which is a GNUism.)
+insert_after() { # insert_after <file> <exact line> <insertion, \n allowed>
+  awk -v m="$2" -v ins="$3" '{ print; if ($0 == m) print ins }' "$1" >"$1.tmp" && mv "$1.tmp" "$1"
+}
 printf 'VK_EXTRA=1\n' >"$M/scripts/validation-extra.sh"
-sed -i 's|^load_script scripts/validation-run.sh$|load_script scripts/validation-run.sh\nload_script scripts/validation-extra.sh|' \
-  "$M/scripts/validate.sh"
+insert_after "$M/scripts/validate.sh" 'record_load scripts/validation-run.sh' \
+  'source "$SCRIPT_DIR/validation-extra.sh" || exit 3\nrecord_load scripts/validation-extra.sh'
 run_validate --gate
 check "an undeclared load fails the gate closed" \
   "$([ "$V_STATUS" -eq 3 ] && printf '%s' "$V_OUT" | grep -q 'validation-extra.sh'; echo $?)" \
   "exit=$V_STATUS out=$V_OUT"
-sed -i 's|^VALIDATION_SCRIPTS="|VALIDATION_SCRIPTS="scripts/validation-extra.sh |' \
-  "$M/scripts/validation-policy.sh"
+awk '{ sub(/^VALIDATION_SCRIPTS="/, "VALIDATION_SCRIPTS=\"scripts/validation-extra.sh "); print }' \
+  "$M/scripts/validation-policy.sh" >"$M/scripts/validation-policy.sh.tmp" &&
+  mv "$M/scripts/validation-policy.sh.tmp" "$M/scripts/validation-policy.sh"
 run_validate --gate
 check "declaring the load is accepted" \
   "$([ "$V_STATUS" -eq 1 ] && ! printf '%s' "$V_OUT" | grep -q 'not declared'; echo $?)" \
@@ -425,6 +431,17 @@ check "FORMAT_EXT matches the root format script's glob" \
 CHECK_SET=$(glob_set format:check | tr ',' '\n' | sort)
 check "format:check covers the same set as format" \
   "$([ "$CHECK_SET" = "$FORMAT_SET" ]; echo $?)" "format:check=$CHECK_SET format=$FORMAT_SET"
+
+# record_load can only see the loads it is handed, so the pairing itself is
+# pinned here: any source in the declared set that is not one of the two
+# sanctioned forms bypasses the declared-set check. Unanchored, so guarded
+# and chained sources match; no path resolution — the failure modes of the
+# earlier textual rows all came from resolving what a source line means.
+# shellcheck disable=SC2086  # DECLARED is a newline list of our own paths
+STRAY=$(cd "$REAL_ROOT" && grep -hE '(^[[:space:]]*|[;&|][[:space:]]*)(source|\.)[[:space:]]' $DECLARED /dev/null |
+  grep -vF 'source "$SCRIPT_DIR/validation-' |
+  grep -vF 'pwd)/validation-lib.sh"' || true)
+check "no load bypasses record_load" "$([ -z "$STRAY" ]; echo $?)" "stray=$STRAY"
 
 # --help must resolve its own file after the cd to the repo root (a relative
 # $0 does not — hence the invocation from a subdirectory) and must stop at the

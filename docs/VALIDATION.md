@@ -106,12 +106,14 @@ being silently skipped.
 
 ## Changing the Validation Scripts
 
-Every file `validate.sh` loads goes through its `load_script` helper, which
-refuses any path not declared in `VALIDATION_SCRIPTS`
+Every `source` in `validate.sh` is paired with `record_load`, which refuses
+any recorded path not declared in `VALIDATION_SCRIPTS`
 (`scripts/validation-policy.sh`) — the run exits 3 and the commit gate fails
-closed. Declaring the file puts it in `CORE_ROOT`, so its edits invalidate
-every cached result. Adding a sourced script therefore means adding it to
-`VALIDATION_SCRIPTS`, and forgetting to is a loud failure, not a stale cache.
+closed. The test suite pins the pairing: a `source` without a `record_load`
+fails its "no load bypasses record_load" row. Declaring the file puts it in
+`CORE_ROOT`, so its edits invalidate every cached result. Adding a sourced
+script therefore means adding it to `VALIDATION_SCRIPTS`, and forgetting to
+is a loud failure, not a stale cache.
 
 Touching the validation scripts, the hooks, `.claude/settings.json` or any
 `*.sh` file registers two more checks before the gate reopens:
