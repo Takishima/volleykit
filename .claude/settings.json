@@ -32,7 +32,9 @@
       "Bash(pnpm exec eslint:*)",
       "Bash(pnpm exec wrangler:*)",
       "Bash(pnpm run size:*)",
-      "Bash(CLAUDE_CODE_REMOTE=true scripts/pre-commit-validate.sh)",
+      "Bash(scripts/validate.sh:*)",
+      "Bash(bash scripts/validate.test.sh)",
+      "Bash(bash scripts/shellcheck.sh)",
       "Bash(pnpm exec prettier --check:*)"
     ],
     "deny": []
@@ -70,19 +72,6 @@
           {
             "type": "command",
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-git-push.sh"
-          },
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-git-commit.sh"
-          }
-        ]
-      },
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/post-read-validation.sh"
           }
         ]
       }

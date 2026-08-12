@@ -1,9 +1,10 @@
 # Quick Test Check
 
-Run tests only.
+Test every package touched by the current changes. Cached — counts towards the
+commit gate, never re-run at commit time.
 
 ```bash
-cd packages/web && pnpm test
+scripts/validate.sh test
 ```
 
-Output: `✓ Test (N passed)` or `✗ Test: [failed test names]`
+Report `✓ Test (N passed)` or `✗ Test: [failed test names]`.
