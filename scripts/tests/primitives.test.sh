@@ -2,8 +2,9 @@
 # Behavior tests for the validation primitives: fingerprinting, change
 # detection, divergence, the cache, the context and registry lifecycle, the
 # registration guard, the exec-bit invariant against the real repository,
-# the commit predicate and the policy/package.json agreement rows. The end-to-end runner and hook tests
-# live in scripts/tests/gate.test.sh; scripts/validate.test.sh runs both.
+# the commit predicate and the policy/package.json agreement rows. The
+# end-to-end runner and hook tests live in scripts/tests/gate.test.sh;
+# scripts/validate.test.sh runs both.
 
 # SC2319: `"$([ condition ]; echo $?)"` is this suite's one check idiom — the
 # status is captured immediately, nothing overwrites it, and check() wants a
@@ -150,8 +151,9 @@ echo "# context and registry lifecycle"
 # The per-run-reset symmetry of context.sh and checks.sh: each resets its
 # state in the function that fills it (context_load, register_all_checks),
 # and source-time declarations are type-only, so neither a re-source nor a
-# repeated pass can leave partial or doubled state. Rows about that
-# lifecycle live here; rows about _register's command guard live under
+# repeated pass can leave partial or doubled state. The rule, by subject:
+# rows about state that a load or a pass resets live here; rows about what
+# _register and register_all_checks reject at registration live under
 # "# registration guard". The fixture's web file stays untracked, so it is
 # the change set.
 R="$WORK/ctx"
@@ -172,20 +174,24 @@ check "the loaded context survives a re-source of context.sh" \
 
 # An initializer on CHECK_NAMES would wipe the whole registry on re-source
 # AFTER registration — validate.sh would read an empty registry and take
-# the "nothing to validate" exit.
+# the "nothing to validate" exit. The snippet prints a shape, so a red run
+# reports `n=0 []` rather than the empty string that IS the failure.
 RS_OUT=$(in_modules "$R" 'context_load && register_all_checks &&
-  source "'"$REAL_ROOT"'/scripts/validation/checks.sh" && echo "${CHECK_NAMES[*]}"' 2>&1)
+  source "'"$REAL_ROOT"'/scripts/validation/checks.sh" &&
+  printf "n=%s [%s]" "${#CHECK_NAMES[@]}" "${CHECK_NAMES[*]}"' 2>&1)
 check "the filled registry survives a re-source of checks.sh" \
   "$(printf '%s' "$RS_OUT" | grep -q 'web:lint'; echo $?)" "$RS_OUT"
 
 # register_all_checks resets the registry per pass, so a second pass on one
-# load replaces it — never appends duplicate checks. The detail carries both
-# counts so a red run shows doubled-vs-empty at a glance.
+# load replaces it — never appends duplicate checks. The predicate gates on
+# the count-pair shape first, so a chain that reds before printing fails as
+# a malformed capture instead of a bare `[` error.
 RG_OUT=$(in_modules "$R" 'context_load && register_all_checks &&
   printf "%s|" "${#CHECK_NAMES[@]}" && register_all_checks &&
   printf "%s" "${#CHECK_NAMES[@]}"' 2>&1)
 check "a second registration pass replaces the registry, not appends" \
-  "$([ "${RG_OUT%|*}" -gt 0 ] && [ "${RG_OUT%|*}" = "${RG_OUT#*|}" ]; echo $?)" "$RG_OUT"
+  "$([[ $RG_OUT =~ ^([0-9]+)\|([0-9]+)$ ]] && [ "${BASH_REMATCH[1]}" -gt 0 ] &&
+    [ "${BASH_REMATCH[1]}" = "${BASH_REMATCH[2]}" ]; echo $?)" "$RG_OUT"
 
 # =============================================================================
 echo "# registration guard"
