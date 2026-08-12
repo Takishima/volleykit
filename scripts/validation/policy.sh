@@ -2,8 +2,10 @@
 # Validation policy: which packages exist, what invalidates what, and which
 # root files feed which checks. This is the file to open when adding a package
 # or widening a check's inputs. Mechanism lives in scripts/validate.sh
-# (arguments, selection, gate), scripts/validation/checks.sh (registry) and
-# scripts/validation/run.sh (execution).
+# (arguments, selection, gate), scripts/validation/context.sh (change
+# detection and affectedness — the primary consumer of these tables),
+# scripts/validation/checks.sh (registry) and scripts/validation/run.sh
+# (execution).
 #
 # Meant to be sourced by scripts/validate.sh with the cwd at the repo root.
 #

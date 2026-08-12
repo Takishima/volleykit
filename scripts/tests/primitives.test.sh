@@ -147,52 +147,44 @@ check "VOLLEYKIT_NO_CACHE=1 bypasses the cache" "$((1 - $?))"
 echo "# registration guard"
 # =============================================================================
 
-# checks.sh defines functions only, so it loads standalone; _register is the
-# chokepoint every registration passes through. run_check execs argv without
-# a shell, so a command that would need one must be rejected here — a
-# metacharacter or newline reaching exec would run a truncated command and
-# report green.
-in_checks() { # in_checks <snippet>; runs with checks.sh sourced
-  bash -c "source '$REAL_ROOT/scripts/validation/checks.sh' || exit 99; $1"
-}
+# _register is the chokepoint every registration passes through. run_check
+# execs argv without a shell, so a command that would need one must be
+# rejected here — a metacharacter or newline reaching exec would run a
+# truncated command and report green. The rows run with the full module
+# chain loaded (in_modules), the same shape as a real run.
+R="$WORK/reg"
+make_repo "$R"
+git -C "$R" commit -q --allow-empty -m init
 
-G_OUT=$(in_checks '_register x lint /tmp "a.sh && b.sh" pkg' 2>&1)
+G_OUT=$(in_modules "$R" '_register x lint /tmp "a.sh && b.sh" pkg' 2>&1)
 check "a metacharacter command is rejected" \
   "$([ $? -ne 0 ] && printf '%s' "$G_OUT" | grep -q 'shell metacharacter'; echo $?)" "$G_OUT"
 
-G_OUT=$(in_checks "_register x lint /tmp \$'a.sh\nb.sh' pkg" 2>&1)
+G_OUT=$(in_modules "$R" "_register x lint /tmp \$'a.sh\nb.sh' pkg" 2>&1)
 check "a newline command is rejected" \
   "$([ $? -ne 0 ] && printf '%s' "$G_OUT" | grep -q 'newline in command'; echo $?)" "$G_OUT"
 
-G_OUT=$(in_checks '_register x lint /tmp __nope__ pkg' 2>&1)
+G_OUT=$(in_modules "$R" '_register x lint /tmp __nope__ pkg' 2>&1)
 check "a sentinel without its composite_* function is rejected" \
   "$([ $? -ne 0 ] && printf '%s' "$G_OUT" | grep -q 'no composite_nope'; echo $?)" "$G_OUT"
 
-in_checks '_register x lint /tmp __format__ pkg && [ "${CHECK_NAMES[0]}" = x ]'
+in_modules "$R" '_register x lint /tmp __format__ pkg && [ "${CHECK_NAMES[0]}" = x ]'
 check "a sentinel with its composite_* function registers" $?
 
-in_checks '_register x lint /tmp "pnpm run lint" pkg && [ "${CHECK_NAMES[0]}" = x ]'
+in_modules "$R" '_register x lint /tmp "pnpm run lint" pkg && [ "${CHECK_NAMES[0]}" = x ]'
 check "a plain argv command registers" $?
 
 # One bad registration must fail the whole pass, not just its own row —
 # register_all_checks reports through the latch, and the caller exits 3.
-in_checks '_register x lint /tmp __nope__ pkg 2>/dev/null; [ "$REGISTER_FAILED" = 1 ]'
+in_modules "$R" '_register x lint /tmp __nope__ pkg 2>/dev/null; [ "$REGISTER_FAILED" = 1 ]'
 check "a guard violation latches REGISTER_FAILED" $?
 
 # register_all_checks reads the loaded context, and the hazard is the full
 # module chain sourced with context_load never called: `set -u` off, every
 # variable unbound-but-empty, every arm skipped, exit 0 with an empty
-# registry. The precondition must turn that into an error with the remedy
-# on stderr.
-R="$WORK/reg"
-make_repo "$R"
-git -C "$R" commit -q --allow-empty -m init
-RA_OUT=$( (cd "$R" && bash -c "
-  source '$REAL_ROOT/scripts/validation/lib.sh' &&
-  source '$REAL_ROOT/scripts/validation/policy.sh' &&
-  source '$REAL_ROOT/scripts/validation/context.sh' &&
-  source '$REAL_ROOT/scripts/validation/checks.sh' &&
-  register_all_checks") 2>&1 ) && RA_STATUS=0 || RA_STATUS=$?
+# registry. context_loaded must turn that into an error with the remedy on
+# stderr.
+RA_OUT=$(in_modules "$R" 'register_all_checks' 2>&1) && RA_STATUS=0 || RA_STATUS=$?
 check "register_all_checks without context_load errors, not an empty registry" \
   "$([ "$RA_STATUS" -ne 0 ] && printf '%s' "$RA_OUT" | grep -q 'context_load first'; echo $?)" \
   "status=$RA_STATUS out=$RA_OUT"
@@ -228,18 +220,16 @@ echo "# exec bits in the real repo"
 # The fixture rows in gate.test.sh pin the gate's behavior; these pin the
 # actual repo state CI ships. The red-direction probe drops a bit in a
 # scratch COPY of the index (GIT_INDEX_FILE), never the real one.
-EB_OUT=$( (cd "$REAL_ROOT" && bash -c '
-  source scripts/validation/lib.sh && source scripts/validation/policy.sh &&
-  exec_bits "${EXEC_BIT_PATHS[@]}"
-') 2>&1 ) && EB_STATUS=0 || EB_STATUS=$?
+EB_OUT=$(in_modules "$REAL_ROOT" 'exec_bits "${EXEC_BIT_PATHS[@]}"' 2>&1) &&
+  EB_STATUS=0 || EB_STATUS=$?
 check "exec_bits passes on the real repo" "$EB_STATUS" "$EB_OUT"
 
-EB_OUT=$( (cd "$REAL_ROOT" && GIT_INDEX_FILE="$WORK/exec-probe-index" bash -c '
+EB_OUT=$(in_modules "$REAL_ROOT" '
+  export GIT_INDEX_FILE="'"$WORK"'/exec-probe-index"
   cp "$(git rev-parse --git-dir)/index" "$GIT_INDEX_FILE"
   git update-index --chmod=-x .claude/hooks/pre-git-commit.sh
-  source scripts/validation/lib.sh && source scripts/validation/policy.sh
   exec_bits "${EXEC_BIT_PATHS[@]}"
-') 2>&1 ) && EB_STATUS=0 || EB_STATUS=$?
+' 2>&1) && EB_STATUS=0 || EB_STATUS=$?
 check "a dropped hook exec bit fails exec_bits" \
   "$([ "$EB_STATUS" -ne 0 ] && printf '%s' "$EB_OUT" | grep -q 'not tracked executable:'; echo $?)" \
   "status=$EB_STATUS out=$EB_OUT"
@@ -259,10 +249,7 @@ check "exec_bits names a non-exec path containing spaces in full" \
 # `:(glob)` keeps `*` from crossing `/`: the sourced helpers in
 # .claude/hooks/lib/ are 100644, and demanding 100755 of them would red the
 # gate on every legal checkout.
-EB_OUT=$( (cd "$REAL_ROOT" && bash -c '
-  source scripts/validation/lib.sh && source scripts/validation/policy.sh
-  git ls-files -- "${EXEC_BIT_PATHS[@]}"
-') 2>&1 )
+EB_OUT=$(in_modules "$REAL_ROOT" 'git ls-files -- "${EXEC_BIT_PATHS[@]}"' 2>&1)
 check "EXEC_BIT_PATHS does not reach into .claude/hooks/lib/" \
   "$(printf '%s\n' "$EB_OUT" | grep -q '/lib/'; echo $((1 - $?)))" "$EB_OUT"
 check "EXEC_BIT_PATHS covers the commit hook" \

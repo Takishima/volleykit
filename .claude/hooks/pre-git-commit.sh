@@ -108,10 +108,19 @@ fi
 # stdout is "<kind> <value>" per line, kind being `check` or `unstaged`. An
 # unknown kind is collected rather than dropped: the protocol is extensible,
 # and a block whose reason names nothing would leave no remedy at all.
+#
+# The value is split off explicitly at the first space rather than with
+# `IFS=' ' read -r kind value` — read strips leading and trailing IFS
+# whitespace from the last field, and a path with a leading or trailing
+# space (which git lists unquoted) would have its remedy name a file that
+# does not exist.
 CHECKS=""
 UNSTAGED=""
 UNKNOWN=""
-while IFS=' ' read -r kind value; do
+while IFS= read -r line; do
+  kind=${line%% *}
+  value=${line#"$kind"}
+  value=${value# }
   case "$kind" in
     check) CHECKS="$CHECKS  - $value"$'\n' ;;
     unstaged) UNSTAGED="$UNSTAGED  - $value"$'\n' ;;

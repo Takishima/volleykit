@@ -17,6 +17,11 @@ matches() { echo "$CHANGED" | grep -qE "$1"; }
 
 affected() { [ -n "${AFFECTED[$1]:-}" ]; }
 
+# True once context_load has run. The state test lives here, in the module
+# that sets the state, so a consumer (register_all_checks) asserts a contract
+# this file owns instead of naming the variables itself.
+context_loaded() { [ -n "${CHANGED+x}" ] && [ -n "${DOCS_ONLY+x}" ]; }
+
 # Sets CHANGED (every path differing from HEAD), DOCS_ONLY, ROOT_CHANGED and
 # AFFECTED / AFFECTED_LIST. Returns non-zero when git cannot represent some
 # path in the change set — the caller must treat that as a broken gate, never

@@ -52,6 +52,19 @@ in_repo() {
   (cd "$dir" && bash -c "source '$REAL_ROOT/scripts/validation/lib.sh' || exit 99; $*")
 }
 
+# Run a snippet inside a repo with the full module chain loaded, in the order
+# scripts/validate.sh loads it — the one copy of that order in the suite, so
+# rows needing more than the lib cannot each hardcode their own.
+in_modules() { # in_modules <dir> <snippet>
+  local dir=$1
+  shift
+  (cd "$dir" && bash -c "
+    source '$REAL_ROOT/scripts/validation/lib.sh' &&
+    source '$REAL_ROOT/scripts/validation/policy.sh' &&
+    source '$REAL_ROOT/scripts/validation/context.sh' &&
+    source '$REAL_ROOT/scripts/validation/checks.sh' || exit 99; $*")
+}
+
 # Evaluate a snippet with the real policy file loaded — the one idiom for
 # reading policy values, so the suite cannot drift from the table it tests.
 read_policy() {

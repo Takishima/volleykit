@@ -335,6 +335,15 @@ printf '#!/bin/bash\n[ "$1" = --gate ] && { echo " "; exit 1; }\nexit 0\n' \
 hook_decision 'git commit -m "blank record"'
 check "hook blocks with a remedy when the gate names nothing renderable" \
   "$(printf '%s' "$H_OUT" | grep -q '"block"' && printf '%s' "$H_OUT" | grep -q 'named nothing'; echo $?)" "$H_OUT"
+
+# A record value with a leading space — a path git lists unquoted — must
+# reach the reason intact: `read` would strip it and the remedy would name a
+# file that does not exist.
+printf '#!/bin/bash\n[ "$1" = --gate ] && { echo "unstaged  spaced.txt"; exit 1; }\nexit 0\n' \
+  >"$M/scripts/validate.sh"
+hook_decision 'git commit -m "spaced record"'
+check "hook preserves a record value's leading space in the remedy" \
+  "$(printf '%s' "$H_OUT" | grep -qF -- '-  spaced.txt'; echo $?)" "$H_OUT"
 mv "$M/scripts/validate.sh.bak" "$M/scripts/validate.sh"
 
 # A dropped exec bit must surface through the hook with its remedy, not as a

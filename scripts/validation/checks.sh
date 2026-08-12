@@ -170,10 +170,10 @@ register_all_checks() {
   # was tried and it let the real hazard through: all four modules sourced,
   # context_load never called, `$DOCS_ONLY` unbound-but-empty under a
   # `set -u`-off standalone load, every arm skipped, and the pass returned 0
-  # having registered nothing. Assert the state itself, with the error on
-  # stderr like every other arm here, so the caller's exit 3 carries a
-  # remedy.
-  if [ -z "${CHANGED+x}" ] || [ -z "${DOCS_ONLY+x}" ]; then
+  # having registered nothing. context_loaded is context.sh's own statement
+  # of what a loaded context is; the error goes to stderr like every other
+  # arm here, so the caller's exit 3 carries a remedy.
+  if ! context_loaded; then
     echo "register_all_checks: run context_load first." >&2
     return 1
   fi
