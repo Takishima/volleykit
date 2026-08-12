@@ -67,3 +67,6 @@ local.properties
 .pre-commit-config.yaml
 
 # Root pnpm-lock.yaml IS tracked for reproducible CI builds (pnpm install --frozen-lockfile requires it)
+
+# Validation check cache (content-addressed, see scripts/validate.sh)
+.validation-cache/

@@ -1,0 +1,28 @@
+name: Shell
+
+# Lints every shell script git knows about (tracked or untracked) and runs
+# the validation-system test suite.
+# No `paths:` filter on purpose: the whole job takes seconds, and a filter is
+# one more list that must be kept in agreement with what the scripts read.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    name: Shellcheck + validation tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Shellcheck
+        run: bash scripts/shellcheck.sh
+
+      - name: Validation system tests
+        run: bash scripts/validate.test.sh
