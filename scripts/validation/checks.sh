@@ -11,6 +11,10 @@
 # Adding a package means adding a row in scripts/validation/policy.sh and a
 # register_check block in register_all_checks below.
 
+# The initializers are deliberate, unlike context.sh's AFFECTED: a re-source
+# resets the whole registry as a unit — names, tables and the latch below
+# together — leaving a consistent empty registry for the register_all_checks
+# that must follow, never a partial one.
 declare -a CHECK_NAMES=()
 # shellcheck disable=SC2034  # CHECK_DIR/CMD/ARGS are consumed by validation/run.sh
 declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()

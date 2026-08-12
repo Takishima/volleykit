@@ -66,7 +66,10 @@ context_load() {
   return 0
 }
 
-declare -A AFFECTED=()
+# No initializer: re-sourcing this file must not reset AFFECTED while the
+# scalars context_load set survive — a half-reset context would pass
+# context_loaded with an empty map. context_load resets the map per run.
+declare -A AFFECTED
 
 # Consumed by fingerprint_for_check (checks.sh) and divergence (validate.sh).
 # shellcheck disable=SC2034,SC2086  # our own constant: split on purpose, no globs

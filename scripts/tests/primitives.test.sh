@@ -156,6 +156,13 @@ R="$WORK/reg"
 make_repo "$R"
 git -C "$R" commit -q --allow-empty -m init
 
+# checks.sh's header claims it defines functions only; pin the observable
+# half — a standalone source succeeds silently, needing no other module and
+# printing nothing.
+G_OUT=$(bash -c "source '$REAL_ROOT/scripts/validation/checks.sh'" 2>&1)
+check "checks.sh sources standalone with no output" \
+  "$([ $? -eq 0 ] && [ -z "$G_OUT" ]; echo $?)" "$G_OUT"
+
 G_OUT=$(in_modules "$R" '_register x lint /tmp "a.sh && b.sh" pkg' 2>&1)
 check "a metacharacter command is rejected" \
   "$([ $? -ne 0 ] && printf '%s' "$G_OUT" | grep -q 'shell metacharacter'; echo $?)" "$G_OUT"

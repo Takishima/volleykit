@@ -52,9 +52,10 @@ in_repo() {
   (cd "$dir" && bash -c "source '$REAL_ROOT/scripts/validation/lib.sh' || exit 99; $*")
 }
 
-# Run a snippet inside a repo with the full module chain loaded, in the order
-# scripts/validate.sh loads it — the one copy of that order in the suite, so
-# rows needing more than the lib cannot each hardcode their own.
+# Run a snippet inside a repo with the four modules registration needs
+# loaded, in the order scripts/validate.sh loads them; the executor (run.sh)
+# is not loaded — no row executes a check. The one copy of that order in the
+# suite, so rows needing more than the lib cannot each hardcode their own.
 in_modules() { # in_modules <dir> <snippet>
   local dir=$1
   shift
