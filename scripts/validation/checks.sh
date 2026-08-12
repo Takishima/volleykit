@@ -3,21 +3,22 @@
 # command guard, and register_all_checks(), which fills the CHECK_* tables
 # from the context (CHANGED / DOCS_ONLY / AFFECTED, scripts/validation/
 # context.sh) and the policy tables. Meant to be sourced after context.sh;
-# defines functions only, reports failure through return codes and leaves
-# exiting to the caller:
+# defines functions and type-only declarations, reports failure through
+# return codes and leaves exiting to the caller:
 #
 #   register_all_checks || exit 3
 #
 # Adding a package means adding a row in scripts/validation/policy.sh and a
 # register_check block in register_all_checks below.
 
-# The initializers are deliberate, unlike context.sh's AFFECTED: a re-source
-# resets the whole registry as a unit — names, tables and the latch below
-# together — leaving a consistent empty registry for the register_all_checks
-# that must follow, never a partial one.
-declare -a CHECK_NAMES=()
+# Type-only declarations; register_all_checks resets the registry per pass —
+# the analogue of context_load resetting the context per run. Call-time reset
+# on the whole unit means a repeated pass replaces the registry instead of
+# appending to it, and a re-source cannot half-reset state the way a
+# source-time initializer would.
+declare -a CHECK_NAMES
 # shellcheck disable=SC2034  # CHECK_DIR/CMD/ARGS are consumed by validation/run.sh
-declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
+declare -A CHECK_CLASS CHECK_DIR CHECK_CMD CHECK_PATHS CHECK_ARGS
 
 # CHECK_PATHS is stored newline-separated so filenames containing spaces
 # survive — splitting "my file.ts" on IFS would produce two pathspecs matching
@@ -39,8 +40,6 @@ declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
 # fail shape relies on how the function is invoked: as the left side of
 # `|| exit 3`, errexit is suppressed inside it, so a failing _register does
 # not abort the pass before the latch is read.
-
-REGISTER_FAILED=0
 
 _register() {
   local name=$1 class=$2 dir=$3 cmd=$4 paths=$5 args=${6-}
@@ -181,6 +180,11 @@ register_all_checks() {
     echo "register_all_checks: run context_load first." >&2
     return 1
   fi
+
+  CHECK_NAMES=()
+  # shellcheck disable=SC2034  # CLASS/DIR/CMD are consumed by validate.sh and validation/run.sh
+  CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
+  REGISTER_FAILED=0
 
   register_format_check || return 1
 

@@ -144,6 +144,34 @@ in_repo "$R" 'cache_store mycheck abc123; VOLLEYKIT_NO_CACHE=1 cache_hit mycheck
 check "VOLLEYKIT_NO_CACHE=1 bypasses the cache" "$((1 - $?))"
 
 # =============================================================================
+echo "# context"
+# =============================================================================
+
+# context.sh's per-run state is reset by context_load, and the source-time
+# AFFECTED declaration deliberately has no initializer: a re-source must not
+# half-reset the context — map emptied, scalars surviving — which would pass
+# context_loaded and shrink the registry to format alone. The fixture's web
+# file stays untracked, so it is the change set.
+R="$WORK/ctx"
+make_repo "$R"
+git -C "$R" commit -q --allow-empty -m init
+mkdir -p "$R/packages/web/src"
+echo 'export const a = 1' >"$R/packages/web/src/app.ts"
+
+RS_OUT=$(in_modules "$R" '
+  context_load &&
+  source "'"$REAL_ROOT"'/scripts/validation/context.sh" &&
+  register_all_checks && echo "${CHECK_NAMES[*]}"' 2>&1)
+check "the loaded context survives a re-source of context.sh" \
+  "$(printf '%s' "$RS_OUT" | grep -q 'web:lint'; echo $?)" "$RS_OUT"
+
+# register_all_checks resets the registry per pass, so a second pass on one
+# load replaces it — never appends duplicate checks.
+in_modules "$R" 'context_load && register_all_checks && n=${#CHECK_NAMES[@]} &&
+  [ "$n" -gt 0 ] && register_all_checks && [ "${#CHECK_NAMES[@]}" -eq "$n" ]'
+check "a second registration pass replaces the registry, not appends" $?
+
+# =============================================================================
 echo "# registration guard"
 # =============================================================================
 
@@ -195,20 +223,6 @@ RA_OUT=$(in_modules "$R" 'register_all_checks' 2>&1) && RA_STATUS=0 || RA_STATUS
 check "register_all_checks without context_load errors, not an empty registry" \
   "$([ "$RA_STATUS" -ne 0 ] && printf '%s' "$RA_OUT" | grep -q 'context_load first'; echo $?)" \
   "status=$RA_STATUS out=$RA_OUT"
-
-# And the loaded context must survive a re-source of context.sh: an
-# initializer on AFFECTED would half-reset it — map emptied, scalars
-# surviving — passing context_loaded and shrinking the registry to format
-# alone.
-mkdir -p "$R/packages/web/src"
-echo 'export const a = 1' >"$R/packages/web/src/app.ts"
-RS_OUT=$(in_modules "$R" '
-  context_load &&
-  source "'"$REAL_ROOT"'/scripts/validation/context.sh" &&
-  affected web && register_all_checks && echo "${CHECK_NAMES[*]}"' 2>&1)
-check "the loaded context survives a re-source of context.sh" \
-  "$(printf '%s' "$RS_OUT" | grep -q 'web:lint'; echo $?)" "$RS_OUT"
-rm -rf "$R/packages"
 
 # =============================================================================
 echo "# policy agrees with package.json"
