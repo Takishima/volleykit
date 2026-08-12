@@ -14,8 +14,10 @@
 # Type-only declarations; register_all_checks resets the registry per pass —
 # the analogue of context_load resetting the context per run. Call-time reset
 # on the whole unit means a repeated pass replaces the registry instead of
-# appending to it, and a re-source cannot half-reset state the way a
-# source-time initializer would.
+# appending to it, and a re-source after registration preserves the filled
+# registry — an initializer here would wipe it, leaving the caller to read
+# an empty CHECK_NAMES and take the "nothing to validate" exit over checks
+# that were never consulted.
 declare -a CHECK_NAMES
 # shellcheck disable=SC2034  # CHECK_DIR/CMD/ARGS are consumed by validation/run.sh
 declare -A CHECK_CLASS CHECK_DIR CHECK_CMD CHECK_PATHS CHECK_ARGS

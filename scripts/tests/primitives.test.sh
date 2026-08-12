@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Behavior tests for the validation primitives: fingerprinting, change
-# detection, divergence, the cache, the registration guard, the exec-bit
-# invariant against the real repository, the commit predicate and the
-# policy/package.json agreement rows. The end-to-end runner and hook tests
+# detection, divergence, the cache, the context and registry lifecycle, the
+# registration guard, the exec-bit invariant against the real repository,
+# the commit predicate and the policy/package.json agreement rows. The end-to-end runner and hook tests
 # live in scripts/tests/gate.test.sh; scripts/validate.test.sh runs both.
 
 # SC2319: `"$([ condition ]; echo $?)"` is this suite's one check idiom — the
@@ -144,20 +144,25 @@ in_repo "$R" 'cache_store mycheck abc123; VOLLEYKIT_NO_CACHE=1 cache_hit mycheck
 check "VOLLEYKIT_NO_CACHE=1 bypasses the cache" "$((1 - $?))"
 
 # =============================================================================
-echo "# context"
+echo "# context and registry lifecycle"
 # =============================================================================
 
-# context.sh's per-run state is reset by context_load, and the source-time
-# AFFECTED declaration deliberately has no initializer: a re-source must not
-# half-reset the context — map emptied, scalars surviving — which would pass
-# context_loaded and shrink the registry to format alone. The fixture's web
-# file stays untracked, so it is the change set.
+# The per-run-reset symmetry of context.sh and checks.sh: each resets its
+# state in the function that fills it (context_load, register_all_checks),
+# and source-time declarations are type-only, so neither a re-source nor a
+# repeated pass can leave partial or doubled state. Rows about that
+# lifecycle live here; rows about _register's command guard live under
+# "# registration guard". The fixture's web file stays untracked, so it is
+# the change set.
 R="$WORK/ctx"
 make_repo "$R"
 git -C "$R" commit -q --allow-empty -m init
 mkdir -p "$R/packages/web/src"
 echo 'export const a = 1' >"$R/packages/web/src/app.ts"
 
+# An initializer on AFFECTED would half-reset the context on re-source —
+# map emptied, scalars surviving — passing context_loaded and shrinking the
+# registry to format alone.
 RS_OUT=$(in_modules "$R" '
   context_load &&
   source "'"$REAL_ROOT"'/scripts/validation/context.sh" &&
@@ -165,11 +170,22 @@ RS_OUT=$(in_modules "$R" '
 check "the loaded context survives a re-source of context.sh" \
   "$(printf '%s' "$RS_OUT" | grep -q 'web:lint'; echo $?)" "$RS_OUT"
 
+# An initializer on CHECK_NAMES would wipe the whole registry on re-source
+# AFTER registration — validate.sh would read an empty registry and take
+# the "nothing to validate" exit.
+RS_OUT=$(in_modules "$R" 'context_load && register_all_checks &&
+  source "'"$REAL_ROOT"'/scripts/validation/checks.sh" && echo "${CHECK_NAMES[*]}"' 2>&1)
+check "the filled registry survives a re-source of checks.sh" \
+  "$(printf '%s' "$RS_OUT" | grep -q 'web:lint'; echo $?)" "$RS_OUT"
+
 # register_all_checks resets the registry per pass, so a second pass on one
-# load replaces it — never appends duplicate checks.
-in_modules "$R" 'context_load && register_all_checks && n=${#CHECK_NAMES[@]} &&
-  [ "$n" -gt 0 ] && register_all_checks && [ "${#CHECK_NAMES[@]}" -eq "$n" ]'
-check "a second registration pass replaces the registry, not appends" $?
+# load replaces it — never appends duplicate checks. The detail carries both
+# counts so a red run shows doubled-vs-empty at a glance.
+RG_OUT=$(in_modules "$R" 'context_load && register_all_checks &&
+  printf "%s|" "${#CHECK_NAMES[@]}" && register_all_checks &&
+  printf "%s" "${#CHECK_NAMES[@]}"' 2>&1)
+check "a second registration pass replaces the registry, not appends" \
+  "$([ "${RG_OUT%|*}" -gt 0 ] && [ "${RG_OUT%|*}" = "${RG_OUT#*|}" ]; echo $?)" "$RG_OUT"
 
 # =============================================================================
 echo "# registration guard"
