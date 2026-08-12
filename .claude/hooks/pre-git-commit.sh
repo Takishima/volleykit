@@ -152,4 +152,11 @@ ${UNKNOWN}
 Run \`scripts/validate.sh\` to see it directly."
 fi
 
+# Belt over the arms above: a record stream that parses to nothing at all
+# (e.g. blank lines only) must still block with a remedy, never with an
+# empty reason.
+[ -z "$REASON" ] && REASON="The gate reported work outstanding but named nothing this hook can render.
+
+Run \`scripts/validate.sh\` to see it directly."
+
 block "$REASON"

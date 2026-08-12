@@ -18,10 +18,15 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# The part list is derived from the directory, not declared: a new
+# *.test.sh under scripts/tests/ runs without editing this file, the same
+# way CORE_ROOT's directory entry covers a new validation module. The
+# harness is excluded by the glob, and parts are order-independent (each
+# owns its own mktemp WORK tree).
 STATUS=0
-for part in primitives gate; do
-  echo "## $part"
-  bash "$SCRIPT_DIR/tests/$part.test.sh" || STATUS=1
+for part in "$SCRIPT_DIR"/tests/*.test.sh; do
+  echo "## $(basename "$part" .test.sh)"
+  bash "$part" || STATUS=1
   echo ""
 done
 

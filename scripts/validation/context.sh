@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Run context for scripts/validate.sh: what changed, and which packages that
-# affects. Meant to be sourced after scripts/validation/policy.sh; defines
-# functions only, reports failure through return codes and leaves exiting to
-# the caller.
+# affects. Reports failure through return codes and leaves exiting to the
+# caller. Two statements run at source time — the AFFECTED declaration and
+# the CORE_ROOT_NL derivation at the bottom — and the second is this file's
+# one ordering dependency: it must be sourced after
+# scripts/validation/policy.sh, which defines CORE_ROOT.
 #
 #   context_load || exit 3        # sets CHANGED, DOCS_ONLY, AFFECTED, ...
 #
@@ -15,10 +17,11 @@ matches() { echo "$CHANGED" | grep -qE "$1"; }
 
 affected() { [ -n "${AFFECTED[$1]:-}" ]; }
 
-# Sets CHANGED (every path differing from HEAD), DOCS_ONLY, ROOT_CHANGED,
-# AFFECTED / AFFECTED_LIST and CORE_ROOT_NL. Returns non-zero when git cannot
-# represent some path in the change set — the caller must treat that as a
-# broken gate, never as "no changes".
+# Sets CHANGED (every path differing from HEAD), DOCS_ONLY, ROOT_CHANGED and
+# AFFECTED / AFFECTED_LIST. Returns non-zero when git cannot represent some
+# path in the change set — the caller must treat that as a broken gate, never
+# as "no changes". (CORE_ROOT_NL is derived once at source time below, not
+# here — a constant, not part of the per-run context.)
 context_load() {
   CHANGED=$(changed_files) || return 1
 

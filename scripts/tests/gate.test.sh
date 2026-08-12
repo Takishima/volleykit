@@ -37,15 +37,17 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-# The fixture carries the runner and everything it is built from: the four
+# The fixture carries the runner and everything it is built from: the
 # pathspecs below are exactly the trees CORE_ROOT / SHELL_INPUTS /
-# EXEC_BIT_PATHS cover. Tracked files only — an untracked scratch file must
-# not change fixture behavior — and by construction the copy cannot include
-# this suite (scripts/tests/ matches none of the pathspecs), so the suite can
-# never recurse into itself. cp preserves exec bits, and git records them on
-# commit, so the fixture's exec-bit state mirrors the repo's.
+# EXEC_BIT_PATHS / TOKENS_INPUTS cover. Tracked files only — an untracked
+# scratch file must not change fixture behavior — and by construction the
+# copy cannot include this suite (scripts/tests/ matches none of the
+# pathspecs), so the suite can never recurse into itself. cp preserves exec
+# bits, and git records them on commit, so the fixture's exec-bit state
+# mirrors the repo's.
 COPY_SET=$(cd "$REAL_ROOT" && git ls-files -- \
-  scripts/validate.sh scripts/validation scripts/shellcheck.sh .claude/hooks)
+  scripts/validate.sh scripts/validation scripts/shellcheck.sh \
+  scripts/sync-style-tokens.js .claude/hooks)
 while IFS= read -r s; do
   mkdir -p "$M/$(dirname "$s")"
   cp "$REAL_ROOT/$s" "$M/$s" || not_ok "fixture copies $s" "missing from the repo"
@@ -62,6 +64,8 @@ SPEC_PATH=$(read_policy 'printf "%s" "$API_SPEC"')
 mkdir -p "$M/$(dirname "$SPEC_PATH")"
 echo 'openapi: 3.0.0' >"$M/$SPEC_PATH"
 echo '.validation-cache/' >"$M/.gitignore"
+mkdir -p "$M/packages/shared/styles"
+echo 'module.exports = {}' >"$M/packages/shared/styles/colors.js"
 echo 'export const a = 1' >"$M/packages/web/src/app.ts"
 echo 'export const s = 1' >"$M/packages/shared/src/index.ts"
 echo 'export const w = 1' >"$M/packages/worker/src/index.ts"
@@ -199,6 +203,15 @@ run_validate --gate
 check "spec edit validates clean" "$V_STATUS" "$V_OUT"
 git -C "$M" checkout -q -- "$SPEC_PATH"
 
+# TOKENS_INPUTS is its own trigger: a styles edit must register the token
+# check alongside the package fan-out.
+echo '// token probe' >>"$M/packages/shared/styles/colors.js"
+run_validate --gate
+check "a styles edit registers the tokens check" \
+  "$([ "$V_STATUS" -eq 1 ] && printf '%s\n' "$V_OUT" | grep -qx "check tokens"; echo $?)" \
+  "exit=$V_STATUS out=$V_OUT"
+git -C "$M" checkout -q -- packages/shared/styles
+
 # =============================================================================
 echo "# validation code invalidates the cache"
 # =============================================================================
@@ -313,6 +326,14 @@ printf '#!/bin/bash\n[ "$1" = --gate ] && { echo "mystery thing"; exit 1; }\nexi
 hook_decision 'git commit -m "unknown record"'
 check "hook renders an unknown gate record rather than blocking blank" \
   "$(printf '%s' "$H_OUT" | grep -q '"block"' && printf '%s' "$H_OUT" | grep -q 'mystery thing'; echo $?)" "$H_OUT"
+
+# And a stream that parses to nothing at all — blank lines only — must fall
+# back to the generic remedy, never an empty reason.
+printf '#!/bin/bash\n[ "$1" = --gate ] && { echo " "; exit 1; }\nexit 0\n' \
+  >"$M/scripts/validate.sh"
+hook_decision 'git commit -m "blank record"'
+check "hook blocks with a remedy when the gate names nothing renderable" \
+  "$(printf '%s' "$H_OUT" | grep -q '"block"' && printf '%s' "$H_OUT" | grep -q 'named nothing'; echo $?)" "$H_OUT"
 mv "$M/scripts/validate.sh.bak" "$M/scripts/validate.sh"
 
 # A dropped exec bit must surface through the hook with its remedy, not as a

@@ -31,7 +31,10 @@ declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
 #
 # A guard violation records REGISTER_FAILED and returns 1; registration
 # continues so every bad command is reported, and register_all_checks fails
-# at the end. The caller turns that into a broken gate.
+# at the end. The caller turns that into a broken gate. The continue-then-
+# fail shape relies on how the function is invoked: as the left side of
+# `|| exit 3`, errexit is suppressed inside it, so a failing _register does
+# not abort the pass before the latch is read.
 
 REGISTER_FAILED=0
 
@@ -162,6 +165,12 @@ register_format_check() {
 }
 
 register_all_checks() {
+  # The registry reads the loaded context; without it every `if matches ...`
+  # would fail inside a subshell and the pass would return 0 having
+  # registered nothing. Unreachable from validate.sh (source order), but a
+  # standalone load must get an error, not a vacuous empty registry.
+  declare -F matches >/dev/null || return 1
+
   register_format_check || return 1
 
   if [ "$DOCS_ONLY" = false ]; then

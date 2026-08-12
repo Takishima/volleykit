@@ -2,8 +2,9 @@
 # Single definition of "does this shell command run `git commit`".
 #
 # Sourced by .claude/hooks/pre-git-commit.sh, which enforces the commit gate,
-# and by scripts/validate.test.sh, which table-drives it. One definition on
-# purpose: two copies kept in agreement by a guard is drift waiting to happen.
+# and by scripts/tests/primitives.test.sh, which table-drives it. One
+# definition on purpose: two copies kept in agreement by a guard is drift
+# waiting to happen.
 
 # This deliberately errs towards matching. Shell syntax cannot be parsed
 # reliably with a regex, and the two failure directions are not symmetric: a
