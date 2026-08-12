@@ -4,12 +4,8 @@
 # per-row output and totals. This is the file the `validation:test` check
 # and CI (.github/workflows/ci-shell.yml) invoke.
 #
-# Parts:
-#   scripts/tests/primitives.test.sh  fingerprint/change/cache/guard/exec-bit
-#                                     primitives, commit predicate, policy
-#                                     agreement rows
-#   scripts/tests/gate.test.sh        end-to-end runner, gate protocol and
-#                                     commit hook against a scratch monorepo
+# The parts are each `scripts/tests/*.test.sh`, discovered by glob — no list
+# here to keep in agreement with the directory, in the header or in the loop.
 #
 # Everything runs against scratch repositories under mktemp with `pnpm`
 # stubbed, so the suites need only bash, git and jq and finish in seconds.

@@ -179,6 +179,24 @@ check "a plain argv command registers" $?
 in_checks '_register x lint /tmp __nope__ pkg 2>/dev/null; [ "$REGISTER_FAILED" = 1 ]'
 check "a guard violation latches REGISTER_FAILED" $?
 
+# register_all_checks reads the loaded context, and the hazard is the full
+# module chain sourced with context_load never called: `set -u` off, every
+# variable unbound-but-empty, every arm skipped, exit 0 with an empty
+# registry. The precondition must turn that into an error with the remedy
+# on stderr.
+R="$WORK/reg"
+make_repo "$R"
+git -C "$R" commit -q --allow-empty -m init
+RA_OUT=$( (cd "$R" && bash -c "
+  source '$REAL_ROOT/scripts/validation/lib.sh' &&
+  source '$REAL_ROOT/scripts/validation/policy.sh' &&
+  source '$REAL_ROOT/scripts/validation/context.sh' &&
+  source '$REAL_ROOT/scripts/validation/checks.sh' &&
+  register_all_checks") 2>&1 ) && RA_STATUS=0 || RA_STATUS=$?
+check "register_all_checks without context_load errors, not an empty registry" \
+  "$([ "$RA_STATUS" -ne 0 ] && printf '%s' "$RA_OUT" | grep -q 'context_load first'; echo $?)" \
+  "status=$RA_STATUS out=$RA_OUT"
+
 # =============================================================================
 echo "# policy agrees with package.json"
 # =============================================================================

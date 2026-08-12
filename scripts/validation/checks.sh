@@ -165,11 +165,18 @@ register_format_check() {
 }
 
 register_all_checks() {
-  # The registry reads the loaded context; without it every `if matches ...`
-  # would fail inside a subshell and the pass would return 0 having
-  # registered nothing. Unreachable from validate.sh (source order), but a
-  # standalone load must get an error, not a vacuous empty registry.
-  declare -F matches >/dev/null || return 1
+  # The registry reads the LOADED context — the variables context_load sets,
+  # not merely the functions context.sh defines. Guarding on a function name
+  # was tried and it let the real hazard through: all four modules sourced,
+  # context_load never called, `$DOCS_ONLY` unbound-but-empty under a
+  # `set -u`-off standalone load, every arm skipped, and the pass returned 0
+  # having registered nothing. Assert the state itself, with the error on
+  # stderr like every other arm here, so the caller's exit 3 carries a
+  # remedy.
+  if [ -z "${CHANGED+x}" ] || [ -z "${DOCS_ONLY+x}" ]; then
+    echo "register_all_checks: run context_load first." >&2
+    return 1
+  fi
 
   register_format_check || return 1
 

@@ -37,14 +37,15 @@ M="$WORK/mono"
 make_repo "$M"
 mkdir -p "$M/scripts" "$M/packages/web/src" "$M/packages/shared/src" \
   "$M/packages/mobile/src" "$M/packages/worker/src" "$M/help-site/src" "$M/docs"
-# The fixture carries the runner and everything it is built from: the
-# pathspecs below are exactly the trees CORE_ROOT / SHELL_INPUTS /
-# EXEC_BIT_PATHS / TOKENS_INPUTS cover. Tracked files only — an untracked
-# scratch file must not change fixture behavior — and by construction the
-# copy cannot include this suite (scripts/tests/ matches none of the
-# pathspecs), so the suite can never recurse into itself. cp preserves exec
-# bits, and git records them on commit, so the fixture's exec-bit state
-# mirrors the repo's.
+# COPY_SET is what the runner needs in order to execute inside the fixture:
+# the runner and its modules, the lint script it registers, the token script,
+# and the hooks tree. That is deliberately NOT the union of the policy path
+# sets — scripts/tests/ (under SHELL_INPUTS) stays out so the suite can never
+# recurse into itself, and fixture content like packages/shared/styles is
+# synthesized below rather than copied. Tracked files only — an untracked
+# scratch file must not change fixture behavior. cp preserves exec bits, and
+# git records them on commit, so the fixture's exec-bit state mirrors the
+# repo's.
 COPY_SET=$(cd "$REAL_ROOT" && git ls-files -- \
   scripts/validate.sh scripts/validation scripts/shellcheck.sh \
   scripts/sync-style-tokens.js .claude/hooks)
