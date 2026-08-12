@@ -147,6 +147,13 @@ check "VOLLEYKIT_NO_CACHE=1 bypasses the cache" "$((1 - $?))"
 echo "# registration guard"
 # =============================================================================
 
+# checks.sh's header claims it defines functions only; pin the observable
+# half — a standalone source succeeds silently, needing no other module and
+# printing nothing. Deliberately NOT in_modules: standalone is the property.
+G_OUT=$(bash -c "source '$REAL_ROOT/scripts/validation/checks.sh'" 2>&1)
+check "checks.sh sources standalone with no output" \
+  "$([ $? -eq 0 ] && [ -z "$G_OUT" ]; echo $?)" "$G_OUT"
+
 # _register is the chokepoint every registration passes through. run_check
 # execs argv without a shell, so a command that would need one must be
 # rejected here — a metacharacter or newline reaching exec would run a
@@ -155,13 +162,6 @@ echo "# registration guard"
 R="$WORK/reg"
 make_repo "$R"
 git -C "$R" commit -q --allow-empty -m init
-
-# checks.sh's header claims it defines functions only; pin the observable
-# half — a standalone source succeeds silently, needing no other module and
-# printing nothing.
-G_OUT=$(bash -c "source '$REAL_ROOT/scripts/validation/checks.sh'" 2>&1)
-check "checks.sh sources standalone with no output" \
-  "$([ $? -eq 0 ] && [ -z "$G_OUT" ]; echo $?)" "$G_OUT"
 
 G_OUT=$(in_modules "$R" '_register x lint /tmp "a.sh && b.sh" pkg' 2>&1)
 check "a metacharacter command is rejected" \
@@ -195,6 +195,20 @@ RA_OUT=$(in_modules "$R" 'register_all_checks' 2>&1) && RA_STATUS=0 || RA_STATUS
 check "register_all_checks without context_load errors, not an empty registry" \
   "$([ "$RA_STATUS" -ne 0 ] && printf '%s' "$RA_OUT" | grep -q 'context_load first'; echo $?)" \
   "status=$RA_STATUS out=$RA_OUT"
+
+# And the loaded context must survive a re-source of context.sh: an
+# initializer on AFFECTED would half-reset it — map emptied, scalars
+# surviving — passing context_loaded and shrinking the registry to format
+# alone.
+mkdir -p "$R/packages/web/src"
+echo 'export const a = 1' >"$R/packages/web/src/app.ts"
+RS_OUT=$(in_modules "$R" '
+  context_load &&
+  source "'"$REAL_ROOT"'/scripts/validation/context.sh" &&
+  affected web && register_all_checks && echo "${CHECK_NAMES[*]}"' 2>&1)
+check "the loaded context survives a re-source of context.sh" \
+  "$(printf '%s' "$RS_OUT" | grep -q 'web:lint'; echo $?)" "$RS_OUT"
+rm -rf "$R/packages"
 
 # =============================================================================
 echo "# policy agrees with package.json"
