@@ -197,7 +197,10 @@ fingerprint() {
 # construction — `git ls-files -s` has no row for them.
 exec_bits() {
   local nonexec
-  nonexec=$(git ls-files -s -- "$@" | awk '$1 != "100755" { print $4 }')
+  # `ls-files -s` is `<mode> <sha> <stage>\t<path>`; strip through the tab
+  # rather than printing $4 — awk's default FS also splits on spaces inside
+  # the path, and the remedy must name the real file.
+  nonexec=$(git ls-files -s -- "$@" | awk '$1 != "100755" { sub(/^[^\t]*\t/, ""); print }')
   [ -z "$nonexec" ] && return 0
   echo "validation: invoked by path but not tracked executable:" >&2
   printf '  %s\n' "$nonexec" >&2

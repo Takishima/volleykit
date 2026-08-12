@@ -6,7 +6,7 @@
 #
 # No package policy lives here. A composite check registers a `__sentinel__`
 # command and defines `composite_<sentinel>` next to its registration in
-# validate.sh; this file only dispatches to it.
+# scripts/validation/checks.sh; this file only dispatches to it.
 #
 # Wave order: everything that is not a build fully parallel, then all builds
 # in parallel. packages/shared exposes its subpath exports as ./src/*.ts and

@@ -2,7 +2,8 @@
 # Validation policy: which packages exist, what invalidates what, and which
 # root files feed which checks. This is the file to open when adding a package
 # or widening a check's inputs. Mechanism lives in scripts/validate.sh
-# (selection, registry, gate) and scripts/validation/run.sh (execution).
+# (arguments, selection, gate), scripts/validation/checks.sh (registry) and
+# scripts/validation/run.sh (execution).
 #
 # Meant to be sourced by scripts/validate.sh with the cwd at the repo root.
 #
@@ -20,8 +21,9 @@
 # to any of those skipped mobile's checks entirely while still claiming a pass.
 #
 # Adding a package means adding a row here and a register_check block in
-# validate.sh. Not every check is package-scoped: format, tokens and the
-# validation:* checks register from the standalone constants below.
+# scripts/validation/checks.sh. Not every check is package-scoped: format,
+# tokens and the validation:* checks register from the standalone constants
+# below.
 #
 # packages/shared/styles sits beside src/, not under it, and is consumed by
 # web (index.css imports design-tokens.css), mobile (tailwind.config.js

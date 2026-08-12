@@ -32,10 +32,10 @@ has a cached PASS for the current file contents, and approves instantly if so.
 
 `--gate` prints one `<kind> <value>` record per line:
 
-| Record            | Meaning                                           | Fix                   |
-| ----------------- | ------------------------------------------------- | --------------------- |
-| `check <name>`    | That check has not passed for the current content | `scripts/validate.sh` |
-| `unstaged <path>` | Staged content differs from the worktree copy     | `git add -A`          |
+| Record            | Meaning                                           | Fix                        |
+| ----------------- | ------------------------------------------------- | -------------------------- |
+| `check <name>`    | That check has not passed for the current content | `scripts/validate.sh`      |
+| `unstaged <path>` | Staged content differs from the worktree copy     | stage it: `git add <path>` |
 
 Exit 0 = gate open, 1 = work outstanding, anything else = the gate itself
 failed and the hook blocks with the error. That third case covers a path git
@@ -48,7 +48,10 @@ Two consequences worth knowing:
 - Checks are package-wide (`eslint .`, `vitest run`), so an untracked broken
   file under a package fails its checks even if you never staged it.
 - The gate reports `unstaged` only for files that are both staged **and**
-  dirty. A merely dirty file does not block a partial commit.
+  dirty. A merely dirty file does not block a partial commit — across files.
+  A within-file partial stage (`git add -p`) does block: the staged hunks are
+  content no check ever saw, so the file must be staged whole (validated) to
+  commit.
 
 ## The Cache
 
@@ -145,10 +148,11 @@ the cache key, which is why none exists and review holds that line.
 Touching the validation scripts, the hooks, `.claude/settings.json` or any
 `*.sh` file registers two more checks before the gate reopens:
 
-- `validation:test` — `scripts/validate.test.sh`, a behavior suite over the
-  fingerprint/cache/exec-bit primitives, the runner, the gate protocol and the
-  commit hook, all against scratch repositories with `pnpm` stubbed. Needs
-  only bash, git and jq.
+- `validation:test` — `scripts/validate.test.sh`, which runs the behavior
+  suites under `scripts/tests/`: the fingerprint/cache/exec-bit primitives,
+  the registration guard, the runner, the gate protocol and the commit hook,
+  all against scratch repositories with `pnpm` stubbed. Needs only bash, git
+  and jq.
 - `validation:shellcheck` — `scripts/shellcheck.sh`, which lints every `*.sh`
   file git knows about, tracked or untracked (minus vendored `.specify/`).
   Registered locally when `shellcheck` is installed;

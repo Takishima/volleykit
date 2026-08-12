@@ -105,13 +105,17 @@ ${ERR:-(no error output)}
 Run it manually: scripts/validate.sh"
 fi
 
-# stdout is "<kind> <value>" per line, kind being `check` or `unstaged`.
+# stdout is "<kind> <value>" per line, kind being `check` or `unstaged`. An
+# unknown kind is collected rather than dropped: the protocol is extensible,
+# and a block whose reason names nothing would leave no remedy at all.
 CHECKS=""
 UNSTAGED=""
+UNKNOWN=""
 while IFS=' ' read -r kind value; do
   case "$kind" in
     check) CHECKS="$CHECKS  - $value"$'\n' ;;
     unstaged) UNSTAGED="$UNSTAGED  - $value"$'\n' ;;
+    *) [ -n "$kind" ] && UNKNOWN="$UNKNOWN  - $kind $value"$'\n' ;;
   esac
 done <<<"$RECORDS"
 
@@ -123,14 +127,29 @@ ${CHECKS}
 Run \`scripts/validate.sh\` (anything already green is skipped), then retry."
 fi
 
+# The staged copy of these files is not the content that was validated — the
+# checks read the worktree, the commit records the index. `git add <file>`
+# stages the validated content; the message deliberately does not prescribe
+# `git add -A`, which for a partial (`git add -p`) stage would discard the
+# intent rather than remedy anything.
 if [ -n "$UNSTAGED" ]; then
   [ -n "$REASON" ] && REASON="$REASON
 
 "
-  REASON="${REASON}Staged content differs from the worktree, so the commit would record something unvalidated:
+  REASON="${REASON}These files are staged with content that was never validated (the checks saw the worktree copy):
 
 ${UNSTAGED}
-Run \`git add -A\`, then retry. Nothing re-runs."
+Stage the validated content (\`git add <file>\`), then retry. Nothing re-runs."
+fi
+
+if [ -n "$UNKNOWN" ]; then
+  [ -n "$REASON" ] && REASON="$REASON
+
+"
+  REASON="${REASON}The gate reported work this hook cannot render:
+
+${UNKNOWN}
+Run \`scripts/validate.sh\` to see it directly."
 fi
 
 block "$REASON"

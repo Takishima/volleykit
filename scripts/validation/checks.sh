@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # Check registry for scripts/validate.sh: the registration mechanism, its
-# metacharacter guard, and the table of checks each affected package
-# contributes. Meant to be sourced by validate.sh after lib.sh and policy.sh,
-# with the cwd at the repo root; reads the caller's CHANGED / DOCS_ONLY /
-# AFFECTED state and fills the CHECK_* tables.
+# command guard, and register_all_checks(), which fills the CHECK_* tables
+# from the context (CHANGED / DOCS_ONLY / AFFECTED, scripts/validation/
+# context.sh) and the policy tables. Meant to be sourced after context.sh;
+# defines functions only, reports failure through return codes and leaves
+# exiting to the caller:
+#
+#   register_all_checks || exit 3
 #
 # Adding a package means adding a row in scripts/validation/policy.sh and a
-# register_check block here.
+# register_check block in register_all_checks below.
 
 declare -a CHECK_NAMES=()
 # shellcheck disable=SC2034  # CHECK_DIR/CMD/ARGS are consumed by validation/run.sh
@@ -25,6 +28,12 @@ declare -A CHECK_CLASS=() CHECK_DIR=() CHECK_CMD=() CHECK_PATHS=() CHECK_ARGS=()
 # command past a guard that only looked at one line. Composite commands are a
 # `__sentinel__` naming a composite_* function defined below, and the sentinel
 # arm verifies the function exists rather than exempting itself from checking.
+#
+# A guard violation records REGISTER_FAILED and returns 1; registration
+# continues so every bad command is reported, and register_all_checks fails
+# at the end. The caller turns that into a broken gate.
+
+REGISTER_FAILED=0
 
 _register() {
   local name=$1 class=$2 dir=$3 cmd=$4 paths=$5 args=${6-}
@@ -33,18 +42,21 @@ _register() {
   case "$cmd" in
     *$'\n'*)
       echo "register_check: $name: newline in command." >&2
-      exit 3
+      REGISTER_FAILED=1
+      return 1
       ;;
     __*)
       if ! declare -F "composite_${cmd//__/}" >/dev/null; then
         echo "register_check: $name: no composite_${cmd//__/} function for $cmd." >&2
-        exit 3
+        REGISTER_FAILED=1
+        return 1
       fi
       ;;
     *[\&\|\;\<\>\`\"\'\*\?]* | *'$('*)
       echo "register_check: $name: shell metacharacter, quote or glob in command." >&2
       echo "run_check execs argv, not a shell line; use a __sentinel__ for composites." >&2
-      exit 3
+      REGISTER_FAILED=1
+      return 1
       ;;
   esac
   CHECK_NAMES+=("$name")
@@ -77,9 +89,6 @@ register_check_files() {
   _register "$1" "$2" "$3" "$4" "$5" "${6-$5}"
 }
 
-# shellcheck disable=SC2086  # our own constant: split on purpose, no globs
-CORE_ROOT_NL=$(printf '%s\n' $CORE_ROOT)
-
 fingerprint_for_check() {
   local -a paths=()
   mapfile -t paths < <(
@@ -89,9 +98,9 @@ fingerprint_for_check() {
   fingerprint "${paths[@]}"
 }
 
-# --- format: prettier over the changed files, minus any that were deleted ---
-# (prettier exits non-zero on a path that is not there, which would leave the
-# gate permanently closed until the deletion was committed)
+# --- composite commands: policy for the two checks a single argv cannot ---
+# --- express, defined here beside their registrations, dispatched by name ---
+# --- in validation/run.sh ---
 
 composite_format() {
   # Newline-separated so paths containing spaces survive.
@@ -99,41 +108,6 @@ composite_format() {
   mapfile -t files <<<"${CHECK_ARGS[$1]}"
   pnpm exec prettier --check "${files[@]}"
 }
-
-# Changing prettier's own config changes the verdict for files that did not
-# change — removing a line from .prettierignore exposes a directory that has
-# never been formatted. So a config edit widens the check to every formattable
-# file rather than the changed ones. Without this, a lone .prettierignore edit
-# registered no check at all and the gate opened on it.
-FORMAT_CANDIDATES=$(echo "$CHANGED" | grep -E "$FORMAT_EXT" || true)
-if matches "$(paths_to_regex "$FORMAT_ROOT")"; then
-  # Union, not replace: $CHANGED includes untracked files, and `git ls-files`
-  # without `-o` is tracked-only — replacing would drop every newly added file.
-  if ! WIDENED=$(tracked_and_untracked_files); then
-    exit 3
-  fi
-  FORMAT_CANDIDATES=$(
-    {
-      printf '%s\n' "$WIDENED"
-      printf '%s\n' "$FORMAT_CANDIDATES"
-    } | grep -E "$FORMAT_EXT" | sed '/^$/d' | sort -u || true
-  )
-fi
-
-FORMAT_FILES=$(printf '%s\n' "$FORMAT_CANDIDATES" | while IFS= read -r f; do
-  [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"
-done || true)
-
-if [ -n "$FORMAT_FILES" ]; then
-  # FORMAT_ROOT rides along in the cache key rather than sitting in CORE_ROOT:
-  # prettier config is the formatter's input and nobody else's. It is not in
-  # CHECK_ARGS — prettier cannot parse .prettierignore and errors on it.
-  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
-  register_check_files "format" "format" "$ROOT_DIR" "__format__" \
-    "$FORMAT_FILES$(printf '\n%s' $FORMAT_ROOT)" "$FORMAT_FILES"
-fi
-
-# --- package checks, from the policy table ---
 
 # `web:build` is `tsc -b && vite build`, so it covers typecheck. `size` is
 # folded in because it can only run against a fresh build; the bundle limits
@@ -149,65 +123,111 @@ composite_web_build() {
   fi
 }
 
-if [ "$DOCS_ONLY" = false ]; then
-  if matches "$(paths_to_regex "$TOKENS_INPUTS")"; then
-    register_check "tokens" "tokens" "$ROOT_DIR" \
-      "node scripts/sync-style-tokens.js --check" \
-      "$TOKENS_INPUTS"
+# --- registration ---
+
+register_format_check() {
+  # Changing prettier's own config changes the verdict for files that did not
+  # change — removing a line from .prettierignore exposes a directory that has
+  # never been formatted. So a config edit widens the check to every
+  # formattable file rather than the changed ones. Without this, a lone
+  # .prettierignore edit registered no check at all and the gate opened on it.
+  local candidates widened files
+  candidates=$(echo "$CHANGED" | grep -E "$FORMAT_EXT" || true)
+  if matches "$(paths_to_regex "$FORMAT_ROOT")"; then
+    # Union, not replace: $CHANGED includes untracked files, and `git
+    # ls-files` without `-o` is tracked-only — replacing would drop every
+    # newly added file.
+    widened=$(tracked_and_untracked_files) || return 1
+    candidates=$(
+      {
+        printf '%s\n' "$widened"
+        printf '%s\n' "$candidates"
+      } | grep -E "$FORMAT_EXT" | sed '/^$/d' | sort -u || true
+    )
   fi
 
-  if affected web; then
-    register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
-    register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
-    register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "${PKG_INPUTS[web]}"
-  fi
+  # Deleted files are dropped: prettier exits non-zero on a path that is not
+  # there, which would leave the gate closed until the deletion is committed.
+  files=$(printf '%s\n' "$candidates" | while IFS= read -r f; do
+    [ -n "$f" ] && [ -f "$f" ] && printf '%s\n' "$f"
+  done || true)
 
-  if affected shared; then
-    register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "${PKG_INPUTS[shared]}"
-    register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "${PKG_INPUTS[shared]}"
-    register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "${PKG_INPUTS[shared]}"
-    register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "${PKG_INPUTS[shared]}"
-  fi
+  [ -z "$files" ] && return 0
+  # FORMAT_ROOT rides along in the cache key rather than sitting in CORE_ROOT:
+  # prettier config is the formatter's input and nobody else's. It is not in
+  # CHECK_ARGS — prettier cannot parse .prettierignore and errors on it.
+  # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+  register_check_files "format" "format" "$ROOT_DIR" "__format__" \
+    "$files$(printf '\n%s' $FORMAT_ROOT)" "$files"
+}
 
-  if affected mobile; then
-    register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "${PKG_INPUTS[mobile]}"
-    register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "${PKG_INPUTS[mobile]}"
-    register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "${PKG_INPUTS[mobile]}"
-  fi
+register_all_checks() {
+  register_format_check || return 1
 
-  if affected worker; then
-    register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "${PKG_INPUTS[worker]}"
-    register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "${PKG_INPUTS[worker]}"
-  fi
+  if [ "$DOCS_ONLY" = false ]; then
+    if matches "$(paths_to_regex "$TOKENS_INPUTS")"; then
+      register_check "tokens" "tokens" "$ROOT_DIR" \
+        "node scripts/sync-style-tokens.js --check" \
+        "$TOKENS_INPUTS"
+    fi
 
-  if affected help-site; then
-    register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "${PKG_INPUTS[help-site]}"
-  fi
+    if affected web; then
+      register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
+      register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
+      register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "${PKG_INPUTS[web]}"
+    fi
 
-  # The validation scripts and the commit hook gate every commit, so they get
-  # the same treatment as any other source: touching one runs the suite that
-  # covers them before the gate reopens. The trigger fires on SHELL_INPUTS or
-  # on any changed `*.sh` file wherever it lives; the changed files enter the
-  # cache key too, so a stored PASS cannot be reported as a hit for a check
-  # that was only just triggered.
-  CHANGED_SHELL=$(echo "$CHANGED" | grep -E '\.sh$' || true)
+    if affected shared; then
+      register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "${PKG_INPUTS[shared]}"
+      register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "${PKG_INPUTS[shared]}"
+      register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "${PKG_INPUTS[shared]}"
+      register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "${PKG_INPUTS[shared]}"
+    fi
 
-  if [ -n "$CHANGED_SHELL" ] || matches "$(paths_to_regex "$SHELL_INPUTS")"; then
-    # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
-    SHELL_KEY="$(printf '%s\n' $SHELL_INPUTS)"$'\n'"$CHANGED_SHELL"
-    register_check_files "validation:test" "test" "$ROOT_DIR" \
-      "bash scripts/validate.test.sh" "$SHELL_KEY" ""
+    if affected mobile; then
+      register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "${PKG_INPUTS[mobile]}"
+      register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "${PKG_INPUTS[mobile]}"
+      register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "${PKG_INPUTS[mobile]}"
+    fi
 
-    # Shell linting runs locally when the binary is available, and always in
-    # CI (.github/workflows/ci-shell.yml). scripts/shellcheck.sh is the single
-    # definition of what is linted and how.
-    if command -v shellcheck >/dev/null 2>&1; then
-      register_check_files "validation:shellcheck" "lint" "$ROOT_DIR" \
-        "bash scripts/shellcheck.sh" "$SHELL_KEY" ""
-    else
-      # stderr, not say(): in gate mode say() is silenced, and "the gate has
-      # no shell-lint opinion on this machine" is exactly when that matters.
-      echo "shellcheck not installed — shell lint runs in CI only." >&2
+    if affected worker; then
+      register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "${PKG_INPUTS[worker]}"
+      register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "${PKG_INPUTS[worker]}"
+    fi
+
+    if affected help-site; then
+      register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "${PKG_INPUTS[help-site]}"
+    fi
+
+    # The validation scripts and the commit hook gate every commit, so they
+    # get the same treatment as any other source: touching one runs the suite
+    # that covers them before the gate reopens. The trigger fires on
+    # SHELL_INPUTS or on any changed `*.sh` file wherever it lives; the
+    # changed files enter the cache key too, so a stored PASS cannot be
+    # reported as a hit for a check that was only just triggered.
+    local changed_shell shell_key
+    changed_shell=$(echo "$CHANGED" | grep -E '\.sh$' || true)
+
+    if [ -n "$changed_shell" ] || matches "$(paths_to_regex "$SHELL_INPUTS")"; then
+      # shellcheck disable=SC2086  # our own constant: split on purpose, no globs
+      shell_key="$(printf '%s\n' $SHELL_INPUTS)"$'\n'"$changed_shell"
+      register_check_files "validation:test" "test" "$ROOT_DIR" \
+        "bash scripts/validate.test.sh" "$shell_key" ""
+
+      # Shell linting runs locally when the binary is available, and always
+      # in CI (.github/workflows/ci-shell.yml). scripts/shellcheck.sh is the
+      # single definition of what is linted and how.
+      if command -v shellcheck >/dev/null 2>&1; then
+        register_check_files "validation:shellcheck" "lint" "$ROOT_DIR" \
+          "bash scripts/shellcheck.sh" "$shell_key" ""
+      else
+        # stderr on purpose: gate mode silences stdout commentary, and "the
+        # gate has no shell-lint opinion on this machine" is exactly when
+        # that matters.
+        echo "shellcheck not installed — shell lint runs in CI only." >&2
+      fi
     fi
   fi
-fi
+
+  [ "$REGISTER_FAILED" = 0 ]
+}

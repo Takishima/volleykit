@@ -16,11 +16,14 @@
 #
 # Layout: scripts/validation/lib.sh holds git/cache primitives,
 # scripts/validation/policy.sh the package/inputs tables,
+# scripts/validation/context.sh change detection and affectedness,
 # scripts/validation/checks.sh the check registry and
-# scripts/validation/run.sh the parallel executor. This file is arguments,
-# selection and the gate protocol. Everything the runner is built from lives
-# under scripts/validate.sh + scripts/validation/, which CORE_ROOT puts into
-# every cache key — see the CORE_ROOT comment in policy.sh.
+# scripts/validation/run.sh the parallel executor. The modules define
+# functions and report through return codes; this file is arguments,
+# selection, the gate protocol — and every exit. Everything the runner is
+# built from lives under scripts/validate.sh + scripts/validation/, which
+# CORE_ROOT puts into every cache key — see the CORE_ROOT comment in
+# policy.sh.
 #
 # The commit gate (.claude/hooks/pre-git-commit.sh) is active only in Claude
 # Code web sessions. This script itself runs anywhere.
@@ -34,6 +37,10 @@ source "$SCRIPT_DIR/validation/lib.sh" || exit 3
 cd "$ROOT_DIR"
 # shellcheck source=./validation/policy.sh
 source "$SCRIPT_DIR/validation/policy.sh" || exit 3
+# shellcheck source=./validation/context.sh
+source "$SCRIPT_DIR/validation/context.sh" || exit 3
+# shellcheck source=./validation/checks.sh
+source "$SCRIPT_DIR/validation/checks.sh" || exit 3
 # shellcheck source=./validation/run.sh
 source "$SCRIPT_DIR/validation/run.sh" || exit 3
 
@@ -95,51 +102,24 @@ say() { [ "$GATE_MODE" = true ] || echo -e "$@"; }
 exec_bits "${EXEC_BIT_PATHS[@]}" || exit 3
 
 # =============================================================================
-# CHANGE DETECTION
+# CONTEXT AND REGISTRY
 # =============================================================================
 
-# A non-zero return means git cannot represent some path in the change set.
-# Exiting 3 rather than 0 or 1 makes the hook report a broken gate instead of
-# an open one — an unrepresentable path must not read as "no changes".
-if ! CHANGED=$(changed_files); then
-  exit 3
-fi
+# A context_load failure means git cannot represent some path in the change
+# set. Exiting 3 rather than 0 or 1 makes the hook report a broken gate
+# instead of an open one — an unrepresentable path must not read as
+# "no changes".
+context_load || exit 3
 
 if [ -z "$CHANGED" ]; then
   say "${GREEN}No changes, nothing to validate.${NC}"
   exit 0
 fi
 
-matches() { echo "$CHANGED" | grep -qE "$1"; }
-
-# Docs-only changes still register `format` — markdown is in the format
-# glob and nothing else gates it — but skip every package check: a README
-# under packages/web says nothing about whether the web tests still pass.
-DOCS_ONLY=false
-if ! echo "$CHANGED" | grep -qvE '\.md$'; then
-  DOCS_ONLY=true
-fi
-
-# Deliberately no source/config extension filter here. An earlier design had
-# one, and it was a second copy of "does this change validate to anything" — a
-# question the registry already answers by ending up empty. The two copies
-# drifted twice: the pattern omitted `css`, making the design-token check
-# unreachable for the very file it watches, and it matched `tsconfig.json`
-# but not `tsconfig.app.json`, which is what `tsc -b` reads. Both commits
-# passed the gate with nothing run.
-#
-# The cost of dropping it is that an asset-only change under a package runs
-# that package's checks. That is the conservative direction, it is cached, and
-# it cannot silently skip.
-
-# =============================================================================
-# API TYPE GENERATION
-# =============================================================================
-#
-# Runs before any fingerprint is computed, because typecheck and build read the
-# generated packages/shared/src/api/schema.ts. Generating after fingerprinting
-# would store cache entries keyed on pre-generation content, guaranteeing a
-# full cache miss on the next run.
+# API type generation runs before any fingerprint is computed, because
+# typecheck and build read the generated packages/shared/src/api/schema.ts.
+# Generating after fingerprinting would store cache entries keyed on
+# pre-generation content, guaranteeing a full cache miss on the next run.
 #
 # The generated schema is NOT a cache input: packages/shared/.gitignore
 # excludes it, so no fingerprint ever contains it. Invalidation comes from
@@ -148,41 +128,13 @@ fi
 #
 # Gate mode never mutates the worktree; if the spec changed without the schema
 # being regenerated, the gate simply reports the checks as missing.
-
 if [ "$GATE_MODE" = false ] && matches "$(paths_to_regex "$API_SPEC")"; then
   echo "OpenAPI spec changed, regenerating types..."
   pnpm run generate:api
-  CHANGED=$(changed_files) || exit 3
+  context_load || exit 3
 fi
 
-# =============================================================================
-# AFFECTED PACKAGES
-# =============================================================================
-
-ROOT_CHANGED=false
-declare -A AFFECTED=()
-AFFECTED_LIST=""
-
-if [ "$DOCS_ONLY" = false ]; then
-  matches "$(paths_to_regex "$CORE_ROOT")" && ROOT_CHANGED=true
-  for pkg in "${PKG_NAMES[@]}"; do
-    if [ "$ROOT_CHANGED" = true ] || matches "$(paths_to_regex "${PKG_INPUTS[$pkg]}")"; then
-      AFFECTED["$pkg"]=1
-      AFFECTED_LIST="$AFFECTED_LIST $pkg"
-    fi
-  done
-fi
-
-affected() { [ -n "${AFFECTED[$1]:-}" ]; }
-
-# =============================================================================
-# CHECK REGISTRY
-# =============================================================================
-
-# Fills the CHECK_* tables from the current CHANGED / DOCS_ONLY / AFFECTED
-# state and defines fingerprint_for_check and the composite_* handlers.
-# shellcheck source=./validation/checks.sh
-source "$SCRIPT_DIR/validation/checks.sh" || exit 3
+register_all_checks || exit 3
 
 # =============================================================================
 # SELECTION
