@@ -1836,6 +1836,11 @@ components:
         linkedDoubleConvocationGameNumberAndRefereePosition:
           type: string
           nullable: true
+          description: |
+            Linked double convocation label. The backend renders this inconsistently -
+            a plain string for most associations, an array of label parts for others
+            (e.g. SRBA): ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
+            Normalized to a joined string by formatLinkedDoubleConvocation().
         convocationCompensation:
           type: object
           description: |
@@ -2101,7 +2106,11 @@ components:
         linkedDoubleConvocationGameNumberAndRefereePosition:
           type: string
           nullable: true
-          description: Linked double convocation info if applicable
+          description: |
+            Linked double convocation label. The backend renders this inconsistently -
+            a plain string for most associations, an array of label parts for others
+            (e.g. SRBA): ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
+            Normalized to a joined string by formatLinkedDoubleConvocation().
         latestReminderToChampionshipOwnerSentAt:
           type: string
           format: date-time

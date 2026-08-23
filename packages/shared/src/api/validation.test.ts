@@ -198,6 +198,51 @@ describe('assignmentSchema', () => {
     }
   })
 
+  it('keeps a string linked double convocation as-is', () => {
+    const result = assignmentSchema.safeParse({
+      ...validAssignment,
+      linkedDoubleConvocationGameNumberAndRefereePosition: '12345/head-two',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe('12345/head-two')
+    }
+  })
+
+  it.each([
+    ['number', 12345, '12345'],
+    [
+      'SRBA array of label parts',
+      ['#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun ', 'ARB 2'],
+      '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun | ARB 2',
+    ],
+    ['array with empty entries', ['#401727', null, ''], '#401727'],
+    ['unrenderable object', { gameNumber: '12345' }, null],
+    ['empty array', [], null],
+    ['empty string', '', null],
+    ['null', null, null],
+  ])(
+    'normalizes linked double convocation value: %s',
+    (_label, value: unknown, expected: string | null) => {
+      const result = assignmentSchema.safeParse({
+        ...validAssignment,
+        linkedDoubleConvocationGameNumberAndRefereePosition: value,
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe(expected)
+      }
+    }
+  )
+
+  it('accepts assignment without linked double convocation field', () => {
+    const result = assignmentSchema.safeParse(validAssignment)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBeUndefined()
+    }
+  })
+
   it('rejects assignment with invalid UUID', () => {
     const result = assignmentSchema.safeParse({
       ...validAssignment,
@@ -356,6 +401,22 @@ describe('gameExchangeSchema', () => {
       requiredRefereeLevel: 'NLA',
     })
     expect(result.success).toBe(true)
+  })
+
+  it('normalizes an array-shaped linked double convocation (SRBA)', () => {
+    const result = gameExchangeSchema.safeParse({
+      ...validExchange,
+      linkedDoubleConvocationGameNumberAndRefereePosition: [
+        '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun ',
+        'ARB 2',
+      ],
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe(
+        '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun | ARB 2'
+      )
+    }
   })
 
   it('rejects exchange with invalid status', () => {

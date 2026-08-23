@@ -39,6 +39,36 @@ const booleanLikeSchema = z
 // Referee position - accept any string from API
 export const refereePositionSchema = z.string()
 
+const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' | '
+
+/**
+ * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to a display string.
+ *
+ * The API renders this computed property inconsistently: usually a string, but for
+ * some associations (e.g. SRBA) an array of label parts, e.g.
+ * ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
+ * Anything unrenderable becomes null so a single odd entry never fails the whole list.
+ */
+function formatLinkedDoubleConvocation(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null
+  if (typeof value === 'number') return String(value)
+
+  if (Array.isArray(value)) {
+    const parts = value
+      .map(formatLinkedDoubleConvocation)
+      .filter((part): part is string => part !== null)
+    return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
+  }
+
+  return null
+}
+
+// Linked double convocation info - shape varies by association, normalized to a string
+const linkedDoubleConvocationSchema = z
+  .unknown()
+  .transform(formatLinkedDoubleConvocation)
+  .optional()
+
 // Convocation status enum
 export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])
 
@@ -188,7 +218,7 @@ export const assignmentSchema = z
     isOpenEntryInRefereeGameExchange: booleanLikeSchema,
     hasLastMessageToReferee: booleanLikeSchema,
     hasLinkedDoubleConvocation: booleanLikeSchema,
-    linkedDoubleConvocationGameNumberAndRefereePosition: z.string().optional().nullable(),
+    linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
     // Compensation data eagerly loaded with assignments to avoid separate API call
     convocationCompensation: convocationCompensationSchema.optional(),
     _permissions: permissionsSchema,
@@ -221,6 +251,7 @@ export const gameExchangeSchema: z.ZodType<any> = z
     notes: z.string().optional().nullable(),
     refereePosition: refereePositionSchema,
     requiredRefereeLevel: z.string().optional().nullable(),
+    linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
     _permissions: permissionsSchema,
   })
   .passthrough()
