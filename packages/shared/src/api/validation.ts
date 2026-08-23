@@ -60,6 +60,11 @@ function formatLinkedDoubleConvocation(value: unknown): string | null {
     return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
   }
 
+  // Surface further backend shape drift instead of dropping it silently
+  if (value !== null && value !== undefined) {
+    console.warn('Unexpected linkedDoubleConvocation shape:', value)
+  }
+
   return null
 }
 
