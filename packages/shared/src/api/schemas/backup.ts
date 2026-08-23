@@ -15,7 +15,8 @@ const backupRefereePersonSchema = z
     displayName: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    gender: z.enum(['m', 'f']).optional().nullable(),
+    // Display-only: an unexpected value must not drop the whole Pikett date row.
+    gender: z.enum(['m', 'f']).optional().nullable().catch(null),
     correspondenceLanguage: z.string().optional(),
     primaryEmailAddress: z
       .object({

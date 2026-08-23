@@ -800,10 +800,51 @@ describe('resilient list parsing', () => {
     expect(result.data?.droppedItems).toHaveLength(1)
   })
 
+  it('keeps a person whose gender is outside the known enum', () => {
+    // Display-only, so an unexpected value is coerced rather than dropping the row.
+    const result = personSearchResponseSchema.safeParse({
+      items: [{ __identity: 'a1111111-1111-4111-a111-111111111111', gender: 'd' }],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.items[0]?.gender).toBeNull()
+  })
+
+  it('drops an assignment whose convocation status is unknown', () => {
+    // Deliberate: refereeConvocationStatus drives filtering, so an unknown value
+    // is not safe to coerce the way a display-only field is.
+    const result = assignmentsResponseSchema.safeParse({
+      items: [{ ...VALID_ASSIGNMENT, refereeConvocationStatus: 'something-new' }],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toEqual([])
+    expect(result.data?.droppedItems).toHaveLength(1)
+  })
+
   it('keeps a backup entry whose nested referee assignments lack an id', () => {
     // A required nested id would drop the whole Pikett date row over one referee.
     const result = refereeBackupResponseSchema.safeParse({
       items: [{ ...VALID_BACKUP_ENTRY, nlaReferees: [{ isDispensed: false }] }],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.droppedItems).toEqual([])
+  })
+
+  it('keeps a backup entry whose nested referee has an unknown gender', () => {
+    const result = refereeBackupResponseSchema.safeParse({
+      items: [
+        {
+          ...VALID_BACKUP_ENTRY,
+          nlaReferees: [{ indoorReferee: { person: { gender: 'd' } } }],
+        },
+      ],
       totalItemsCount: 1,
     })
 

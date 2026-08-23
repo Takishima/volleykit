@@ -81,7 +81,8 @@ export const personSearchResultSchema = z
     displayName: z.string().optional(),
     associationId: z.number().optional().nullable(),
     birthday: dateTimeSchema,
-    gender: z.enum(['m', 'f']).optional().nullable(),
+    // Display-only: an unexpected value must not drop the person from search.
+    gender: z.enum(['m', 'f']).optional().nullable().catch(null),
     _permissions: permissionsSchema,
   })
   .passthrough()

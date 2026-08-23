@@ -285,8 +285,9 @@ export const mockApi = {
       totalItemsCount: total,
     }
 
-    // Validate mock response matches real API schema, then cast back to expected type
-    // (validation ensures data structure is correct, cast preserves original type compatibility)
+    // Surfaces envelope-level drift in demo mode. Item-level drift is caught by
+    // the droppedItems assertions in contract.test.ts, since a resilient list
+    // schema parses successfully even when every item drops.
     validateResponse(response, assignmentsResponseSchema, 'mock:searchAssignments')
     return response
   },
@@ -315,7 +316,7 @@ export const mockApi = {
       totalItemsCount: total,
     }
 
-    // Validate mock response matches real API schema, then cast back to expected type
+    // Envelope-level check only; contract.test.ts asserts no items were dropped.
     validateResponse(response, compensationsResponseSchema, 'mock:searchCompensations')
     return response
   },
@@ -367,7 +368,7 @@ export const mockApi = {
       totalItemsCount: total,
     }
 
-    // Validate mock response matches real API schema, then cast back to expected type
+    // Envelope-level check only; contract.test.ts asserts no items were dropped.
     validateResponse(response, exchangesResponseSchema, 'mock:searchExchanges')
     return response
   },
@@ -535,7 +536,7 @@ export const mockApi = {
       totalItemsCount: filtered.length,
     }
 
-    // Validate mock response matches real API schema, then cast back to expected type
+    // Envelope-level check only; contract.test.ts asserts no items were dropped.
     validateResponse(response, personSearchResponseSchema, 'mock:searchPersons')
     return response
   },

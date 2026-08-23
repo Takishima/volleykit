@@ -7,9 +7,10 @@
  * are kept and invalid ones are dropped onto `droppedItems`, where
  * `validateResponse` logs them.
  *
- * `droppedItems` survives at runtime everywhere, but web's API layer casts list
- * responses to the generated OpenAPI types, so TypeScript there does not see the
- * field — web consumers read it with `getDroppedListItems`.
+ * `droppedItems` survives at runtime everywhere, but a platform that casts list
+ * responses to its own generated types will not see the field through
+ * TypeScript. Such consumers read it with `getDroppedListItems` from
+ * `@volleykit/shared/api`.
  */
 import { z } from 'zod'
 
@@ -47,9 +48,9 @@ function toResilientList<TItem>(
 
   return {
     // `totalItemsCount` is the server's total across all pages and is passed
-    // through untouched. Subtracting a page-local drop count would make it
-    // differ per page, which breaks the stall detection in `usePaginatedQuery`.
-    // Per-page counts come from `items.length` and `droppedItems.length`.
+    // through untouched: it must stay page-invariant, so a page-local drop count
+    // is never subtracted from it. Per-page counts are `items.length` and
+    // `droppedItems.length`.
     items: kept,
     totalItemsCount,
     droppedItems,

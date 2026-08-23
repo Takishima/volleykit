@@ -9,7 +9,12 @@
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { queryKeys, type SearchConfiguration, type GameExchange } from '../api'
+import {
+  queryKeys,
+  type PaginatedResponse,
+  type SearchConfiguration,
+  type GameExchange,
+} from '../api'
 import { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS } from '../api/constants'
 
 export { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS }
@@ -21,9 +26,7 @@ export type ExchangeStatusFilter = 'open' | 'applied' | 'closed' | 'all'
  * API client interface for fetching exchanges.
  */
 export interface ExchangesApiClient {
-  searchExchanges: (
-    config: SearchConfiguration
-  ) => Promise<{ items: GameExchange[]; totalItemsCount: number }>
+  searchExchanges: (config: SearchConfiguration) => Promise<PaginatedResponse<GameExchange>>
   applyForExchange?: (exchangeId: string) => Promise<void>
   removeOwnExchange?: (convocationId: string) => Promise<void>
 }
