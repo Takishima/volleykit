@@ -24,6 +24,7 @@ import {
   nominationListResponseSchema,
   nominationListSchema,
   personSearchResponseSchema,
+  personSearchResultSchema,
   possibleNominationsResponseSchema,
   refereeBackupEntrySchema,
   refereeBackupResponseSchema,
@@ -39,12 +40,7 @@ export * from './schemas'
 export type Assignment = z.infer<typeof assignmentSchema>
 export type CompensationRecord = z.infer<typeof compensationRecordSchema>
 export type GameExchange = z.infer<typeof gameExchangeSchema>
-/**
- * Derived from the response type rather than from `personSearchResultSchema`
- * directly, so it is identical by construction to what `validateResponse`
- * returns in `items`.
- */
-export type ValidatedPersonSearchResult = PersonSearchResponse['items'][number]
+export type ValidatedPersonSearchResult = z.infer<typeof personSearchResultSchema>
 export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>
 export type CompensationsResponse = z.infer<typeof compensationsResponseSchema>
 export type ExchangesResponse = z.infer<typeof exchangesResponseSchema>
@@ -131,14 +127,20 @@ export const validateResponse = createValidateResponse((message, ...args) => {
 /**
  * Compile-time guard on the resilient list factories.
  *
- * They must expose each item's *output* type. `z.ZodType<T>` collapses input and
- * output onto one parameter, so an item schema containing a transform once made
- * them infer the input side — `gender` became `unknown` on every response type
- * built from the factory, and only the single site that pins a zod-inferred type
- * explicitly failed to compile. This fails in shared's own typecheck instead.
+ * They must expose each item's *output* type. `z.ZodType<T>` collapsed input and
+ * output onto one parameter, so an item schema containing a transform could make
+ * them infer the input side instead — `gender` became `unknown` on every type
+ * built from the factory. Only the one site that pinned a zod-inferred type
+ * explicitly failed to compile; everywhere else the wrong type was simply
+ * accepted, since `unknown` swallows any comparison.
+ *
+ * Mutual assignability is the check that matters: it fails whichever way the two
+ * diverge, and it fails here, in shared's own typecheck, with a name that says
+ * what went wrong.
  */
-type AssertAssignable<TActual extends TExpected, TExpected> = TActual
-export type ResilientListItemsAreOutputTypes = AssertAssignable<
-  ValidatedPersonSearchResult['gender'],
-  'm' | 'f' | null | undefined
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
+type AssertTrue<T extends true> = T
+
+export type PersonSearchItemsAreSchemaOutput = AssertTrue<
+  Exact<PersonSearchResponse['items'][number], ValidatedPersonSearchResult>
 >
