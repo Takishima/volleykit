@@ -1,3 +1,5 @@
+import { getDroppedListItems } from '@volleykit/shared/api'
+
 import type { SearchConfiguration, Assignment, ApiClient } from '@/api/client'
 import { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '@/common/utils/constants'
 import { createLogger } from '@/common/utils/logger'
@@ -95,8 +97,7 @@ export function parseDateOrFallback(dateString: string | undefined | null, fallb
  * Stops fetching when any of these conditions are met:
  * - All items fetched (allItems.length >= totalCount)
  * - MAX_FETCH_ALL_PAGES reached (safety limit)
- * - Empty page returned (API exhausted or issue)
- * - Stalled response (totalCount unchanged between pages, indicating potential issue)
+ * - A page comes back carrying nothing at all — no items and no dropped items
  *
  * Note: This function manages its own offset/limit pagination internally.
  * The caller's config should NOT include offset/limit as they will be overwritten.
@@ -114,6 +115,7 @@ export async function fetchAllAssignmentPages(
   let offset = 0
   let totalCount = 0
   let pagesFetched = 0
+  let droppedTotal = 0
 
   do {
     // Check for cancellation before each request
@@ -131,39 +133,43 @@ export async function fetchAllAssignmentPages(
     }
 
     const pageItems = response.items || []
+    const droppedCount = getDroppedListItems(response).length
 
-    // Guard against infinite loop: break if page returns no items
-    // This can happen if totalItemsCount is stale or API has issues
-    if (pageItems.length === 0) {
+    // Guard against an infinite loop. The server is out of rows only when the
+    // page carried nothing at all: a page whose items every one failed
+    // validation arrives with `items: []` but still consumed a page worth of
+    // rows, so treating that as exhaustion would silently drop every page after
+    // it.
+    if (pageItems.length === 0 && droppedCount === 0) {
       break
     }
 
     allItems.push(...pageItems)
+    droppedTotal += droppedCount
     totalCount = response.totalItemsCount || 0
 
-    // Termination is covered by the empty-page break above, the totalCount exit
-    // below, and MAX_FETCH_ALL_PAGES. Comparing totalCount between pages is not
-    // a stall signal: it is the server's total across all pages, so a healthy
-    // API repeats it every page, and doing so stopped every fetch at page two.
-    //
-    // The empty-page break is load-bearing now that list schemas can drop
-    // malformed items: allItems.length can stay below totalCount permanently, so
-    // the loop ends when the server runs out of rows rather than by reaching it.
-
-    // Early exit when all items are fetched to avoid unnecessary loop iterations
-    if (allItems.length >= totalCount && totalCount > 0) {
-      break
-    }
-
+    // `totalItemsCount` is the server's total across all pages, so a healthy API
+    // repeats it on every response. It is not a stall signal, and comparing it
+    // between pages used to stop every multi-page fetch at page two.
     offset += DEFAULT_PAGE_SIZE
     pagesFetched++
-  } while (allItems.length < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES)
 
-  // Log warning if we hit the page limit before fetching all items
-  if (pagesFetched >= MAX_FETCH_ALL_PAGES && allItems.length < totalCount) {
+    // Early exit once every row the server counted has been seen, whether it
+    // was kept or dropped.
+    if (allItems.length + droppedTotal >= totalCount && totalCount > 0) {
+      break
+    }
+  } while (allItems.length + droppedTotal < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES)
+
+  // Any shortfall is worth a warning, not just the page cap: without this, a
+  // truncated fetch is indistinguishable from a complete one at the call site.
+  if (allItems.length < totalCount) {
+    const reachedPageLimit = pagesFetched >= MAX_FETCH_ALL_PAGES
     log.warn(
-      `Reached MAX_FETCH_ALL_PAGES limit (${MAX_FETCH_ALL_PAGES}). ` +
-        `Fetched ${allItems.length} of ${totalCount} total items. Some data may be missing.`
+      `Fetched ${allItems.length} of ${totalCount} total items.` +
+        (droppedTotal > 0 ? ` ${droppedTotal} dropped by validation.` : '') +
+        (reachedPageLimit ? ` Reached MAX_FETCH_ALL_PAGES limit (${MAX_FETCH_ALL_PAGES}).` : '') +
+        ' Some data may be missing.'
     )
   }
 

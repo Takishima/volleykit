@@ -25,13 +25,14 @@ vi.mock('@/api/client', () => ({
   },
 }))
 
+// One stable logger instance: the module under test captures it at import time,
+// so a factory returning a fresh object per call cannot be asserted against.
+const { mockLogger } = vi.hoisted(() => ({
+  mockLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}))
+
 vi.mock('@/common/utils/logger', () => ({
-  createLogger: vi.fn(() => ({
-    debug: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  })),
+  createLogger: vi.fn(() => mockLogger),
 }))
 
 function createMockAssignment(startingDateTime?: string, identity?: string): Assignment {
@@ -206,6 +207,11 @@ describe('parseDateOrFallback', () => {
 })
 
 describe('fetchAllAssignmentPages', () => {
+  const page = (prefix: string, size: number) =>
+    Array(size)
+      .fill(null)
+      .map((_, i) => createMockAssignment('2025-01-15T18:00:00Z', `${prefix}-${i}`))
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -349,11 +355,6 @@ describe('fetchAllAssignmentPages', () => {
     // as a stall signal used to break out at page two and silently return 200.
     const { api } = await import('@/api/client')
 
-    const page = (prefix: string, size: number) =>
-      Array(size)
-        .fill(null)
-        .map((_, i) => createMockAssignment('2025-01-15T18:00:00Z', `${prefix}-${i}`))
-
     vi.mocked(api.searchAssignments)
       .mockResolvedValueOnce({ items: page('a', 100), totalItemsCount: 250 })
       .mockResolvedValueOnce({ items: page('b', 100), totalItemsCount: 250 })
@@ -365,9 +366,7 @@ describe('fetchAllAssignmentPages', () => {
     expect(api.searchAssignments).toHaveBeenCalledTimes(3)
   })
 
-  it('ends on an empty page when dropped items keep the count short', async () => {
-    // Resilient list parsing can drop malformed items, so allItems.length may
-    // never reach totalItemsCount; the empty page is what ends the loop.
+  it('ends when a page carries neither items nor dropped items', async () => {
     const { api } = await import('@/api/client')
 
     vi.mocked(api.searchAssignments)
@@ -375,12 +374,49 @@ describe('fetchAllAssignmentPages', () => {
         items: [createMockAssignment('2025-01-15T18:00:00Z', 'a-0')],
         totalItemsCount: 250,
       })
-      .mockResolvedValueOnce({ items: [], totalItemsCount: 250 })
+      .mockResolvedValueOnce({ items: [], droppedItems: [], totalItemsCount: 250 } as never)
 
     const result = await fetchAllAssignmentPages(api, {})
 
     expect(result.length).toBe(1)
     expect(api.searchAssignments).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps paging past a page whose items were all dropped', async () => {
+    // Such a page arrives as `items: []` but consumed a page worth of server
+    // rows, so treating it as exhaustion would drop every page after it.
+    const { api } = await import('@/api/client')
+
+    vi.mocked(api.searchAssignments)
+      .mockResolvedValueOnce({ items: page('a', 100), totalItemsCount: 250 })
+      .mockResolvedValueOnce({
+        items: [],
+        droppedItems: Array(100).fill({ index: 0, issues: [] }),
+        totalItemsCount: 250,
+      } as never)
+      .mockResolvedValueOnce({ items: page('c', 50), totalItemsCount: 250 })
+
+    const result = await fetchAllAssignmentPages(api, {})
+
+    expect(result.length).toBe(150)
+    expect(api.searchAssignments).toHaveBeenCalledTimes(3)
+  })
+
+  it('warns when the fetch ends short of totalItemsCount', async () => {
+    const { api } = await import('@/api/client')
+
+    vi.mocked(api.searchAssignments)
+      .mockResolvedValueOnce({
+        items: [createMockAssignment('2025-01-15T18:00:00Z', 'a-0')],
+        totalItemsCount: 250,
+      })
+      .mockResolvedValueOnce({ items: [], droppedItems: [], totalItemsCount: 250 } as never)
+
+    await fetchAllAssignmentPages(api, {})
+
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Fetched 1 of 250 total items')
+    )
   })
 
   it('uses correct offset for each page', async () => {
