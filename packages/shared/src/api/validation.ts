@@ -145,6 +145,20 @@ type AssertTrue<T extends true> = T
 // job — and web typechecks this package's *source* with `noUnusedLocals`, so a
 // module-local alias fails web's build (TS6196) even though shared's own
 // tsconfig would accept it.
+// `optionalResilientListSchema`
 export type PersonSearchItemsAreSchemaOutput = AssertTrue<
   Exact<PersonSearchResponse['items'][number], ValidatedPersonSearchResult>
+>
+
+// `resilientListSchema` is a separate function body carrying four of the six
+// list responses, so it needs its own cover. Both item schemas below reach
+// `tolerantEnum`, which is what makes input and output differ; exchanges are
+// skipped because `gameExchangeSchema` is `z.ZodType<any>` and `Exact` would
+// hold vacuously.
+export type AssignmentItemsAreSchemaOutput = AssertTrue<
+  Exact<AssignmentsResponse['items'][number], Assignment>
+>
+
+export type BackupItemsAreSchemaOutput = AssertTrue<
+  Exact<RefereeBackupSearchResponse['items'][number], RefereeBackupEntry>
 >

@@ -875,6 +875,22 @@ describe('resilient list parsing', () => {
     expect(result.data?.droppedItems).toEqual([])
   })
 
+  it('coerces an unknown transportation mode on a nested backup referee', () => {
+    const result = refereeBackupResponseSchema.safeParse({
+      items: [
+        {
+          ...VALID_BACKUP_ENTRY,
+          nlaReferees: [{ indoorReferee: { transportationMode: 'e-bike' } }],
+        },
+      ],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.items[0]?.nlaReferees?.[0]?.indoorReferee?.transportationMode).toBeNull()
+  })
+
   it('keeps a backup entry whose nested referee has an unknown gender', () => {
     // A strict enum here would fail the person, then the assignment, then the row.
     const result = refereeBackupResponseSchema.safeParse({

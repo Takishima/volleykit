@@ -400,6 +400,9 @@ describe('fetchAllAssignmentPages', () => {
 
     expect(result.length).toBe(150)
     expect(api.searchAssignments).toHaveBeenCalledTimes(3)
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('100 dropped by validation')
+    )
   })
 
   it('warns when the fetch ends short of totalItemsCount', async () => {

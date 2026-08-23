@@ -95,7 +95,7 @@ export function parseDateOrFallback(dateString: string | undefined | null, fallb
  * Uses sequential fetching to avoid overwhelming the API.
  *
  * Stops fetching when any of these conditions are met:
- * - All items fetched (allItems.length >= totalCount)
+ * - Every counted row seen, kept or dropped (allItems.length + droppedTotal >= totalCount)
  * - MAX_FETCH_ALL_PAGES reached (safety limit)
  * - A page comes back carrying nothing at all — no items and no dropped items
  *
@@ -164,7 +164,10 @@ export async function fetchAllAssignmentPages(
   // Any shortfall is worth a warning, not just the page cap: without this, a
   // truncated fetch is indistinguishable from a complete one at the call site.
   if (allItems.length < totalCount) {
-    const reachedPageLimit = pagesFetched >= MAX_FETCH_ALL_PAGES
+    // Only a cause when the cap actually cut the fetch short: a run that ends on
+    // its tenth page having seen every counted row was not truncated by it.
+    const reachedPageLimit =
+      pagesFetched >= MAX_FETCH_ALL_PAGES && allItems.length + droppedTotal < totalCount
     log.warn(
       `Fetched ${allItems.length} of ${totalCount} total items.` +
         (droppedTotal > 0 ? ` ${droppedTotal} dropped by validation.` : '') +
