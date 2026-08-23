@@ -251,6 +251,7 @@ export const gameExchangeSchema: z.ZodType<any> = z
     notes: z.string().optional().nullable(),
     refereePosition: refereePositionSchema,
     requiredRefereeLevel: z.string().optional().nullable(),
+    linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
     _permissions: permissionsSchema,
   })
   .passthrough()
