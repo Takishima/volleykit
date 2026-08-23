@@ -15,6 +15,7 @@ import {
   convocationStatusSchema,
   dateTimeSchema,
   exchangeStatusSchema,
+  genderSchema,
   linkedDoubleConvocationSchema,
   permissionsSchema,
   refereePositionSchema,
@@ -27,6 +28,7 @@ export const assignmentSchema = z
   .object({
     __identity: uuidSchema,
     refereeGame: refereeGameSchema,
+    // Strict on purpose: drives filtering, so an unknown value cannot be handled.
     refereeConvocationStatus: convocationStatusSchema,
     refereePosition: refereePositionSchema,
     confirmationStatus: z.string().optional().nullable(),
@@ -60,6 +62,8 @@ export const gameExchangeSchema: z.ZodType<any> = z
   .object({
     __identity: uuidSchema,
     refereeGame: refereeGameForExchangeSchema,
+    // Strict on purpose: drives ExchangeStatusFilter, so an unknown value cannot
+    // be rendered or filtered and the exchange is better dropped than shown wrong.
     status: exchangeStatusSchema,
     createdAt: dateTimeSchema,
     submittedByPerson: personSummarySchema.optional(),
@@ -81,9 +85,7 @@ export const personSearchResultSchema = z
     displayName: z.string().optional(),
     associationId: z.number().optional().nullable(),
     birthday: dateTimeSchema,
-    // Left strict: this schema is itself a list item, so an unexpected value
-    // drops only this person, which is what resilient list parsing is for.
-    gender: z.enum(['m', 'f']).optional().nullable(),
+    gender: genderSchema,
     _permissions: permissionsSchema,
   })
   .passthrough()

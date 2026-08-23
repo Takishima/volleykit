@@ -3,7 +3,7 @@
  */
 import { z } from 'zod'
 
-import { toleratedGenderSchema, uuidSchema } from './primitives'
+import { genderSchema, uuidSchema } from './primitives'
 import { resilientListSchema } from './resilient-list'
 
 // Person details for a backup referee
@@ -15,7 +15,7 @@ const backupRefereePersonSchema = z
     displayName: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    gender: toleratedGenderSchema,
+    gender: genderSchema,
     correspondenceLanguage: z.string().optional(),
     primaryEmailAddress: z
       .object({

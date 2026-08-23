@@ -67,17 +67,29 @@ export const linkedDoubleConvocationSchema = z
   .optional()
 
 /**
- * Gender, tolerant of values outside the known set.
+ * An enum whose unrecognised values coerce to null instead of failing the parent.
  *
- * Display-only, and it sits below the list-item boundary in the referee backup
- * tree: a strict enum there fails the person, which fails the referee
- * assignment, which drops the whole Pikett date row. Anything unrecognised
- * becomes null instead.
+ * Use for display-only fields. A strict enum rejects its parent object, which
+ * rejects that object's parent, and so on up to the nearest list item — so one
+ * cosmetic value the backend added can remove a whole row. Fields that drive
+ * behaviour (filtering, routing) stay strict: there the item genuinely cannot be
+ * handled, and dropping it is what resilient list parsing is for.
+ *
+ * Built on `transform` rather than `.catch()` on purpose: zod's `ZodCatch`
+ * output is `NoUndefined<output<T>>`, which makes an optional key required and
+ * changes every inferred response type that contains it.
  */
-export const toleratedGenderSchema = z
-  .unknown()
-  .transform((value) => (value === 'm' || value === 'f' ? value : null))
-  .optional()
+export function tolerantEnum<const TValues extends readonly string[]>(values: TValues) {
+  return z
+    .unknown()
+    .transform((value) =>
+      values.includes(value as TValues[number]) ? (value as TValues[number]) : null
+    )
+    .optional()
+}
+
+/** Gender is rendered as an icon and read by nothing else. */
+export const genderSchema = tolerantEnum(['m', 'f'])
 
 // Convocation status enum
 export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])

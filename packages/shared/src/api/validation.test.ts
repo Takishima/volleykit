@@ -800,19 +800,54 @@ describe('resilient list parsing', () => {
     expect(result.data?.droppedItems).toHaveLength(1)
   })
 
-  it('drops only the offending person when a gender is outside the known enum', () => {
-    // At the list-item boundary the resilient list already contains the damage.
+  it('keeps a person whose gender is outside the known enum', () => {
+    // Display-only, so it coerces rather than removing a selectable person.
     const result = personSearchResponseSchema.safeParse({
-      items: [
-        { __identity: 'a1111111-1111-4111-a111-111111111111' },
-        { __identity: 'b2222222-2222-4222-b222-222222222222', gender: 'd' },
-      ],
-      totalItemsCount: 2,
+      items: [{ __identity: 'a1111111-1111-4111-a111-111111111111', gender: 'd' }],
+      totalItemsCount: 1,
     })
 
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.items[0]?.gender).toBeNull()
+  })
+
+  it('drops an exchange whose status is unknown', () => {
+    // Deliberate: status drives ExchangeStatusFilter, so it cannot be coerced.
+    const result = exchangesResponseSchema.safeParse({
+      items: [
+        {
+          __identity: '550e8400-e29b-41d4-a716-446655440000',
+          refereeGame: {},
+          status: 'withdrawn',
+          refereePosition: 'head-one',
+        },
+      ],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toEqual([])
     expect(result.data?.droppedItems).toHaveLength(1)
+  })
+
+  it('keeps a compensation whose transportation mode is unknown', () => {
+    const result = compensationsResponseSchema.safeParse({
+      items: [
+        {
+          __identity: '550e8400-e29b-41d4-a716-446655440000',
+          refereeGame: {},
+          convocationCompensation: { transportationMode: 'e-bike' },
+          refereeConvocationStatus: 'active',
+          refereePosition: 'head-one',
+        },
+      ],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.items[0]?.convocationCompensation?.transportationMode).toBeNull()
   })
 
   it('drops an assignment whose convocation status is unknown', () => {
@@ -841,7 +876,7 @@ describe('resilient list parsing', () => {
   })
 
   it('keeps a backup entry whose nested referee has an unknown gender', () => {
-    // Below the item boundary, so a strict enum here would drop the whole row.
+    // A strict enum here would fail the person, then the assignment, then the row.
     const result = refereeBackupResponseSchema.safeParse({
       items: [
         {
@@ -855,6 +890,7 @@ describe('resilient list parsing', () => {
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
     expect(result.data?.droppedItems).toEqual([])
+    expect(result.data?.items[0]?.nlaReferees?.[0]?.indoorReferee?.person?.gender).toBeNull()
   })
 
   it('defaults a missing items array to empty on optional list schemas', () => {

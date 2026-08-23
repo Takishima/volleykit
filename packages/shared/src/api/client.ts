@@ -27,6 +27,7 @@ import type {
   PersonSearchResponse,
   RefereeBackupEntry,
   DroppedListItem,
+  ResilientList,
 } from './validation'
 
 // Re-export types from validation for convenience
@@ -89,9 +90,7 @@ export type ApiResult<T> = { data: T; error: null } | { data: null; error: ApiEr
  * generated API types still satisfies the contract; a client that parses with a
  * resilient list schema always returns it.
  */
-export interface PaginatedResponse<T> {
-  items: T[]
-  totalItemsCount: number
+export interface PaginatedResponse<T> extends Omit<ResilientList<T>, 'droppedItems'> {
   droppedItems?: DroppedListItem[]
 }
 
