@@ -114,6 +114,19 @@ export function getDroppedListItems(data: unknown): DroppedListItem[] {
   return Array.isArray(dropped) ? (dropped as DroppedListItem[]) : []
 }
 
+/**
+ * How many server rows a parsed list response consumed.
+ *
+ * Kept items plus dropped ones. A page whose items all failed validation comes
+ * back with `items: []` but still consumed a page worth of rows, so pagination
+ * has to count them or it mistakes that page for the end of the data.
+ */
+export function countRowsConsumed(response: unknown): number {
+  const items = (response as { items?: unknown }).items
+
+  return (Array.isArray(items) ? items.length : 0) + getDroppedListItems(response).length
+}
+
 /** Formats dropped-item diagnostics into a single log-friendly line. */
 export function formatDroppedListItems(dropped: DroppedListItem[]): string {
   return dropped

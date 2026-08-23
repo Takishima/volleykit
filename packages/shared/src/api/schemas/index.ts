@@ -41,5 +41,5 @@ export { associationSettingsSchema, seasonSchema } from './settings'
 
 export { refereeBackupEntrySchema, refereeBackupResponseSchema } from './backup'
 
-export { formatDroppedListItems, getDroppedListItems } from './resilient-list'
+export { countRowsConsumed, formatDroppedListItems, getDroppedListItems } from './resilient-list'
 export type { DroppedListItem, ResilientList } from './resilient-list'

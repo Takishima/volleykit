@@ -1,4 +1,4 @@
-import { getDroppedListItems } from '@volleykit/shared/api'
+import { countRowsConsumed } from '@volleykit/shared/api'
 
 import type { SearchConfiguration, Assignment, ApiClient } from '@/api/client'
 import { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '@/common/utils/constants'
@@ -95,7 +95,7 @@ export function parseDateOrFallback(dateString: string | undefined | null, fallb
  * Uses sequential fetching to avoid overwhelming the API.
  *
  * Stops fetching when any of these conditions are met:
- * - Every counted row seen, kept or dropped (allItems.length + droppedTotal >= totalCount)
+ * - Every counted row seen, kept or dropped (rowsSeen >= totalCount)
  * - MAX_FETCH_ALL_PAGES reached (safety limit)
  * - A page comes back carrying nothing at all — no items and no dropped items
  *
@@ -115,7 +115,7 @@ export async function fetchAllAssignmentPages(
   let offset = 0
   let totalCount = 0
   let pagesFetched = 0
-  let droppedTotal = 0
+  let rowsSeen = 0
 
   do {
     // Check for cancellation before each request
@@ -133,19 +133,18 @@ export async function fetchAllAssignmentPages(
     }
 
     const pageItems = response.items || []
-    const droppedCount = getDroppedListItems(response).length
+    const rowsConsumed = countRowsConsumed(response)
 
     // Guard against an infinite loop. The server is out of rows only when the
-    // page carried nothing at all: a page whose items every one failed
-    // validation arrives with `items: []` but still consumed a page worth of
-    // rows, so treating that as exhaustion would silently drop every page after
-    // it.
-    if (pageItems.length === 0 && droppedCount === 0) {
+    // page consumed none: a page whose items every one failed validation arrives
+    // with `items: []` but still consumed a page worth of rows, so treating that
+    // as exhaustion would silently drop every page after it.
+    if (rowsConsumed === 0) {
       break
     }
 
     allItems.push(...pageItems)
-    droppedTotal += droppedCount
+    rowsSeen += rowsConsumed
     totalCount = response.totalItemsCount || 0
 
     // `totalItemsCount` is the server's total across all pages, so a healthy API
@@ -153,21 +152,17 @@ export async function fetchAllAssignmentPages(
     // between pages used to stop every multi-page fetch at page two.
     offset += DEFAULT_PAGE_SIZE
     pagesFetched++
-
-    // Early exit once every row the server counted has been seen, whether it
-    // was kept or dropped.
-    if (allItems.length + droppedTotal >= totalCount && totalCount > 0) {
-      break
-    }
-  } while (allItems.length + droppedTotal < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES)
+    // No early-exit `if` here: the `while` below already ends the loop once
+    // every counted row has been seen, including when totalCount is 0.
+  } while (rowsSeen < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES)
 
   // Any shortfall is worth a warning, not just the page cap: without this, a
   // truncated fetch is indistinguishable from a complete one at the call site.
   if (allItems.length < totalCount) {
+    const droppedTotal = rowsSeen - allItems.length
     // Only a cause when the cap actually cut the fetch short: a run that ends on
     // its tenth page having seen every counted row was not truncated by it.
-    const reachedPageLimit =
-      pagesFetched >= MAX_FETCH_ALL_PAGES && allItems.length + droppedTotal < totalCount
+    const reachedPageLimit = pagesFetched >= MAX_FETCH_ALL_PAGES && rowsSeen < totalCount
     log.warn(
       `Fetched ${allItems.length} of ${totalCount} total items.` +
         (droppedTotal > 0 ? ` ${droppedTotal} dropped by validation.` : '') +
