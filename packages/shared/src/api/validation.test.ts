@@ -17,7 +17,9 @@ import {
   compensationsResponseSchema,
   exchangesResponseSchema,
   personSearchResponseSchema,
+  refereeBackupResponseSchema,
   validateResponse,
+  getDroppedListItems,
 } from './validation'
 
 describe('dateSchema', () => {
@@ -703,5 +705,103 @@ describe('validateResponse', () => {
     expect(() =>
       validateResponse(invalidResponse, personSearchResponseSchema, 'my-context')
     ).toThrow(/Invalid API response for my-context/)
+  })
+})
+
+describe('resilient list parsing', () => {
+  const VALID_ASSIGNMENT = {
+    __identity: '550e8400-e29b-41d4-a716-446655440000',
+    refereeGame: {},
+    refereeConvocationStatus: 'active',
+    refereePosition: 'head-one',
+  }
+  // Missing every required field, so the item schema always rejects it
+  const INVALID_ASSIGNMENT = { __identity: 'not-a-uuid' }
+
+  it('keeps valid items when a sibling item is malformed', () => {
+    const result = assignmentsResponseSchema.safeParse({
+      items: [VALID_ASSIGNMENT, INVALID_ASSIGNMENT],
+      totalItemsCount: 2,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.items[0]?.__identity).toBe(VALID_ASSIGNMENT.__identity)
+    expect(result.data).not.toHaveProperty('__droppedItems')
+  })
+
+  it('decrements totalItemsCount by the number of dropped items', () => {
+    const result = assignmentsResponseSchema.safeParse({
+      items: [VALID_ASSIGNMENT, INVALID_ASSIGNMENT],
+      totalItemsCount: 42,
+    })
+
+    expect(result.data?.totalItemsCount).toBe(41)
+  })
+
+  it('never drives totalItemsCount below zero', () => {
+    const result = assignmentsResponseSchema.safeParse({
+      items: [INVALID_ASSIGNMENT, INVALID_ASSIGNMENT],
+      totalItemsCount: 1,
+    })
+
+    expect(result.data?.totalItemsCount).toBe(0)
+  })
+
+  it('records the index and issues of each dropped item', () => {
+    const result = assignmentsResponseSchema.safeParse({
+      items: [VALID_ASSIGNMENT, INVALID_ASSIGNMENT],
+      totalItemsCount: 2,
+    })
+
+    const dropped = getDroppedListItems(result.data)
+    expect(dropped).toHaveLength(1)
+    expect(dropped?.[0]?.index).toBe(1)
+    expect(dropped?.[0]?.issues.length).toBeGreaterThan(0)
+  })
+
+  it('reports no dropped items for a fully valid response', () => {
+    const result = assignmentsResponseSchema.safeParse({
+      items: [VALID_ASSIGNMENT],
+      totalItemsCount: 1,
+    })
+
+    expect(getDroppedListItems(result.data)).toEqual([])
+  })
+
+  it('still rejects a malformed envelope', () => {
+    expect(assignmentsResponseSchema.safeParse({ totalItemsCount: 0 }).success).toBe(false)
+    expect(assignmentsResponseSchema.safeParse({ items: [] }).success).toBe(false)
+    expect(
+      assignmentsResponseSchema.safeParse({ items: 'not-an-array', totalItemsCount: 0 }).success
+    ).toBe(false)
+  })
+
+  it('passes unknown envelope keys through', () => {
+    const result = refereeBackupResponseSchema.safeParse({
+      items: [],
+      totalItemsCount: 0,
+      entityTemplate: null,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data).toHaveProperty('entityTemplate', null)
+  })
+
+  it('logs dropped items from validateResponse without throwing', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = validateResponse(
+      { items: [VALID_ASSIGNMENT, INVALID_ASSIGNMENT], totalItemsCount: 2 },
+      assignmentsResponseSchema,
+      'assignments'
+    )
+
+    expect(result.items).toHaveLength(1)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('API validation dropped 1 invalid item(s) (assignments)')
+    )
+
+    consoleSpy.mockRestore()
   })
 })

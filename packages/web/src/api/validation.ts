@@ -25,6 +25,8 @@
  * - Prefer specific error messages over generic validation errors
  */
 
+import { formatDroppedListItems, getDroppedListItems } from '@volleykit/shared/api'
+
 import { logger } from '@/common/utils/logger'
 
 import type { ZodLikeSchema } from '@volleykit/shared/api'
@@ -78,6 +80,13 @@ export function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, con
 
     logger.error(`API validation error (${context}):`, result.error.issues)
     throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
+  }
+
+  const dropped = getDroppedListItems(result.data)
+  if (dropped.length > 0) {
+    logger.error(
+      `API validation dropped ${dropped.length} invalid item(s) (${context}): ${formatDroppedListItems(dropped)}`
+    )
   }
 
   return result.data
