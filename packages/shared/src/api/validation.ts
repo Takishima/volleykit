@@ -24,7 +24,6 @@ import {
   nominationListResponseSchema,
   nominationListSchema,
   personSearchResponseSchema,
-  personSearchResultSchema,
   possibleNominationsResponseSchema,
   refereeBackupEntrySchema,
   refereeBackupResponseSchema,
@@ -40,7 +39,13 @@ export * from './schemas'
 export type Assignment = z.infer<typeof assignmentSchema>
 export type CompensationRecord = z.infer<typeof compensationRecordSchema>
 export type GameExchange = z.infer<typeof gameExchangeSchema>
-export type ValidatedPersonSearchResult = z.infer<typeof personSearchResultSchema>
+/**
+ * Derived from the response type rather than from `personSearchResultSchema`
+ * directly, so it is identical by construction to what `validateResponse`
+ * returns in `items`. Deriving the two independently made them diverge whenever
+ * the item schema gained a transform, which broke web's `scorerSearchOptions`.
+ */
+export type ValidatedPersonSearchResult = PersonSearchResponse['items'][number]
 export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>
 export type CompensationsResponse = z.infer<typeof compensationsResponseSchema>
 export type ExchangesResponse = z.infer<typeof exchangesResponseSchema>
