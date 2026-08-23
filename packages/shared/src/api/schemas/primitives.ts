@@ -66,6 +66,19 @@ export const linkedDoubleConvocationSchema = z
   .transform(formatLinkedDoubleConvocation)
   .optional()
 
+/**
+ * Gender, tolerant of values outside the known set.
+ *
+ * Display-only, and it sits below the list-item boundary in the referee backup
+ * tree: a strict enum there fails the person, which fails the referee
+ * assignment, which drops the whole Pikett date row. Anything unrecognised
+ * becomes null instead.
+ */
+export const toleratedGenderSchema = z
+  .unknown()
+  .transform((value) => (value === 'm' || value === 'f' ? value : null))
+  .optional()
+
 // Convocation status enum
 export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])
 

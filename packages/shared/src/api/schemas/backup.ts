@@ -3,7 +3,7 @@
  */
 import { z } from 'zod'
 
-import { uuidSchema } from './primitives'
+import { toleratedGenderSchema, uuidSchema } from './primitives'
 import { resilientListSchema } from './resilient-list'
 
 // Person details for a backup referee
@@ -15,8 +15,7 @@ const backupRefereePersonSchema = z
     displayName: z.string().optional(),
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    // Display-only: an unexpected value must not drop the whole Pikett date row.
-    gender: z.enum(['m', 'f']).optional().nullable().catch(null),
+    gender: toleratedGenderSchema,
     correspondenceLanguage: z.string().optional(),
     primaryEmailAddress: z
       .object({

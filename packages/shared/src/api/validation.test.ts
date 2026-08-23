@@ -800,16 +800,19 @@ describe('resilient list parsing', () => {
     expect(result.data?.droppedItems).toHaveLength(1)
   })
 
-  it('keeps a person whose gender is outside the known enum', () => {
-    // Display-only, so an unexpected value is coerced rather than dropping the row.
+  it('drops only the offending person when a gender is outside the known enum', () => {
+    // At the list-item boundary the resilient list already contains the damage.
     const result = personSearchResponseSchema.safeParse({
-      items: [{ __identity: 'a1111111-1111-4111-a111-111111111111', gender: 'd' }],
-      totalItemsCount: 1,
+      items: [
+        { __identity: 'a1111111-1111-4111-a111-111111111111' },
+        { __identity: 'b2222222-2222-4222-b222-222222222222', gender: 'd' },
+      ],
+      totalItemsCount: 2,
     })
 
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
-    expect(result.data?.items[0]?.gender).toBeNull()
+    expect(result.data?.droppedItems).toHaveLength(1)
   })
 
   it('drops an assignment whose convocation status is unknown', () => {
@@ -838,6 +841,7 @@ describe('resilient list parsing', () => {
   })
 
   it('keeps a backup entry whose nested referee has an unknown gender', () => {
+    // Below the item boundary, so a strict enum here would drop the whole row.
     const result = refereeBackupResponseSchema.safeParse({
       items: [
         {

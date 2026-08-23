@@ -81,8 +81,9 @@ export const personSearchResultSchema = z
     displayName: z.string().optional(),
     associationId: z.number().optional().nullable(),
     birthday: dateTimeSchema,
-    // Display-only: an unexpected value must not drop the person from search.
-    gender: z.enum(['m', 'f']).optional().nullable().catch(null),
+    // Left strict: this schema is itself a list item, so an unexpected value
+    // drops only this person, which is what resilient list parsing is for.
+    gender: z.enum(['m', 'f']).optional().nullable(),
     _permissions: permissionsSchema,
   })
   .passthrough()
