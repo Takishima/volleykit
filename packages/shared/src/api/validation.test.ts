@@ -198,6 +198,48 @@ describe('assignmentSchema', () => {
     }
   })
 
+  it('keeps a string linked double convocation as-is', () => {
+    const result = assignmentSchema.safeParse({
+      ...validAssignment,
+      linkedDoubleConvocationGameNumberAndRefereePosition: '12345/head-two',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe('12345/head-two')
+    }
+  })
+
+  it('normalizes non-string linked double convocation values (SRBA)', () => {
+    const cases: Array<[unknown, string | null]> = [
+      [12345, '12345'],
+      [{ gameNumber: '12345', refereePosition: 'head-two' }, '12345 / head-two'],
+      [[{ gameNumber: 12345 }, '67890/head-one'], '12345 / 67890/head-one'],
+      [{}, null],
+      [[], null],
+      ['', null],
+      [null, null],
+    ]
+
+    for (const [value, expected] of cases) {
+      const result = assignmentSchema.safeParse({
+        ...validAssignment,
+        linkedDoubleConvocationGameNumberAndRefereePosition: value,
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe(expected)
+      }
+    }
+  })
+
+  it('accepts assignment without linked double convocation field', () => {
+    const result = assignmentSchema.safeParse(validAssignment)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBeUndefined()
+    }
+  })
+
   it('rejects assignment with invalid UUID', () => {
     const result = assignmentSchema.safeParse({
       ...validAssignment,

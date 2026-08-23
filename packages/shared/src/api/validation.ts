@@ -39,6 +39,43 @@ const booleanLikeSchema = z
 // Referee position - accept any string from API
 export const refereePositionSchema = z.string()
 
+const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' / '
+
+/**
+ * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to a display string.
+ *
+ * Most associations return a plain string ("12345/head-two"), but some (e.g. SRBA)
+ * render this computed property as a number, an object or an array of them.
+ * Anything we cannot render becomes null so a single odd entry never fails the list.
+ */
+function formatLinkedDoubleConvocation(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null
+  if (typeof value === 'number') return String(value)
+
+  if (Array.isArray(value)) {
+    const parts = value
+      .map(formatLinkedDoubleConvocation)
+      .filter((part): part is string => part !== null)
+    return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
+  }
+
+  if (value !== null && typeof value === 'object') {
+    const record = value as Record<string, unknown>
+    const parts = [record.gameNumber, record.refereePosition]
+      .map(formatLinkedDoubleConvocation)
+      .filter((part): part is string => part !== null)
+    return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
+  }
+
+  return null
+}
+
+// Linked double convocation info - shape varies by association, normalized to string | null
+const linkedDoubleConvocationSchema = z
+  .unknown()
+  .transform(formatLinkedDoubleConvocation)
+  .optional()
+
 // Convocation status enum
 export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])
 
@@ -188,7 +225,7 @@ export const assignmentSchema = z
     isOpenEntryInRefereeGameExchange: booleanLikeSchema,
     hasLastMessageToReferee: booleanLikeSchema,
     hasLinkedDoubleConvocation: booleanLikeSchema,
-    linkedDoubleConvocationGameNumberAndRefereePosition: z.string().optional().nullable(),
+    linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
     // Compensation data eagerly loaded with assignments to avoid separate API call
     convocationCompensation: convocationCompensationSchema.optional(),
     _permissions: permissionsSchema,
