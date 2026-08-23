@@ -250,12 +250,15 @@ describe('personSearchResponseSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('rejects items with invalid __identity', () => {
+  it('drops items with invalid __identity instead of rejecting the list', () => {
     const result = personSearchResponseSchema.safeParse({
-      items: [{ ...validPerson, __identity: 'not-a-uuid' }],
-      totalItemsCount: 1,
+      items: [validPerson, { ...validPerson, __identity: 'not-a-uuid' }],
+      totalItemsCount: 2,
     })
-    expect(result.success).toBe(false)
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.totalItemsCount).toBe(1)
   })
 
   it('rejects non-array items', () => {
@@ -285,11 +288,8 @@ describe('validateResponse', () => {
     expect(result.items?.[0]?.__identity).toBe('a1111111-1111-4111-a111-111111111111')
   })
 
-  it('throws descriptive error for invalid input', () => {
-    const invalidResponse = {
-      items: [{ __identity: 'invalid-uuid' }],
-      totalItemsCount: 1,
-    }
+  it('throws descriptive error for an invalid envelope', () => {
+    const invalidResponse = { items: 'not-an-array', totalItemsCount: 1 }
 
     expect(() => validateResponse(invalidResponse, personSearchResponseSchema, 'test')).toThrow(
       /Invalid API response for test/
@@ -297,13 +297,25 @@ describe('validateResponse', () => {
   })
 
   it('includes field path in error message', () => {
-    const invalidResponse = {
-      items: [{ __identity: 'invalid-uuid' }],
-      totalItemsCount: 1,
-    }
+    const invalidResponse = { items: 'not-an-array', totalItemsCount: 1 }
 
     expect(() => validateResponse(invalidResponse, personSearchResponseSchema, 'test')).toThrow(
-      /items\.0\.__identity/
+      /items/
     )
+  })
+
+  it('drops an invalid item and logs it instead of throwing', () => {
+    const response = {
+      items: [
+        { __identity: 'a1111111-1111-4111-a111-111111111111', firstName: 'Hans' },
+        { __identity: 'invalid-uuid' },
+      ],
+      totalItemsCount: 2,
+    }
+
+    const result = validateResponse(response, personSearchResponseSchema, 'test')
+
+    expect(result.items).toHaveLength(1)
+    expect(result.totalItemsCount).toBe(1)
   })
 })

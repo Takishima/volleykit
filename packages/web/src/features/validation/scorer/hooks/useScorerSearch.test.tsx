@@ -283,19 +283,24 @@ describe('useScorerSearch', () => {
     expect(result.current.error?.message).toBe('API Error')
   })
 
-  it('catches malformed API responses via Zod validation', async () => {
+  it('drops malformed items rather than failing the whole search', async () => {
     const { getApiClient } = await import('@/api/client')
-    const malformedResponse = {
+    const partiallyMalformedResponse = {
       items: [
+        {
+          __identity: 'a1111111-1111-4111-a111-111111111111',
+          firstName: 'Anna',
+          lastName: 'Meier',
+        },
         {
           __identity: 'not-a-valid-uuid',
           firstName: 'Hans',
           lastName: 'Müller',
         },
       ],
-      totalItemsCount: 1,
+      totalItemsCount: 2,
     }
-    const mockSearchPersons = vi.fn().mockResolvedValue(malformedResponse)
+    const mockSearchPersons = vi.fn().mockResolvedValue(partiallyMalformedResponse)
     vi.mocked(getApiClient).mockReturnValue({
       searchPersons: mockSearchPersons,
     } as unknown as ReturnType<typeof getApiClient>)
@@ -305,11 +310,11 @@ describe('useScorerSearch', () => {
     })
 
     await waitFor(() => {
-      expect(result.current.isError).toBe(true)
+      expect(result.current.data).toBeDefined()
     })
 
-    expect(result.current.error?.message).toMatch(/Invalid API response/)
-    expect(result.current.error?.message).toMatch(/scorerSearch/)
+    expect(result.current.isError).toBe(false)
+    expect(result.current.data).toHaveLength(1)
   })
 
   it('validates response structure when items is not an array', async () => {

@@ -30,8 +30,9 @@ import {
   refereeBackupResponseSchema,
   scoresheetSchema,
   scoresheetValidationSchema,
+  formatDroppedListItems,
+  getDroppedListItems,
 } from './schemas'
-import { formatDroppedListItems, getDroppedListItems } from './schemas/resilient-list'
 
 export * from './schemas'
 
@@ -84,28 +85,41 @@ export interface ZodLikeSchema<T> {
     | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
 }
 
+/** Sink for validation diagnostics, so each platform can supply its own logger. */
+export type ValidationErrorLogger = (message: string, ...args: unknown[]) => void
+
 /**
- * Validates API response data against a Zod schema.
- * Returns the validated data or throws a descriptive error.
+ * Builds a `validateResponse` bound to a platform's error logger.
+ *
+ * The returned function validates API response data against a Zod schema and
+ * returns the validated data or throws a descriptive error. Items dropped by a
+ * resilient list schema are reported but do not throw.
  */
-export function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
-  const result = schema.safeParse(data)
+export function createValidateResponse(logError: ValidationErrorLogger) {
+  return function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
+    const result = schema.safeParse(data)
 
-  if (!result.success) {
-    const errorDetails = result.error.issues
-      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join('; ')
+    if (!result.success) {
+      const errorDetails = result.error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join('; ')
 
-    console.error(`API validation error (${context}):`, result.error.issues)
-    throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
+      logError(`API validation error (${context}):`, result.error.issues)
+      throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
+    }
+
+    const dropped = getDroppedListItems(result.data)
+    if (dropped.length > 0) {
+      logError(
+        `API validation dropped ${dropped.length} invalid item(s) (${context}): ${formatDroppedListItems(dropped)}`
+      )
+    }
+
+    return result.data
   }
-
-  const dropped = getDroppedListItems(result.data)
-  if (dropped.length > 0) {
-    console.error(
-      `API validation dropped ${dropped.length} invalid item(s) (${context}): ${formatDroppedListItems(dropped)}`
-    )
-  }
-
-  return result.data
 }
+
+/** Default `validateResponse` for platforms without their own logger. */
+export const validateResponse = createValidateResponse((message, ...args) => {
+  console.error(message, ...args)
+})

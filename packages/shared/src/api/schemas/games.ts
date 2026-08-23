@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 import { fileResourceSchema, personSummarySchema } from './common'
 import { dateTimeSchema, permissionsSchema, uuidSchema } from './primitives'
+import { optionalResilientListSchema } from './resilient-list'
 
 // Scoresheet validation schema
 export const scoresheetValidationSchema = z
@@ -123,7 +124,5 @@ const possibleNominationSchema = z
   .passthrough()
 
 // Possible nominations response schema
-export const possibleNominationsResponseSchema = z.object({
-  items: z.array(possibleNominationSchema).optional(),
-  totalItemsCount: z.number().optional(),
-})
+export const possibleNominationsResponseSchema =
+  optionalResilientListSchema(possibleNominationSchema)

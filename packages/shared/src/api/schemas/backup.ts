@@ -84,5 +84,5 @@ export const refereeBackupEntrySchema = z
   .passthrough()
 
 // Referee backup search response
-// `entityTemplate` and any other envelope key pass through untouched.
+// `entityTemplate` is not declared: the API sends it, nothing reads it.
 export const refereeBackupResponseSchema = resilientListSchema(refereeBackupEntrySchema)

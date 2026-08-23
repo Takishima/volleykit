@@ -20,7 +20,7 @@ import {
   refereePositionSchema,
   uuidSchema,
 } from './primitives'
-import { resilientListSchema } from './resilient-list'
+import { optionalResilientListSchema, resilientListSchema } from './resilient-list'
 
 // Assignment schema
 export const assignmentSchema = z
@@ -94,10 +94,8 @@ export const compensationsResponseSchema = resilientListSchema(compensationRecor
 
 export const exchangesResponseSchema = resilientListSchema(gameExchangeSchema)
 
-export const personSearchResponseSchema = z.object({
-  items: z.array(personSearchResultSchema).optional(),
-  totalItemsCount: z.number().optional(),
-})
+// `items` is absent rather than empty when this endpoint has nothing to return.
+export const personSearchResponseSchema = optionalResilientListSchema(personSearchResultSchema)
 
 // Compensation detail response (showWithNestedObjects wrapper)
 export const compensationDetailedSchema = z

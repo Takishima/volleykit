@@ -22,6 +22,16 @@ import {
   getDroppedListItems,
 } from './validation'
 
+/** Fails every required field of `assignmentSchema`, so the item schema always rejects it. */
+const INVALID_ASSIGNMENT = { __identity: 'not-a-uuid' }
+
+const VALID_ASSIGNMENT = {
+  __identity: '550e8400-e29b-41d4-a716-446655440000',
+  refereeGame: {},
+  refereeConvocationStatus: 'active',
+  refereePosition: 'head-one',
+}
+
 describe('dateSchema', () => {
   it('accepts ISO date format', () => {
     const result = dateSchema.safeParse('2024-01-15')
@@ -529,11 +539,12 @@ describe('assignmentsResponseSchema', () => {
     expect(result.success).toBe(false)
   })
 
-  it('rejects missing totalItemsCount', () => {
+  it('defaults totalItemsCount to 0 when absent', () => {
     const result = assignmentsResponseSchema.safeParse({
       items: [],
     })
-    expect(result.success).toBe(false)
+    expect(result.success).toBe(true)
+    expect(result.data?.totalItemsCount).toBe(0)
   })
 })
 
@@ -625,12 +636,15 @@ describe('personSearchResponseSchema', () => {
     expect(result.success).toBe(true)
   })
 
-  it('rejects items with invalid __identity', () => {
+  it('drops items with invalid __identity instead of rejecting the list', () => {
     const result = personSearchResponseSchema.safeParse({
-      items: [{ ...validPerson, __identity: 'not-a-uuid' }],
-      totalItemsCount: 1,
+      items: [validPerson, { ...validPerson, __identity: 'not-a-uuid' }],
+      totalItemsCount: 2,
     })
-    expect(result.success).toBe(false)
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.totalItemsCount).toBe(1)
   })
 
   it('rejects non-array items', () => {
@@ -661,36 +675,21 @@ describe('validateResponse', () => {
   })
 
   it('throws descriptive error for invalid input', () => {
-    const invalidResponse = {
-      items: [{ __identity: 'invalid-uuid' }],
-      totalItemsCount: 1,
-    }
-
-    expect(() => validateResponse(invalidResponse, personSearchResponseSchema, 'test')).toThrow(
+    expect(() => validateResponse(INVALID_ASSIGNMENT, assignmentSchema, 'test')).toThrow(
       /Invalid API response for test/
     )
   })
 
   it('includes field path in error message', () => {
-    const invalidResponse = {
-      items: [{ __identity: 'invalid-uuid' }],
-      totalItemsCount: 1,
-    }
-
-    expect(() => validateResponse(invalidResponse, personSearchResponseSchema, 'test')).toThrow(
-      /items\.0\.__identity/
+    expect(() => validateResponse(INVALID_ASSIGNMENT, assignmentSchema, 'test')).toThrow(
+      /__identity/
     )
   })
 
   it('logs error to console', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const invalidResponse = {
-      items: [{ __identity: 'invalid-uuid' }],
-      totalItemsCount: 1,
-    }
-
-    expect(() => validateResponse(invalidResponse, personSearchResponseSchema, 'test')).toThrow()
+    expect(() => validateResponse(INVALID_ASSIGNMENT, assignmentSchema, 'test')).toThrow()
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('API validation error (test)'),
       expect.any(Array)
@@ -703,21 +702,12 @@ describe('validateResponse', () => {
     const invalidResponse = { items: 'not-an-array' }
 
     expect(() =>
-      validateResponse(invalidResponse, personSearchResponseSchema, 'my-context')
+      validateResponse(invalidResponse, assignmentsResponseSchema, 'my-context')
     ).toThrow(/Invalid API response for my-context/)
   })
 })
 
 describe('resilient list parsing', () => {
-  const VALID_ASSIGNMENT = {
-    __identity: '550e8400-e29b-41d4-a716-446655440000',
-    refereeGame: {},
-    refereeConvocationStatus: 'active',
-    refereePosition: 'head-one',
-  }
-  // Missing every required field, so the item schema always rejects it
-  const INVALID_ASSIGNMENT = { __identity: 'not-a-uuid' }
-
   it('keeps valid items when a sibling item is malformed', () => {
     const result = assignmentsResponseSchema.safeParse({
       items: [VALID_ASSIGNMENT, INVALID_ASSIGNMENT],
@@ -727,7 +717,6 @@ describe('resilient list parsing', () => {
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
     expect(result.data?.items[0]?.__identity).toBe(VALID_ASSIGNMENT.__identity)
-    expect(result.data).not.toHaveProperty('__droppedItems')
   })
 
   it('decrements totalItemsCount by the number of dropped items', () => {
@@ -754,10 +743,11 @@ describe('resilient list parsing', () => {
       totalItemsCount: 2,
     })
 
-    const dropped = getDroppedListItems(result.data)
+    const dropped = result.data?.droppedItems
     expect(dropped).toHaveLength(1)
     expect(dropped?.[0]?.index).toBe(1)
     expect(dropped?.[0]?.issues.length).toBeGreaterThan(0)
+    expect(getDroppedListItems(result.data)).toEqual(dropped)
   })
 
   it('reports no dropped items for a fully valid response', () => {
@@ -766,26 +756,61 @@ describe('resilient list parsing', () => {
       totalItemsCount: 1,
     })
 
-    expect(getDroppedListItems(result.data)).toEqual([])
+    expect(result.data?.droppedItems).toEqual([])
   })
 
   it('still rejects a malformed envelope', () => {
     expect(assignmentsResponseSchema.safeParse({ totalItemsCount: 0 }).success).toBe(false)
-    expect(assignmentsResponseSchema.safeParse({ items: [] }).success).toBe(false)
     expect(
       assignmentsResponseSchema.safeParse({ items: 'not-an-array', totalItemsCount: 0 }).success
     ).toBe(false)
   })
 
-  it('passes unknown envelope keys through', () => {
+  it('drops invalid exchanges', () => {
+    const result = exchangesResponseSchema.safeParse({
+      items: [
+        {
+          __identity: '550e8400-e29b-41d4-a716-446655440000',
+          refereeGame: {},
+          status: 'open',
+          refereePosition: 'head-one',
+        },
+        { __identity: 'not-a-uuid' },
+      ],
+      totalItemsCount: 2,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.droppedItems).toHaveLength(1)
+  })
+
+  it('drops invalid referee backup entries', () => {
     const result = refereeBackupResponseSchema.safeParse({
-      items: [],
-      totalItemsCount: 0,
+      items: [
+        {
+          __identity: '550e8400-e29b-41d4-a716-446655440000',
+          date: '2026-03-13T18:00:00+00:00',
+          weekday: 'Friday',
+          calendarWeek: 11,
+        },
+        { __identity: '660e8400-e29b-41d4-a716-446655440000', weekday: 'Saturday' },
+      ],
+      totalItemsCount: 2,
       entityTemplate: null,
     })
 
     expect(result.success).toBe(true)
-    expect(result.data).toHaveProperty('entityTemplate', null)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.totalItemsCount).toBe(1)
+  })
+
+  it('defaults a missing items array to empty on optional list schemas', () => {
+    const result = personSearchResponseSchema.safeParse({})
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toEqual([])
+    expect(result.data?.totalItemsCount).toBe(0)
   })
 
   it('logs dropped items from validateResponse without throwing', () => {

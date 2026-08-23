@@ -16,6 +16,7 @@ import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
   exchangesResponseSchema,
+  getDroppedListItems,
   personSearchResponseSchema,
   validateResponse,
 } from './validation'
@@ -47,6 +48,27 @@ import type {
   RefereeBackupSearchResponse,
   PickExchangeResponse,
 } from './client'
+import type { ZodLikeSchema } from './validation'
+
+/**
+ * Validates a mock list response and rejects any item the schema dropped.
+ *
+ * Real API responses tolerate malformed items; fixtures must not, or demo data
+ * silently drifts out of sync with the schema.
+ */
+function assertMockResponseMatchesSchema<T>(
+  response: unknown,
+  schema: ZodLikeSchema<T>,
+  context: string
+): void {
+  const dropped = getDroppedListItems(validateResponse(response, schema, context))
+
+  if (dropped.length > 0) {
+    throw new Error(
+      `Mock fixture does not match schema (${context}): ${dropped.length} item(s) dropped`
+    )
+  }
+}
 
 // Network delay constants for realistic demo behavior
 const MOCK_NETWORK_DELAY_MS = 50
@@ -287,7 +309,7 @@ export const mockApi = {
 
     // Validate mock response matches real API schema, then cast back to expected type
     // (validation ensures data structure is correct, cast preserves original type compatibility)
-    validateResponse(response, assignmentsResponseSchema, 'mock:searchAssignments')
+    assertMockResponseMatchesSchema(response, assignmentsResponseSchema, 'mock:searchAssignments')
     return response
   },
 
@@ -316,7 +338,11 @@ export const mockApi = {
     }
 
     // Validate mock response matches real API schema, then cast back to expected type
-    validateResponse(response, compensationsResponseSchema, 'mock:searchCompensations')
+    assertMockResponseMatchesSchema(
+      response,
+      compensationsResponseSchema,
+      'mock:searchCompensations'
+    )
     return response
   },
 
@@ -368,7 +394,7 @@ export const mockApi = {
     }
 
     // Validate mock response matches real API schema, then cast back to expected type
-    validateResponse(response, exchangesResponseSchema, 'mock:searchExchanges')
+    assertMockResponseMatchesSchema(response, exchangesResponseSchema, 'mock:searchExchanges')
     return response
   },
 
@@ -536,7 +562,7 @@ export const mockApi = {
     }
 
     // Validate mock response matches real API schema, then cast back to expected type
-    validateResponse(response, personSearchResponseSchema, 'mock:searchPersons')
+    assertMockResponseMatchesSchema(response, personSearchResponseSchema, 'mock:searchPersons')
     return response
   },
 
