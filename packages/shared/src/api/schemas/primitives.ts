@@ -91,6 +91,9 @@ export function tolerantEnum<const TValues extends readonly string[]>(values: TV
 /** Gender is rendered as an icon and read by nothing else. */
 export const genderSchema = tolerantEnum(['m', 'f'])
 
+/** Transportation mode is display-only, and the backend may add modes. */
+export const transportationModeSchema = tolerantEnum(['car', 'train', 'public_transport', 'other'])
+
 // Convocation status enum
 export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])
 

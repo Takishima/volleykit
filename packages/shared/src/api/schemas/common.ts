@@ -6,7 +6,7 @@
  */
 import { z } from 'zod'
 
-import { dateSchema, dateTimeSchema, tolerantEnum, uuidSchema } from './primitives'
+import { dateSchema, dateTimeSchema, transportationModeSchema, uuidSchema } from './primitives'
 
 // Team schema
 const teamSchema = z
@@ -119,9 +119,7 @@ export const convocationCompensationSchema = z
     publicTransportExpenses: z.number().optional().nullable(),
     travelExpensesPercentageWeighting: z.number().optional(),
     distanceInMetres: z.number().optional(),
-    // Display-only, and nested below every list item that carries a compensation,
-    // so a new mode from the backend must not drop the record.
-    transportationMode: tolerantEnum(['car', 'train', 'public_transport', 'other']),
+    transportationMode: transportationModeSchema,
     paymentValueDate: dateSchema,
     gameCompensationFormatted: z.string().optional(),
     travelExpensesFormatted: z.string().optional(),

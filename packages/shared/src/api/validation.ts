@@ -42,8 +42,7 @@ export type GameExchange = z.infer<typeof gameExchangeSchema>
 /**
  * Derived from the response type rather than from `personSearchResultSchema`
  * directly, so it is identical by construction to what `validateResponse`
- * returns in `items`. Deriving the two independently made them diverge whenever
- * the item schema gained a transform, which broke web's `scorerSearchOptions`.
+ * returns in `items`.
  */
 export type ValidatedPersonSearchResult = PersonSearchResponse['items'][number]
 export type AssignmentsResponse = z.infer<typeof assignmentsResponseSchema>
@@ -128,3 +127,18 @@ export function createValidateResponse(logError: ValidationErrorLogger) {
 export const validateResponse = createValidateResponse((message, ...args) => {
   console.error(message, ...args)
 })
+
+/**
+ * Compile-time guard on the resilient list factories.
+ *
+ * They must expose each item's *output* type. `z.ZodType<T>` collapses input and
+ * output onto one parameter, so an item schema containing a transform once made
+ * them infer the input side — `gender` became `unknown` on every response type
+ * built from the factory, and only the single site that pins a zod-inferred type
+ * explicitly failed to compile. This fails in shared's own typecheck instead.
+ */
+type AssertAssignable<TActual extends TExpected, TExpected> = TActual
+export type ResilientListItemsAreOutputTypes = AssertAssignable<
+  ValidatedPersonSearchResult['gender'],
+  'm' | 'f' | null | undefined
+>

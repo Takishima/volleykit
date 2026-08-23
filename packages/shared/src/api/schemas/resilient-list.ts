@@ -32,7 +32,7 @@ const NO_ITEMS_COUNT = 0
 function toResilientList<TItem>(
   items: unknown[],
   totalItemsCount: number,
-  itemSchema: z.ZodType<TItem>
+  itemSchema: z.ZodTypeAny
 ): ResilientList<TItem> {
   const kept: TItem[] = []
   const droppedItems: DroppedListItem[] = []
@@ -40,7 +40,9 @@ function toResilientList<TItem>(
   items.forEach((entry, index) => {
     const parsed = itemSchema.safeParse(entry)
     if (parsed.success) {
-      kept.push(parsed.data)
+      // `z.ZodTypeAny` widens safeParse's payload; callers pin TItem to
+      // `z.output<TSchema>`, which is exactly what a successful parse yields.
+      kept.push(parsed.data as TItem)
     } else {
       droppedItems.push({ index, issues: parsed.error.issues })
     }
@@ -63,22 +65,29 @@ function toResilientList<TItem>(
  * `totalItemsCount` is optional because a missing count is no reason to discard
  * items that parsed fine; consumers already treat it as best-effort.
  *
+ * The item type is read off the schema's *output* side. `z.ZodType<TItem>`
+ * collapses input and output onto one parameter, so an item schema containing a
+ * transform (see `tolerantEnum`) would infer the input type instead and every
+ * response type built from it would silently describe the wrong shape.
+ *
  * @param itemSchema - Schema applied to each entry of `items`.
  */
-export function resilientListSchema<TItem>(itemSchema: z.ZodType<TItem>) {
+export function resilientListSchema<TSchema extends z.ZodTypeAny>(itemSchema: TSchema) {
   return z
     .object({
       items: z.array(z.unknown()),
       totalItemsCount: z.number().optional().default(NO_ITEMS_COUNT),
     })
-    .transform(({ items, totalItemsCount }) => toResilientList(items, totalItemsCount, itemSchema))
+    .transform(({ items, totalItemsCount }) =>
+      toResilientList<z.output<TSchema>>(items, totalItemsCount, itemSchema)
+    )
 }
 
 /**
  * Same as {@link resilientListSchema}, for search endpoints that omit `items`
  * entirely when there is nothing to return.
  */
-export function optionalResilientListSchema<TItem>(itemSchema: z.ZodType<TItem>) {
+export function optionalResilientListSchema<TSchema extends z.ZodTypeAny>(itemSchema: TSchema) {
   return z
     .object({
       items: z
@@ -87,7 +96,9 @@ export function optionalResilientListSchema<TItem>(itemSchema: z.ZodType<TItem>)
         .default(() => []),
       totalItemsCount: z.number().optional().default(NO_ITEMS_COUNT),
     })
-    .transform(({ items, totalItemsCount }) => toResilientList(items, totalItemsCount, itemSchema))
+    .transform(({ items, totalItemsCount }) =>
+      toResilientList<z.output<TSchema>>(items, totalItemsCount, itemSchema)
+    )
 }
 
 /**

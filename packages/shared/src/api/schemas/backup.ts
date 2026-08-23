@@ -3,7 +3,7 @@
  */
 import { z } from 'zod'
 
-import { genderSchema, uuidSchema } from './primitives'
+import { genderSchema, transportationModeSchema, uuidSchema } from './primitives'
 import { resilientListSchema } from './resilient-list'
 
 // Person details for a backup referee
@@ -47,7 +47,7 @@ const backupIndoorRefereeSchema = z
     persistenceObjectIdentifier: uuidSchema.optional(),
     person: backupRefereePersonSchema.optional(),
     refereeInformation: z.string().optional(),
-    transportationMode: z.string().optional().nullable(),
+    transportationMode: transportationModeSchema,
     validated: z.boolean().optional(),
     mobilePhoneNumbers: z.string().optional().nullable(),
     privatePostalAddresses: z.string().optional().nullable(),
