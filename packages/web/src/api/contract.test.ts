@@ -74,6 +74,9 @@ describe('Mock data contract tests', () => {
         throw responseValidationError('Assignments response', result.error)
       }
       expect(result.success).toBe(true)
+      // Resilient list schemas parse successfully even when items drop, so the
+      // drop list is what actually detects fixture drift.
+      expect(result.data?.droppedItems).toEqual([])
     })
 
     it('assignments have required fields for UI', () => {
@@ -112,6 +115,9 @@ describe('Mock data contract tests', () => {
         throw responseValidationError('Compensations response', result.error)
       }
       expect(result.success).toBe(true)
+      // Resilient list schemas parse successfully even when items drop, so the
+      // drop list is what actually detects fixture drift.
+      expect(result.data?.droppedItems).toEqual([])
     })
 
     it('compensations have required fields for UI', () => {
@@ -150,6 +156,9 @@ describe('Mock data contract tests', () => {
         throw responseValidationError('Exchanges response', result.error)
       }
       expect(result.success).toBe(true)
+      // Resilient list schemas parse successfully even when items drop, so the
+      // drop list is what actually detects fixture drift.
+      expect(result.data?.droppedItems).toEqual([])
     })
 
     it('exchanges have required fields for UI', () => {
@@ -187,6 +196,9 @@ describe('Mock data contract tests', () => {
         throw responseValidationError('Person search response', result.error)
       }
       expect(result.success).toBe(true)
+      // Resilient list schemas parse successfully even when items drop, so the
+      // drop list is what actually detects fixture drift.
+      expect(result.data?.droppedItems).toEqual([])
     })
 
     it('scorers have required fields for UI', () => {
@@ -423,6 +435,9 @@ describe('Add assignment to exchange mutation', () => {
       throw responseValidationError('Exchanges response after add', result.error)
     }
     expect(result.success).toBe(true)
+    // Resilient list schemas parse successfully even when items drop, so the
+    // drop list is what actually detects fixture drift.
+    expect(result.data?.droppedItems).toEqual([])
 
     // Verify the new exchange is included
     const newExchange = response.items.find(

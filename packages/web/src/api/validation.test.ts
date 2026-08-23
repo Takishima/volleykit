@@ -258,7 +258,7 @@ describe('personSearchResponseSchema', () => {
 
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
-    expect(result.data?.totalItemsCount).toBe(1)
+    expect(result.data?.droppedItems).toHaveLength(1)
   })
 
   it('rejects non-array items', () => {
@@ -316,6 +316,6 @@ describe('validateResponse', () => {
     const result = validateResponse(response, personSearchResponseSchema, 'test')
 
     expect(result.items).toHaveLength(1)
-    expect(result.totalItemsCount).toBe(1)
+    expect(result.droppedItems).toHaveLength(1)
   })
 })

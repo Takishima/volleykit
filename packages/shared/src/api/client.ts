@@ -26,6 +26,7 @@ import type {
   PossibleNominationsResponse,
   PersonSearchResponse,
   RefereeBackupEntry,
+  ResilientList,
 } from './validation'
 
 // Re-export types from validation for convenience
@@ -83,11 +84,11 @@ export type ApiResult<T> = { data: T; error: null } | { data: null; error: ApiEr
 
 /**
  * Paginated response structure from the API.
+ *
+ * Extends `ResilientList` so every list endpoint describes the same envelope,
+ * including the items the schema had to drop.
  */
-export interface PaginatedResponse<T> {
-  items: T[]
-  totalItemsCount: number
-}
+export type PaginatedResponse<T> = ResilientList<T>
 
 /**
  * Coach assignment identifiers for nomination list operations.

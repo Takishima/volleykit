@@ -55,9 +55,11 @@ const backupIndoorRefereeSchema = z
   .passthrough()
 
 // Backup referee assignment
+// `__identity` is optional like every other nested schema here: a required id
+// would make one malformed referee reject the whole Pikett date row.
 const backupRefereeAssignmentSchema = z
   .object({
-    __identity: uuidSchema,
+    __identity: uuidSchema.optional(),
     indoorReferee: backupIndoorRefereeSchema.optional(),
     isDispensed: z.boolean().optional(),
     hasFutureRefereeConvocations: z.boolean().optional(),

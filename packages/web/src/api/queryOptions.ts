@@ -123,6 +123,9 @@ export function scorerSearchOptions(apiClient: ApiClient, filters: PersonSearchF
   return queryOptions<ValidatedPersonSearchResult[]>({
     queryKey: queryKeys.scorerSearch.search(filters),
     queryFn: async () => {
+      // Both ApiClient implementations already validate, so this re-parse is
+      // defence in depth against a client that does not. Drops are logged by
+      // whichever parse sees them first; `validated.droppedItems` is empty here.
       const response = await apiClient.searchPersons(filters)
       const validated = validateResponse(response, personSearchResponseSchema, 'scorerSearch')
       return validated.items ?? []

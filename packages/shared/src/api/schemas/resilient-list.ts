@@ -5,7 +5,11 @@
  * fails to parse, so one association returning an unexpected shape blanks the
  * whole screen. These factories parse items individually instead: valid items
  * are kept and invalid ones are dropped onto `droppedItems`, where
- * `validateResponse` logs them and any layer above the API can read them.
+ * `validateResponse` logs them.
+ *
+ * `droppedItems` survives at runtime everywhere, but web's API layer casts list
+ * responses to the generated OpenAPI types, so TypeScript there does not see the
+ * field — web consumers read it with `getDroppedListItems`.
  */
 import { z } from 'zod'
 
@@ -22,7 +26,6 @@ export interface ResilientList<TItem> {
   droppedItems: DroppedListItem[]
 }
 
-const NO_ITEMS: unknown[] = []
 const NO_ITEMS_COUNT = 0
 
 function toResilientList<TItem>(
@@ -43,9 +46,12 @@ function toResilientList<TItem>(
   })
 
   return {
+    // `totalItemsCount` is the server's total across all pages and is passed
+    // through untouched. Subtracting a page-local drop count would make it
+    // differ per page, which breaks the stall detection in `usePaginatedQuery`.
+    // Per-page counts come from `items.length` and `droppedItems.length`.
     items: kept,
-    // Keep pagination consistent with the items actually returned.
-    totalItemsCount: Math.max(0, totalItemsCount - droppedItems.length),
+    totalItemsCount,
     droppedItems,
   }
 }
@@ -74,7 +80,10 @@ export function resilientListSchema<TItem>(itemSchema: z.ZodType<TItem>) {
 export function optionalResilientListSchema<TItem>(itemSchema: z.ZodType<TItem>) {
   return z
     .object({
-      items: z.array(z.unknown()).optional().default(NO_ITEMS),
+      items: z
+        .array(z.unknown())
+        .optional()
+        .default(() => []),
       totalItemsCount: z.number().optional().default(NO_ITEMS_COUNT),
     })
     .transform(({ items, totalItemsCount }) => toResilientList(items, totalItemsCount, itemSchema))

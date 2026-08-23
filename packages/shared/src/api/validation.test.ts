@@ -644,7 +644,7 @@ describe('personSearchResponseSchema', () => {
 
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
-    expect(result.data?.totalItemsCount).toBe(1)
+    expect(result.data?.droppedItems).toHaveLength(1)
   })
 
   it('rejects non-array items', () => {
@@ -719,22 +719,15 @@ describe('resilient list parsing', () => {
     expect(result.data?.items[0]?.__identity).toBe(VALID_ASSIGNMENT.__identity)
   })
 
-  it('decrements totalItemsCount by the number of dropped items', () => {
+  it('passes the server totalItemsCount through unchanged', () => {
+    // It counts every page, so subtracting a page-local drop count would make it
+    // differ per page and break stall detection in usePaginatedQuery.
     const result = assignmentsResponseSchema.safeParse({
       items: [VALID_ASSIGNMENT, INVALID_ASSIGNMENT],
       totalItemsCount: 42,
     })
 
-    expect(result.data?.totalItemsCount).toBe(41)
-  })
-
-  it('never drives totalItemsCount below zero', () => {
-    const result = assignmentsResponseSchema.safeParse({
-      items: [INVALID_ASSIGNMENT, INVALID_ASSIGNMENT],
-      totalItemsCount: 1,
-    })
-
-    expect(result.data?.totalItemsCount).toBe(0)
+    expect(result.data?.totalItemsCount).toBe(42)
   })
 
   it('records the index and issues of each dropped item', () => {
@@ -785,15 +778,17 @@ describe('resilient list parsing', () => {
     expect(result.data?.droppedItems).toHaveLength(1)
   })
 
+  const VALID_BACKUP_ENTRY = {
+    __identity: '550e8400-e29b-41d4-a716-446655440000',
+    date: '2026-03-13T18:00:00+00:00',
+    weekday: 'Friday',
+    calendarWeek: 11,
+  }
+
   it('drops invalid referee backup entries', () => {
     const result = refereeBackupResponseSchema.safeParse({
       items: [
-        {
-          __identity: '550e8400-e29b-41d4-a716-446655440000',
-          date: '2026-03-13T18:00:00+00:00',
-          weekday: 'Friday',
-          calendarWeek: 11,
-        },
+        VALID_BACKUP_ENTRY,
         { __identity: '660e8400-e29b-41d4-a716-446655440000', weekday: 'Saturday' },
       ],
       totalItemsCount: 2,
@@ -802,7 +797,19 @@ describe('resilient list parsing', () => {
 
     expect(result.success).toBe(true)
     expect(result.data?.items).toHaveLength(1)
-    expect(result.data?.totalItemsCount).toBe(1)
+    expect(result.data?.droppedItems).toHaveLength(1)
+  })
+
+  it('keeps a backup entry whose nested referee assignments lack an id', () => {
+    // A required nested id would drop the whole Pikett date row over one referee.
+    const result = refereeBackupResponseSchema.safeParse({
+      items: [{ ...VALID_BACKUP_ENTRY, nlaReferees: [{ isDispensed: false }] }],
+      totalItemsCount: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.items).toHaveLength(1)
+    expect(result.data?.droppedItems).toEqual([])
   })
 
   it('defaults a missing items array to empty on optional list schemas', () => {
