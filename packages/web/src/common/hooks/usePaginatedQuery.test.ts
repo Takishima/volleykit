@@ -256,16 +256,14 @@ describe('fetchAllAssignmentPages', () => {
     const { api } = await import('@/api/client')
 
     let callCount = 0
-    // Return full pages with increasing totalItemsCount to avoid stall detection
-    // The stall detection breaks if totalCount doesn't change between pages
+    // Grow totalItemsCount so allItems never catches up and the page cap is what
+    // ends the loop rather than the totalCount exit.
     vi.mocked(api.searchAssignments).mockImplementation(async () => {
       const currentCall = callCount++
       return {
         items: Array(100)
           .fill(null)
           .map((_, i) => createMockAssignment('2025-01-15T18:00:00Z', `item-${currentCall}-${i}`)),
-        // Simulate growing dataset to avoid stall detection
-        // Each call reports more total items available
         totalItemsCount: 2000 + currentCall * 100,
       }
     })
@@ -322,10 +320,9 @@ describe('fetchAllAssignmentPages', () => {
     await expect(fetchAllAssignmentPages(api, {}, controller.signal)).rejects.toThrow('Aborted')
   })
 
-  it('detects stalled responses and breaks', async () => {
+  it('stops once the accumulated items reach totalItemsCount', async () => {
     const { api } = await import('@/api/client')
 
-    // Return same totalCount repeatedly (stalled)
     vi.mocked(api.searchAssignments)
       .mockResolvedValueOnce({
         items: Array(100)
@@ -337,13 +334,52 @@ describe('fetchAllAssignmentPages', () => {
         items: Array(100)
           .fill(null)
           .map((_, i) => createMockAssignment('2025-01-15T18:00:00Z', `b-${i}`)),
-        totalItemsCount: 200, // Same as before - stalled
+        totalItemsCount: 200,
       })
 
     const result = await fetchAllAssignmentPages(api, {})
 
-    // Should break after detecting stall (not fetch third page)
+    // 200 of 200 fetched, so there is no third request
     expect(result.length).toBe(200)
+    expect(api.searchAssignments).toHaveBeenCalledTimes(2)
+  })
+
+  it('fetches every page when the total spans more than two', async () => {
+    // A healthy API repeats the same totalItemsCount on every page. Treating that
+    // as a stall signal used to break out at page two and silently return 200.
+    const { api } = await import('@/api/client')
+
+    const page = (prefix: string, size: number) =>
+      Array(size)
+        .fill(null)
+        .map((_, i) => createMockAssignment('2025-01-15T18:00:00Z', `${prefix}-${i}`))
+
+    vi.mocked(api.searchAssignments)
+      .mockResolvedValueOnce({ items: page('a', 100), totalItemsCount: 250 })
+      .mockResolvedValueOnce({ items: page('b', 100), totalItemsCount: 250 })
+      .mockResolvedValueOnce({ items: page('c', 50), totalItemsCount: 250 })
+
+    const result = await fetchAllAssignmentPages(api, {})
+
+    expect(result.length).toBe(250)
+    expect(api.searchAssignments).toHaveBeenCalledTimes(3)
+  })
+
+  it('ends on an empty page when dropped items keep the count short', async () => {
+    // Resilient list parsing can drop malformed items, so allItems.length may
+    // never reach totalItemsCount; the empty page is what ends the loop.
+    const { api } = await import('@/api/client')
+
+    vi.mocked(api.searchAssignments)
+      .mockResolvedValueOnce({
+        items: [createMockAssignment('2025-01-15T18:00:00Z', 'a-0')],
+        totalItemsCount: 250,
+      })
+      .mockResolvedValueOnce({ items: [], totalItemsCount: 250 })
+
+    const result = await fetchAllAssignmentPages(api, {})
+
+    expect(result.length).toBe(1)
     expect(api.searchAssignments).toHaveBeenCalledTimes(2)
   })
 

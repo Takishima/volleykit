@@ -113,7 +113,6 @@ export async function fetchAllAssignmentPages(
   const allItems: Assignment[] = []
   let offset = 0
   let totalCount = 0
-  let previousTotalCount: number
   let pagesFetched = 0
 
   do {
@@ -140,14 +139,16 @@ export async function fetchAllAssignmentPages(
     }
 
     allItems.push(...pageItems)
-    previousTotalCount = totalCount
     totalCount = response.totalItemsCount || 0
 
-    // Detect stalled responses: if totalCount hasn't changed after adding items,
-    // the API may be returning duplicate data or has a pagination issue
-    if (pagesFetched > 0 && totalCount === previousTotalCount && totalCount > 0) {
-      break
-    }
+    // Termination is covered by the empty-page break above, the totalCount exit
+    // below, and MAX_FETCH_ALL_PAGES. Comparing totalCount between pages is not
+    // a stall signal: it is the server's total across all pages, so a healthy
+    // API repeats it every page, and doing so stopped every fetch at page two.
+    //
+    // The empty-page break is load-bearing now that list schemas can drop
+    // malformed items: allItems.length can stay below totalCount permanently, so
+    // the loop ends when the server runs out of rows rather than by reaching it.
 
     // Early exit when all items are fetched to avoid unnecessary loop iterations
     if (allItems.length >= totalCount && totalCount > 0) {
