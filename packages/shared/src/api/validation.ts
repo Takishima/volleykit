@@ -41,8 +41,6 @@ export const refereePositionSchema = z.string()
 
 const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' | '
 
-let hasWarnedLinkedDoubleConvocationShape = false
-
 /**
  * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to a display string.
  *
@@ -60,13 +58,6 @@ function formatLinkedDoubleConvocation(value: unknown): string | null {
       .map(formatLinkedDoubleConvocation)
       .filter((part): part is string => part !== null)
     return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
-  }
-
-  // Surface further backend shape drift once, by shape only - the payload is an
-  // unknown API value and may contain PII (see docs/SECURITY_CHECKLIST.md)
-  if (value !== null && value !== undefined && !hasWarnedLinkedDoubleConvocationShape) {
-    hasWarnedLinkedDoubleConvocationShape = true
-    console.warn('Unexpected linkedDoubleConvocation shape:', typeof value)
   }
 
   return null
