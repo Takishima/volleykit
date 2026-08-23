@@ -1834,8 +1834,16 @@ components:
         hasLinkedDoubleConvocation:
           type: boolean
         linkedDoubleConvocationGameNumberAndRefereePosition:
-          type: string
           nullable: true
+          description: |
+            Linked double convocation label. Rendered inconsistently by the backend:
+            a plain string for most associations, an array of label parts for others
+            (e.g. SRBA): ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
         convocationCompensation:
           type: object
           description: |

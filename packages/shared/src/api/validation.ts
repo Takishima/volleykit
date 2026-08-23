@@ -39,14 +39,15 @@ const booleanLikeSchema = z
 // Referee position - accept any string from API
 export const refereePositionSchema = z.string()
 
-const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' / '
+const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' | '
 
 /**
  * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to a display string.
  *
- * Most associations return a plain string ("12345/head-two"), but some (e.g. SRBA)
- * render this computed property as a number, an object or an array of them.
- * Anything we cannot render becomes null so a single odd entry never fails the list.
+ * The API renders this computed property inconsistently: usually a string, but for
+ * some associations (e.g. SRBA) an array of label parts, e.g.
+ * ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
+ * Anything unrenderable becomes null so a single odd entry never fails the whole list.
  */
 function formatLinkedDoubleConvocation(value: unknown): string | null {
   if (typeof value === 'string') return value.trim() || null
@@ -59,18 +60,10 @@ function formatLinkedDoubleConvocation(value: unknown): string | null {
     return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
   }
 
-  if (value !== null && typeof value === 'object') {
-    const record = value as Record<string, unknown>
-    const parts = [record.gameNumber, record.refereePosition]
-      .map(formatLinkedDoubleConvocation)
-      .filter((part): part is string => part !== null)
-    return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
-  }
-
   return null
 }
 
-// Linked double convocation info - shape varies by association, normalized to string | null
+// Linked double convocation info - shape varies by association, normalized to a string
 const linkedDoubleConvocationSchema = z
   .unknown()
   .transform(formatLinkedDoubleConvocation)

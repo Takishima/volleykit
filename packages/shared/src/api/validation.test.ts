@@ -212,9 +212,12 @@ describe('assignmentSchema', () => {
   it('normalizes non-string linked double convocation values (SRBA)', () => {
     const cases: Array<[unknown, string | null]> = [
       [12345, '12345'],
-      [{ gameNumber: '12345', refereePosition: 'head-two' }, '12345 / head-two'],
-      [[{ gameNumber: 12345 }, '67890/head-one'], '12345 / 67890/head-one'],
-      [{}, null],
+      [
+        ['#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun ', 'ARB 2'],
+        '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun | ARB 2',
+      ],
+      [['#401727', null, ''], '#401727'],
+      [{ gameNumber: '12345' }, null],
       [[], null],
       ['', null],
       [null, null],
