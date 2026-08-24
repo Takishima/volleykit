@@ -2,9 +2,15 @@
  * TanStack Query persistence adapter for offline support.
  *
  * Persists query cache to AsyncStorage for offline viewing.
+ *
+ * NOT WIRED YET: `AppProviders` mounts a plain `QueryClientProvider`. Nothing
+ * in the app imports `persistOptions`, so none of this runs — it is kept ready
+ * for the switch to `PersistQueryClientProvider`.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
+
+import { PERSISTED_SCHEMA_VERSION } from '@volleykit/shared/api'
 
 import type { PersistedClient } from '@tanstack/react-query-persist-client'
 
@@ -16,6 +22,9 @@ const DEFAULT_GC_TIME = 30 * 24 * 60 * 60 * 1000
 
 /** Max cache age (30 days) */
 const MAX_AGE = 30 * 24 * 60 * 60 * 1000
+
+/** Cache version - increment for platform-local cache format changes */
+const CACHE_VERSION = 1
 
 /**
  * AsyncStorage persister for TanStack Query.
@@ -98,6 +107,7 @@ export const offlineQueryClientOptions = {
 export const persistOptions = {
   persister: asyncStoragePersister,
   maxAge: MAX_AGE,
+  buster: `${PERSISTED_SCHEMA_VERSION}.${CACHE_VERSION}`,
   // Don't persist errored queries
   dehydrateOptions: {
     shouldDehydrateQuery: (query: { state: { status: string } }) => {

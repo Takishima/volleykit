@@ -174,7 +174,7 @@ describe('assignmentSchema', () => {
       isOpenEntryInRefereeGameExchange: '1',
       hasLastMessageToReferee: '0',
       hasLinkedDoubleConvocation: true,
-      linkedDoubleConvocationGameNumberAndRefereePosition: '12345/head-two',
+      linkedDoubleConvocationGameNumberAndRefereePosition: ['12345', 'head-two'],
       _permissions: {
         canEdit: true,
         canDelete: false,
@@ -210,39 +210,42 @@ describe('assignmentSchema', () => {
     }
   })
 
-  it('keeps a string linked double convocation as-is', () => {
+  it('keeps a string linked double convocation as a single part', () => {
     const result = assignmentSchema.safeParse({
       ...validAssignment,
       linkedDoubleConvocationGameNumberAndRefereePosition: '12345/head-two',
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe('12345/head-two')
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual([
+        '12345/head-two',
+      ])
     }
   })
 
   it.each([
-    ['number', 12345, '12345'],
+    ['number', 12345, ['12345']],
     [
       'SRBA array of label parts',
       ['#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun ', 'ARB 2'],
-      '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun | ARB 2',
+      ['#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun', 'ARB 2'],
     ],
-    ['array with empty entries', ['#401727', null, ''], '#401727'],
+    ['array with empty entries', ['#401727', null, ''], ['#401727']],
+    ['nested arrays', [['#401727', 'ARB 2']], ['#401727', 'ARB 2']],
     ['unrenderable object', { gameNumber: '12345' }, null],
     ['empty array', [], null],
     ['empty string', '', null],
     ['null', null, null],
   ])(
     'normalizes linked double convocation value: %s',
-    (_label, value: unknown, expected: string | null) => {
+    (_label, value: unknown, expected: string[] | null) => {
       const result = assignmentSchema.safeParse({
         ...validAssignment,
         linkedDoubleConvocationGameNumberAndRefereePosition: value,
       })
       expect(result.success).toBe(true)
       if (result.success) {
-        expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe(expected)
+        expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual(expected)
       }
     }
   )
@@ -425,9 +428,10 @@ describe('gameExchangeSchema', () => {
     })
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBe(
-        '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun | ARB 2'
-      )
+      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual([
+        '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun',
+        'ARB 2',
+      ])
     }
   })
 

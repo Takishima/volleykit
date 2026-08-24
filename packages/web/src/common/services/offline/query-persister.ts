@@ -5,6 +5,8 @@
  * Falls back gracefully if IndexedDB is unavailable.
  */
 
+import { PERSISTED_SCHEMA_VERSION } from '@volleykit/shared/api'
+
 import { MS_PER_DAY } from '@/common/utils/constants'
 import { logger } from '@/common/utils/logger'
 
@@ -15,7 +17,7 @@ import type { PersistedClient, Persister } from '@tanstack/react-query-persist-c
 /** Storage key for persisted query cache */
 const PERSISTED_CACHE_KEY = 'persisted-client'
 
-/** Current cache version - increment to invalidate old caches */
+/** Current cache version - increment for platform-local cache format changes */
 const CACHE_VERSION = 1
 
 /** Max cache age: 7 days */
@@ -174,7 +176,7 @@ export const persistOptions = {
     },
   },
   // Restore cache in background (don't block initial render)
-  buster: String(CACHE_VERSION),
+  buster: `${PERSISTED_SCHEMA_VERSION}.${CACHE_VERSION}`,
 }
 
 /**

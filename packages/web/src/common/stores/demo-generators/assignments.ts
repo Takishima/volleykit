@@ -31,7 +31,7 @@ interface AssignmentConfig {
   isGameInFuture: boolean
   isOpenInExchange?: boolean
   hasMessage?: boolean
-  linkedDouble?: string
+  linkedDouble?: string[]
   /** Whether games in this group require no scoresheet upload */
   hasNoScoresheet?: boolean
   /** Whether this is a tournament group */
@@ -61,10 +61,10 @@ export function createAssignment(
         : null,
     isOpenEntryInRefereeGameExchange: config.isOpenInExchange ?? false,
     hasLastMessageToReferee: config.hasMessage ?? false,
-    hasLinkedDoubleConvocation: !!config.linkedDouble,
-    ...(config.linkedDouble && {
-      linkedDoubleConvocationGameNumberAndRefereePosition: config.linkedDouble,
-    }),
+    hasLinkedDoubleConvocation: !!config.linkedDouble?.length,
+    ...(config.linkedDouble?.length
+      ? { linkedDoubleConvocationGameNumberAndRefereePosition: config.linkedDouble }
+      : {}),
     // Compensation lock flags for editability check
     convocationCompensation: {
       paymentDone: false,
@@ -118,6 +118,7 @@ export function generateAssignments(associationCode: DemoAssociationCode, now: D
       gender: 'm',
       isGameInFuture: true,
       hasMessage: true,
+      linkedDouble: ['#401727 | 13.03.2027 18:00', 'ARB 2'],
     },
     // NLA/1L women - head referee
     {
@@ -131,7 +132,7 @@ export function generateAssignments(associationCode: DemoAssociationCode, now: D
       leagueIndex: 0,
       gender: 'f',
       isGameInFuture: true,
-      linkedDouble: '382420 / ARB 1',
+      linkedDouble: ['382420 / ARB 1'],
     },
     // NLB for SV, 3L for regional - women (3L women have only 1st ref)
     {
