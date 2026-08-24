@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.32.0
+
+### Patch Changes
+
+- [#1176](https://github.com/Takishima/volleykit/pull/1176) [`52568b0`](https://github.com/Takishima/volleykit/commit/52568b05df469e84fbac2cc63c50a777a3d1636f) Thanks [@claude](https://github.com/apps/claude)! - `linkedDoubleConvocationGameNumberAndRefereePosition` now normalizes to an array of label parts instead of a pre-joined display string. The API layer stays shape-only, leaving the layout to consumers. The mobile assignment detail screen renders one part per line.
+
+- [#1172](https://github.com/Takishima/volleykit/pull/1172) [`c7be9cc`](https://github.com/Takishima/volleykit/commit/c7be9cc71fd8e4a246026f8b8b44c2f8a29e1c92) Thanks [@claude](https://github.com/apps/claude)! - Parse API list responses per item so one malformed entry no longer discards the whole list. Invalid items are dropped onto `droppedItems` and logged; `totalItemsCount` still reports the server's total across all pages, so per-page counts come from `items.length` plus `droppedItems.length`.
+- Updated dependencies [[`52568b0`](https://github.com/Takishima/volleykit/commit/52568b05df469e84fbac2cc63c50a777a3d1636f), [`c7be9cc`](https://github.com/Takishima/volleykit/commit/c7be9cc71fd8e4a246026f8b8b44c2f8a29e1c92), [`c04fb34`](https://github.com/Takishima/volleykit/commit/c04fb349299b2b012f9de21c69a395906e165120)]:
+  - @volleykit/shared@1.32.0
+
 ## 1.31.0
 
 ### Patch Changes
