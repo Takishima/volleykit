@@ -72,7 +72,7 @@ function getAssignmentDisplayData(assignment: Assignment, language: string, tbd:
     hasExchange: assignment.isOpenEntryInRefereeGameExchange,
     hasMessage: assignment.hasLastMessageToReferee,
     hasDoubleConvocation: assignment.hasLinkedDoubleConvocation,
-    doubleConvocationParts: assignment.linkedDoubleConvocationGameNumberAndRefereePosition,
+    doubleConvocationParts: assignment.linkedDoubleConvocationGameNumberAndRefereePosition ?? [],
     latitude: location?.latitude,
     longitude: location?.longitude,
   }
@@ -136,7 +136,6 @@ export function AssignmentDetailScreen({ route }: Props) {
 
   const display = getAssignmentDisplayData(assignment, language, t('common.tbd'))
   const statusColors = STATUS_COLORS[display.status]
-  const doubleConvocationParts = display.doubleConvocationParts ?? []
 
   const handleOpenMaps = () => {
     if (display.latitude && display.longitude) {
@@ -220,13 +219,13 @@ export function AssignmentDetailScreen({ route }: Props) {
           )}
 
           {/* Double convocation indicator */}
-          {display.hasDoubleConvocation && doubleConvocationParts.length > 0 && (
+          {display.hasDoubleConvocation && display.doubleConvocationParts.length > 0 && (
             <View className="bg-purple-50 rounded-lg p-4 flex-row items-center">
               <Feather name="users" size={18} color={COLORS.purple600} />
               <View className="ml-3 flex-1">
                 <Text className="text-purple-700">{t('assignments.doubleConvocation')}</Text>
-                {doubleConvocationParts.map((part) => (
-                  <Text key={part} className="text-purple-600 text-sm mt-1">
+                {display.doubleConvocationParts.map((part, index) => (
+                  <Text key={`${index}-${part}`} className="text-purple-600 text-sm mt-1">
                     {part}
                   </Text>
                 ))}

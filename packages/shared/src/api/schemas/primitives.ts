@@ -45,11 +45,13 @@ export const refereePositionSchema = z.string()
  * Anything unrenderable becomes null so a single odd entry never fails the whole list.
  *
  * The parts are kept separate: this layer settles the shape only, and how they are
- * laid out is the consumer's call. `formatLinkedDoubleConvocation` in
- * `@volleykit/shared/utils` joins them for consumers that want a single line.
+ * laid out is the consumer's call — one line each, a chip per part, or joined.
  */
 function toLinkedDoubleConvocationParts(value: unknown): string[] | null {
-  if (typeof value === 'string') return value.trim() ? [value.trim()] : null
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed ? [trimmed] : null
+  }
   if (typeof value === 'number') return [String(value)]
 
   if (Array.isArray(value)) {

@@ -131,7 +131,7 @@ export function generateAssignments(associationCode: DemoAssociationCode, now: D
       leagueIndex: 0,
       gender: 'f',
       isGameInFuture: true,
-      linkedDouble: ['382420', 'ARB 1'],
+      linkedDouble: ['382420 / ARB 1'],
     },
     // NLB for SV, 3L for regional - women (3L women have only 1st ref)
     {

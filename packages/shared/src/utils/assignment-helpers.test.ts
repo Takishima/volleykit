@@ -17,7 +17,6 @@ import {
   isGameAlreadyValidated,
   isActionAvailable,
   formatTeamMatchup,
-  formatLinkedDoubleConvocation,
 } from './assignment-helpers'
 import type { components } from '../api'
 
@@ -627,23 +626,5 @@ describe('formatTeamMatchup', () => {
 
   it('should handle empty strings', () => {
     expect(formatTeamMatchup('', '')).toBe(' vs ')
-  })
-})
-
-describe('formatLinkedDoubleConvocation', () => {
-  it('should join label parts with the display separator', () => {
-    expect(formatLinkedDoubleConvocation(['#401727 | 13.03.2027 18:00', 'ARB 2'])).toBe(
-      '#401727 | 13.03.2027 18:00 | ARB 2'
-    )
-  })
-
-  it('should return a single part unchanged', () => {
-    expect(formatLinkedDoubleConvocation(['382420 / ARB 1'])).toBe('382420 / ARB 1')
-  })
-
-  it('should return null for an empty, null or missing parts list', () => {
-    expect(formatLinkedDoubleConvocation([])).toBe(null)
-    expect(formatLinkedDoubleConvocation(null)).toBe(null)
-    expect(formatLinkedDoubleConvocation(undefined)).toBe(null)
   })
 })
