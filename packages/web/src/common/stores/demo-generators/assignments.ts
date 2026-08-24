@@ -118,6 +118,7 @@ export function generateAssignments(associationCode: DemoAssociationCode, now: D
       gender: 'm',
       isGameInFuture: true,
       hasMessage: true,
+      linkedDouble: ['#401727 | 13.03.2027 18:00', 'ARB 2'],
     },
     // NLA/1L women - head referee
     {

@@ -18,6 +18,15 @@ const DEFAULT_GC_TIME = 30 * 24 * 60 * 60 * 1000
 const MAX_AGE = 30 * 24 * 60 * 60 * 1000
 
 /**
+ * Cache version - bump whenever a persisted query value changes shape.
+ *
+ * The cache stores post-validation data, so a schema change leaves entries
+ * written by an older release in the previous shape; rehydrating them renders
+ * before any refetch (and forever while offline). Bumping discards them.
+ */
+const CACHE_VERSION = 2
+
+/**
  * AsyncStorage persister for TanStack Query.
  */
 export const asyncStoragePersister = {
@@ -98,6 +107,7 @@ export const offlineQueryClientOptions = {
 export const persistOptions = {
   persister: asyncStoragePersister,
   maxAge: MAX_AGE,
+  buster: String(CACHE_VERSION),
   // Don't persist errored queries
   dehydrateOptions: {
     shouldDehydrateQuery: (query: { state: { status: string } }) => {

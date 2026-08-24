@@ -16,7 +16,7 @@ import type { PersistedClient, Persister } from '@tanstack/react-query-persist-c
 const PERSISTED_CACHE_KEY = 'persisted-client'
 
 /** Current cache version - increment to invalidate old caches */
-const CACHE_VERSION = 1
+const CACHE_VERSION = 2
 
 /** Max cache age: 7 days */
 const CACHE_DAYS = 7
