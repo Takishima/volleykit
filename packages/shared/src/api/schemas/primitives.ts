@@ -3,6 +3,10 @@
  *
  * These describe field-level shapes only: identifiers, dates, enums and the
  * coercions needed because the backend renders some fields inconsistently.
+ *
+ * Changing what a `.transform()` here produces changes what persisted query
+ * caches hold: bump `PERSISTED_SCHEMA_VERSION` in `./version` so both
+ * platforms discard the entries written in the old shape.
  */
 import { z } from 'zod'
 

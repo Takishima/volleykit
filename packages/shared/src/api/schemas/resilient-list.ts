@@ -7,6 +7,10 @@
  * are kept and invalid ones are dropped onto `droppedItems`, where
  * `validateResponse` logs them.
  *
+ * Changing what these factories produce changes what persisted query caches
+ * hold: bump `PERSISTED_SCHEMA_VERSION` in `./version` so both platforms
+ * discard the entries written in the old shape.
+ *
  * `droppedItems` survives at runtime everywhere, but a platform that casts list
  * responses to its own generated types will not see the field through
  * TypeScript. Such consumers read it with `getDroppedListItems` from
