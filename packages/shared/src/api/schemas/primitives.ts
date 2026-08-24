@@ -36,34 +36,34 @@ export const booleanLikeSchema = z
 // Referee position - accept any string from API
 export const refereePositionSchema = z.string()
 
-const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' | '
-
 /**
- * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to a display string.
+ * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to label parts.
  *
  * The API renders this computed property inconsistently: usually a string, but for
  * some associations (e.g. SRBA) an array of label parts, e.g.
  * ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
  * Anything unrenderable becomes null so a single odd entry never fails the whole list.
+ *
+ * The parts are kept separate: this layer settles the shape only, and how they are
+ * laid out is the consumer's call. `formatLinkedDoubleConvocation` in
+ * `@volleykit/shared/utils` joins them for consumers that want a single line.
  */
-function formatLinkedDoubleConvocation(value: unknown): string | null {
-  if (typeof value === 'string') return value.trim() || null
-  if (typeof value === 'number') return String(value)
+function toLinkedDoubleConvocationParts(value: unknown): string[] | null {
+  if (typeof value === 'string') return value.trim() ? [value.trim()] : null
+  if (typeof value === 'number') return [String(value)]
 
   if (Array.isArray(value)) {
-    const parts = value
-      .map(formatLinkedDoubleConvocation)
-      .filter((part): part is string => part !== null)
-    return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
+    const parts = value.flatMap((entry) => toLinkedDoubleConvocationParts(entry) ?? [])
+    return parts.length > 0 ? parts : null
   }
 
   return null
 }
 
-// Linked double convocation info - shape varies by association, normalized to a string
+// Linked double convocation info - shape varies by association, normalized to label parts
 export const linkedDoubleConvocationSchema = z
   .unknown()
-  .transform(formatLinkedDoubleConvocation)
+  .transform(toLinkedDoubleConvocationParts)
   .optional()
 
 /**

@@ -260,3 +260,20 @@ export interface AssignmentStatus {
 export const formatTeamMatchup = (homeTeam: string, awayTeam: string): string => {
   return `${homeTeam} vs ${awayTeam}`
 }
+
+/** Separator between linked double convocation label parts on a single line. */
+const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' | '
+
+/**
+ * Joins linked double convocation label parts into one display string.
+ *
+ * The API returns the parts either as one pre-joined string or (e.g. SRBA) as
+ * separate label parts; the schema normalizes both to an array. Use this when a
+ * single line is wanted — consumers that lay the parts out themselves (one line
+ * each, a chip per part) read the array directly.
+ */
+export const formatLinkedDoubleConvocation = (
+  parts: readonly string[] | null | undefined
+): string | null => {
+  return parts?.length ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
+}
