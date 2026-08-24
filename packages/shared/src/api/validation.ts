@@ -1,583 +1,40 @@
 /**
- * Runtime validation schemas for API responses using Zod.
+ * Runtime validation for API responses.
  *
- * These schemas validate that the API returns data in the expected format,
- * providing early error detection and better error messages when the backend
- * returns unexpected data structures.
+ * The schemas themselves live in `./schemas`, grouped by domain, and are
+ * re-exported here so `@volleykit/shared/api` consumers keep a single import
+ * surface. This module owns the inferred types and the `validateResponse`
+ * helper that turns a schema failure into a descriptive error.
  *
  * Extracted from web-app/src/api/validation.ts for cross-platform use.
  */
-import { z } from 'zod'
+import type { z } from 'zod'
 
-// Common field schemas
-const uuidSchema = z.string().uuid()
-const dateTimeSchema = z.string().datetime({ offset: true }).optional().nullable()
+import {
+  assignmentSchema,
+  assignmentsResponseSchema,
+  compensationDetailedSchema,
+  compensationRecordSchema,
+  compensationsResponseSchema,
+  exchangesResponseSchema,
+  fileResourceSchema,
+  gameDetailsResponseSchema,
+  gameDetailsSchema,
+  gameExchangeSchema,
+  nominationListResponseSchema,
+  nominationListSchema,
+  personSearchResponseSchema,
+  personSearchResultSchema,
+  possibleNominationsResponseSchema,
+  refereeBackupEntrySchema,
+  refereeBackupResponseSchema,
+  scoresheetSchema,
+  scoresheetValidationSchema,
+  formatDroppedListItems,
+  getDroppedListItems,
+} from './schemas'
 
-const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-
-// Date schema that accepts:
-// - ISO date format: "2024-01-15"
-// - ISO datetime format: "2024-12-19T23:00:00.000000+00:00"
-// - Empty string: "" (API returns this for unpaid compensations)
-// - null (API returns null for unpaid compensations)
-export const dateSchema = z
-  .union([z.literal(''), z.string().regex(ISO_DATE_PATTERN), z.string().datetime({ offset: true })])
-  .optional()
-  .nullable()
-
-// Boolean-like schema for API fields that return "0"/"1" strings instead of booleans
-const booleanLikeSchema = z
-  .union([z.boolean(), z.string(), z.null()])
-  .optional()
-  .nullable()
-  .transform((val) => {
-    if (val === '1' || val === true) return true
-    if (val === '0' || val === false) return false
-    return null
-  })
-
-// Referee position - accept any string from API
-export const refereePositionSchema = z.string()
-
-const LINKED_DOUBLE_CONVOCATION_SEPARATOR = ' | '
-
-/**
- * Normalizes `linkedDoubleConvocationGameNumberAndRefereePosition` to a display string.
- *
- * The API renders this computed property inconsistently: usually a string, but for
- * some associations (e.g. SRBA) an array of label parts, e.g.
- * ["#401727 | 13.03.2027 18:00 | VB Therwil - VBC Thun", "ARB 2"].
- * Anything unrenderable becomes null so a single odd entry never fails the whole list.
- */
-function formatLinkedDoubleConvocation(value: unknown): string | null {
-  if (typeof value === 'string') return value.trim() || null
-  if (typeof value === 'number') return String(value)
-
-  if (Array.isArray(value)) {
-    const parts = value
-      .map(formatLinkedDoubleConvocation)
-      .filter((part): part is string => part !== null)
-    return parts.length > 0 ? parts.join(LINKED_DOUBLE_CONVOCATION_SEPARATOR) : null
-  }
-
-  return null
-}
-
-// Linked double convocation info - shape varies by association, normalized to a string
-const linkedDoubleConvocationSchema = z
-  .unknown()
-  .transform(formatLinkedDoubleConvocation)
-  .optional()
-
-// Convocation status enum
-export const convocationStatusSchema = z.enum(['active', 'cancelled', 'archived'])
-
-// Exchange status enum
-export const exchangeStatusSchema = z.enum(['open', 'applied', 'closed'])
-
-// Permissions schema
-const permissionsSchema = z
-  .object({
-    canEdit: z.boolean().optional(),
-    canDelete: z.boolean().optional(),
-    canView: z.boolean().optional(),
-  })
-  .passthrough()
-  .optional()
-
-// Team schema
-const teamSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    name: z.string().optional(),
-    shortName: z.string().optional().nullable(),
-  })
-  .passthrough()
-
-// Hall schema
-const hallSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    name: z.string().optional(),
-    shortName: z.string().optional().nullable(),
-    primaryPostalAddress: z
-      .object({
-        combinedAddress: z.string().optional(),
-        postalCode: z.string().optional(),
-        city: z.string().optional(),
-        geographicalLocation: z
-          .object({
-            plusCode: z.string().optional(),
-            latitude: z.number().optional(),
-            longitude: z.number().optional(),
-          })
-          .passthrough()
-          .optional(),
-      })
-      .passthrough()
-      .optional(),
-  })
-  .passthrough()
-
-// Game schema (nested in referee game)
-const gameSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    gameNumber: z.string().optional(),
-    startingDateTime: dateTimeSchema,
-    teamHome: teamSchema.optional(),
-    teamAway: teamSchema.optional(),
-    hall: hallSchema.optional(),
-  })
-  .passthrough()
-
-// Person summary schema
-const personSummarySchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    shortName: z.string().optional().nullable(),
-    displayName: z.string().optional(),
-  })
-  .passthrough()
-
-// Referee convocation reference schema
-const refereeConvocationRefSchema = z
-  .object({
-    indoorAssociationReferee: z
-      .object({
-        indoorReferee: z
-          .object({
-            person: personSummarySchema.optional(),
-          })
-          .passthrough()
-          .optional(),
-      })
-      .passthrough()
-      .optional(),
-  })
-  .passthrough()
-  .nullable()
-
-// Referee game schema
-const refereeGameSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    game: gameSchema.optional(),
-  })
-  .passthrough()
-
-// Referee game for exchange (includes more details)
-const refereeGameForExchangeSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    game: gameSchema.optional(),
-    activeRefereeConvocationFirstHeadReferee: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationSecondHeadReferee: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationFirstLinesman: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationSecondLinesman: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationThirdLinesman: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationFourthLinesman: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationStandbyHeadReferee: refereeConvocationRefSchema.optional(),
-    activeRefereeConvocationStandbyLinesman: refereeConvocationRefSchema.optional(),
-  })
-  .passthrough()
-
-// Convocation compensation schema (must be defined before assignmentSchema)
-const convocationCompensationSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    paymentDone: z.boolean().optional(),
-    payGameCompensation: z.boolean().optional(),
-    gameCompensation: z.number().optional(),
-    payTravelExpenses: z.boolean().optional(),
-    travelExpenses: z.number().optional(),
-    publicTransportExpenses: z.number().optional().nullable(),
-    travelExpensesPercentageWeighting: z.number().optional(),
-    distanceInMetres: z.number().optional(),
-    transportationMode: z.enum(['car', 'train', 'public_transport', 'other']).optional().nullable(),
-    paymentValueDate: dateSchema,
-    gameCompensationFormatted: z.string().optional(),
-    travelExpensesFormatted: z.string().optional(),
-    costFormatted: z.string().optional(),
-    distanceFormatted: z.string().optional().nullable(),
-    hasFlexibleTravelExpenses: z.boolean().optional(),
-  })
-  .passthrough()
-
-// Assignment schema
-export const assignmentSchema = z
-  .object({
-    __identity: uuidSchema,
-    refereeGame: refereeGameSchema,
-    refereeConvocationStatus: convocationStatusSchema,
-    refereePosition: refereePositionSchema,
-    confirmationStatus: z.string().optional().nullable(),
-    confirmationDate: dateTimeSchema,
-    isOpenEntryInRefereeGameExchange: booleanLikeSchema,
-    hasLastMessageToReferee: booleanLikeSchema,
-    hasLinkedDoubleConvocation: booleanLikeSchema,
-    linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
-    // Compensation data eagerly loaded with assignments to avoid separate API call
-    convocationCompensation: convocationCompensationSchema.optional(),
-    _permissions: permissionsSchema,
-  })
-  .passthrough()
-
-// Compensation record schema
-export const compensationRecordSchema = z
-  .object({
-    __identity: uuidSchema,
-    refereeGame: refereeGameSchema,
-    convocationCompensation: convocationCompensationSchema,
-    refereeConvocationStatus: convocationStatusSchema,
-    compensationDate: dateTimeSchema,
-    refereePosition: refereePositionSchema,
-    _permissions: permissionsSchema,
-  })
-  .passthrough()
-
-// Game exchange schema
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Explicit any needed to avoid TS7056 (type serialization limit)
-export const gameExchangeSchema: z.ZodType<any> = z
-  .object({
-    __identity: uuidSchema,
-    refereeGame: refereeGameForExchangeSchema,
-    status: exchangeStatusSchema,
-    createdAt: dateTimeSchema,
-    submittedByPerson: personSummarySchema.optional(),
-    exchangeReason: z.string().optional().nullable(),
-    notes: z.string().optional().nullable(),
-    refereePosition: refereePositionSchema,
-    requiredRefereeLevel: z.string().optional().nullable(),
-    linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
-    _permissions: permissionsSchema,
-  })
-  .passthrough()
-
-// Person search result schema
-export const personSearchResultSchema = z
-  .object({
-    __identity: uuidSchema,
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    displayName: z.string().optional(),
-    associationId: z.number().optional().nullable(),
-    birthday: dateTimeSchema,
-    gender: z.enum(['m', 'f']).optional().nullable(),
-    _permissions: permissionsSchema,
-  })
-  .passthrough()
-
-// Response schemas
-export const assignmentsResponseSchema = z.object({
-  items: z.array(assignmentSchema),
-  totalItemsCount: z.number(),
-})
-
-export const compensationsResponseSchema = z.object({
-  items: z.array(compensationRecordSchema),
-  totalItemsCount: z.number(),
-})
-
-export const exchangesResponseSchema = z.object({
-  items: z.array(gameExchangeSchema),
-  totalItemsCount: z.number(),
-})
-
-export const personSearchResponseSchema = z.object({
-  items: z.array(personSearchResultSchema).optional(),
-  totalItemsCount: z.number().optional(),
-})
-
-// ============================================================================
-// Detail / mutation response schemas
-// ============================================================================
-
-// Compensation detail response (showWithNestedObjects wrapper)
-export const compensationDetailedSchema = z
-  .object({
-    convocationCompensation: convocationCompensationSchema.optional(),
-  })
-  .passthrough()
-
-// Pick exchange response (pickFromRefereeGameExchange wrapper)
-export const pickExchangeResponseSchema = z
-  .object({
-    refereeGameExchange: z
-      .object({
-        __identity: uuidSchema.optional(),
-        status: z.string().optional(),
-      })
-      .passthrough(),
-  })
-  .passthrough()
-
-// File resource schema (upload response)
-export const fileResourceSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    persistentResource: z
-      .object({
-        __identity: uuidSchema.optional(),
-        filename: z.string().optional(),
-        mediaType: z.string().optional(),
-        fileSize: z.number().optional(),
-      })
-      .passthrough()
-      .optional(),
-    publicResourceUri: z.string().optional(),
-  })
-  .passthrough()
-
-// File resource array schema (upload response is an array)
-export const fileResourceArraySchema = z.array(fileResourceSchema)
-
-// Scoresheet validation schema
-export const scoresheetValidationSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    hasValidationIssues: z.boolean().optional(),
-    hasValidationIssuesForAssociationUserContext: z.boolean().optional(),
-    hasValidationIssuesForClubUserContext: z.boolean().optional(),
-    areValidationIssuesAddressedByChampionshipOperator: z.boolean().optional(),
-    scoresheetValidationIssues: z.array(z.object({}).passthrough()).optional(),
-  })
-  .passthrough()
-
-// Scoresheet schema
-export const scoresheetSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    game: z.object({ __identity: uuidSchema.optional() }).passthrough().optional(),
-    isSimpleScoresheet: z.boolean().optional(),
-    writerPerson: personSummarySchema.optional().nullable(),
-    scoresheetValidation: scoresheetValidationSchema.optional().nullable(),
-    file: fileResourceSchema.optional().nullable(),
-    hasFile: z.boolean().optional(),
-    closedAt: dateTimeSchema,
-  })
-  .passthrough()
-
-// Indoor player nomination schema
-const indoorPlayerNominationSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    indoorPlayer: z
-      .object({
-        __identity: uuidSchema.optional(),
-        person: personSummarySchema.optional(),
-      })
-      .passthrough()
-      .optional(),
-    indoorPlayerLicenseCategory: z
-      .object({
-        __identity: uuidSchema.optional(),
-        shortName: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-  })
-  .passthrough()
-
-// Nomination list schema
-export const nominationListSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    game: z.object({ __identity: uuidSchema.optional() }).passthrough().optional(),
-    team: z
-      .object({
-        __identity: uuidSchema.optional(),
-        displayName: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-    indoorPlayerNominations: z.array(indoorPlayerNominationSchema).optional(),
-    coachPerson: personSummarySchema.optional().nullable(),
-    firstAssistantCoachPerson: personSummarySchema.optional().nullable(),
-    secondAssistantCoachPerson: personSummarySchema.optional().nullable(),
-    closed: z.boolean().optional(),
-    closedAt: dateTimeSchema,
-    checked: z.boolean().optional(),
-    isClosedForTeam: z.boolean().optional(),
-    nominationListValidation: z.object({}).passthrough().optional().nullable(),
-    _permissions: permissionsSchema,
-  })
-  .passthrough()
-
-// Nomination list response (finalize wrapper)
-export const nominationListResponseSchema = z
-  .object({
-    nominationList: nominationListSchema.optional(),
-  })
-  .passthrough()
-
-// Game details schema (showWithNestedObjects response)
-export const gameDetailsSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    scoresheet: scoresheetSchema.optional().nullable(),
-    nominationListOfTeamHome: nominationListSchema.optional().nullable(),
-    nominationListOfTeamAway: nominationListSchema.optional().nullable(),
-    group: z
-      .object({
-        __identity: uuidSchema.optional(),
-        hasNoScoresheet: z.boolean().optional(),
-      })
-      .passthrough()
-      .optional()
-      .nullable(),
-  })
-  .passthrough()
-
-// Game details response wrapper
-export const gameDetailsResponseSchema = z
-  .object({
-    game: gameDetailsSchema,
-  })
-  .passthrough()
-
-// Association settings schema
-export const associationSettingsSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    usesGameExchange: z.boolean().optional(),
-    hoursAfterGameStartForRefereeToEditGameList: z.number().optional(),
-    isRefereeDataManagementAllowed: z.boolean().optional(),
-  })
-  .passthrough()
-
-// Season schema
-export const seasonSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    name: z.string().optional(),
-    displayName: z.string().optional(),
-    seasonStartDate: dateTimeSchema,
-    seasonEndDate: dateTimeSchema,
-    active: z.boolean().optional(),
-  })
-  .passthrough()
-
-// Possible player nomination schema
-const possibleNominationSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    indoorPlayer: z
-      .object({
-        __identity: uuidSchema.optional(),
-        person: personSummarySchema.optional(),
-      })
-      .passthrough()
-      .optional(),
-    indoorPlayerLicenseCategory: z
-      .object({
-        __identity: uuidSchema.optional(),
-        shortName: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-    teamDisplayName: z.string().optional(),
-    isInSameTeam: z.boolean().optional(),
-    isInSameClub: z.boolean().optional(),
-    isInSameGender: z.boolean().optional(),
-  })
-  .passthrough()
-
-// Possible nominations response schema
-export const possibleNominationsResponseSchema = z.object({
-  items: z.array(possibleNominationSchema).optional(),
-  totalItemsCount: z.number().optional(),
-})
-
-// ============================================================================
-// Referee Backup (Pikett) Schemas
-// ============================================================================
-
-// Person details for a backup referee
-const backupRefereePersonSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    persistenceObjectIdentifier: uuidSchema.optional(),
-    associationId: z.number().optional().nullable(),
-    displayName: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    gender: z.enum(['m', 'f']).optional().nullable(),
-    correspondenceLanguage: z.string().optional(),
-    primaryEmailAddress: z
-      .object({
-        emailAddress: z.string().optional(),
-        isPrimary: z.boolean().optional(),
-        __identity: uuidSchema.optional(),
-      })
-      .passthrough()
-      .optional()
-      .nullable(),
-    primaryPhoneNumber: z
-      .object({
-        localNumber: z.string().optional(),
-        normalizedLocalNumber: z.string().optional(),
-        numberType: z.string().optional(),
-        isPrimary: z.boolean().optional(),
-        __identity: uuidSchema.optional(),
-      })
-      .passthrough()
-      .optional()
-      .nullable(),
-  })
-  .passthrough()
-
-// Indoor referee details for backup assignment
-const backupIndoorRefereeSchema = z
-  .object({
-    __identity: uuidSchema.optional(),
-    persistenceObjectIdentifier: uuidSchema.optional(),
-    person: backupRefereePersonSchema.optional(),
-    refereeInformation: z.string().optional(),
-    transportationMode: z.string().optional().nullable(),
-    validated: z.boolean().optional(),
-    mobilePhoneNumbers: z.string().optional().nullable(),
-    privatePostalAddresses: z.string().optional().nullable(),
-  })
-  .passthrough()
-
-// Backup referee assignment
-const backupRefereeAssignmentSchema = z
-  .object({
-    __identity: uuidSchema,
-    indoorReferee: backupIndoorRefereeSchema.optional(),
-    isDispensed: z.boolean().optional(),
-    hasFutureRefereeConvocations: z.boolean().optional(),
-    hasResigned: z.boolean().optional(),
-    unconfirmedFutureRefereeConvocations: z.boolean().optional(),
-    originId: z.number().optional().nullable(),
-    createdBy: z.string().optional().nullable(),
-    updatedBy: z.string().optional().nullable(),
-  })
-  .passthrough()
-
-// Referee backup entry (a single date with assigned backup referees)
-export const refereeBackupEntrySchema = z
-  .object({
-    __identity: uuidSchema,
-    date: z.string().datetime({ offset: true }),
-    weekday: z.string(),
-    calendarWeek: z.number(),
-    joinedNlaReferees: z.string().optional().nullable(),
-    joinedNlbReferees: z.string().optional().nullable(),
-    nlaReferees: z.array(backupRefereeAssignmentSchema).optional(),
-    nlbReferees: z.array(backupRefereeAssignmentSchema).optional(),
-  })
-  .passthrough()
-
-// Referee backup search response
-export const refereeBackupResponseSchema = z.object({
-  items: z.array(refereeBackupEntrySchema),
-  totalItemsCount: z.number(),
-  entityTemplate: z.unknown().optional().nullable(),
-})
+export * from './schemas'
 
 // Type exports inferred from Zod schemas
 export type Assignment = z.infer<typeof assignmentSchema>
@@ -628,21 +85,81 @@ export interface ZodLikeSchema<T> {
     | { success: false; error: { issues: Array<{ path: PropertyKey[]; message: string }> } }
 }
 
+/** Sink for validation diagnostics, so each platform can supply its own logger. */
+export type ValidationErrorLogger = (message: string, ...args: unknown[]) => void
+
 /**
- * Validates API response data against a Zod schema.
- * Returns the validated data or throws a descriptive error.
+ * Builds a `validateResponse` bound to a platform's error logger.
+ *
+ * The returned function validates API response data against a Zod schema and
+ * returns the validated data or throws a descriptive error. Items dropped by a
+ * resilient list schema are reported but do not throw.
  */
-export function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
-  const result = schema.safeParse(data)
+export function createValidateResponse(logError: ValidationErrorLogger) {
+  return function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
+    const result = schema.safeParse(data)
 
-  if (!result.success) {
-    const errorDetails = result.error.issues
-      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join('; ')
+    if (!result.success) {
+      const errorDetails = result.error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join('; ')
 
-    console.error(`API validation error (${context}):`, result.error.issues)
-    throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
+      logError(`API validation error (${context}):`, result.error.issues)
+      throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
+    }
+
+    const dropped = getDroppedListItems(result.data)
+    if (dropped.length > 0) {
+      logError(
+        `API validation dropped ${dropped.length} invalid item(s) (${context}): ${formatDroppedListItems(dropped)}`
+      )
+    }
+
+    return result.data
   }
-
-  return result.data
 }
+
+/** Default `validateResponse` for platforms without their own logger. */
+export const validateResponse = createValidateResponse((message, ...args) => {
+  console.error(message, ...args)
+})
+
+/**
+ * Compile-time guard on the resilient list factories.
+ *
+ * They must expose each item's *output* type. `z.ZodType<T>` collapsed input and
+ * output onto one parameter, so an item schema containing a transform could make
+ * them infer the input side instead — `gender` became `unknown` on every type
+ * built from the factory. Only the one site that pinned a zod-inferred type
+ * explicitly failed to compile; everywhere else the wrong type was simply
+ * accepted, since `unknown` swallows any comparison.
+ *
+ * Mutual assignability is the check that matters: it fails whichever way the two
+ * diverge, and it fails here, in shared's own typecheck, with a name that says
+ * what went wrong.
+ */
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false
+type AssertTrue<T extends true> = T
+
+// Exported on purpose. It is never referenced — failing to compile is its whole
+// job — and web typechecks this package's *source* with `noUnusedLocals`, so a
+// module-local alias fails web's build (TS6196) even though shared's own
+// tsconfig would accept it.
+// Covers `optionalResilientListSchema`, which person search and possible
+// nominations use.
+export type PersonSearchItemsAreSchemaOutput = AssertTrue<
+  Exact<PersonSearchResponse['items'][number], ValidatedPersonSearchResult>
+>
+
+// `resilientListSchema` is a separate function body carrying four of the six
+// list responses, so it needs its own cover. Both item schemas below reach
+// `tolerantEnum`, which is what makes input and output differ; exchanges are
+// skipped because `gameExchangeSchema` is `z.ZodType<any>` and `Exact` would
+// hold vacuously.
+export type AssignmentItemsAreSchemaOutput = AssertTrue<
+  Exact<AssignmentsResponse['items'][number], Assignment>
+>
+
+export type BackupItemsAreSchemaOutput = AssertTrue<
+  Exact<RefereeBackupSearchResponse['items'][number], RefereeBackupEntry>
+>

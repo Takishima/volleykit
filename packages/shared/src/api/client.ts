@@ -26,6 +26,8 @@ import type {
   PossibleNominationsResponse,
   PersonSearchResponse,
   RefereeBackupEntry,
+  DroppedListItem,
+  ResilientList,
 } from './validation'
 
 // Re-export types from validation for convenience
@@ -83,10 +85,13 @@ export type ApiResult<T> = { data: T; error: null } | { data: null; error: ApiEr
 
 /**
  * Paginated response structure from the API.
+ *
+ * `droppedItems` is optional so a client that declares its return type from
+ * generated API types still satisfies the contract; a client that parses with a
+ * resilient list schema always returns it.
  */
-export interface PaginatedResponse<T> {
-  items: T[]
-  totalItemsCount: number
+export interface PaginatedResponse<T> extends Omit<ResilientList<T>, 'droppedItems'> {
+  droppedItems?: DroppedListItem[]
 }
 
 /**

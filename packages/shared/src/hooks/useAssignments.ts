@@ -11,7 +11,12 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { addDays, startOfDay, endOfDay, subDays } from 'date-fns'
 
-import { queryKeys, type SearchConfiguration, type Assignment } from '../api'
+import {
+  queryKeys,
+  type PaginatedResponse,
+  type SearchConfiguration,
+  type Assignment,
+} from '../api'
 import {
   DEFAULT_PAGE_SIZE,
   ASSIGNMENTS_STALE_TIME_MS,
@@ -37,9 +42,7 @@ export type DatePeriod = 'upcoming' | 'past' | 'thisWeek' | 'nextMonth' | 'custo
  * Implementations differ between web (fetch) and mobile (fetch + native adapters).
  */
 export interface AssignmentsApiClient {
-  searchAssignments: (
-    config: SearchConfiguration
-  ) => Promise<{ items: Assignment[]; totalItemsCount: number }>
+  searchAssignments: (config: SearchConfiguration) => Promise<PaginatedResponse<Assignment>>
   getAssignmentDetails?: (id: string, expand?: string[]) => Promise<Assignment>
 }
 

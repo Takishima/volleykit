@@ -25,9 +25,9 @@
  * - Prefer specific error messages over generic validation errors
  */
 
-import { logger } from '@/common/utils/logger'
+import { createValidateResponse } from '@volleykit/shared/api'
 
-import type { ZodLikeSchema } from '@volleykit/shared/api'
+import { logger } from '@/common/utils/logger'
 
 // Re-export all schemas from shared package
 export {
@@ -57,7 +57,6 @@ export {
   possibleNominationsResponseSchema,
   refereeBackupResponseSchema,
   type ValidatedPersonSearchResult,
-  type ZodLikeSchema,
 } from '@volleykit/shared/api'
 
 // ============================================================================
@@ -67,18 +66,9 @@ export {
 /**
  * Validates API response data against a Zod schema.
  * Returns the validated data or throws a descriptive error.
+ *
+ * Shares its implementation with the shared package; only the log sink differs.
  */
-export function validateResponse<T>(data: unknown, schema: ZodLikeSchema<T>, context: string): T {
-  const result = schema.safeParse(data)
-
-  if (!result.success) {
-    const errorDetails = result.error.issues
-      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
-      .join('; ')
-
-    logger.error(`API validation error (${context}):`, result.error.issues)
-    throw new Error(`Invalid API response for ${context}: ${errorDetails}`)
-  }
-
-  return result.data
-}
+export const validateResponse = createValidateResponse((message, ...args) => {
+  logger.error(message, ...args)
+})

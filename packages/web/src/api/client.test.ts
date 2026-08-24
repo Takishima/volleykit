@@ -162,7 +162,8 @@ describe('API Client', () => {
       )
 
       const result = await api.searchAssignments({})
-      expect(result).toEqual(mockAssignmentsResponse)
+      expect(result).toMatchObject(mockAssignmentsResponse)
+      expect(result.droppedItems).toEqual([])
     })
   })
 

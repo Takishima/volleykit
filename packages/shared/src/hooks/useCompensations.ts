@@ -9,7 +9,12 @@
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { queryKeys, type SearchConfiguration, type CompensationRecord } from '../api'
+import {
+  queryKeys,
+  type PaginatedResponse,
+  type SearchConfiguration,
+  type CompensationRecord,
+} from '../api'
 import { DEFAULT_PAGE_SIZE, COMPENSATIONS_STALE_TIME_MS } from '../api/constants'
 
 export { DEFAULT_PAGE_SIZE, COMPENSATIONS_STALE_TIME_MS }
@@ -23,7 +28,7 @@ export type CompensationStatus = 'pending' | 'paid' | 'all'
 export interface CompensationsApiClient {
   searchCompensations: (
     config: SearchConfiguration
-  ) => Promise<{ items: CompensationRecord[]; totalItemsCount: number }>
+  ) => Promise<PaginatedResponse<CompensationRecord>>
 }
 
 /** Stable empty array for React Query selectors */
