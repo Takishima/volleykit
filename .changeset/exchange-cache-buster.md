@@ -2,7 +2,7 @@
 '@volleykit/shared': patch
 ---
 
-Discard persisted query caches written before exchanges requested `_permissions`
+Discard persisted query caches written before exchanges read `_permissions`
 
 Exchange entries cached by an earlier build may carry no take-over permission,
 which reads as takeable, so a warm cache would keep offering entries the referee

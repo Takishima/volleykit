@@ -139,19 +139,13 @@ export const EXCHANGE_PROPERTIES = [
   'refereeGame.activeRefereeConvocationStandbyHeadReferee.__identity',
   'refereeGame.activeRefereeConvocationStandbyLinesman',
   'refereeGame.activeRefereeConvocationStandbyLinesman.__identity',
-  // Per-entry permissions: `properties.appliedBy.update` is the server's answer to
-  // "may the signed-in referee take this over?" and decides whether an entry is
-  // offered at all (see exchange-helpers.ts).
-  //
-  // Requested explicitly even though the endpoint may well return it unasked, as
-  // it does for compensations. Of the two ways to be wrong, only this one fails
-  // loudly: an unaccepted property path breaks the search outright, whereas an
-  // absent flag reads as "takeable" and silently turns the whole filter into a
-  // no-op. `_permissions` is a framework-level path rather than a domain
-  // property, and the profile endpoint takes it (docs/api/profile_api.md), so
-  // rejection is unlikely. Confirm against the live search when a capture of our
-  // own request exists.
-  '_permissions',
+  // `_permissions` is deliberately NOT requested here: the search endpoint
+  // resolves every render path against the RefereeGameExchange model and answers
+  // 500 for this one ("The field _permissions ... neither exists in the DB nor
+  // does it have a custom select expression or property value provider"). The
+  // block still arrives unasked, as it does for compensations, and
+  // `properties.appliedBy.update` drives the take-over filter in
+  // exchange-helpers.ts. See docs/api/exchanges_api.md.
 ]
 
 /**
