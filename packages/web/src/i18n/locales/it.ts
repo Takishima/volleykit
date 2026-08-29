@@ -275,7 +275,7 @@ const it: Translations = {
     singleBallHallConditional:
       'Partita con 1 pallone possibile (solo se eccezionalmente disponibile una sola sala parziale)',
     singleBallHallRefereeAtPartition:
-      'Partita con 1 pallone, senza raccattapalle (solo se il/la 1° arbitro si trova sul lato della parete divisoria)',
+      'Partita con 1 pallone, senza raccattapalle (solo se il 1° arbitro si trova sul lato della parete divisoria)',
     singleBallHallTooltip: 'Sala 1 pallone',
     conflictWarningTooltip: 'Conflitto di programmazione',
     conflictWarningTitle: 'Possibile conflitto di programmazione',
