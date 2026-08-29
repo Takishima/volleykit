@@ -1,5 +1,12 @@
 # @volleykit/mobile
 
+## 1.33.0
+
+### Patch Changes
+
+- Updated dependencies [[`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8), [`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8)]:
+  - @volleykit/shared@1.33.0
+
 ## 1.32.0
 
 ### Patch Changes

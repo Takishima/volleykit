@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.33.0
+
+### Minor Changes
+
+- [#1177](https://github.com/Takishima/volleykit/pull/1177) [`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8) Thanks [@Takishima](https://github.com/Takishima)! - Hide exchange entries the referee is not allowed to take over
+  
+  The exchange search endpoint returns a per-entry `_permissions.properties.appliedBy.update`
+  flag telling whether the signed-in referee may apply - it is false when a backend rule
+  blocks them, be it a league tier the region keeps for its own club referees, a referee
+  registered as referee for one of the two playing teams, or an explicit ban. Those entries
+  are now dropped from the Open tab instead of offering a take-over the backend rejects.
+  Own entries stay visible so they can still be removed from the marketplace, and entries
+  without the flag are treated as takeable.
+
+- [#1179](https://github.com/Takishima/volleykit/pull/1179) [`c183489`](https://github.com/Takishima/volleykit/commit/c18348994a0223b21f1656cd0393a1c46b9b404a) Thanks [@Takishima](https://github.com/Takishima)! - Updated the NLB single-ball hall list to the 2026/27 SwissVolley document (29.06.2026): added Subingen (3fach Halle, Teilhalle 1), which applies only when the 1st referee is on the partition wall side, and replaced the linked German and French source PDFs.
+
+### Patch Changes
+
+- Updated dependencies [[`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8), [`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8)]:
+  - @volleykit/shared@1.33.0
+
 ## 1.32.0
 
 ### Patch Changes

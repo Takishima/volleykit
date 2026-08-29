@@ -1,5 +1,31 @@
 # @volleykit/shared
 
+## 1.33.0
+
+### Minor Changes
+
+- [#1177](https://github.com/Takishima/volleykit/pull/1177) [`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8) Thanks [@Takishima](https://github.com/Takishima)! - Hide exchange entries the referee is not allowed to take over
+
+  The exchange search endpoint returns a per-entry `_permissions.properties.appliedBy.update`
+  flag telling whether the signed-in referee may apply - it is false when a backend rule
+  blocks them, be it a league tier the region keeps for its own club referees, a referee
+  registered as referee for one of the two playing teams, or an explicit ban. Those entries
+  are now dropped from the Open tab instead of offering a take-over the backend rejects.
+  Own entries stay visible so they can still be removed from the marketplace, and entries
+  without the flag are treated as takeable.
+
+### Patch Changes
+
+- [#1177](https://github.com/Takishima/volleykit/pull/1177) [`686bdd0`](https://github.com/Takishima/volleykit/commit/686bdd09390580f8799007ded9e2556b1f205bc8) Thanks [@Takishima](https://github.com/Takishima)! - Discard persisted query caches written before exchanges read `_permissions`
+
+  Exchange entries cached by an earlier build should already carry the take-over
+  permission - the endpoint returns the block without being asked and the schema
+  passed it through - but an entry stored without it reads as takeable and would
+  keep offering entries the referee cannot take over. Bumping
+  `PERSISTED_SCHEMA_VERSION` changes the persister buster on both platforms and
+  discards those entries once, so the filter starts from a cache that cannot
+  predate it.
+
 ## 1.32.0
 
 ### Minor Changes
