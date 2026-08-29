@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import { canTakeOverExchange, isOwnExchange } from '@volleykit/shared/utils'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
@@ -176,6 +177,16 @@ export function useExchangeFilters({
           sameLocationDistanceKm: DEFAULT_SAME_LOCATION_DISTANCE_KM,
         })
       })
+    }
+
+    // Hide entries the server refuses to hand over on the "open" tab - most
+    // notably games of a team the user is registered as a referee for. Own
+    // entries are kept: they carry the same flag but must stay removable.
+    if (statusFilter === 'open') {
+      result = result.filter(
+        ({ exchange }) =>
+          canTakeOverExchange(exchange) || isOwnExchange(exchange, currentUserIdentity)
+      )
     }
 
     // Hide user's own exchanges in "open" tab when filter is enabled

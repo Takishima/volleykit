@@ -14,6 +14,7 @@ import {
   booleanLikeSchema,
   convocationStatusSchema,
   dateTimeSchema,
+  exchangePermissionsSchema,
   exchangeStatusSchema,
   genderSchema,
   linkedDoubleConvocationSchema,
@@ -72,7 +73,7 @@ export const gameExchangeSchema: z.ZodType<any> = z
     refereePosition: refereePositionSchema,
     requiredRefereeLevel: z.string().optional().nullable(),
     linkedDoubleConvocationGameNumberAndRefereePosition: linkedDoubleConvocationSchema,
-    _permissions: permissionsSchema,
+    _permissions: exchangePermissionsSchema,
   })
   .passthrough()
 

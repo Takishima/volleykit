@@ -16,6 +16,7 @@ import {
   type GameExchange,
 } from '../api'
 import { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS } from '../api/constants'
+import { filterTakeableExchanges } from '../utils/exchange-helpers'
 
 export { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS }
 
@@ -47,6 +48,11 @@ export interface UseExchangesOptions {
   hideOwn?: boolean
   /** Current user ID for filtering own exchanges */
   currentUserId?: string
+  /**
+   * Drop entries the server says the current user may not take over (e.g. they
+   * are registered as a referee for one of the two teams). Defaults to true.
+   */
+  hideNotTakeable?: boolean
 }
 
 /**
@@ -63,6 +69,7 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
     enabled = true,
     hideOwn = false,
     currentUserId,
+    hideNotTakeable = true,
   } = options
 
   const config = useMemo<SearchConfiguration>(
@@ -81,6 +88,12 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
     queryFn: async () => {
       const response = await apiClient.searchExchanges(config)
       let items = response.items ?? EMPTY_EXCHANGES
+
+      // Drop entries the referee is barred from taking over (own entries stay so
+      // they can still be pulled back off the marketplace)
+      if (hideNotTakeable) {
+        items = filterTakeableExchanges(items, currentUserId)
+      }
 
       // Filter out own exchanges if requested
       if (hideOwn && currentUserId) {

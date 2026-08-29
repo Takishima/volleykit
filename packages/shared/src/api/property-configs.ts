@@ -139,6 +139,11 @@ export const EXCHANGE_PROPERTIES = [
   'refereeGame.activeRefereeConvocationStandbyHeadReferee.__identity',
   'refereeGame.activeRefereeConvocationStandbyLinesman',
   'refereeGame.activeRefereeConvocationStandbyLinesman.__identity',
+  // Per-entry permissions: `properties.appliedBy.update` is the server's answer to
+  // "may the signed-in referee take this over?". It is false when a rule blocks
+  // them - most importantly when they are registered as a referee for one of the
+  // two teams playing the game.
+  '_permissions',
 ]
 
 /**

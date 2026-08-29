@@ -4,5 +4,6 @@
 
 export * from './date-helpers'
 export * from './assignment-helpers'
+export * from './exchange-helpers'
 export * from './error-helpers'
 export * from './geo'

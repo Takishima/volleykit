@@ -148,6 +148,34 @@ refereeConvocations[0][__identity]: <convocation_uuid>
 __csrfToken: <token>
 ```
 
+## Take-over Permission (`_permissions`)
+
+Each item in the response carries the server's verdict on whether the signed-in
+referee may take that entry over:
+
+```json
+{
+  "_permissions": {
+    "properties": {
+      "appliedBy": { "update": false }
+    }
+  }
+}
+```
+
+- `true`: the referee can apply (`pickFromRefereeGameExchange` succeeds)
+- `false`: a rule blocks them. The most important case is a referee registered
+  as referee for one of the two teams playing the game (referee mandate held for
+  that club/team), but level and ban rules land on the same flag.
+
+The search endpoint returns every open entry regardless of this flag, so the
+clients filter on it: entries with `update: false` are dropped from the Open tab.
+Own entries are kept - they carry `update: false` too, yet must stay visible so
+the submitter can pull them back off the marketplace. An entry without the flag
+is treated as takeable so a missing property never empties the list.
+
+Request `_permissions` in `propertyRenderConfiguration` to get it.
+
 ## Notes
 
 - Date filtering uses `propertyFilters` with `refereeGame.game.startingDateTime`

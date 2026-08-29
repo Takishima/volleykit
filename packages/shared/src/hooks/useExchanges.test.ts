@@ -236,6 +236,104 @@ describe('useExchanges', () => {
     expect(result.current.data).toHaveLength(1)
   })
 
+  it('should drop exchanges the referee may not take over', async () => {
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-takeable',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: true } } },
+      } as GameExchange,
+      {
+        // Referee is registered for one of the two teams - server denies the takeover
+        __identity: 'exc-blocked',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 2,
+    })
+
+    const { result } = renderHook(
+      () =>
+        useExchanges({
+          apiClient: mockApiClient,
+          currentUserId: 'user-123',
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.[0].__identity).toBe('exc-takeable')
+  })
+
+  it('should keep own exchanges even when they are not takeable', async () => {
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-own',
+        submittedByPerson: { __identity: 'user-123' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 1,
+    })
+
+    const { result } = renderHook(
+      () =>
+        useExchanges({
+          apiClient: mockApiClient,
+          currentUserId: 'user-123',
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toHaveLength(1)
+  })
+
+  it('should keep blocked exchanges when hideNotTakeable is false', async () => {
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-blocked',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 1,
+    })
+
+    const { result } = renderHook(
+      () =>
+        useExchanges({
+          apiClient: mockApiClient,
+          currentUserId: 'user-123',
+          hideNotTakeable: false,
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toHaveLength(1)
+  })
+
   it('should not fetch when disabled', async () => {
     renderHook(
       () =>
