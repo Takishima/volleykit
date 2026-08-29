@@ -121,7 +121,7 @@ pnpm run generate:api           # Generate API types (required before build)
 
 cd packages/web && pnpm run dev      # Start dev server
 cd packages/web && pnpm run build    # Production build
-cd packages/web && pnpm run knip     # Dead code detection
+scripts/validate.sh knip             # Dead code detection
 cd packages/web && pnpm run size     # Bundle size check
 
 cd packages/mobile && pnpm start  # Expo dev server

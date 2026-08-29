@@ -208,9 +208,9 @@ jobs:
         with:
           working-directory: packages/web
       # setup-node-deps caches only the root and packages/web node_modules, and
-      # skips installing when both keys hit. This job also needs the shared and
-      # mobile workspace dirs, which nothing caches, so install unconditionally.
-      # Idempotent and near-free when everything is already present.
+      # skips installing when both keys hit. This job also needs
+      # packages/shared/node_modules, which nothing caches, so install
+      # unconditionally. Idempotent and near-free when everything is present.
       - name: Ensure every workspace has its dependencies
         run: pnpm install --frozen-lockfile
       - name: Download API types
@@ -229,7 +229,7 @@ jobs:
           status=0
           for pkg in volleykit-web @volleykit/shared; do
             echo "::group::knip ($pkg)"
-            pnpm --filter "$pkg" run knip || status=1
+            pnpm --filter "$pkg" --fail-if-no-match run knip || status=1
             echo "::endgroup::"
           done
           exit "$status"
