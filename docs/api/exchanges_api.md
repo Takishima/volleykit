@@ -236,9 +236,18 @@ neither exists in the DB nor does it have a custom select expression or property
 
 Every render path is resolved against the domain model, and `_permissions` is a
 framework-level path, not a model property - so the search fails outright rather
-than ignoring the unknown path. The same holds for compensations, which return
-the block without it being requested. `propertyRenderConfiguration` therefore
-lists domain paths only; the permission block is read off the response.
+than ignoring the unknown path. `propertyRenderConfiguration` therefore lists
+domain paths only; the permission block is read off the response.
+
+The official client omits it too:
+[captures/exchanges_request.txt](captures/exchanges_request.txt) is an
+official-site search with 41 render paths and no `_permissions`, yet responses
+captured from that site carry the block per entry (the 10-entry table above,
+from a later session). The sibling endpoints are captured the same way - neither
+[captures/assignments_request.txt](captures/assignments_request.txt) nor
+[captures/compensations_request.txt](captures/compensations_request.txt) asks
+for `_permissions`, and both schemas have parsed the block off their responses
+since #971.
 
 If a future backend change stops returning the block, every entry loses its flag
 and is treated as takeable - the filter turns into a no-op, which keeps the Open
