@@ -12,32 +12,9 @@ const config = {
   jest: true,
 
   ignoreDependencies: [
-    // Workspace dependency resolved via path alias
-    '@volleykit/shared',
-
-    // Expo plugins in app.json - loaded dynamically by Expo
-    'expo-linking',
-    'expo-router',
-
-    // Peer dependency of @react-navigation/native-stack
-    'react-native-screens',
-
-    // Peer dependencies required by @volleykit/shared
-    'zod',
-    'zustand',
-
-    // Dynamic import() in route-calculator.ts
-    'ojp-sdk-next',
-
-    // Dev tool dependencies - used by CLIs, not imported
+    // Used by the babel CLI/preset chain, not imported from source
     '@babel/core',
-    'eslint',
-    'jest',
-    'jest-expo',
-    'react-test-renderer',
   ],
-
-  ignoreBinaries: ['expo', 'tsc', 'eslint', 'jest', 'knip'],
 
   ignoreExportsUsedInFile: true,
 
