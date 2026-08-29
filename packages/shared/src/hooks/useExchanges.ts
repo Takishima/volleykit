@@ -105,6 +105,9 @@ export function useExchanges(
       if (status === 'open') {
         result = filterTakeableExchanges(result, currentUserId)
       }
+      // Counted over the full fetched list, before `hideOwn` narrows it. Web
+      // repeats this arithmetic in useExchangeFilters over its own wrapper type;
+      // both sides share the predicate, so keep the scope aligned.
       const notTakeableCount = items.length - result.length
 
       // Filter out own exchanges if requested

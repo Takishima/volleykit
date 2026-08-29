@@ -490,6 +490,29 @@ describe('ExchangePage', () => {
       ).not.toBeInTheDocument()
     })
 
+    it('should report withheld entries above a list that still has cards', () => {
+      const takeable = createMockExchange({
+        __identity: 'exchange-takeable',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: allowedPermissions,
+      })
+      const blocked = createMockExchange({
+        __identity: 'exchange-blocked',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(
+        createMockQueryResult([takeable, blocked])
+      )
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+      expect(screen.getByText(/one exchange is hidden/i)).toBeInTheDocument()
+    })
+
     it('should not blame filters when the marketplace itself is empty', () => {
       // hideOwnExchanges defaults to true, so an empty fetch used to read as
       // "no exchanges match your filters"

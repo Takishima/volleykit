@@ -118,6 +118,11 @@ export function useExchangeFilters({
     // entries are kept: they carry the same flag but must stay removable.
     // Runs first so the count describes the marketplace rather than whatever
     // the level, distance, travel time and gap filters happened to leave.
+    //
+    // Mobile gets the same number from the shared `useExchanges`, which counts
+    // over the raw entries; web has its own fetch hook and a wrapper type, so it
+    // repeats the arithmetic here. Both count the full fetched list, and the
+    // predicate itself is shared - keep it that way if either side moves.
     if (statusFilter === 'open') {
       const takeable = result.filter(({ exchange }) =>
         isTakeableOrOwn(exchange, currentUserIdentity)
@@ -233,7 +238,6 @@ export function useExchangeFilters({
   return {
     filteredData,
     notTakeableCount,
-    fetchedCount: data?.length ?? 0,
     travelTimeMap,
     homeLocation,
     isTravelTimeFilterAvailable,

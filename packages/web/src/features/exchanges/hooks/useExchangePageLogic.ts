@@ -105,7 +105,6 @@ export function useExchangePageLogic() {
   const {
     filteredData,
     notTakeableCount,
-    fetchedCount,
     travelTimeMap,
     homeLocation,
     isTravelTimeFilterAvailable,
@@ -124,35 +123,23 @@ export function useExchangePageLogic() {
     dummyExchanges,
   })
 
-  // Which empty state the Open tab should show. Derived here rather than in the
-  // component: every input already lives in this hook, and only the wording is
-  // the component's business.
+  // What the Open tab should say about a list that is shorter than the fetch.
+  // Derived here rather than in the component: every input already lives in this
+  // hook, and only the wording is the component's business.
   //
-  // "Nothing on offer" and "everything was filtered away" are different answers,
-  // so an empty fetch never gets blamed on a filter.
-  const openTabEmptyState = useMemo((): {
-    filtered: boolean
-    notTakeableCount: number
-  } => {
+  // `filtered` is deliberately not read off the filter toggles. Those say a
+  // filter is enabled, not that it removed anything - the level filter outside
+  // demo mode, or the distance filter with no home location, are enabled and
+  // inert, and `hideOwnExchanges` defaults to true for everyone. What the user
+  // needs to know is whether something they can still act on did the removing,
+  // and the arithmetic answers that: an entry that survived the take-over filter
+  // yet is missing from the list was removed by a filter the user owns.
+  const openTabNotice = useMemo((): { filtered: boolean; notTakeableCount: number } => {
+    const fetchedCount = data?.length ?? 0
     if (fetchedCount === 0) return { filtered: false, notTakeableCount: 0 }
 
-    const hasActiveFilters =
-      hideOwnExchanges ||
-      levelFilterEnabled ||
-      distanceFilter.enabled ||
-      travelTimeFilter.enabled ||
-      gameGapFilter.enabled
-
-    return { filtered: hasActiveFilters, notTakeableCount }
-  }, [
-    fetchedCount,
-    hideOwnExchanges,
-    levelFilterEnabled,
-    distanceFilter.enabled,
-    travelTimeFilter.enabled,
-    gameGapFilter.enabled,
-    notTakeableCount,
-  ])
+    return { filtered: fetchedCount - notTakeableCount > 0, notTakeableCount }
+  }, [data, notTakeableCount])
 
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null
@@ -239,7 +226,7 @@ export function useExchangePageLogic() {
 
     // Data
     groupedData,
-    openTabEmptyState,
+    openTabNotice,
     travelTimeMap,
     homeLocation,
     showDummyData,

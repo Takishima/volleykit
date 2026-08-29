@@ -30,7 +30,7 @@ export function ExchangePage() {
     statusFilter,
     handleTabChange,
     groupedData,
-    openTabEmptyState,
+    openTabNotice,
     travelTimeMap,
     homeLocation,
     showDummyData,
@@ -101,17 +101,17 @@ export function ExchangePage() {
       )
     }
 
+    const { filtered, notTakeableCount } = openTabNotice
+
+    // Entries the server refuses to hand over are dropped without a toggle to
+    // restore them, so name them either way - above a shortened list, or as the
+    // empty state. A filter the user can act on still leads.
+    const notTakeableNote =
+      notTakeableCount === 1
+        ? t('exchange.exchangesNotTakeableOne')
+        : tInterpolate('exchange.exchangesNotTakeable', { count: notTakeableCount })
+
     if (groupedData.length === 0) {
-      const { filtered, notTakeableCount } = openTabEmptyState
-
-      // Entries the server refuses to hand over are dropped without a toggle to
-      // restore them, so name them. An active filter still leads: that one the
-      // user can act on.
-      const notTakeableNote =
-        notTakeableCount === 1
-          ? t('exchange.exchangesNotTakeableOne')
-          : tInterpolate('exchange.exchangesNotTakeable', { count: notTakeableCount })
-
       let openTabDescription = t('exchange.noOpenExchangesDescription')
       if (filtered) {
         openTabDescription = notTakeableCount
@@ -137,40 +137,45 @@ export function ExchangePage() {
     }
 
     return (
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {groupedData.map((group, groupIndex) => {
-          // Track global item index for tour data attribute
-          const itemsBeforeThisGroup = groupedData
-            .slice(0, groupIndex)
-            .reduce((sum, g) => sum + g.items.length, 0)
+      <>
+        {statusFilter === 'open' && notTakeableCount > 0 && (
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{notTakeableNote}</p>
+        )}
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {groupedData.map((group, groupIndex) => {
+            // Track global item index for tour data attribute
+            const itemsBeforeThisGroup = groupedData
+              .slice(0, groupIndex)
+              .reduce((sum, g) => sum + g.items.length, 0)
 
-          return (
-            <Fragment key={group.week.key}>
-              {/* Only show separator if there's more than one week */}
-              {groupedData.length > 1 && <WeekSeparator week={group.week} />}
-              {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
-                const travelTimeData = travelTimeMap.get(exchange.__identity)
-                return (
-                  <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
-                    {({ isDrawerOpen }) => (
-                      <ExchangeCard
-                        exchange={exchange}
-                        disableExpansion={isDrawerOpen}
-                        dataTour={
-                          itemsBeforeThisGroup + itemIndex === 0 ? 'exchange-card' : undefined
-                        }
-                        carDistanceKm={homeLocation ? carDistanceKm : null}
-                        travelTimeMinutes={travelTimeData?.minutes}
-                        travelTimeLoading={travelTimeData?.isLoading}
-                      />
-                    )}
-                  </SwipeableCard>
-                )
-              })}
-            </Fragment>
-          )
-        })}
-      </div>
+            return (
+              <Fragment key={group.week.key}>
+                {/* Only show separator if there's more than one week */}
+                {groupedData.length > 1 && <WeekSeparator week={group.week} />}
+                {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
+                  const travelTimeData = travelTimeMap.get(exchange.__identity)
+                  return (
+                    <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
+                      {({ isDrawerOpen }) => (
+                        <ExchangeCard
+                          exchange={exchange}
+                          disableExpansion={isDrawerOpen}
+                          dataTour={
+                            itemsBeforeThisGroup + itemIndex === 0 ? 'exchange-card' : undefined
+                          }
+                          carDistanceKm={homeLocation ? carDistanceKm : null}
+                          travelTimeMinutes={travelTimeData?.minutes}
+                          travelTimeLoading={travelTimeData?.isLoading}
+                        />
+                      )}
+                    </SwipeableCard>
+                  )
+                })}
+              </Fragment>
+            )
+          })}
+        </div>
+      </>
     )
   }
 
