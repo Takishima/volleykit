@@ -27,7 +27,7 @@ on:
 #   setup ─────┬──────────────────────────────────────┐
 #   (API types)│                                      │
 #              ├──> lint ──────┐                      │
-#              ├──> knip       │                      │
+#              ├──> knip (web, shared, mobile)                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
 #                              ├──> e2e (per browser) │
@@ -116,10 +116,13 @@ jobs:
           working-directory: packages/web
       - name: Audit dependencies
         run: |
-          # Known unfixable vulnerabilities to ignore:
-          # - GHSA-3ppc-4f35-3m26: minimatch ReDoS (transitive via eslint, no fix until eslint 10)
-          # - GHSA-jmr7-xgp7-cmfj: fast-xml-parser DoS (transitive via ojp-sdk-next, no upstream fix)
-          IGNORED_ADVISORIES="GHSA-3ppc-4f35-3m26 GHSA-jmr7-xgp7-cmfj"
+          # Space-separated GHSA ids to suppress. Keep this empty unless an
+          # advisory genuinely has no fix: a stale entry lets a regression on
+          # that advisory ship green.
+          # - GHSA-3ppc-4f35-3m26 (minimatch ReDoS) was waiting on eslint 10, now on 10.9.1.
+          # - GHSA-jmr7-xgp7-cmfj (fast-xml-parser DoS) is fixed by the ^5.11.1 override,
+          #   since ojp-sdk-next pins the vulnerable 5.0.8 exactly.
+          IGNORED_ADVISORIES=""
           AUDIT_JSON=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
           FOUND=$(echo "$AUDIT_JSON" | jq -r '.vulnerabilities | keys[]' 2>/dev/null || true)
 
@@ -197,9 +200,6 @@ jobs:
     name: Dead Code Check
     needs: setup
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -212,8 +212,17 @@ jobs:
         with:
           name: api-types
           path: packages
+      # shared and mobile also define a knip script; run all three so a config
+      # that has never been green cannot ship unnoticed.
       - name: Check for dead code
-        run: pnpm run knip
+        run: |
+          status=0
+          for pkg in web shared mobile; do
+            echo "::group::knip ($pkg)"
+            (cd "packages/$pkg" && pnpm run knip) || status=1
+            echo "::endgroup::"
+          done
+          exit "$status"
   # Unit tests - needs API types from setup
   # PRs: only run tests affected by changed files (--changed)
   # main: run all tests for full coverage validation
