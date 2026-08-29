@@ -223,14 +223,35 @@ Own entries are kept - they carry `update: false` too, yet must stay visible so
 the submitter can pull them back off the marketplace. An entry without the flag
 is treated as takeable so a missing property never empties the list.
 
-The clients request `_permissions` in `propertyRenderConfiguration`. Whether the
-endpoint returns the block unasked is unconfirmed - the capture that shows it
-came from the official site, whose request shape for that call was not captured,
-and the compensations endpoint does return it without asking. Requesting it is
-the safer of the two guesses: an unaccepted property path fails the search
-outright, while a missing flag reads as "takeable" and turns the filter into a
-silent no-op. To settle it, capture our own search with the property removed and
-check whether `items[]._permissions.properties.appliedBy` still arrives.
+### Do not request `_permissions` on this endpoint
+
+The block arrives unasked, and asking for it breaks the search. Listing
+`_permissions` in `propertyRenderConfiguration` makes the endpoint answer
+`500` with:
+
+```
+In path _permissions: The field _permissions on Indoorvolleyball\RefAdmin\Domain\Model\RefereeGameExchange
+neither exists in the DB nor does it have a custom select expression or property value provider
+```
+
+Every render path is resolved against the domain model, and `_permissions` is a
+framework-level path, not a model property - so the search fails outright rather
+than ignoring the unknown path. `propertyRenderConfiguration` therefore lists
+domain paths only; the permission block is read off the response.
+
+The official client omits it too:
+[captures/exchanges_request.txt](captures/exchanges_request.txt) is an
+official-site search with 48 render paths and no `_permissions`, yet responses
+captured from that site carry the block per entry (the 10-entry table above,
+from a later session). The sibling endpoints are captured the same way - neither
+[captures/assignments_request.txt](captures/assignments_request.txt) nor
+[captures/compensations_request.txt](captures/compensations_request.txt) asks
+for `_permissions`, and both schemas have parsed the block off their responses
+since #971.
+
+If a future backend change stops returning the block, every entry loses its flag
+and is treated as takeable - the filter turns into a no-op, which keeps the Open
+tab populated rather than emptying it.
 
 ## Notes
 
