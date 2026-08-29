@@ -11,11 +11,6 @@ const config = {
   eslint: true,
   jest: true,
 
-  ignoreDependencies: [
-    // Used by the babel CLI/preset chain, not imported from source
-    '@babel/core',
-  ],
-
   ignoreExportsUsedInFile: true,
 
   rules: {
