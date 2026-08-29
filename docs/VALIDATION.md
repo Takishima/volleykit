@@ -10,7 +10,7 @@ scripts/validate.sh --clear  # drop the cache
 ```
 
 Classes: `format`, `tokens`, `lint`, `typecheck`, `knip`, `test`, `build`.
-`/lint`, `/test`, `/build` are wrappers over these.
+`/lint`, `/test`, `/build`, `/knip` are wrappers over these.
 
 ## Rules
 
@@ -177,7 +177,6 @@ validate.
 pnpm run format          # prettier --write
 pnpm run lint:fix        # eslint --fix        (web, mobile)
 pnpm run generate:api    # regenerate API types
-cd packages/web && pnpm run knip    # dead code
 ```
 
 ## E2E Tests (Web App)

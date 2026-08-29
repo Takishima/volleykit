@@ -27,7 +27,7 @@ on:
 #   setup ─────┬──────────────────────────────────────┐
 #   (API types)│                                      │
 #              ├──> lint ──────┐                      │
-#              ├──> knip (x3)  │                      │
+#              ├──> knip (x2)  │                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
 #                              ├──> e2e (per browser) │
@@ -218,10 +218,21 @@ jobs:
         with:
           name: api-types
           path: packages
-      # -r --if-present covers every package that defines a knip script, so this
-      # needs no edit when one is added or removed.
+      # One --filter per package, not a single multi-filter run: pnpm exits 0
+      # when *some* selected packages lack the script and only fails when none
+      # has it, so a multi-filter run would silently drop a package whose script
+      # was renamed — the bug this gate exists to catch. A single filter exits 1.
+      # The loop keeps going so one failing package still reports the other.
+      # Mobile runs its own knip in ci-mobile.yml, the workflow its changes trigger.
       - name: Check for dead code
-        run: pnpm -r --if-present run knip
+        run: |
+          status=0
+          for pkg in volleykit-web @volleykit/shared; do
+            echo "::group::knip ($pkg)"
+            pnpm --filter "$pkg" run knip || status=1
+            echo "::endgroup::"
+          done
+          exit "$status"
   # Unit tests - needs API types from setup
   # PRs: only run tests affected by changed files (--changed)
   # main: run all tests for full coverage validation
