@@ -179,8 +179,7 @@ export function useExchangeFilters({
       })
     }
 
-    // Hide entries the server refuses to hand over on the "open" tab - most
-    // notably games of a team the user is registered as a referee for. Own
+    // Hide entries the server refuses to hand over on the "open" tab. Own
     // entries are kept: they carry the same flag but must stay removable.
     if (statusFilter === 'open') {
       result = result.filter(

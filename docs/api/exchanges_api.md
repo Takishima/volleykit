@@ -164,13 +164,26 @@ referee may take that entry over:
 ```
 
 - `true`: the referee can apply (`pickFromRefereeGameExchange` succeeds)
-- `false`: a conflict of interest blocks them - they are registered as a referee
-  for one of the two teams playing that game.
+- `false`: a backend rule blocks them, and applying anyway is rejected
 
-The flag is not about referee level: a capture from a referee cleared up to and
-including National League B had `update: false` on regional games they are
-qualified for. Take the field as the server's answer and do not re-derive it
-from `requiredRefereeLevel`.
+The backend does not say which rule fired, and the clients do not try to
+reproduce it - the field is taken as the server's answer.
+
+Observed in a capture from a Swiss Volley Region Zurich referee cleared up to
+and including National League B (2026-08-29, all 10 entries in the same regional
+association):
+
+| Games                                  | `update` | League      | `requiredRefereeLevel` |
+| -------------------------------------- | -------- | ----------- | ---------------------- |
+| 406907, 405628, 406403, 406830, 405659 | `false`  | 4L, 5L      | N4                     |
+| 406305, 406720, 406221, 406995, 406159 | `true`   | 2L, 3L, U23 | N3                     |
+
+So the flag tracked the _lower_ league boundary, not the referee's upper
+clearance: the region appears to keep 4L/5L entries for its own club referees.
+Rules that block a specific game rather than a whole tier - a referee registered
+as referee for one of the two playing teams, or an explicit club/team ban - land
+on the same flag; that capture contains no such case, since it has four distinct
+blocked home clubs and one club (VBC Einsiedeln) on both sides of the split.
 
 The search endpoint returns every open entry regardless of this flag, so the
 clients filter on it: entries with `update: false` are dropped from the Open tab.

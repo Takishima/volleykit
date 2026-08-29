@@ -120,9 +120,8 @@ export const permissionsSchema = z
 //
 // The exchange search endpoint answers with per-property permissions instead of
 // the canEdit/canDelete/canView flags. `properties.appliedBy.update` is the
-// server's verdict on whether the signed-in referee may take the entry over: it
-// is false when they are registered as a referee for one of the two teams
-// playing that game.
+// server's verdict on whether the signed-in referee may take the entry over:
+// false means a backend rule blocks them and applying would be rejected.
 export const exchangePermissionsSchema = z
   .object({
     properties: z

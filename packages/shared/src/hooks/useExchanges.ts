@@ -49,8 +49,8 @@ export interface UseExchangesOptions {
   /** Current user ID for filtering own exchanges */
   currentUserId?: string
   /**
-   * Drop entries the server says the current user may not take over (e.g. they
-   * are registered as a referee for one of the two teams). Defaults to true.
+   * Drop entries the server says the current user may not take over.
+   * Defaults to true.
    */
   hideNotTakeable?: boolean
 }
