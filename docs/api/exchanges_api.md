@@ -180,10 +180,42 @@ association):
 
 So the flag tracked the _lower_ league boundary, not the referee's upper
 clearance: the region appears to keep 4L/5L entries for its own club referees.
-Rules that block a specific game rather than a whole tier - a referee registered
-as referee for one of the two playing teams, or an explicit club/team ban - land
-on the same flag; that capture contains no such case, since it has four distinct
-blocked home clubs and one club (VBC Einsiedeln) on both sides of the split.
+
+Two rival explanations are ruled out by that same capture:
+
+- **Team registration / club affiliation**: four distinct home clubs are blocked,
+  and VBC Einsiedeln sits on both sides of the split (D3 blocked, D2 and H2
+  takeable).
+- **Distance from home**: Sporthalle Brüel in 8840 Einsiedeln hosts both a
+  blocked entry (405659, 5L) and two takeable ones (406221 and 406995, 2L).
+
+### Which rules feed the flag
+
+`GET .../refereeassociationsettings/getRefereeAssociationSettingsOfActiveParty`
+(already fetched by the clients) exposes the association's exchange
+configuration. The fields that decide who may catch a game:
+
+| Field                                                            | Zurich value                                         | Effect                                                                                  |
+| ---------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `usesGameExchange`                                               | `true`                                               | The exchange exists for this association                                                |
+| `allowedRefereeTypesForGameExchange`                             | `["head-two", "head-one"]`                           | Only head referee entries can be exchanged - no linesman entries                        |
+| `hoursBeforeGameStartIgnoringConvocationCriteriaInGameExchange`  | `72`                                                 | Inside 72h before game start the convocation criteria stop being enforced               |
+| `allowGameExchangeCatchingOfFlaggedRefereeXHoursBeforeGameStart` | `72`                                                 | Same window for referees flagged as systematically delayed                              |
+| `maxDistanceInKmBetweenRefereeAndHall`                           | `50`                                                 | Distance criterion                                                                      |
+| `basisToConsiderRefereeHome`                                     | `["", "hasValidatedPlayerOrCoachLicenseOfHomeClub"]` | A referee holding a validated player or coach license of the home club counts as "home" |
+| `refereeMandateAllocationType`                                   | `"club"`                                             | Referee mandates are allocated per club, not per team                                   |
+| `clubsThisRefereeIsNotAllowedToArbitrate` (referee data)         | visible, not editable                                | Explicit club ban                                                                       |
+| `teamsThisRefereeIsNotAllowedToArbitrate` (referee data)         | visible, not editable                                | Explicit team ban                                                                       |
+| `mayNotRefereeMatchForGender` (referee data)                     | visible, not editable                                | Gender restriction                                                                      |
+
+So `appliedBy.update` is the outcome of the whole convocation-criteria check for
+that referee and that game - level, distance, gender, club/team bans and the
+home-club conflict of interest all collapse into the one boolean. The response
+never says which criterion fired.
+
+Because the criteria stop applying 72h before game start, the same entry can flip
+from `false` to `true` as the game approaches. The clients re-read the flag on
+every fetch, so this needs no client-side handling.
 
 The search endpoint returns every open entry regardless of this flag, so the
 clients filter on it: entries with `update: false` are dropped from the Open tab.
