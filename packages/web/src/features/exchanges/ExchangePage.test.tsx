@@ -525,6 +525,24 @@ describe('ExchangePage', () => {
       expect(screen.queryByText(/match your filters/i)).not.toBeInTheDocument()
     })
 
+    it('should not blame filters when grouping drops undated entries', () => {
+      // groupByWeek silently drops entries without a parseable start time
+      const undated = createMockExchange({
+        __identity: 'exchange-undated',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: allowedPermissions,
+        refereeGame: { game: { encounter: { teamHome: {}, teamAway: {} } } },
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([undated]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.queryByText(/match your filters/i)).not.toBeInTheDocument()
+      expect(screen.getByText(/no referee positions available for exchange/i)).toBeInTheDocument()
+    })
+
     it('should keep the referee own blocked exchange so it stays removable', () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({

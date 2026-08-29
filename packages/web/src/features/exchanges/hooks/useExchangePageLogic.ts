@@ -123,24 +123,6 @@ export function useExchangePageLogic() {
     dummyExchanges,
   })
 
-  // What the Open tab should say about a list that is shorter than the fetch.
-  // Derived here rather than in the component: every input already lives in this
-  // hook, and only the wording is the component's business.
-  //
-  // `filtered` is deliberately not read off the filter toggles. Those say a
-  // filter is enabled, not that it removed anything - the level filter outside
-  // demo mode, or the distance filter with no home location, are enabled and
-  // inert, and `hideOwnExchanges` defaults to true for everyone. What the user
-  // needs to know is whether something they can still act on did the removing,
-  // and the arithmetic answers that: an entry that survived the take-over filter
-  // yet is missing from the list was removed by a filter the user owns.
-  const openTabNotice = useMemo((): { filtered: boolean; notTakeableCount: number } => {
-    const fetchedCount = data?.length ?? 0
-    if (fetchedCount === 0) return { filtered: false, notTakeableCount: 0 }
-
-    return { filtered: fetchedCount - notTakeableCount > 0, notTakeableCount }
-  }, [data, notTakeableCount])
-
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null
   const isDistanceFilterAvailable = homeLocation !== null
@@ -150,6 +132,32 @@ export function useExchangePageLogic() {
     if (!filteredData || filteredData.length === 0) return []
     return groupByWeek(filteredData, (item) => item.exchange.refereeGame?.game?.startingDateTime)
   }, [filteredData])
+
+  // What the Open tab should say about a list that is shorter than the fetch.
+  // Derived here rather than in the component: every input already lives in this
+  // hook, and only the wording is the component's business.
+  //
+  // `filtered` is deliberately not read off the filter toggles. Those say a
+  // filter is enabled, not that it removed anything - the level filter outside
+  // demo mode, or the distance filter with no home location, are enabled and
+  // inert, and `hideOwnExchanges` defaults to true for everyone. What the user
+  // needs to know is whether something they can act on did the removing, so the
+  // arithmetic asks exactly that: an entry that was neither withheld by the
+  // server nor rendered was dropped by a filter the user owns.
+  //
+  // Measured against what the filters left, not against what reaches the screen:
+  // `groupByWeek` drops entries too, silently, when a game carries no parseable
+  // start time. Those survived every filter, so counting the rendered total
+  // would blame a filter for the grouping's work - the empty state then falls
+  // back to "nothing on offer", which is at least not a false accusation.
+  const openTabNotice = useMemo((): { filtered: boolean; notTakeableCount: number } => {
+    const fetchedCount = data?.length ?? 0
+    if (fetchedCount === 0) return { filtered: false, notTakeableCount: 0 }
+
+    const survivedFilters = filteredData?.length ?? 0
+
+    return { filtered: fetchedCount - notTakeableCount - survivedFilters > 0, notTakeableCount }
+  }, [data, notTakeableCount, filteredData])
 
   const { takeOverModal, removeFromExchangeModal, handleTakeOver, handleRemoveFromExchange } =
     useExchangeActions()
