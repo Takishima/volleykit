@@ -117,6 +117,9 @@ export function ExchangesScreen(_props: Props) {
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-gray-600 text-center">{t('exchange.noExchanges')}</Text>
+        <Text className="text-gray-500 text-sm text-center mt-2">
+          {t('exchange.onlyTakeableListed')}
+        </Text>
       </View>
     )
   }
@@ -129,6 +132,11 @@ export function ExchangesScreen(_props: Props) {
       keyExtractor={(item) => item.__identity}
       refreshControl={
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
+      }
+      ListFooterComponent={
+        <Text className="text-gray-500 text-xs text-center mt-2">
+          {t('exchange.onlyTakeableListed')}
+        </Text>
       }
       renderItem={({ item }) => {
         const display = getExchangeDisplay(item, language, t('common.tbd'))

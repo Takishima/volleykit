@@ -153,6 +153,7 @@ const it: Translations = {
     submittedBy: 'Da:',
     levelRequired: 'Livello {level}+',
     hideOwn: 'Nascondi i miei',
+    onlyTakeableListed: 'Sono elencati solo gli scambi che ti è permesso rilevare.',
   },
   positions: {
     'head-one': '1° Arbitro',

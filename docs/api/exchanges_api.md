@@ -223,7 +223,14 @@ Own entries are kept - they carry `update: false` too, yet must stay visible so
 the submitter can pull them back off the marketplace. An entry without the flag
 is treated as takeable so a missing property never empties the list.
 
-Request `_permissions` in `propertyRenderConfiguration` to get it.
+The clients request `_permissions` in `propertyRenderConfiguration`. Whether the
+endpoint returns the block unasked is unconfirmed - the capture that shows it
+came from the official site, whose request shape for that call was not captured,
+and the compensations endpoint does return it without asking. Requesting it is
+the safer of the two guesses: an unaccepted property path fails the search
+outright, while a missing flag reads as "takeable" and turns the filter into a
+silent no-op. To settle it, capture our own search with the property removed and
+check whether `items[]._permissions.properties.appliedBy` still arrives.
 
 ## Notes
 

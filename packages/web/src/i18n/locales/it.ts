@@ -354,8 +354,9 @@ const it: Translations = {
     calculatingTravelTime: 'Calcolo tempo di viaggio...',
     noExchangesAtLevel: 'Nessuno scambio disponibile al tuo livello.',
     noExchangesWithFilters: 'Nessuno scambio corrisponde ai tuoi filtri.',
-    allExchangesNotTakeable:
+    exchangesNotTakeable:
       '{count} scambi sono nascosti: l’associazione non ti permette di rilevarli.',
+    exchangesNotTakeableOne: 'Uno scambio è nascosto: l’associazione non ti permette di rilevarlo.',
     noOpenExchangesTitle: 'Nessuno scambio aperto',
     noOpenExchangesDescription:
       'Al momento non ci sono posizioni arbitrali disponibili per lo scambio.',

@@ -484,7 +484,7 @@ describe('ExchangePage', () => {
 
       renderWithQueryClient(<ExchangePage />)
 
-      expect(screen.getByText(/1 exchanges are hidden/i)).toBeInTheDocument()
+      expect(screen.getByText(/one exchange is hidden/i)).toBeInTheDocument()
       expect(
         screen.queryByText(/no referee positions available for exchange/i)
       ).not.toBeInTheDocument()

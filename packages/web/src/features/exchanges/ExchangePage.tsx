@@ -110,13 +110,20 @@ export function ExchangePage() {
         gameGapFilter.enabled
 
       // Entries the server refuses to hand over are dropped without a toggle to
-      // restore them, so name them rather than claiming nothing is on offer
-      const openTabDescription =
-        notTakeableCount > 0
-          ? tInterpolate('exchange.allExchangesNotTakeable', { count: notTakeableCount })
-          : hasActiveFilters
-            ? t('exchange.noExchangesWithFilters')
-            : t('exchange.noOpenExchangesDescription')
+      // restore them, so name them rather than claiming nothing is on offer. An
+      // active filter still leads: that one the user can adjust.
+      const notTakeableNote =
+        notTakeableCount === 1
+          ? t('exchange.exchangesNotTakeableOne')
+          : tInterpolate('exchange.exchangesNotTakeable', { count: notTakeableCount })
+
+      const openTabDescription = hasActiveFilters
+        ? notTakeableCount > 0
+          ? `${t('exchange.noExchangesWithFilters')} ${notTakeableNote}`
+          : t('exchange.noExchangesWithFilters')
+        : notTakeableCount > 0
+          ? notTakeableNote
+          : t('exchange.noOpenExchangesDescription')
 
       return (
         <EmptyState
