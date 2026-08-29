@@ -114,6 +114,18 @@ export function useExchangeFilters({
 
     let result = exchangesWithDistance
 
+    // Hide entries the server refuses to hand over on the "open" tab. Own
+    // entries are kept: they carry the same flag but must stay removable.
+    // Runs first so the count describes the marketplace rather than whatever
+    // the level, distance, travel time and gap filters happened to leave.
+    if (statusFilter === 'open') {
+      const takeable = result.filter(({ exchange }) =>
+        isTakeableOrOwn(exchange, currentUserIdentity)
+      )
+      notTakeableCount = result.length - takeable.length
+      result = takeable
+    }
+
     // Apply level filter (only on "open" tab in demo mode)
     if (
       levelFilterEnabled &&
@@ -183,16 +195,6 @@ export function useExchangeFilters({
       })
     }
 
-    // Hide entries the server refuses to hand over on the "open" tab. Own
-    // entries are kept: they carry the same flag but must stay removable.
-    if (statusFilter === 'open') {
-      const takeable = result.filter(({ exchange }) =>
-        isTakeableOrOwn(exchange, currentUserIdentity)
-      )
-      notTakeableCount = result.length - takeable.length
-      result = takeable
-    }
-
     // Hide user's own exchanges in "open" tab when filter is enabled
     if (hideOwnExchanges && statusFilter === 'open' && currentUserIdentity) {
       result = result.filter(
@@ -231,6 +233,7 @@ export function useExchangeFilters({
   return {
     filteredData,
     notTakeableCount,
+    fetchedCount: data?.length ?? 0,
     travelTimeMap,
     homeLocation,
     isTravelTimeFilterAvailable,

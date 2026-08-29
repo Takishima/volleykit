@@ -35,6 +35,18 @@ export interface ExchangesApiClient {
 /** Stable empty array for React Query selectors */
 const EMPTY_EXCHANGES: GameExchange[] = []
 
+/**
+ * What the hook reports: the entries to show, plus how many the server refuses
+ * to hand over. Consumers need the count to explain a short list rather than
+ * leaving the referee to wonder.
+ */
+export interface ExchangeListResult {
+  /** Entries worth offering to the referee */
+  items: GameExchange[]
+  /** How many entries the server marked as not takeable */
+  notTakeableCount: number
+}
+
 export interface UseExchangesOptions {
   /** API client for fetching exchanges */
   apiClient: ExchangesApiClient
@@ -56,7 +68,9 @@ export interface UseExchangesOptions {
  * @param options - Configuration options including API client
  * @returns Query result with exchanges array
  */
-export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameExchange[], Error> {
+export function useExchanges(
+  options: UseExchangesOptions
+): UseQueryResult<ExchangeListResult, Error> {
   const {
     apiClient,
     status = 'open',
@@ -81,7 +95,7 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
   // so they run per observer in `select` rather than in `queryFn`. That keeps the
   // shared (and persisted) cache entry holding the server's list verbatim.
   const select = useCallback(
-    (items: GameExchange[]) => {
+    (items: GameExchange[]): ExchangeListResult => {
       let result = items
 
       // Drop entries the referee is barred from taking over (own entries stay so
@@ -91,6 +105,7 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
       if (status === 'open') {
         result = filterTakeableExchanges(result, currentUserId)
       }
+      const notTakeableCount = items.length - result.length
 
       // Filter out own exchanges if requested
       if (hideOwn && currentUserId) {
@@ -99,7 +114,7 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
         )
       }
 
-      return result
+      return { items: result, notTakeableCount }
     },
     [status, currentUserId, hideOwn]
   )

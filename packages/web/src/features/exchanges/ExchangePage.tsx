@@ -30,7 +30,7 @@ export function ExchangePage() {
     statusFilter,
     handleTabChange,
     groupedData,
-    notTakeableCount,
+    openTabEmptyState,
     travelTimeMap,
     homeLocation,
     showDummyData,
@@ -102,28 +102,24 @@ export function ExchangePage() {
     }
 
     if (groupedData.length === 0) {
-      const hasActiveFilters =
-        hideOwnExchanges ||
-        levelFilterEnabled ||
-        distanceFilter.enabled ||
-        travelTimeFilter.enabled ||
-        gameGapFilter.enabled
+      const { filtered, notTakeableCount } = openTabEmptyState
 
       // Entries the server refuses to hand over are dropped without a toggle to
-      // restore them, so name them rather than claiming nothing is on offer. An
-      // active filter still leads: that one the user can adjust.
+      // restore them, so name them. An active filter still leads: that one the
+      // user can act on.
       const notTakeableNote =
         notTakeableCount === 1
           ? t('exchange.exchangesNotTakeableOne')
           : tInterpolate('exchange.exchangesNotTakeable', { count: notTakeableCount })
 
-      const openTabDescription = hasActiveFilters
-        ? notTakeableCount > 0
+      let openTabDescription = t('exchange.noOpenExchangesDescription')
+      if (filtered) {
+        openTabDescription = notTakeableCount
           ? `${t('exchange.noExchangesWithFilters')} ${notTakeableNote}`
           : t('exchange.noExchangesWithFilters')
-        : notTakeableCount > 0
-          ? notTakeableNote
-          : t('exchange.noOpenExchangesDescription')
+      } else if (notTakeableCount > 0) {
+        openTabDescription = notTakeableNote
+      }
 
       return (
         <EmptyState

@@ -74,7 +74,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.items).toHaveLength(1)
     expect(mockApiClient.searchExchanges).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'open', // Default status
@@ -168,8 +168,8 @@ describe('useExchanges', () => {
     })
 
     // Should filter out the exchange from user-123
-    expect(result.current.data).toHaveLength(1)
-    expect(result.current.data?.[0].__identity).toBe('exc-2')
+    expect(result.current.data?.items).toHaveLength(1)
+    expect(result.current.data?.items[0].__identity).toBe('exc-2')
   })
 
   it('should not filter when hideOwn is false', async () => {
@@ -203,7 +203,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(2)
+    expect(result.current.data?.items).toHaveLength(2)
   })
 
   it('should not filter when currentUserId is not provided', async () => {
@@ -233,7 +233,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.items).toHaveLength(1)
   })
 
   it('should drop exchanges the referee may not take over', async () => {
@@ -269,8 +269,9 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
-    expect(result.current.data?.[0].__identity).toBe('exc-takeable')
+    expect(result.current.data?.items).toHaveLength(1)
+    expect(result.current.data?.items[0].__identity).toBe('exc-takeable')
+    expect(result.current.data?.notTakeableCount).toBe(1)
   })
 
   it('should keep own exchanges even when they are not takeable', async () => {
@@ -300,7 +301,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.items).toHaveLength(1)
   })
 
   it('should keep blocked exchanges on non-open statuses', async () => {
@@ -333,7 +334,8 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.items).toHaveLength(1)
+    expect(result.current.data?.notTakeableCount).toBe(0)
   })
 
   it('should cache the unfiltered list so per-caller options still apply', async () => {
@@ -367,7 +369,7 @@ describe('useExchanges', () => {
     await waitFor(() => {
       expect(hidingOwn.result.current.isSuccess).toBe(true)
     })
-    expect(hidingOwn.result.current.data?.map((e) => e.__identity)).toEqual(['exc-takeable'])
+    expect(hidingOwn.result.current.data?.items.map((e) => e.__identity)).toEqual(['exc-takeable'])
 
     // Second observer shares the cache entry and must still see its own entry
     const keepingOwn = renderHook(
@@ -378,7 +380,7 @@ describe('useExchanges', () => {
     await waitFor(() => {
       expect(keepingOwn.result.current.isSuccess).toBe(true)
     })
-    expect(keepingOwn.result.current.data?.map((e) => e.__identity)).toEqual([
+    expect(keepingOwn.result.current.data?.items.map((e) => e.__identity)).toEqual([
       'exc-own',
       'exc-takeable',
     ])
@@ -436,7 +438,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toEqual([])
+    expect(result.current.data?.items).toEqual([])
   })
 })
 

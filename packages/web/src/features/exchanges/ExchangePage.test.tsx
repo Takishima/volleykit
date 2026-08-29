@@ -490,6 +490,18 @@ describe('ExchangePage', () => {
       ).not.toBeInTheDocument()
     })
 
+    it('should not blame filters when the marketplace itself is empty', () => {
+      // hideOwnExchanges defaults to true, so an empty fetch used to read as
+      // "no exchanges match your filters"
+      mockSettings(true)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getByText(/no referee positions available for exchange/i)).toBeInTheDocument()
+      expect(screen.queryByText(/match your filters/i)).not.toBeInTheDocument()
+    })
+
     it('should keep the referee own blocked exchange so it stays removable', () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({

@@ -27,6 +27,9 @@ import type { MainTabScreenProps } from '../navigation/types'
 
 type Props = MainTabScreenProps<'Exchanges'>
 
+/** Stable empty array so an absent query result does not remount the list */
+const EMPTY_EXCHANGES: GameExchange[] = []
+
 // Status badge color mappings
 const STATUS_COLORS = {
   open: { bg: 'bg-success-100', text: 'text-success-700' },
@@ -67,18 +70,15 @@ export function ExchangesScreen(_props: Props) {
   // Needed so the referee's own entries survive the take-over filter
   const currentUserId = useAuthStore((state) => state.user?.id)
 
-  const {
-    data: exchanges = [],
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useExchanges({
+  const { data, isLoading, isFetching, isError, error, refetch } = useExchanges({
     apiClient,
     status: 'open',
     currentUserId,
   })
+
+  const exchanges = data?.items ?? EMPTY_EXCHANGES
+  // Only speak when something was actually withheld
+  const notTakeableCount = data?.notTakeableCount ?? 0
 
   const onRefresh = useCallback(() => {
     refetch()
@@ -117,9 +117,11 @@ export function ExchangesScreen(_props: Props) {
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-gray-600 text-center">{t('exchange.noExchanges')}</Text>
-        <Text className="text-gray-500 text-sm text-center mt-2">
-          {t('exchange.onlyTakeableListed')}
-        </Text>
+        {notTakeableCount > 0 && (
+          <Text className="text-gray-500 text-sm text-center mt-2">
+            {t('exchange.onlyTakeableListed')}
+          </Text>
+        )}
       </View>
     )
   }
@@ -134,9 +136,11 @@ export function ExchangesScreen(_props: Props) {
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
       }
       ListFooterComponent={
-        <Text className="text-gray-500 text-xs text-center mt-2">
-          {t('exchange.onlyTakeableListed')}
-        </Text>
+        notTakeableCount > 0 ? (
+          <Text className="text-gray-500 text-xs text-center mt-2">
+            {t('exchange.onlyTakeableListed')}
+          </Text>
+        ) : null
       }
       renderItem={({ item }) => {
         const display = getExchangeDisplay(item, language, t('common.tbd'))

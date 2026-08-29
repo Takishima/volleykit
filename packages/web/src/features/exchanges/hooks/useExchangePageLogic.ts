@@ -105,6 +105,7 @@ export function useExchangePageLogic() {
   const {
     filteredData,
     notTakeableCount,
+    fetchedCount,
     travelTimeMap,
     homeLocation,
     isTravelTimeFilterAvailable,
@@ -122,6 +123,36 @@ export function useExchangePageLogic() {
     showDummyData,
     dummyExchanges,
   })
+
+  // Which empty state the Open tab should show. Derived here rather than in the
+  // component: every input already lives in this hook, and only the wording is
+  // the component's business.
+  //
+  // "Nothing on offer" and "everything was filtered away" are different answers,
+  // so an empty fetch never gets blamed on a filter.
+  const openTabEmptyState = useMemo((): {
+    filtered: boolean
+    notTakeableCount: number
+  } => {
+    if (fetchedCount === 0) return { filtered: false, notTakeableCount: 0 }
+
+    const hasActiveFilters =
+      hideOwnExchanges ||
+      levelFilterEnabled ||
+      distanceFilter.enabled ||
+      travelTimeFilter.enabled ||
+      gameGapFilter.enabled
+
+    return { filtered: hasActiveFilters, notTakeableCount }
+  }, [
+    fetchedCount,
+    hideOwnExchanges,
+    levelFilterEnabled,
+    distanceFilter.enabled,
+    travelTimeFilter.enabled,
+    gameGapFilter.enabled,
+    notTakeableCount,
+  ])
 
   // Determine if filters are available
   const isLevelFilterAvailable = isDemoMode && userRefereeLevel !== null
@@ -208,7 +239,7 @@ export function useExchangePageLogic() {
 
     // Data
     groupedData,
-    notTakeableCount,
+    openTabEmptyState,
     travelTimeMap,
     homeLocation,
     showDummyData,
