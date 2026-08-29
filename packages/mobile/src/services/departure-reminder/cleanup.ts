@@ -142,7 +142,9 @@ export function verifyNoLocationHistory(): boolean {
  *
  * @returns Cleanup interval ID for cancellation
  */
-export function schedulePeriodicCleanup(intervalMs: number = 60 * 60 * 1000): NodeJS.Timeout {
+export function schedulePeriodicCleanup(
+  intervalMs: number = 60 * 60 * 1000
+): ReturnType<typeof setInterval> {
   return setInterval(async () => {
     await cleanupPastReminders()
   }, intervalMs)

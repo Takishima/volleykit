@@ -29,10 +29,7 @@ import type {
  * Mobile doesn't currently support batch updates or assignment-based compensation updates.
  */
 export type OfflineAction =
-  | UpdateCompensationAction
-  | ApplyForExchangeAction
-  | AddToExchangeAction
-  | RemoveOwnExchangeAction
+  UpdateCompensationAction | ApplyForExchangeAction | AddToExchangeAction | RemoveOwnExchangeAction
 
 /**
  * Action type discriminator values for mobile.
