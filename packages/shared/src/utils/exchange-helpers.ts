@@ -9,9 +9,12 @@ import type { GameExchange } from '../api'
  *
  * The search endpoint returns `_permissions.properties.appliedBy.update` per
  * entry: the server's own verdict on whether the signed-in referee is allowed to
- * apply. It is false when a rule blocks them - most importantly when they are
- * registered as a referee for one of the two teams playing that game, but also
- * for level or ban rules. Applying anyway is rejected by the backend.
+ * apply. It is false when a conflict of interest blocks them - they are
+ * registered as a referee for one of the two teams playing that game. Applying
+ * anyway is rejected by the backend.
+ *
+ * The flag is not a level check, so it is taken as-is rather than re-derived
+ * from `requiredRefereeLevel`.
  *
  * Entries without the flag are treated as takeable so a missing property never
  * empties the list.

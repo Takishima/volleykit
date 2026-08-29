@@ -164,9 +164,13 @@ referee may take that entry over:
 ```
 
 - `true`: the referee can apply (`pickFromRefereeGameExchange` succeeds)
-- `false`: a rule blocks them. The most important case is a referee registered
-  as referee for one of the two teams playing the game (referee mandate held for
-  that club/team), but level and ban rules land on the same flag.
+- `false`: a conflict of interest blocks them - they are registered as a referee
+  for one of the two teams playing that game.
+
+The flag is not about referee level: a capture from a referee cleared up to and
+including National League B had `update: false` on regional games they are
+qualified for. Take the field as the server's answer and do not re-derive it
+from `requiredRefereeLevel`.
 
 The search endpoint returns every open entry regardless of this flag, so the
 clients filter on it: entries with `update: false` are dropped from the Open tab.
