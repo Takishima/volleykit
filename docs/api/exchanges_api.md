@@ -241,7 +241,7 @@ domain paths only; the permission block is read off the response.
 
 The official client omits it too:
 [captures/exchanges_request.txt](captures/exchanges_request.txt) is an
-official-site search with 41 render paths and no `_permissions`, yet responses
+official-site search with 48 render paths and no `_permissions`, yet responses
 captured from that site carry the block per entry (the 10-entry table above,
 from a later session). The sibling endpoints are captured the same way - neither
 [captures/assignments_request.txt](captures/assignments_request.txt) nor
