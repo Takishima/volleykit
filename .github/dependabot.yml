@@ -27,26 +27,25 @@ updates:
       - dependency-name: "react-native"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "react-native-safe-area-context"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: "react-native-screens"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "jest"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/jest"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "jest-expo"
-        update-types: ["version-update:semver-major"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # Pulled in explicitly so they stop drifting as auto-installed peers; their
+      # versions come from expo/bundledNativeModules.json, not npm's latest.
+      # Expo pins reanimated and worklets to an exact version, so even a patch
+      # bump fails `expo install --check` — those two are ignored outright.
+      - dependency-name: "react-native-reanimated"
+      - dependency-name: "react-native-worklets"
+      # gesture-handler is pinned as ~2.32.0, so patches are in range and welcome.
+      - dependency-name: "react-native-gesture-handler"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       # TypeScript major bumps require manual tsconfig migration (baseUrl deprecation,
-      # lib changes, etc.) and mobile must stay on TS 5.x for Expo SDK 55 compatibility.
+      # lib changes, etc.). Every package is on TS 6; TS 7 is the Go port.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       # @react-navigation packages are pinned by Expo SDK — upgrade via `expo install`.
       - dependency-name: "@react-navigation/*"
         update-types: ["version-update:semver-major"]
-      # astro is pinned to 6.1.9 in help-site (see help-site/package.json) because newer
-      # versions break the build with current vite/rolldown/@tailwindcss/vite combo.
-      # Upgrade manually once the upstream incompatibility is resolved.
-      - dependency-name: "astro"
     groups:
       # Group all minor/patch updates into a single PR
       all-minor-patch:
@@ -57,23 +56,6 @@ updates:
       all-major:
         update-types:
           - "major"
-  # Enable version updates for pub (Dart/Flutter)
-  - package-ecosystem: "pub"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "07:00"
-      timezone: "UTC"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "Takishima"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "flutter"
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"

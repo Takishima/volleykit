@@ -202,6 +202,7 @@ register_all_checks() {
     if affected web; then
       register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
       register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
+      register_check "web:knip" "knip" "$ROOT_DIR/packages/web" "pnpm run knip" "${PKG_INPUTS[web]}"
       register_check "web:build" "build" "$ROOT_DIR/packages/web" "__web_build__" "${PKG_INPUTS[web]}"
     fi
 
@@ -209,6 +210,7 @@ register_all_checks() {
       register_check "shared:lint" "lint" "$ROOT_DIR/packages/shared" "pnpm run lint" "${PKG_INPUTS[shared]}"
       register_check "shared:typecheck" "typecheck" "$ROOT_DIR/packages/shared" "pnpm run typecheck" "${PKG_INPUTS[shared]}"
       register_check "shared:test" "test" "$ROOT_DIR/packages/shared" "pnpm test" "${PKG_INPUTS[shared]}"
+      register_check "shared:knip" "knip" "$ROOT_DIR/packages/shared" "pnpm run knip" "${PKG_INPUTS[shared]}"
       register_check "shared:build" "build" "$ROOT_DIR/packages/shared" "pnpm run build" "${PKG_INPUTS[shared]}"
     fi
 
@@ -216,6 +218,7 @@ register_all_checks() {
       register_check "mobile:lint" "lint" "$ROOT_DIR/packages/mobile" "pnpm run lint" "${PKG_INPUTS[mobile]}"
       register_check "mobile:typecheck" "typecheck" "$ROOT_DIR/packages/mobile" "pnpm run typecheck" "${PKG_INPUTS[mobile]}"
       register_check "mobile:test" "test" "$ROOT_DIR/packages/mobile" "pnpm test" "${PKG_INPUTS[mobile]}"
+      register_check "mobile:knip" "knip" "$ROOT_DIR/packages/mobile" "pnpm run knip" "${PKG_INPUTS[mobile]}"
     fi
 
     if affected worker; then

@@ -1,9 +1,10 @@
 # Quick Knip Check
 
-Run dead code detection only.
+Detect dead code in every package touched by the current changes. Cached —
+counts towards the commit gate, never re-run at commit time.
 
 ```bash
-cd packages/web && pnpm run knip
+scripts/validate.sh knip
 ```
 
-Output: `✓ Knip` or `✗ Knip: [unused exports summary]`
+Report `✓ Knip` or `✗ Knip: [first finding]`.

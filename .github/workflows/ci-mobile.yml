@@ -93,6 +93,12 @@ jobs:
           key: ${{ needs.setup.outputs.api-cache-key }}
       - name: Run ESLint
         run: pnpm run lint
+      # Lives here rather than in ci.yml's Dead Code Check: that workflow does
+      # not trigger on packages/mobile/**, so a mobile-only PR would never run it.
+      # Runs even when ESLint fails, so a lint error cannot hide a knip finding.
+      - name: Check for dead code
+        if: ${{ !cancelled() }}
+        run: pnpm run knip
   test:
     name: Test
     runs-on: ubuntu-latest

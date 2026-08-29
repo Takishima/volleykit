@@ -27,7 +27,7 @@ on:
 #   setup ─────┬──────────────────────────────────────┐
 #   (API types)│                                      │
 #              ├──> lint ──────┐                      │
-#              ├──> knip       │                      │
+#              ├──> knip (x2)  │                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
 #                              ├──> e2e (per browser) │
@@ -116,10 +116,13 @@ jobs:
           working-directory: packages/web
       - name: Audit dependencies
         run: |
-          # Known unfixable vulnerabilities to ignore:
-          # - GHSA-3ppc-4f35-3m26: minimatch ReDoS (transitive via eslint, no fix until eslint 10)
-          # - GHSA-jmr7-xgp7-cmfj: fast-xml-parser DoS (transitive via ojp-sdk-next, no upstream fix)
-          IGNORED_ADVISORIES="GHSA-3ppc-4f35-3m26 GHSA-jmr7-xgp7-cmfj"
+          # Space-separated GHSA ids to suppress. Keep this empty unless an
+          # advisory genuinely has no fix: a stale entry lets a regression on
+          # that advisory ship green.
+          # - GHSA-3ppc-4f35-3m26 (minimatch ReDoS) was waiting on eslint 10, now on 10.9.1.
+          # - GHSA-jmr7-xgp7-cmfj (fast-xml-parser DoS) is fixed by the ^5.11.1 override,
+          #   since ojp-sdk-next pins the vulnerable 5.0.8 exactly.
+          IGNORED_ADVISORIES=""
           AUDIT_JSON=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
           FOUND=$(echo "$AUDIT_JSON" | jq -r '.vulnerabilities | keys[]' 2>/dev/null || true)
 
@@ -197,9 +200,6 @@ jobs:
     name: Dead Code Check
     needs: setup
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/web
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -207,13 +207,32 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
+      # setup-node-deps caches only the root and packages/web node_modules, and
+      # skips installing when both keys hit. This job also needs
+      # packages/shared/node_modules, which nothing caches, so install
+      # unconditionally. Idempotent and near-free when everything is present.
+      - name: Ensure every workspace has its dependencies
+        run: pnpm install --frozen-lockfile
       - name: Download API types
         uses: actions/download-artifact@v8
         with:
           name: api-types
           path: packages
+      # One --filter per package, not a single multi-filter run: pnpm exits 0
+      # when *some* selected packages lack the script and only fails when none
+      # has it, so a multi-filter run would silently drop a package whose script
+      # was renamed — the bug this gate exists to catch. A single filter exits 1.
+      # The loop keeps going so one failing package still reports the other.
+      # Mobile runs its own knip in ci-mobile.yml, the workflow its changes trigger.
       - name: Check for dead code
-        run: pnpm run knip
+        run: |
+          status=0
+          for pkg in volleykit-web @volleykit/shared; do
+            echo "::group::knip ($pkg)"
+            pnpm --filter "$pkg" --fail-if-no-match run knip || status=1
+            echo "::endgroup::"
+          done
+          exit "$status"
   # Unit tests - needs API types from setup
   # PRs: only run tests affected by changed files (--changed)
   # main: run all tests for full coverage validation

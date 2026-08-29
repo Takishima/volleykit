@@ -11,7 +11,7 @@
 # Results are cached by input content hash, so a check run mid-work is not
 # re-run at commit time, and fixing one package does not re-run the others.
 #
-# Classes: format, tokens, lint, typecheck, test, build
+# Classes: format, tokens, lint, typecheck, knip, test, build
 # END HELP
 #
 # Layout: scripts/validation/lib.sh holds git/cache primitives,
@@ -76,7 +76,7 @@ for arg in "$@"; do
       exit 0
       ;;
     all) ;;
-    format | tokens | lint | typecheck | test | build) CLASS_FILTER+=("$arg") ;;
+    format | tokens | lint | typecheck | knip | test | build) CLASS_FILTER+=("$arg") ;;
     *)
       echo "Unknown argument: $arg (see --help)" >&2
       exit 2

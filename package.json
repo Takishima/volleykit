@@ -21,7 +21,7 @@
     "shared:test": "pnpm --filter @volleykit/shared run test"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.101.4",
+    "@tanstack/react-query": "^5.102.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zustand": "^5.0.15"
@@ -35,26 +35,15 @@
   },
   "pnpm": {
     "overrides": {
-      "fast-xml-parser": "^5.5.7",
-      "@types/react": "^19.2.18",
-      "axios": "^1.12.0",
-      "jsdom": "^27.4.0",
-      "@xmldom/xmldom": "^0.8.11",
       "react": "^19.2.8",
-      "react-native-screens": "~4.24.0",
-      "devalue": "^5.6.4",
-      "flatted@<=3.4.1": ">=3.4.2",
-      "h3@<1.15.9": ">=1.15.9",
-      "smol-toml@<1.6.1": ">=1.6.1",
-      "happy-dom@>=15.10.0 <=20.8.7": ">=20.8.8",
+      "@types/react": "^19.2.18",
       "serialize-javascript@<7.0.5": ">=7.0.5",
-      "brace-expansion@<1.1.13": ">=1.1.13",
-      "brace-expansion@>=2.0.0 <2.0.3": ">=2.0.3",
-      "brace-expansion@>=4.0.0 <5.0.5": ">=5.0.5",
-      "node-forge@<1.4.0": ">=1.4.0",
-      "picomatch@>=4.0.0 <4.0.4": ">=4.0.4",
-      "vite": "8.1.4",
-      "zod@>=4.4.0 <5": "4.3.6"
+      "js-yaml@>=4.0.0 <4.3.1": ">=4.3.1",
+      "esbuild@>=0.27.3 <0.28.1": ">=0.28.1",
+      "sharp@<0.35.0": ">=0.35.0",
+      "uuid@<11.1.1": "^11.1.1",
+      "ojp-sdk-next>axios": "^1.18.0",
+      "ojp-sdk-next>fast-xml-parser": "^5.11.1"
     },
     "onlyBuiltDependencies": [
       "esbuild",
@@ -62,7 +51,15 @@
       "sharp",
       "unrs-resolver",
       "workerd"
-    ]
+    ],
+    "packageExtensions": {
+      "react-native-worklets": {
+        "dependencies": {
+          "@babel/generator": "^7.29.0",
+          "@babel/traverse": "^7.29.0"
+        }
+      }
+    }
   },
   "engines": {
     "node": ">=22.0.0"
