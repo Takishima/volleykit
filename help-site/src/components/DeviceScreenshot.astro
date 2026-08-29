@@ -45,7 +45,15 @@ interface Props {
   devices?: DeviceType[]
 }
 
-const { id, alt, caption, altKey, captionKey, instructions, devices = [...DEVICE_TYPES] } = Astro.props
+const {
+  id,
+  alt,
+  caption,
+  altKey,
+  captionKey,
+  instructions,
+  devices = [...DEVICE_TYPES],
+} = Astro.props
 
 // Generate a unique ID for this component instance (for tab accessibility)
 const componentId = `device-screenshot-${id}`
@@ -139,7 +147,9 @@ const defaultDevice = firstExisting?.device ?? devices[0]
             alt={`${alt} (${display.label})`}
             class="mx-auto max-w-full rounded-lg border border-border-default shadow-md dark:border-border-default-dark"
             loading="lazy"
-            {...(altKey ? { 'data-i18n-alt': altKey, 'data-alt-suffix': ` (${display.label})` } : {})}
+            {...(altKey
+              ? { 'data-i18n-alt': altKey, 'data-alt-suffix': ` (${display.label})` }
+              : {})}
           />
         ) : (
           <div class="mx-auto max-w-2xl rounded-lg border-2 border-dashed border-border-strong bg-surface-subtle p-8 text-center dark:border-border-strong-dark dark:bg-surface-subtle-dark">
