@@ -1,37 +1,49 @@
 /**
  * Configuration for sports halls where NLA/NLB games can be played with only 1 ball.
- * Based on official SwissVolley document "Hallenliste NLB: Spiel mit 1 Ball" (2025/26 season).
+ * Based on official SwissVolley document "Hallenliste NLB: Spiel mit 1 Ball" (2026/27 season,
+ * published 29.06.2026).
  *
  * Source PDFs stored in public/documents/:
  * - single-ball-halls-de.pdf (German)
  * - single-ball-halls-fr.pdf (French)
  */
 
+/**
+ * When the single-ball rule applies in a hall.
+ *
+ * - `always`: play with 1 ball, no ball kids required
+ * - `singleSubHall`: only when exceptionally one sub-hall is available ("*)" in the document),
+ *   otherwise play with 3 balls (with ball kids)
+ * - `refereeAtPartition`: only when the 1st referee stands on the partition wall side
+ */
+export type SingleBallCondition = 'always' | 'singleSubHall' | 'refereeAtPartition'
+
 export interface SingleBallHall {
   /** City name (primary match field) */
   city: string
   /** Keywords to match in hall name (secondary verification) */
   hallKeywords: string[]
-  /**
-   * If true, single-ball rule only applies when exceptionally only one sub-hall is available.
-   * Otherwise, play with 3 balls (with ball kids).
-   */
-  conditional: boolean
+  /** When the single-ball rule applies in this hall */
+  condition: SingleBallCondition
 }
 
 /**
  * List of sports halls where NLB games can be played with only 1 ball.
- * No ball kids required in these halls.
  */
 export const SINGLE_BALL_HALLS: SingleBallHall[] = [
-  { city: 'Däniken', hallKeywords: ['Erlimatt'], conditional: true },
-  { city: 'Guntershausen', hallKeywords: ['Turnhalle'], conditional: false },
-  { city: 'Laufen', hallKeywords: ['Gymnasium'], conditional: true },
-  { city: 'Liesberg', hallKeywords: ['Seemättli', 'MZH'], conditional: false },
-  { city: 'Luzern', hallKeywords: ['Bahnhofhalle'], conditional: true },
-  { city: 'Olten', hallKeywords: ['Giroud', 'Olma'], conditional: true },
-  { city: 'Ruswil', hallKeywords: ['Dorfhalle'], conditional: false },
-  { city: 'Thônex', hallKeywords: ['Sous-Moulin'], conditional: true },
+  { city: 'Däniken', hallKeywords: ['Erlimatt'], condition: 'singleSubHall' },
+  { city: 'Guntershausen', hallKeywords: ['Turnhalle'], condition: 'always' },
+  { city: 'Laufen', hallKeywords: ['Gymnasium'], condition: 'singleSubHall' },
+  { city: 'Liesberg', hallKeywords: ['Seemättli', 'MZH'], condition: 'always' },
+  { city: 'Luzern', hallKeywords: ['Bahnhofhalle'], condition: 'singleSubHall' },
+  { city: 'Olten', hallKeywords: ['Giroud', 'Olma'], condition: 'singleSubHall' },
+  { city: 'Ruswil', hallKeywords: ['Dorfhalle'], condition: 'always' },
+  {
+    city: 'Subingen',
+    hallKeywords: ['3fach', '3-fach', 'Dreifach'],
+    condition: 'refereeAtPartition',
+  },
+  { city: 'Thônex', hallKeywords: ['Sous-Moulin'], condition: 'singleSubHall' },
 ]
 
 /** Leagues where single-ball hall rules apply */

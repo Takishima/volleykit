@@ -1,7 +1,16 @@
 import { CircleAlert, ExternalLink } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
+import type { SingleBallCondition } from '@/data/single-ball-halls'
+import type { TranslationKey } from '@/i18n'
 
 import { useAssignmentCardContext } from './context'
+
+/** Notice text shown for each single-ball condition */
+const CONDITION_LABEL_KEYS: Record<SingleBallCondition, TranslationKey> = {
+  always: 'assignments.singleBallHall',
+  singleSubHall: 'assignments.singleBallHallConditional',
+  refereeAtPartition: 'assignments.singleBallHallRefereeAtPartition',
+}
 
 /** Displays single-ball hall warning notice in details view */
 export function SingleBallNotice() {
@@ -22,9 +31,7 @@ export function SingleBallNotice() {
     >
       <CircleAlert className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
       <span className="underline decoration-warning-400/50 group-hover:decoration-warning-500 underline-offset-2">
-        {singleBallMatch.isConditional
-          ? t('assignments.singleBallHallConditional')
-          : t('assignments.singleBallHall')}
+        {t(CONDITION_LABEL_KEYS[singleBallMatch.condition])}
       </span>
       <ExternalLink
         className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100"
