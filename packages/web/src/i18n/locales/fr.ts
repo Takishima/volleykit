@@ -276,7 +276,7 @@ const fr: Translations = {
     singleBallHallConditional:
       'Rencontre avec 1 ballon possible (seulement si exceptionnellement une seule salle partielle disponible)',
     singleBallHallRefereeAtPartition:
-      'Rencontre avec 1 ballon (seulement si le/la 1er arbitre est du côté de la cloison)',
+      'Rencontre avec 1 ballon, sans ramasseurs (seulement si le/la 1re arbitre est du côté de la cloison)',
     singleBallHallTooltip: 'Salle 1 ballon',
     conflictWarningTooltip: 'Conflit de planning',
     conflictWarningTitle: 'Conflit de planning possible',

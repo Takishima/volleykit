@@ -8,18 +8,8 @@ import {
   SINGLE_BALL_LEAGUES,
   SINGLE_BALL_PDF_PATHS,
   type SingleBallHall,
-  type SingleBallHallNoteKey,
 } from '@/data/single-ball-halls'
 import type { Locale } from '@/i18n'
-
-export interface SingleBallHallMatch {
-  /** The matched hall configuration */
-  hall: SingleBallHall
-  /** Whether the rule is conditional (only applies when single sub-hall available) */
-  isConditional: boolean
-  /** Hall-specific condition to show instead of the default notice text */
-  noteKey?: SingleBallHallNoteKey
-}
 
 /**
  * Normalizes a string for comparison by removing accents and converting to lowercase.
@@ -58,7 +48,7 @@ function isTopLeague(leagueCategory: string | undefined): boolean {
 
 /**
  * Detects if an assignment is in a single-ball hall.
- * Returns match details if found, null otherwise.
+ * Returns the matched hall configuration if found, null otherwise.
  *
  * Rules are only applied for NLA/NLB games.
  *
@@ -69,7 +59,7 @@ function isTopLeague(leagueCategory: string | undefined): boolean {
  * This strict matching avoids false positives since some keywords
  * like "Turnhalle" or "Gymnasium" are very common.
  */
-export function detectSingleBallHall(assignment: Assignment): SingleBallHallMatch | null {
+export function detectSingleBallHall(assignment: Assignment): SingleBallHall | null {
   const game = assignment.refereeGame?.game
   if (!game) return null
 
@@ -87,11 +77,7 @@ export function detectSingleBallHall(assignment: Assignment): SingleBallHallMatc
   // Find matching hall - requires BOTH city AND hall keyword match
   for (const hall of SINGLE_BALL_HALLS) {
     if (matchCity(city, hall.city) && matchHallKeywords(hallName, hall.hallKeywords)) {
-      return {
-        hall,
-        isConditional: hall.conditional,
-        noteKey: hall.noteKey,
-      }
+      return hall
     }
   }
 

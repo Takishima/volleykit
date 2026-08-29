@@ -275,7 +275,7 @@ const de: Translations = {
     singleBallHallConditional:
       'Spiel mit 1 Ball möglich (nur wenn ausnahmsweise nur eine Teilhalle zur Verfügung steht)',
     singleBallHallRefereeAtPartition:
-      'Spiel mit 1 Ball (nur wenn der/die 1. Schiedsrichter:in bei der Trennwand steht)',
+      'Spiel mit 1 Ball, ohne Ballholer (nur wenn der/die 1. Schiedsrichter:in bei der Trennwand steht)',
     singleBallHallTooltip: '1-Ball-Halle',
     conflictWarningTooltip: 'Terminkonflikt',
     conflictWarningTitle: 'Möglicher Terminkonflikt',

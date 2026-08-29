@@ -47,8 +47,8 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Ruswil')
-      expect(result?.isConditional).toBe(false)
+      expect(result?.city).toBe('Ruswil')
+      expect(result?.condition).toBe('always')
     })
 
     it('detects conditional single-ball hall (Luzern Bahnhofhalle)', () => {
@@ -56,8 +56,8 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Luzern')
-      expect(result?.isConditional).toBe(true)
+      expect(result?.city).toBe('Luzern')
+      expect(result?.condition).toBe('singleSubHall')
     })
 
     it('detects Guntershausen Turnhalle (unconditional)', () => {
@@ -65,8 +65,8 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Guntershausen')
-      expect(result?.isConditional).toBe(false)
+      expect(result?.city).toBe('Guntershausen')
+      expect(result?.condition).toBe('always')
     })
 
     it('detects Liesberg MZH Seemättli (unconditional)', () => {
@@ -74,7 +74,7 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.isConditional).toBe(false)
+      expect(result?.condition).toBe('always')
     })
 
     it('detects Olten Giroud-Olma (conditional)', () => {
@@ -82,8 +82,8 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Olten')
-      expect(result?.isConditional).toBe(true)
+      expect(result?.city).toBe('Olten')
+      expect(result?.condition).toBe('singleSubHall')
     })
 
     it('detects Thônex CS Sous-Moulin (conditional)', () => {
@@ -91,18 +91,17 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Thônex')
-      expect(result?.isConditional).toBe(true)
+      expect(result?.city).toBe('Thônex')
+      expect(result?.condition).toBe('singleSubHall')
     })
 
-    it('detects Subingen 3fach Halle with referee-at-partition condition', () => {
+    it('detects Subingen 3fach Halle (referee at partition)', () => {
       const assignment = createMockAssignment('Subingen', '3fach Halle', 'NLB')
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Subingen')
-      expect(result?.isConditional).toBe(false)
-      expect(result?.noteKey).toBe('singleBallHallRefereeAtPartition')
+      expect(result?.city).toBe('Subingen')
+      expect(result?.condition).toBe('refereeAtPartition')
     })
 
     it('detects Subingen Dreifachturnhalle spelling variant', () => {
@@ -110,14 +109,7 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Subingen')
-    })
-
-    it('leaves noteKey undefined for halls without a specific condition', () => {
-      const assignment = createMockAssignment('Ruswil', 'Dorfhalle neu', 'NLB')
-      const result = detectSingleBallHall(assignment)
-
-      expect(result?.noteKey).toBeUndefined()
+      expect(result?.city).toBe('Subingen')
     })
 
     it('matches with case-insensitive city name', () => {
@@ -125,7 +117,7 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Ruswil')
+      expect(result?.city).toBe('Ruswil')
     })
 
     it('matches with accented characters normalized', () => {
@@ -134,7 +126,7 @@ describe('detectSingleBallHall', () => {
       const result = detectSingleBallHall(assignment)
 
       expect(result).not.toBeNull()
-      expect(result?.hall.city).toBe('Thônex')
+      expect(result?.city).toBe('Thônex')
     })
   })
 
@@ -209,9 +201,9 @@ describe('detectSingleBallHall', () => {
       expect(result).toBeNull()
     })
 
-    it('avoids false positive for generic Turnhalle in wrong city (Subingen keywords)', () => {
-      // "Turnhalle" is a Subingen keyword, but must not match elsewhere
-      const assignment = createMockAssignment('Solothurn', 'Dreifachturnhalle', 'NLB')
+    it('avoids false positive for another hall in Subingen', () => {
+      // Only the 3fach Halle in Subingen is a single-ball hall
+      const assignment = createMockAssignment('Subingen', 'Turnhalle Schulhaus', 'NLB')
       const result = detectSingleBallHall(assignment)
 
       expect(result).toBeNull()

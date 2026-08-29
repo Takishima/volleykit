@@ -270,7 +270,7 @@ const en: Translations = {
     singleBallHallConditional:
       'Single ball game possible (only when exceptionally one sub-hall available)',
     singleBallHallRefereeAtPartition:
-      'Single ball game (only when the 1st referee stands on the partition wall side)',
+      'Single ball game, no ball kids (only when the 1st referee stands on the partition wall side)',
     singleBallHallTooltip: 'Single ball hall',
     conflictWarningTooltip: 'Scheduling conflict',
     conflictWarningTitle: 'Potential scheduling conflict',
