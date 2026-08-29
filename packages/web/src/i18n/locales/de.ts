@@ -357,6 +357,8 @@ const de: Translations = {
     calculatingTravelTime: 'Reisezeit wird berechnet...',
     noExchangesAtLevel: 'Keine Tauschangebote auf Ihrem Niveau verfügbar.',
     noExchangesWithFilters: 'Keine Tauschangebote entsprechen Ihren Filtern.',
+    allExchangesNotTakeable:
+      '{count} Tauschangebote sind ausgeblendet: Der Verband lässt Sie diese nicht übernehmen.',
     noOpenExchangesTitle: 'Keine offenen Tauschangebote',
     noOpenExchangesDescription: 'Derzeit sind keine Schiedsrichterpositionen zum Tausch verfügbar.',
     noApplicationsTitle: 'Keine Angebote',

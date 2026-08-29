@@ -104,6 +104,7 @@ export function useExchangePageLogic() {
   // Delegate all filtering to the extracted hook
   const {
     filteredData,
+    notTakeableCount,
     travelTimeMap,
     homeLocation,
     isTravelTimeFilterAvailable,
@@ -207,6 +208,7 @@ export function useExchangePageLogic() {
 
     // Data
     groupedData,
+    notTakeableCount,
     travelTimeMap,
     homeLocation,
     showDummyData,

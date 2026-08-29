@@ -18,7 +18,10 @@ import type { GameExchange } from '../api'
  * docs/api/exchanges_api.md for the captured evidence).
  *
  * Entries without the flag are treated as takeable so a missing property never
- * empties the list.
+ * empties the list. The optional chaining is the only real guard: `GameExchange`
+ * resolves to `any` (its schema is declared `z.ZodType<any>` to stay under the TS
+ * serialization limit), so `exchangePermissionsSchema` documents the payload
+ * rather than enforcing it here.
  *
  * @param exchange - The exchange entry to check
  * @returns true when the entry can be taken over (or the server said nothing)
@@ -41,10 +44,24 @@ export function isOwnExchange(exchange: GameExchange, personId: string | undefin
 }
 
 /**
- * Drops the entries the signed-in referee is not allowed to take over.
+ * Whether an entry is worth offering to the signed-in referee.
  *
- * Own entries survive the filter: the server marks them as not takeable too, but
- * the referee still needs to see them to pull them back off the marketplace.
+ * Own entries qualify even when the server marks them as not takeable: the
+ * referee still needs to see them to pull them back off the marketplace.
+ *
+ * Callers that filter a wrapper type rather than the entries themselves use this
+ * predicate directly, so both platforms decide with the same rule.
+ *
+ * @param exchange - The exchange entry to check
+ * @param personId - The signed-in referee's person identity
+ * @returns true when the entry should stay in the list
+ */
+export function isTakeableOrOwn(exchange: GameExchange, personId: string | undefined): boolean {
+  return canTakeOverExchange(exchange) || isOwnExchange(exchange, personId)
+}
+
+/**
+ * Drops the entries the signed-in referee is not allowed to take over.
  *
  * @param exchanges - The exchange entries to filter
  * @param personId - The signed-in referee's person identity
@@ -54,7 +71,5 @@ export function filterTakeableExchanges(
   exchanges: GameExchange[],
   personId: string | undefined
 ): GameExchange[] {
-  return exchanges.filter(
-    (exchange) => canTakeOverExchange(exchange) || isOwnExchange(exchange, personId)
-  )
+  return exchanges.filter((exchange) => isTakeableOrOwn(exchange, personId))
 }

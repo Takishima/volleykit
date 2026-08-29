@@ -238,6 +238,7 @@ export interface Translations {
     calculatingTravelTime: string
     noExchangesAtLevel: string
     noExchangesWithFilters: string
+    allExchangesNotTakeable: string
     noOpenExchangesTitle: string
     noOpenExchangesDescription: string
     noApplicationsTitle: string

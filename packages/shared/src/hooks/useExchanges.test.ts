@@ -303,10 +303,12 @@ describe('useExchanges', () => {
     expect(result.current.data).toHaveLength(1)
   })
 
-  it('should keep blocked exchanges when hideNotTakeable is false', async () => {
+  it('should keep blocked exchanges on non-open statuses', async () => {
+    // On the applied tab the flag is expected to be false - the referee already
+    // holds the entry, so it still belongs in the list
     const mockExchanges: GameExchange[] = [
       {
-        __identity: 'exc-blocked',
+        __identity: 'exc-applied',
         submittedByPerson: { __identity: 'user-456' },
         _permissions: { properties: { appliedBy: { update: false } } },
       } as GameExchange,
@@ -321,8 +323,8 @@ describe('useExchanges', () => {
       () =>
         useExchanges({
           apiClient: mockApiClient,
+          status: 'applied',
           currentUserId: 'user-123',
-          hideNotTakeable: false,
         }),
       { wrapper: createWrapper() }
     )
@@ -332,6 +334,54 @@ describe('useExchanges', () => {
     })
 
     expect(result.current.data).toHaveLength(1)
+  })
+
+  it('should cache the unfiltered list so per-caller options still apply', async () => {
+    // Filtering runs in `select`, not `queryFn`: the cache entry is shared by
+    // callers whose options are not part of the query key
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-own',
+        submittedByPerson: { __identity: 'user-123' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+      {
+        __identity: 'exc-takeable',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: true } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 2,
+    })
+
+    const wrapper = createWrapper()
+
+    const hidingOwn = renderHook(
+      () => useExchanges({ apiClient: mockApiClient, currentUserId: 'user-123', hideOwn: true }),
+      { wrapper }
+    )
+
+    await waitFor(() => {
+      expect(hidingOwn.result.current.isSuccess).toBe(true)
+    })
+    expect(hidingOwn.result.current.data?.map((e) => e.__identity)).toEqual(['exc-takeable'])
+
+    // Second observer shares the cache entry and must still see its own entry
+    const keepingOwn = renderHook(
+      () => useExchanges({ apiClient: mockApiClient, currentUserId: 'user-123', hideOwn: false }),
+      { wrapper }
+    )
+
+    await waitFor(() => {
+      expect(keepingOwn.result.current.isSuccess).toBe(true)
+    })
+    expect(keepingOwn.result.current.data?.map((e) => e.__identity)).toEqual([
+      'exc-own',
+      'exc-takeable',
+    ])
   })
 
   it('should not fetch when disabled', async () => {

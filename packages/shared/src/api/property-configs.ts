@@ -139,10 +139,12 @@ export const EXCHANGE_PROPERTIES = [
   'refereeGame.activeRefereeConvocationStandbyHeadReferee.__identity',
   'refereeGame.activeRefereeConvocationStandbyLinesman',
   'refereeGame.activeRefereeConvocationStandbyLinesman.__identity',
-  // Per-entry permissions: `properties.appliedBy.update` is the server's answer to
-  // "may the signed-in referee take this over?". False means a backend rule
-  // blocks them and applying would be rejected.
-  '_permissions',
+  // `_permissions` is deliberately absent: the endpoint returns it unasked, the
+  // same way the compensations endpoint does (COMPENSATION_PROPERTIES omits it
+  // while compensation-actions.ts reads it in production). Requesting a property
+  // path the endpoint does not accept would fail the whole search, so the risk is
+  // not worth taking for a block that arrives anyway. See exchange-helpers.ts for
+  // how `properties.appliedBy.update` is consumed.
 ]
 
 /**

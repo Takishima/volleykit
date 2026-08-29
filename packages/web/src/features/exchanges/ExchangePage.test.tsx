@@ -472,6 +472,24 @@ describe('ExchangePage', () => {
       expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
     })
 
+    it('should say entries were hidden instead of claiming none exist', () => {
+      const blocked = createMockExchange({
+        __identity: 'exchange-blocked',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([blocked]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getByText(/1 exchanges are hidden/i)).toBeInTheDocument()
+      expect(
+        screen.queryByText(/no referee positions available for exchange/i)
+      ).not.toBeInTheDocument()
+    })
+
     it('should keep the referee own blocked exchange so it stays removable', () => {
       vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
         selector({

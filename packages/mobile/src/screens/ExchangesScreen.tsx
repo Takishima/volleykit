@@ -18,6 +18,7 @@ import {
 import type { GameExchange } from '@volleykit/shared/api'
 import { useExchanges } from '@volleykit/shared/hooks'
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
+import { useAuthStore } from '@volleykit/shared/stores'
 import { formatLocalizedDate } from '@volleykit/shared/utils'
 
 import { useApiClient } from '../contexts'
@@ -63,6 +64,8 @@ function getExchangeDisplay(
 export function ExchangesScreen(_props: Props) {
   const { t, language } = useTranslation()
   const apiClient = useApiClient()
+  // Needed so the referee's own entries survive the take-over filter
+  const currentUserId = useAuthStore((state) => state.user?.id)
 
   const {
     data: exchanges = [],
@@ -74,6 +77,7 @@ export function ExchangesScreen(_props: Props) {
   } = useExchanges({
     apiClient,
     status: 'open',
+    currentUserId,
   })
 
   const onRefresh = useCallback(() => {

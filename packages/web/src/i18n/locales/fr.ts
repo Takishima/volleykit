@@ -357,6 +357,8 @@ const fr: Translations = {
     calculatingTravelTime: 'Calcul du temps de trajet...',
     noExchangesAtLevel: 'Aucun échange disponible à votre niveau.',
     noExchangesWithFilters: 'Aucun échange ne correspond à vos filtres.',
+    allExchangesNotTakeable:
+      '{count} échanges sont masqués : l’association ne vous autorise pas à les reprendre.',
     noOpenExchangesTitle: 'Aucun échange ouvert',
     noOpenExchangesDescription:
       "Il n'y a actuellement aucun poste d'arbitre disponible pour échange.",

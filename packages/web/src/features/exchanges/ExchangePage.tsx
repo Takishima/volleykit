@@ -25,11 +25,12 @@ const RemoveFromExchangeModal = lazy(() =>
 )
 
 export function ExchangePage() {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const {
     statusFilter,
     handleTabChange,
     groupedData,
+    notTakeableCount,
     travelTimeMap,
     homeLocation,
     showDummyData,
@@ -107,6 +108,16 @@ export function ExchangePage() {
         distanceFilter.enabled ||
         travelTimeFilter.enabled ||
         gameGapFilter.enabled
+
+      // Entries the server refuses to hand over are dropped without a toggle to
+      // restore them, so name them rather than claiming nothing is on offer
+      const openTabDescription =
+        notTakeableCount > 0
+          ? tInterpolate('exchange.allExchangesNotTakeable', { count: notTakeableCount })
+          : hasActiveFilters
+            ? t('exchange.noExchangesWithFilters')
+            : t('exchange.noOpenExchangesDescription')
+
       return (
         <EmptyState
           icon="exchange"
@@ -116,11 +127,7 @@ export function ExchangePage() {
               : t('exchange.noApplicationsTitle')
           }
           description={
-            statusFilter === 'open'
-              ? hasActiveFilters
-                ? t('exchange.noExchangesWithFilters')
-                : t('exchange.noOpenExchangesDescription')
-              : t('exchange.noApplicationsDescription')
+            statusFilter === 'open' ? openTabDescription : t('exchange.noApplicationsDescription')
           }
         />
       )

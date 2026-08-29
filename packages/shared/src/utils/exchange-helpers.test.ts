@@ -6,7 +6,12 @@ import { describe, it, expect } from 'vitest'
 
 import type { GameExchange } from '../api'
 
-import { canTakeOverExchange, filterTakeableExchanges, isOwnExchange } from './exchange-helpers'
+import {
+  canTakeOverExchange,
+  filterTakeableExchanges,
+  isOwnExchange,
+  isTakeableOrOwn,
+} from './exchange-helpers'
 
 const USER_ID = 'person-1'
 
@@ -61,6 +66,27 @@ describe('isOwnExchange', () => {
   it('returns false without a person id', () => {
     const exchange = createExchange({ submittedByPerson: undefined })
     expect(isOwnExchange(exchange, undefined)).toBe(false)
+  })
+})
+
+describe('isTakeableOrOwn', () => {
+  it('keeps a takeable entry from another referee', () => {
+    expect(isTakeableOrOwn(createExchange({ _permissions: permissions(true) }), USER_ID)).toBe(true)
+  })
+
+  it('rejects a blocked entry from another referee', () => {
+    expect(isTakeableOrOwn(createExchange({ _permissions: permissions(false) }), USER_ID)).toBe(
+      false
+    )
+  })
+
+  it('keeps a blocked entry the referee submitted', () => {
+    const own = createExchange({
+      submittedByPerson: { __identity: USER_ID },
+      _permissions: permissions(false),
+    })
+
+    expect(isTakeableOrOwn(own, USER_ID)).toBe(true)
   })
 })
 

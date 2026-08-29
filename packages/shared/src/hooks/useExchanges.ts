@@ -6,7 +6,7 @@
  * Extracted from web-app/src/features/exchanges/hooks/useExchanges.ts
  */
 
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import {
@@ -48,11 +48,6 @@ export interface UseExchangesOptions {
   hideOwn?: boolean
   /** Current user ID for filtering own exchanges */
   currentUserId?: string
-  /**
-   * Drop entries the server says the current user may not take over.
-   * Defaults to true.
-   */
-  hideNotTakeable?: boolean
 }
 
 /**
@@ -69,7 +64,6 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
     enabled = true,
     hideOwn = false,
     currentUserId,
-    hideNotTakeable = true,
   } = options
 
   const config = useMemo<SearchConfiguration>(
@@ -83,25 +77,40 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
     [status]
   )
 
-  return useQuery({
-    queryKey: queryKeys.exchanges.list(config, associationKey),
-    queryFn: async () => {
-      const response = await apiClient.searchExchanges(config)
-      let items = response.items ?? EMPTY_EXCHANGES
+  // Both filters depend on per-caller options that the query key does not carry,
+  // so they run per observer in `select` rather than in `queryFn`. That keeps the
+  // shared (and persisted) cache entry holding the server's list verbatim.
+  const select = useCallback(
+    (items: GameExchange[]) => {
+      let result = items
 
       // Drop entries the referee is barred from taking over (own entries stay so
-      // they can still be pulled back off the marketplace)
-      if (hideNotTakeable) {
-        items = filterTakeableExchanges(items, currentUserId)
+      // they can still be pulled back off the marketplace). Only on the open
+      // marketplace: on the applied and closed tabs the flag is false by
+      // definition, and those entries still belong in the list.
+      if (status === 'open') {
+        result = filterTakeableExchanges(result, currentUserId)
       }
 
       // Filter out own exchanges if requested
       if (hideOwn && currentUserId) {
-        items = items.filter((exchange) => exchange.submittedByPerson?.__identity !== currentUserId)
+        result = result.filter(
+          (exchange) => exchange.submittedByPerson?.__identity !== currentUserId
+        )
       }
 
-      return items
+      return result
     },
+    [status, currentUserId, hideOwn]
+  )
+
+  return useQuery({
+    queryKey: queryKeys.exchanges.list(config, associationKey),
+    queryFn: async () => {
+      const response = await apiClient.searchExchanges(config)
+      return response.items ?? EMPTY_EXCHANGES
+    },
+    select,
     staleTime: EXCHANGES_STALE_TIME_MS,
     enabled,
   })
