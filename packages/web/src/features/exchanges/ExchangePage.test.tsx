@@ -399,6 +399,175 @@ describe('ExchangePage', () => {
     })
   })
 
+  describe('Take-over eligibility filtering', () => {
+    // The server answers per entry whether the signed-in referee may apply.
+    // It says no when a rule blocks them - e.g. they are registered as a
+    // referee for one of the two teams playing that game.
+    const blockedPermissions = { properties: { appliedBy: { update: false } } }
+    const allowedPermissions = { properties: { appliedBy: { update: true } } }
+
+    function mockSettings(hideOwnForTestAssociation: boolean) {
+      const state = {
+        homeLocation: null,
+        distanceFilter: { enabled: false, maxDistanceKm: 50 },
+        setDistanceFilterEnabled: vi.fn(),
+        transportEnabled: false,
+        isTransportEnabledForAssociation: () => false,
+        getArrivalBufferForAssociation: () => 30,
+        travelTimeFilter: {
+          enabled: false,
+          maxTravelTimeMinutes: 120,
+          arrivalBufferMinutes: 30,
+          cacheInvalidatedAt: null,
+        },
+        setTravelTimeFilterEnabled: vi.fn(),
+        setMaxDistanceKm: vi.fn(),
+        setMaxTravelTimeMinutes: vi.fn(),
+        levelFilterEnabled: false,
+        setLevelFilterEnabled: mockSetLevelFilterEnabled,
+        gameGapFilter: { enabled: false, minGapMinutes: 120 },
+        setGameGapFilterEnabled: vi.fn(),
+        hideOwnExchangesByAssociation: { TEST: hideOwnForTestAssociation },
+        setHideOwnExchangesForAssociation: vi.fn(),
+      }
+      vi.mocked(settingsStore.useSettingsStore).mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (selector?: (state: any) => any) => (selector ? selector(state) : state)
+      )
+    }
+
+    it('should hide exchanges the referee is not allowed to take over', () => {
+      const takeable = createMockExchange({
+        __identity: 'exchange-takeable',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: allowedPermissions,
+      })
+      const blocked = createMockExchange({
+        __identity: 'exchange-blocked',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(
+        createMockQueryResult([takeable, blocked])
+      )
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+    })
+
+    it('should keep exchanges without permission data', () => {
+      const unknown = createMockExchange({
+        __identity: 'exchange-unknown',
+        submittedByPerson: { __identity: 'other-person' },
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([unknown]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+    })
+
+    it('should say entries were hidden instead of claiming none exist', () => {
+      const blocked = createMockExchange({
+        __identity: 'exchange-blocked',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([blocked]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getByText(/one exchange is hidden/i)).toBeInTheDocument()
+      expect(
+        screen.queryByText(/no referee positions available for exchange/i)
+      ).not.toBeInTheDocument()
+    })
+
+    it('should report withheld entries above a list that still has cards', () => {
+      const takeable = createMockExchange({
+        __identity: 'exchange-takeable',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: allowedPermissions,
+      })
+      const blocked = createMockExchange({
+        __identity: 'exchange-blocked',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(
+        createMockQueryResult([takeable, blocked])
+      )
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+      expect(screen.getByText(/one exchange is hidden/i)).toBeInTheDocument()
+    })
+
+    it('should not blame filters when the marketplace itself is empty', () => {
+      // hideOwnExchanges defaults to true, so an empty fetch used to read as
+      // "no exchanges match your filters"
+      mockSettings(true)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getByText(/no referee positions available for exchange/i)).toBeInTheDocument()
+      expect(screen.queryByText(/match your filters/i)).not.toBeInTheDocument()
+    })
+
+    it('should not blame filters when grouping drops undated entries', () => {
+      // groupByWeek silently drops entries without a parseable start time
+      const undated = createMockExchange({
+        __identity: 'exchange-undated',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: allowedPermissions,
+        refereeGame: { game: { encounter: { teamHome: {}, teamAway: {} } } },
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([undated]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.queryByText(/match your filters/i)).not.toBeInTheDocument()
+      expect(screen.getByText(/no referee positions available for exchange/i)).toBeInTheDocument()
+    })
+
+    it('should keep the referee own blocked exchange so it stays removable', () => {
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({
+          dataSource: 'api',
+          isAssociationSwitching: false,
+          isCalendarMode: () => false,
+          user: { id: 'user-123' },
+        } as unknown as ReturnType<typeof authStore.useAuthStore.getState>)
+      )
+
+      const own = createMockExchange({
+        __identity: 'exchange-own',
+        submittedByPerson: { __identity: 'user-123' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([own]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+    })
+  })
+
   describe('Tab Navigation', () => {
     it('should default to Open tab', () => {
       renderWithQueryClient(<ExchangePage />)

@@ -153,6 +153,7 @@ const en: Translations = {
     submittedBy: 'By:',
     levelRequired: 'Level {level}+',
     hideOwn: 'Hide own',
+    onlyTakeableListed: 'Only exchanges you are allowed to take over are listed.',
   },
   positions: {
     'head-one': '1st Referee',

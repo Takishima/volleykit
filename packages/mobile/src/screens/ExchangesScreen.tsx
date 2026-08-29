@@ -18,6 +18,7 @@ import {
 import type { GameExchange } from '@volleykit/shared/api'
 import { useExchanges } from '@volleykit/shared/hooks'
 import { useTranslation, type TranslationKey } from '@volleykit/shared/i18n'
+import { useAuthStore } from '@volleykit/shared/stores'
 import { formatLocalizedDate } from '@volleykit/shared/utils'
 
 import { useApiClient } from '../contexts'
@@ -25,6 +26,9 @@ import { useApiClient } from '../contexts'
 import type { MainTabScreenProps } from '../navigation/types'
 
 type Props = MainTabScreenProps<'Exchanges'>
+
+/** Stable empty array so an absent query result does not remount the list */
+const EMPTY_EXCHANGES: GameExchange[] = []
 
 // Status badge color mappings
 const STATUS_COLORS = {
@@ -63,18 +67,18 @@ function getExchangeDisplay(
 export function ExchangesScreen(_props: Props) {
   const { t, language } = useTranslation()
   const apiClient = useApiClient()
+  // Needed so the referee's own entries survive the take-over filter
+  const currentUserId = useAuthStore((state) => state.user?.id)
 
-  const {
-    data: exchanges = [],
-    isLoading,
-    isFetching,
-    isError,
-    error,
-    refetch,
-  } = useExchanges({
+  const { data, isLoading, isFetching, isError, error, refetch } = useExchanges({
     apiClient,
     status: 'open',
+    currentUserId,
   })
+
+  const exchanges = data?.items ?? EMPTY_EXCHANGES
+  // Only speak when something was actually withheld
+  const notTakeableCount = data?.notTakeableCount ?? 0
 
   const onRefresh = useCallback(() => {
     refetch()
@@ -113,6 +117,11 @@ export function ExchangesScreen(_props: Props) {
     return (
       <View className="flex-1 items-center justify-center px-6">
         <Text className="text-gray-600 text-center">{t('exchange.noExchanges')}</Text>
+        {notTakeableCount > 0 && (
+          <Text className="text-gray-500 text-sm text-center mt-2">
+            {t('exchange.onlyTakeableListed')}
+          </Text>
+        )}
       </View>
     )
   }
@@ -125,6 +134,13 @@ export function ExchangesScreen(_props: Props) {
       keyExtractor={(item) => item.__identity}
       refreshControl={
         <RefreshControl refreshing={isFetching && !isLoading} onRefresh={onRefresh} />
+      }
+      ListFooterComponent={
+        notTakeableCount > 0 ? (
+          <Text className="text-gray-500 text-xs text-center mt-2">
+            {t('exchange.onlyTakeableListed')}
+          </Text>
+        ) : null
       }
       renderItem={({ item }) => {
         const display = getExchangeDisplay(item, language, t('common.tbd'))

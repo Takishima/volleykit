@@ -74,7 +74,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.items).toHaveLength(1)
     expect(mockApiClient.searchExchanges).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'open', // Default status
@@ -168,8 +168,8 @@ describe('useExchanges', () => {
     })
 
     // Should filter out the exchange from user-123
-    expect(result.current.data).toHaveLength(1)
-    expect(result.current.data?.[0].__identity).toBe('exc-2')
+    expect(result.current.data?.items).toHaveLength(1)
+    expect(result.current.data?.items[0].__identity).toBe('exc-2')
   })
 
   it('should not filter when hideOwn is false', async () => {
@@ -203,7 +203,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(2)
+    expect(result.current.data?.items).toHaveLength(2)
   })
 
   it('should not filter when currentUserId is not provided', async () => {
@@ -233,7 +233,157 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toHaveLength(1)
+    expect(result.current.data?.items).toHaveLength(1)
+  })
+
+  it('should drop exchanges the referee may not take over', async () => {
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-takeable',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: true } } },
+      } as GameExchange,
+      {
+        // Referee is registered for one of the two teams - server denies the takeover
+        __identity: 'exc-blocked',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 2,
+    })
+
+    const { result } = renderHook(
+      () =>
+        useExchanges({
+          apiClient: mockApiClient,
+          currentUserId: 'user-123',
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data?.items).toHaveLength(1)
+    expect(result.current.data?.items[0].__identity).toBe('exc-takeable')
+    expect(result.current.data?.notTakeableCount).toBe(1)
+  })
+
+  it('should keep own exchanges even when they are not takeable', async () => {
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-own',
+        submittedByPerson: { __identity: 'user-123' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 1,
+    })
+
+    const { result } = renderHook(
+      () =>
+        useExchanges({
+          apiClient: mockApiClient,
+          currentUserId: 'user-123',
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data?.items).toHaveLength(1)
+  })
+
+  it('should keep blocked exchanges on non-open statuses', async () => {
+    // On the applied tab the flag is expected to be false - the referee already
+    // holds the entry, so it still belongs in the list
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-applied',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 1,
+    })
+
+    const { result } = renderHook(
+      () =>
+        useExchanges({
+          apiClient: mockApiClient,
+          status: 'applied',
+          currentUserId: 'user-123',
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data?.items).toHaveLength(1)
+    expect(result.current.data?.notTakeableCount).toBe(0)
+  })
+
+  it('should cache the unfiltered list so per-caller options still apply', async () => {
+    // Filtering runs in `select`, not `queryFn`: the cache entry is shared by
+    // callers whose options are not part of the query key
+    const mockExchanges: GameExchange[] = [
+      {
+        __identity: 'exc-own',
+        submittedByPerson: { __identity: 'user-123' },
+        _permissions: { properties: { appliedBy: { update: false } } },
+      } as GameExchange,
+      {
+        __identity: 'exc-takeable',
+        submittedByPerson: { __identity: 'user-456' },
+        _permissions: { properties: { appliedBy: { update: true } } },
+      } as GameExchange,
+    ]
+
+    vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
+      items: mockExchanges,
+      totalItemsCount: 2,
+    })
+
+    const wrapper = createWrapper()
+
+    const hidingOwn = renderHook(
+      () => useExchanges({ apiClient: mockApiClient, currentUserId: 'user-123', hideOwn: true }),
+      { wrapper }
+    )
+
+    await waitFor(() => {
+      expect(hidingOwn.result.current.isSuccess).toBe(true)
+    })
+    expect(hidingOwn.result.current.data?.items.map((e) => e.__identity)).toEqual(['exc-takeable'])
+
+    // Second observer shares the cache entry and must still see its own entry
+    const keepingOwn = renderHook(
+      () => useExchanges({ apiClient: mockApiClient, currentUserId: 'user-123', hideOwn: false }),
+      { wrapper }
+    )
+
+    await waitFor(() => {
+      expect(keepingOwn.result.current.isSuccess).toBe(true)
+    })
+    expect(keepingOwn.result.current.data?.items.map((e) => e.__identity)).toEqual([
+      'exc-own',
+      'exc-takeable',
+    ])
   })
 
   it('should not fetch when disabled', async () => {
@@ -288,7 +438,7 @@ describe('useExchanges', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data).toEqual([])
+    expect(result.current.data?.items).toEqual([])
   })
 })
 

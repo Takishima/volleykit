@@ -11,5 +11,5 @@ export {
   DEFAULT_PAGE_SIZE,
 } from './useAssignments'
 export { useCompensations, type UseCompensationsOptions } from './useCompensations'
-export { useExchanges, type UseExchangesOptions } from './useExchanges'
+export { useExchanges, type UseExchangesOptions, type ExchangeListResult } from './useExchanges'
 export * from './useAuth'

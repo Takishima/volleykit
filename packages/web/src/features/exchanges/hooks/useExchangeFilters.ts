@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 
+import { isTakeableOrOwn } from '@volleykit/shared/utils'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
@@ -98,16 +99,37 @@ export function useExchangeFilters({
     })
   }, [data, homeLocation])
 
-  // Filter exchanges by user's referee level, distance, travel time, game gap, and ownership
-  const filteredData = useMemo(() => {
+  // Filter exchanges by user's referee level, distance, travel time, game gap, and ownership.
+  // Also reports how many entries the server refuses to hand over, so the page can
+  // say so instead of claiming the marketplace is empty.
+  const { filteredData, notTakeableCount } = useMemo(() => {
+    let notTakeableCount = 0
+
     // When tour is active, show ONLY the dummy exchange
     if (showDummyData) {
-      return dummyExchanges
+      return { filteredData: dummyExchanges, notTakeableCount }
     }
 
-    if (!exchangesWithDistance) return null
+    if (!exchangesWithDistance) return { filteredData: null, notTakeableCount }
 
     let result = exchangesWithDistance
+
+    // Hide entries the server refuses to hand over on the "open" tab. Own
+    // entries are kept: they carry the same flag but must stay removable.
+    // Runs first so the count describes the marketplace rather than whatever
+    // the level, distance, travel time and gap filters happened to leave.
+    //
+    // Mobile gets the same number from the shared `useExchanges`, which counts
+    // over the raw entries; web has its own fetch hook and a wrapper type, so it
+    // repeats the arithmetic here. Both count the full fetched list, and the
+    // predicate itself is shared - keep it that way if either side moves.
+    if (statusFilter === 'open') {
+      const takeable = result.filter(({ exchange }) =>
+        isTakeableOrOwn(exchange, currentUserIdentity)
+      )
+      notTakeableCount = result.length - takeable.length
+      result = takeable
+    }
 
     // Apply level filter (only on "open" tab in demo mode)
     if (
@@ -185,7 +207,7 @@ export function useExchangeFilters({
       )
     }
 
-    return result
+    return { filteredData: result, notTakeableCount }
   }, [
     showDummyData,
     dummyExchanges,
@@ -215,6 +237,7 @@ export function useExchangeFilters({
 
   return {
     filteredData,
+    notTakeableCount,
     travelTimeMap,
     homeLocation,
     isTravelTimeFilterAvailable,

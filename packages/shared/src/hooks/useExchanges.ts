@@ -6,7 +6,7 @@
  * Extracted from web-app/src/features/exchanges/hooks/useExchanges.ts
  */
 
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import {
@@ -16,6 +16,7 @@ import {
   type GameExchange,
 } from '../api'
 import { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS } from '../api/constants'
+import { filterTakeableExchanges } from '../utils/exchange-helpers'
 
 export { DEFAULT_PAGE_SIZE, EXCHANGES_STALE_TIME_MS }
 
@@ -33,6 +34,18 @@ export interface ExchangesApiClient {
 
 /** Stable empty array for React Query selectors */
 const EMPTY_EXCHANGES: GameExchange[] = []
+
+/**
+ * What the hook reports: the entries to show, plus how many the server refuses
+ * to hand over. Consumers need the count to explain a short list rather than
+ * leaving the referee to wonder.
+ */
+export interface ExchangeListResult {
+  /** Entries worth offering to the referee */
+  items: GameExchange[]
+  /** How many entries the server marked as not takeable */
+  notTakeableCount: number
+}
 
 export interface UseExchangesOptions {
   /** API client for fetching exchanges */
@@ -55,7 +68,9 @@ export interface UseExchangesOptions {
  * @param options - Configuration options including API client
  * @returns Query result with exchanges array
  */
-export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameExchange[], Error> {
+export function useExchanges(
+  options: UseExchangesOptions
+): UseQueryResult<ExchangeListResult, Error> {
   const {
     apiClient,
     status = 'open',
@@ -76,19 +91,44 @@ export function useExchanges(options: UseExchangesOptions): UseQueryResult<GameE
     [status]
   )
 
+  // Both filters depend on per-caller options that the query key does not carry,
+  // so they run per observer in `select` rather than in `queryFn`. That keeps the
+  // shared (and persisted) cache entry holding the server's list verbatim.
+  const select = useCallback(
+    (items: GameExchange[]): ExchangeListResult => {
+      let result = items
+
+      // Drop entries the referee is barred from taking over (own entries stay so
+      // they can still be pulled back off the marketplace). Only on the open
+      // marketplace: on the applied and closed tabs the flag is false by
+      // definition, and those entries still belong in the list.
+      if (status === 'open') {
+        result = filterTakeableExchanges(result, currentUserId)
+      }
+      // Counted over the full fetched list, before `hideOwn` narrows it. Web
+      // repeats this arithmetic in useExchangeFilters over its own wrapper type;
+      // both sides share the predicate, so keep the scope aligned.
+      const notTakeableCount = items.length - result.length
+
+      // Filter out own exchanges if requested
+      if (hideOwn && currentUserId) {
+        result = result.filter(
+          (exchange) => exchange.submittedByPerson?.__identity !== currentUserId
+        )
+      }
+
+      return { items: result, notTakeableCount }
+    },
+    [status, currentUserId, hideOwn]
+  )
+
   return useQuery({
     queryKey: queryKeys.exchanges.list(config, associationKey),
     queryFn: async () => {
       const response = await apiClient.searchExchanges(config)
-      let items = response.items ?? EMPTY_EXCHANGES
-
-      // Filter out own exchanges if requested
-      if (hideOwn && currentUserId) {
-        items = items.filter((exchange) => exchange.submittedByPerson?.__identity !== currentUserId)
-      }
-
-      return items
+      return response.items ?? EMPTY_EXCHANGES
     },
+    select,
     staleTime: EXCHANGES_STALE_TIME_MS,
     enabled,
   })

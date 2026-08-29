@@ -153,6 +153,7 @@ const de: Translations = {
     submittedBy: 'Von:',
     levelRequired: 'Niveau {level}+',
     hideOwn: 'Eigene ausblenden',
+    onlyTakeableListed: 'Es werden nur Tauschangebote angezeigt, die Sie übernehmen dürfen.',
   },
   positions: {
     'head-one': '1. Schiedsrichter',

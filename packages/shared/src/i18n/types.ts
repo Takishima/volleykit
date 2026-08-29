@@ -165,6 +165,7 @@ export interface Translations {
     submittedBy: string
     levelRequired: string
     hideOwn: string
+    onlyTakeableListed: string
   }
   positions: {
     'head-one': string

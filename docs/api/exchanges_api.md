@@ -148,6 +148,90 @@ refereeConvocations[0][__identity]: <convocation_uuid>
 __csrfToken: <token>
 ```
 
+## Take-over Permission (`_permissions`)
+
+Each item in the response carries the server's verdict on whether the signed-in
+referee may take that entry over:
+
+```json
+{
+  "_permissions": {
+    "properties": {
+      "appliedBy": { "update": false }
+    }
+  }
+}
+```
+
+- `true`: the referee can apply (`pickFromRefereeGameExchange` succeeds)
+- `false`: a backend rule blocks them, and applying anyway is rejected
+
+The backend does not say which rule fired, and the clients do not try to
+reproduce it - the field is taken as the server's answer.
+
+Observed in a capture from a Swiss Volley Region Zurich referee cleared up to
+and including National League B (2026-08-29, all 10 entries in the same regional
+association):
+
+| Games                                  | `update` | League      | `requiredRefereeLevel` |
+| -------------------------------------- | -------- | ----------- | ---------------------- |
+| 406907, 405628, 406403, 406830, 405659 | `false`  | 4L, 5L      | N4                     |
+| 406305, 406720, 406221, 406995, 406159 | `true`   | 2L, 3L, U23 | N3                     |
+
+So the flag tracked the _lower_ league boundary, not the referee's upper
+clearance: the region appears to keep 4L/5L entries for its own club referees.
+
+Two rival explanations are ruled out by that same capture:
+
+- **Team registration / club affiliation**: four distinct home clubs are blocked,
+  and VBC Einsiedeln sits on both sides of the split (D3 blocked, D2 and H2
+  takeable).
+- **Distance from home**: Sporthalle Brüel in 8840 Einsiedeln hosts both a
+  blocked entry (405659, 5L) and two takeable ones (406221 and 406995, 2L).
+
+### Which rules feed the flag
+
+`GET .../refereeassociationsettings/getRefereeAssociationSettingsOfActiveParty`
+(already fetched by the clients) exposes the association's exchange
+configuration. The fields that decide who may catch a game:
+
+| Field                                                            | Zurich value                                         | Effect                                                                                  |
+| ---------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `usesGameExchange`                                               | `true`                                               | The exchange exists for this association                                                |
+| `allowedRefereeTypesForGameExchange`                             | `["head-two", "head-one"]`                           | Only head referee entries can be exchanged - no linesman entries                        |
+| `hoursBeforeGameStartIgnoringConvocationCriteriaInGameExchange`  | `72`                                                 | Inside 72h before game start the convocation criteria stop being enforced               |
+| `allowGameExchangeCatchingOfFlaggedRefereeXHoursBeforeGameStart` | `72`                                                 | Same window for referees flagged as systematically delayed                              |
+| `maxDistanceInKmBetweenRefereeAndHall`                           | `50`                                                 | Distance criterion                                                                      |
+| `basisToConsiderRefereeHome`                                     | `["", "hasValidatedPlayerOrCoachLicenseOfHomeClub"]` | A referee holding a validated player or coach license of the home club counts as "home" |
+| `refereeMandateAllocationType`                                   | `"club"`                                             | Referee mandates are allocated per club, not per team                                   |
+| `clubsThisRefereeIsNotAllowedToArbitrate` (referee data)         | visible, not editable                                | Explicit club ban                                                                       |
+| `teamsThisRefereeIsNotAllowedToArbitrate` (referee data)         | visible, not editable                                | Explicit team ban                                                                       |
+| `mayNotRefereeMatchForGender` (referee data)                     | visible, not editable                                | Gender restriction                                                                      |
+
+So `appliedBy.update` is the outcome of the whole convocation-criteria check for
+that referee and that game - level, distance, gender, club/team bans and the
+home-club conflict of interest all collapse into the one boolean. The response
+never says which criterion fired.
+
+Because the criteria stop applying 72h before game start, the same entry can flip
+from `false` to `true` as the game approaches. The clients re-read the flag on
+every fetch, so this needs no client-side handling.
+
+The search endpoint returns every open entry regardless of this flag, so the
+clients filter on it: entries with `update: false` are dropped from the Open tab.
+Own entries are kept - they carry `update: false` too, yet must stay visible so
+the submitter can pull them back off the marketplace. An entry without the flag
+is treated as takeable so a missing property never empties the list.
+
+The clients request `_permissions` in `propertyRenderConfiguration`. Whether the
+endpoint returns the block unasked is unconfirmed - the capture that shows it
+came from the official site, whose request shape for that call was not captured,
+and the compensations endpoint does return it without asking. Requesting it is
+the safer of the two guesses: an unaccepted property path fails the search
+outright, while a missing flag reads as "takeable" and turns the filter into a
+silent no-op. To settle it, capture our own search with the property removed and
+check whether `items[]._permissions.properties.appliedBy` still arrives.
+
 ## Notes
 
 - Date filtering uses `propertyFilters` with `refereeGame.game.startingDateTime`

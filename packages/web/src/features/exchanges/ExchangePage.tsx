@@ -25,11 +25,12 @@ const RemoveFromExchangeModal = lazy(() =>
 )
 
 export function ExchangePage() {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const {
     statusFilter,
     handleTabChange,
     groupedData,
+    openTabNotice,
     travelTimeMap,
     homeLocation,
     showDummyData,
@@ -100,13 +101,26 @@ export function ExchangePage() {
       )
     }
 
+    const { filtered, notTakeableCount } = openTabNotice
+
+    // Entries the server refuses to hand over are dropped without a toggle to
+    // restore them, so name them either way - above a shortened list, or as the
+    // empty state. A filter the user can act on still leads.
+    const notTakeableNote =
+      notTakeableCount === 1
+        ? t('exchange.exchangesNotTakeableOne')
+        : tInterpolate('exchange.exchangesNotTakeable', { count: notTakeableCount })
+
     if (groupedData.length === 0) {
-      const hasActiveFilters =
-        hideOwnExchanges ||
-        levelFilterEnabled ||
-        distanceFilter.enabled ||
-        travelTimeFilter.enabled ||
-        gameGapFilter.enabled
+      let openTabDescription = t('exchange.noOpenExchangesDescription')
+      if (filtered) {
+        openTabDescription = notTakeableCount
+          ? `${t('exchange.noExchangesWithFilters')} ${notTakeableNote}`
+          : t('exchange.noExchangesWithFilters')
+      } else if (notTakeableCount > 0) {
+        openTabDescription = notTakeableNote
+      }
+
       return (
         <EmptyState
           icon="exchange"
@@ -116,51 +130,52 @@ export function ExchangePage() {
               : t('exchange.noApplicationsTitle')
           }
           description={
-            statusFilter === 'open'
-              ? hasActiveFilters
-                ? t('exchange.noExchangesWithFilters')
-                : t('exchange.noOpenExchangesDescription')
-              : t('exchange.noApplicationsDescription')
+            statusFilter === 'open' ? openTabDescription : t('exchange.noApplicationsDescription')
           }
         />
       )
     }
 
     return (
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {groupedData.map((group, groupIndex) => {
-          // Track global item index for tour data attribute
-          const itemsBeforeThisGroup = groupedData
-            .slice(0, groupIndex)
-            .reduce((sum, g) => sum + g.items.length, 0)
+      <>
+        {statusFilter === 'open' && notTakeableCount > 0 && (
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{notTakeableNote}</p>
+        )}
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {groupedData.map((group, groupIndex) => {
+            // Track global item index for tour data attribute
+            const itemsBeforeThisGroup = groupedData
+              .slice(0, groupIndex)
+              .reduce((sum, g) => sum + g.items.length, 0)
 
-          return (
-            <Fragment key={group.week.key}>
-              {/* Only show separator if there's more than one week */}
-              {groupedData.length > 1 && <WeekSeparator week={group.week} />}
-              {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
-                const travelTimeData = travelTimeMap.get(exchange.__identity)
-                return (
-                  <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
-                    {({ isDrawerOpen }) => (
-                      <ExchangeCard
-                        exchange={exchange}
-                        disableExpansion={isDrawerOpen}
-                        dataTour={
-                          itemsBeforeThisGroup + itemIndex === 0 ? 'exchange-card' : undefined
-                        }
-                        carDistanceKm={homeLocation ? carDistanceKm : null}
-                        travelTimeMinutes={travelTimeData?.minutes}
-                        travelTimeLoading={travelTimeData?.isLoading}
-                      />
-                    )}
-                  </SwipeableCard>
-                )
-              })}
-            </Fragment>
-          )
-        })}
-      </div>
+            return (
+              <Fragment key={group.week.key}>
+                {/* Only show separator if there's more than one week */}
+                {groupedData.length > 1 && <WeekSeparator week={group.week} />}
+                {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
+                  const travelTimeData = travelTimeMap.get(exchange.__identity)
+                  return (
+                    <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
+                      {({ isDrawerOpen }) => (
+                        <ExchangeCard
+                          exchange={exchange}
+                          disableExpansion={isDrawerOpen}
+                          dataTour={
+                            itemsBeforeThisGroup + itemIndex === 0 ? 'exchange-card' : undefined
+                          }
+                          carDistanceKm={homeLocation ? carDistanceKm : null}
+                          travelTimeMinutes={travelTimeData?.minutes}
+                          travelTimeLoading={travelTimeData?.isLoading}
+                        />
+                      )}
+                    </SwipeableCard>
+                  )
+                })}
+              </Fragment>
+            )
+          })}
+        </div>
+      </>
     )
   }
 

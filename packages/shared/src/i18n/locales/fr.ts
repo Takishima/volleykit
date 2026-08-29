@@ -153,6 +153,7 @@ const fr: Translations = {
     submittedBy: 'Par :',
     levelRequired: 'Niveau {level}+',
     hideOwn: 'Masquer les miens',
+    onlyTakeableListed: 'Seuls les échanges que vous êtes autorisé à reprendre sont affichés.',
   },
   positions: {
     'head-one': '1er Arbitre',

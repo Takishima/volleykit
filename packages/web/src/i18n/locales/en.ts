@@ -348,6 +348,10 @@ const en: Translations = {
     calculatingTravelTime: 'Calculating travel time...',
     noExchangesAtLevel: 'No exchanges available at your level.',
     noExchangesWithFilters: 'No exchanges match your filters.',
+    exchangesNotTakeable:
+      '{count} exchanges are hidden: the association does not let you take them over.',
+    exchangesNotTakeableOne:
+      'One exchange is hidden: the association does not let you take it over.',
     noOpenExchangesTitle: 'No open exchanges',
     noOpenExchangesDescription: 'There are currently no referee positions available for exchange.',
     noApplicationsTitle: 'No offers',
