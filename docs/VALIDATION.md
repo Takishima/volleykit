@@ -9,7 +9,7 @@ scripts/validate.sh --gate   # list what is missing (runs nothing)
 scripts/validate.sh --clear  # drop the cache
 ```
 
-Classes: `format`, `tokens`, `lint`, `typecheck`, `test`, `build`.
+Classes: `format`, `tokens`, `lint`, `typecheck`, `knip`, `test`, `build`.
 `/lint`, `/test`, `/build` are wrappers over these.
 
 ## Rules
@@ -89,14 +89,16 @@ package table.
 
 | Package   | format¹ | lint | knip | typecheck  | test | build |
 | --------- | ------- | ---- | ---- | ---------- | ---- | ----- |
-| web       | ✓       | ✓    | CI²  | (in build) | ✓    | ✓     |
-| shared    | ✓       | ✓    | –    | ✓          | ✓    | ✓     |
-| mobile    | ✓       | ✓    | –    | ✓          | ✓    | –     |
+| web       | ✓       | ✓    | ✓²   | (in build) | ✓    | ✓     |
+| shared    | ✓       | ✓    | ✓²   | ✓          | ✓    | ✓     |
+| mobile    | ✓       | ✓    | ✓²   | ✓          | ✓    | –     |
 | worker    | ✓       | ✓    | –    | –          | ✓    | –     |
 | help-site | ✓       | –    | –    | –          | –    | ✓     |
 
 ¹ Runs once over all changed files, not per-package
-² Knip runs in CI only — too slow for pre-commit
+² Was CI-only while knip 5 was too slow for pre-commit. On knip 6 a run is
+1-2s per package and only re-runs when that package changes, so the gate now
+covers the same three packages CI does.
 
 Non-build checks run in parallel, then all builds in parallel. The web build
 includes `tsc -b` and the bundle-size check. API types regenerate first if

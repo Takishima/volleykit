@@ -27,7 +27,7 @@ on:
 #   setup ─────┬──────────────────────────────────────┐
 #   (API types)│                                      │
 #              ├──> lint ──────┐                      │
-#              ├──> knip (web, shared, mobile)                      │
+#              ├──> knip (x3)  │                      │
 #              ├──> test       │                      │
 #              └──> build ─────┼──> bundle-size       │
 #                              ├──> e2e (per browser) │
@@ -207,22 +207,21 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
+      # setup-node-deps caches only the root and packages/web node_modules, and
+      # skips installing when both keys hit. This job also needs the shared and
+      # mobile workspace dirs, which nothing caches, so install unconditionally.
+      # Idempotent and near-free when everything is already present.
+      - name: Ensure every workspace has its dependencies
+        run: pnpm install --frozen-lockfile
       - name: Download API types
         uses: actions/download-artifact@v8
         with:
           name: api-types
           path: packages
-      # shared and mobile also define a knip script; run all three so a config
-      # that has never been green cannot ship unnoticed.
+      # -r --if-present covers every package that defines a knip script, so this
+      # needs no edit when one is added or removed.
       - name: Check for dead code
-        run: |
-          status=0
-          for pkg in web shared mobile; do
-            echo "::group::knip ($pkg)"
-            (cd "packages/$pkg" && pnpm run knip) || status=1
-            echo "::endgroup::"
-          done
-          exit "$status"
+        run: pnpm -r --if-present run knip
   # Unit tests - needs API types from setup
   # PRs: only run tests affected by changed files (--changed)
   # main: run all tests for full coverage validation
