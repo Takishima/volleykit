@@ -7,13 +7,15 @@ settings:
 overrides:
   react: ^19.2.8
   '@types/react': ^19.2.18
-  axios: ^1.18.0
-  fast-xml-parser: ^5.11.1
   serialize-javascript@<7.0.5: '>=7.0.5'
   js-yaml@>=4.0.0 <4.3.1: '>=4.3.1'
   esbuild@>=0.27.3 <0.28.1: '>=0.28.1'
   sharp@<0.35.0: '>=0.35.0'
   uuid@<11.1.1: ^11.1.1
+  ojp-sdk-next>axios: ^1.18.0
+  ojp-sdk-next>fast-xml-parser: ^5.11.1
+
+packageExtensionsChecksum: sha256-zDAw04NMzaXStg8ibaF1eaGbIS1ZKIaQoTXEUHf+5bs=
 
 importers:
 
@@ -284,6 +286,9 @@ importers:
       knip:
         specifier: ^6.33.0
         version: 6.33.0
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.6
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
@@ -326,6 +331,9 @@ importers:
       knip:
         specifier: ^6.33.0
         version: 6.33.0
+      prettier:
+        specifier: ^3.9.6
+        version: 3.9.6
       react:
         specifier: ^19.2.8
         version: 19.2.8
@@ -12195,9 +12203,7 @@ snapshots:
       metro-runtime: 0.84.5
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.86.3': {}
 
@@ -17015,6 +17021,7 @@ snapshots:
   react-native-worklets@0.10.1(@babel/core@7.29.7)(@react-native/metro-config@0.85.2(@babel/core@7.29.7))(react-native@0.86.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.2(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.2.8))(react@19.2.8):
     dependencies:
       '@babel/core': 7.29.7
+      '@babel/generator': 7.29.8
       '@babel/plugin-transform-arrow-functions': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-class-properties': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-classes': 7.29.7(@babel/core@7.29.7)
@@ -17024,6 +17031,7 @@ snapshots:
       '@babel/plugin-transform-template-literals': 7.29.7(@babel/core@7.29.7)
       '@babel/plugin-transform-unicode-regex': 7.29.7(@babel/core@7.29.7)
       '@babel/preset-typescript': 7.29.7(@babel/core@7.29.7)
+      '@babel/traverse': 7.29.8
       '@babel/types': 7.29.8
       '@react-native/metro-config': 0.85.2(@babel/core@7.29.7)
       convert-source-map: 2.0.0
