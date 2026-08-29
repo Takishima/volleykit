@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 
 import type { Assignment } from '@/api/client'
+import type { SingleBallHallNoteKey } from '@/data/single-ball-halls'
 import type { AssignmentConflict } from '@/features/assignments/utils/conflict-detection'
 
 /** Helper to extract referee display name from deep nested structure */
@@ -66,7 +67,7 @@ export interface AssignmentCardContextValue {
   /** Function to open SBB connection */
   openSbbConnection: () => Promise<void>
   /** Single-ball hall match info */
-  singleBallMatch: { isConditional: boolean } | null
+  singleBallMatch: { isConditional: boolean; noteKey?: SingleBallHallNoteKey } | null
   /** Path to single-ball halls PDF */
   singleBallPdfPath: string
   /** Pre-rendered expand arrow element */

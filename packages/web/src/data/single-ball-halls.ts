@@ -1,11 +1,18 @@
 /**
  * Configuration for sports halls where NLA/NLB games can be played with only 1 ball.
- * Based on official SwissVolley document "Hallenliste NLB: Spiel mit 1 Ball" (2025/26 season).
+ * Based on official SwissVolley document "Hallenliste NLB: Spiel mit 1 Ball" (2026/27 season,
+ * published 29.06.2026).
  *
  * Source PDFs stored in public/documents/:
  * - single-ball-halls-de.pdf (German)
  * - single-ball-halls-fr.pdf (French)
  */
+
+/**
+ * Translation key (under `assignments.*`) for a hall-specific condition that is
+ * neither the plain rule nor the generic "*)" single-sub-hall condition.
+ */
+export type SingleBallHallNoteKey = 'singleBallHallRefereeAtPartition'
 
 export interface SingleBallHall {
   /** City name (primary match field) */
@@ -17,6 +24,8 @@ export interface SingleBallHall {
    * Otherwise, play with 3 balls (with ball kids).
    */
   conditional: boolean
+  /** Hall-specific condition to show instead of the default notice text */
+  noteKey?: SingleBallHallNoteKey
 }
 
 /**
@@ -31,6 +40,12 @@ export const SINGLE_BALL_HALLS: SingleBallHall[] = [
   { city: 'Luzern', hallKeywords: ['Bahnhofhalle'], conditional: true },
   { city: 'Olten', hallKeywords: ['Giroud', 'Olma'], conditional: true },
   { city: 'Ruswil', hallKeywords: ['Dorfhalle'], conditional: false },
+  {
+    city: 'Subingen',
+    hallKeywords: ['3fach', '3-fach', 'Dreifach', 'Turnhalle'],
+    conditional: false,
+    noteKey: 'singleBallHallRefereeAtPartition',
+  },
   { city: 'Thônex', hallKeywords: ['Sous-Moulin'], conditional: true },
 ]
 

@@ -162,6 +162,7 @@ export interface Translations {
     failedToLoadData: string
     singleBallHall: string
     singleBallHallConditional: string
+    singleBallHallRefereeAtPartition: string
     singleBallHallTooltip: string
     conflictWarningTooltip: string
     conflictWarningTitle: string

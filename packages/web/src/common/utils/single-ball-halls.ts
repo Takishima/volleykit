@@ -8,6 +8,7 @@ import {
   SINGLE_BALL_LEAGUES,
   SINGLE_BALL_PDF_PATHS,
   type SingleBallHall,
+  type SingleBallHallNoteKey,
 } from '@/data/single-ball-halls'
 import type { Locale } from '@/i18n'
 
@@ -16,6 +17,8 @@ export interface SingleBallHallMatch {
   hall: SingleBallHall
   /** Whether the rule is conditional (only applies when single sub-hall available) */
   isConditional: boolean
+  /** Hall-specific condition to show instead of the default notice text */
+  noteKey?: SingleBallHallNoteKey
 }
 
 /**
@@ -87,6 +90,7 @@ export function detectSingleBallHall(assignment: Assignment): SingleBallHallMatc
       return {
         hall,
         isConditional: hall.conditional,
+        noteKey: hall.noteKey,
       }
     }
   }

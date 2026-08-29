@@ -12,6 +12,12 @@ export function SingleBallNotice() {
     return null
   }
 
+  const singleBallNoticeText = singleBallMatch.noteKey
+    ? t(`assignments.${singleBallMatch.noteKey}`)
+    : singleBallMatch.isConditional
+      ? t('assignments.singleBallHallConditional')
+      : t('assignments.singleBallHall')
+
   return (
     <a
       href={singleBallPdfPath}
@@ -22,9 +28,7 @@ export function SingleBallNotice() {
     >
       <CircleAlert className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
       <span className="underline decoration-warning-400/50 group-hover:decoration-warning-500 underline-offset-2">
-        {singleBallMatch.isConditional
-          ? t('assignments.singleBallHallConditional')
-          : t('assignments.singleBallHall')}
+        {singleBallNoticeText}
       </span>
       <ExternalLink
         className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100"

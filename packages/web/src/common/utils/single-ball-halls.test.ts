@@ -95,6 +95,31 @@ describe('detectSingleBallHall', () => {
       expect(result?.isConditional).toBe(true)
     })
 
+    it('detects Subingen 3fach Halle with referee-at-partition condition', () => {
+      const assignment = createMockAssignment('Subingen', '3fach Halle', 'NLB')
+      const result = detectSingleBallHall(assignment)
+
+      expect(result).not.toBeNull()
+      expect(result?.hall.city).toBe('Subingen')
+      expect(result?.isConditional).toBe(false)
+      expect(result?.noteKey).toBe('singleBallHallRefereeAtPartition')
+    })
+
+    it('detects Subingen Dreifachturnhalle spelling variant', () => {
+      const assignment = createMockAssignment('Subingen', 'Dreifachturnhalle', 'NLA')
+      const result = detectSingleBallHall(assignment)
+
+      expect(result).not.toBeNull()
+      expect(result?.hall.city).toBe('Subingen')
+    })
+
+    it('leaves noteKey undefined for halls without a specific condition', () => {
+      const assignment = createMockAssignment('Ruswil', 'Dorfhalle neu', 'NLB')
+      const result = detectSingleBallHall(assignment)
+
+      expect(result?.noteKey).toBeUndefined()
+    })
+
     it('matches with case-insensitive city name', () => {
       const assignment = createMockAssignment('RUSWIL', 'Dorfhalle neu', 'NLB')
       const result = detectSingleBallHall(assignment)
@@ -179,6 +204,14 @@ describe('detectSingleBallHall', () => {
     it('avoids false positive for generic Turnhalle in wrong city', () => {
       // Turnhalle is common, but only Guntershausen Turnhalle is a single-ball hall
       const assignment = createMockAssignment('Bern', 'Turnhalle Wankdorf', 'NLB')
+      const result = detectSingleBallHall(assignment)
+
+      expect(result).toBeNull()
+    })
+
+    it('avoids false positive for generic Turnhalle in wrong city (Subingen keywords)', () => {
+      // "Turnhalle" is a Subingen keyword, but must not match elsewhere
+      const assignment = createMockAssignment('Solothurn', 'Dreifachturnhalle', 'NLB')
       const result = detectSingleBallHall(assignment)
 
       expect(result).toBeNull()
