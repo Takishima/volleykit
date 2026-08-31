@@ -54,7 +54,10 @@ export function useAbsences() {
 
   // No placeholderData: an association switch is a context change, so the
   // page shows a spinner instead of the previous association's rows under
-  // the new association's header.
+  // the new association's header. useRefereeBackups keeps placeholderData
+  // on the same switch - deliberately divergent for now; aligning the
+  // peers (and parameterizing the planned useAssociationScopedList
+  // extraction accordingly) is a follow-up.
   return useQuery({
     ...absenceListOptions(apiClient, associationKey),
     select: selectAbsences,

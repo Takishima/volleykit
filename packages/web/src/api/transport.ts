@@ -159,10 +159,11 @@ export async function apiRequest<T>(
     // Both `&& body` conjuncts (here and on the fetch body below) are
     // load-bearing for searchAbsences: an omitted body must produce a
     // request with no Content-Type and no injected __csrfToken, because
-    // the refereeabsence/search controller 500s on ANY form body
-    // (docs/api/captures/absence_endpoints.md). Defaulting the body or
-    // attaching the token to every state-changing request would silently
-    // reintroduce that 500.
+    // the refereeabsence/search controller 500s on a form body carrying
+    // only __csrfToken and misbehaves on every searchConfiguration body
+    // tried (docs/api/captures/absence_endpoints.md). Defaulting the body
+    // or attaching the token to every state-changing request would
+    // silently reintroduce that 500.
     if (method !== 'GET' && body) {
       headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
     }

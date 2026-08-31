@@ -297,6 +297,12 @@ unlike every other VolleyManager search endpoint:
   `_permissions` per item, ordered `fromDate` descending. This matches VolleyManager's
   own page, whose copy-as-cURL carries no body.
 
+Note the asymmetry between the last three rows: the `offset`/`limit` body (which also
+carried `__csrfToken`) returned 200, while a body carrying _only_ `__csrfToken` 500s.
+The controller apparently tolerates a form body when it contains `searchConfiguration`
+keys it recognizes, and errors when the body holds nothing it maps - the safe request
+shape is no body at all, which is also the only one that returns the complete list.
+
 No `propertyRenderConfiguration` is sent - the captured responses returned all needed
 fields (including `_permissions`) without one. Responses are parsed with
 `refereeAbsencesResponseSchema` (`packages/shared/src/api/schemas/absences.ts`, resilient

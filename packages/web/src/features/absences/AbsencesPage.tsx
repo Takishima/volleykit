@@ -69,11 +69,6 @@ export function AbsencesPage() {
   const totalItemsCount = data?.totalItemsCount ?? 0
   const hasMore = data?.hasMore ?? false
 
-  // A failed refetch keeps the last successful data in the query cache while
-  // the error state renders; the badge and the truncation note describe a
-  // rendered list, so neither may sit above the error on that stale data.
-  const showsFetchedList = !error
-
   // Day-granular date key keeps the memo deps stable across re-renders and
   // regroups on the next render after midnight. parseISO reads the date-only
   // key as LOCAL midnight (unlike the native new Date('yyyy-MM-dd') UTC parse
@@ -101,11 +96,15 @@ export function AbsencesPage() {
     )
   }
 
+  // The tab strip renders outside renderContent(), so the badge needs its
+  // own error gate: a failed refetch keeps the last successful data in the
+  // query cache, and a count derived from it may not sit above the error
+  // state. renderContent()'s branch structure covers everything below it.
   const tabs = [
     {
       id: 'upcoming' as const,
       label: t('absences.upcoming'),
-      badge: showsFetchedList && upcoming.length > 0 ? String(upcoming.length) : undefined,
+      badge: !error && upcoming.length > 0 ? String(upcoming.length) : undefined,
     },
     { id: 'past' as const, label: t('absences.past') },
   ]
@@ -129,9 +128,9 @@ export function AbsencesPage() {
         {/* Server-regression guard: the bodyless request returns everything
             today, so this fires only if the server reintroduces paging.
             Which end a hypothetical page would cut is unknowable, so the
-            disclosure sits above both tab panels, gated on the same
-            fetched-list flag as the badge. */}
-        {showsFetchedList && hasMore && (
+            disclosure sits above both tab panels. The error case cannot
+            reach this branch - it returned above. */}
+        {hasMore && (
           <p className="text-sm text-text-muted dark:text-text-muted-dark">
             {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
           </p>

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -67,5 +67,25 @@ describe('useAbsences', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     expect(result.current.data?.hasMore).toBe(true)
+  })
+
+  // Pins the absence of placeholderData: an association switch must reset
+  // the query to a spinner, not hold the previous association's rows under
+  // the new association's header. Restoring placeholderData keeps data
+  // defined here and fails both assertions.
+  it('drops the previous association data while the new one loads', async () => {
+    server.use(
+      http.post('*/api%5crefereeabsence/search', () =>
+        HttpResponse.json({ items: [createAbsence(0)], totalItemsCount: 1 })
+      )
+    )
+
+    const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    act(() => useAuthStore.setState({ activeOccupationId: 'occupation-2' }))
+
+    expect(result.current.data).toBeUndefined()
+    expect(result.current.isLoading).toBe(true)
   })
 })
