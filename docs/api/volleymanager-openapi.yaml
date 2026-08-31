@@ -1453,16 +1453,15 @@ paths:
       tags: [Absences]
       summary: Search referee absences
       description: |
-        Search for referee absences with pagination.
-        Returns a list of absence entries for the current referee, ordered
-        newest-first by the server's default (observed in all captures).
+        Returns absence entries for the current referee, ordered newest-first
+        by the server's default (observed in all captures).
 
-        Unlike the other search endpoints, this controller returns
-        500 Internal Server Error when searchConfiguration carries
-        propertyFilters or propertyOrderings (smoke-tested 2026-08-31);
-        send only offset and limit. The requested limit is capped at the
-        server default of 10 rows per page (limit=100 still returned 10 of
-        54), so fetching everything requires offset pagination.
+        This controller handles searchConfiguration unlike every other search
+        endpoint (smoke-tested 2026-08-31): propertyFilters or
+        propertyOrderings cause a 500 Internal Server Error; offset/limit
+        activate a server-side page clamped to 10 rows regardless of the
+        requested limit; and a request with NO searchConfiguration at all
+        returns the complete list in one response. Send only the CSRF token.
       operationId: searchRefereeAbsences
       requestBody:
         required: true

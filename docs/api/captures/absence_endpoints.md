@@ -274,31 +274,28 @@ Observations:
 
 ## Implementation Status in VolleyKit
 
-The web app's read-only **Absences** tab (`packages/web/src/features/absences/`) uses
+The web app's read-only **Absences** page (`packages/web/src/features/absences/`) uses
 `refereeabsence/search` via `api.searchAbsences()` in `packages/web/src/api/real-api.ts`.
-The request the app sends is:
+The request the app sends is deliberately **bodyless** (only the CSRF token):
 
 ```
 POST /api/indoorvolleyball.refadmin/api\refereeabsence/search
 Content-Type: application/x-www-form-urlencoded
 
-searchConfiguration[offset]=0
-&searchConfiguration[limit]=100
-&__csrfToken=<csrf-token>
+__csrfToken=<csrf-token>
 ```
 
-**Smoke-tested 2026-08-31** (two rounds):
+**Smoke-tested 2026-08-31** (three rounds). This controller handles
+`searchConfiguration` unlike every other VolleyManager search endpoint:
 
-- Sending `propertyFilters` (a `fromDate` dateRange) or `propertyOrderings` makes this
-  controller return **500 Internal Server Error** - unlike every other VolleyManager
-  search endpoint. VolleyManager's own page sends no `searchConfiguration` at all
-  (copy-as-cURL of its request carries no body).
-- The offset/limit-only request returns **200** with `_permissions` per item, ordered
-  `fromDate` descending by server default - but the server **caps the requested limit
-  at 10**: `limit=100` still returned 10 items of `totalItemsCount: 54`. The app
-  therefore pages by offset until every counted row is seen
-  (`fetchAllAbsencePages` in `packages/web/src/common/hooks/usePaginatedQuery.ts`),
-  advancing by rows actually consumed rather than by the requested limit.
+- `propertyFilters` (a `fromDate` dateRange) or `propertyOrderings` → **500 Internal
+  Server Error**.
+- `offset`/`limit` only → **200**, but the server clamps the page to **10 rows**
+  regardless of the requested limit (`limit=100` returned 10 items of
+  `totalItemsCount: 54`).
+- **No `searchConfiguration` at all** → **200 with the complete list** (all 54 items in
+  one response), `_permissions` per item, ordered `fromDate` descending. This matches
+  VolleyManager's own page, whose copy-as-cURL carries no body.
 
 No `propertyRenderConfiguration` is sent - the captured responses returned all needed
 fields (including `_permissions`) without one. Responses are parsed with

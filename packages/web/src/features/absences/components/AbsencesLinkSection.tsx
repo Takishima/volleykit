@@ -5,8 +5,10 @@ import { CalendarX2, ChevronRight } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 
 /**
- * Navigation card to the Absences page. The absences entry point lives here
- * instead of the bottom nav, which caps at four tabs.
+ * Navigation card to the Absences page, rendered by SettingsPage. Lives in
+ * the absences feature so the route, icon, and title key stay with the
+ * domain that owns them; the entry point sits in Settings because the bottom
+ * nav caps at four tabs.
  */
 export function AbsencesLinkSection() {
   const { t } = useTranslation()

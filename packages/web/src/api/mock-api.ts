@@ -854,18 +854,19 @@ export const mockApi = {
   /**
    * Search referee absences.
    * Reads the demo store's per-association set: editable own entries plus
-   * one read-only association-imposed blocking. Applies the same
-   * filter/sort/paginate pipeline as the other store-backed searches.
+   * one read-only association-imposed blocking, returned whole - the live
+   * endpoint takes no search configuration.
    */
-  async searchAbsences(config: SearchConfiguration = {}): Promise<RefereeAbsenceSearchResponse> {
+  async searchAbsences(): Promise<RefereeAbsenceSearchResponse> {
     await delay(MOCK_NETWORK_DELAY_MS)
 
+    // Bodyless like the real client: the live endpoint returns the complete
+    // list only when no searchConfiguration is sent.
     const store = useDemoStore.getState()
-    const { items, total } = processSearchRequest(store.absences, config)
 
     const response: RefereeAbsenceSearchResponse = {
-      items,
-      totalItemsCount: total,
+      items: store.absences,
+      totalItemsCount: store.absences.length,
     }
 
     // Surfaces envelope-level drift in demo mode. Return the RAW response, not

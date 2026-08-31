@@ -1,4 +1,3 @@
-export { AbsencesLinkSection } from './AbsencesLinkSection'
 export { ProfileSection } from './ProfileSection'
 export { PreferencesSection } from './PreferencesSection'
 export { HomeLocationSection } from './HomeLocationSection'

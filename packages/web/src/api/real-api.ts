@@ -783,16 +783,19 @@ export const api = {
    * blockings (e.g. national-squad duty dates); `_permissions` on each item
    * says whether it is editable.
    *
-   * @param config - Search configuration with filters and sorting
-   * @returns Promise with referee absence entries
+   * Deliberately bodyless (only the CSRF token): sending any
+   * searchConfiguration either 500s (propertyFilters/propertyOrderings) or
+   * activates a server-side page clamped to 10 rows (offset/limit), while no
+   * configuration returns the complete list newest-first. Smoke-tested
+   * 2026-08-31; see docs/api/captures/absence_endpoints.md.
+   *
+   * @returns Promise with all referee absence entries
    */
-  async searchAbsences(config: SearchConfiguration = {}): Promise<RefereeAbsenceSearchResponse> {
+  async searchAbsences(): Promise<RefereeAbsenceSearchResponse> {
     const data = await apiRequest<unknown>(
       '/indoorvolleyball.refadmin/api%5crefereeabsence/search',
       'POST',
-      {
-        searchConfiguration: config,
-      }
+      {}
     )
     return validateResponse(
       data,

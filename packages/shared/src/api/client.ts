@@ -195,8 +195,10 @@ export interface ApiClient {
   // Referee backup
   searchRefereeBackups(config?: SearchConfiguration): Promise<PaginatedResponse<RefereeBackupEntry>>
 
-  // Absences (own + association-imposed blocked dates, per active association)
-  searchAbsences(config?: SearchConfiguration): Promise<PaginatedResponse<RefereeAbsence>>
+  // Absences (own + association-imposed blocked dates, per active association).
+  // No search configuration: the endpoint returns the complete list only for
+  // a bodyless request and misbehaves for any other shape.
+  searchAbsences(): Promise<PaginatedResponse<RefereeAbsence>>
 }
 
 /**

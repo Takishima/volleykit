@@ -32,22 +32,17 @@ function createAbsence(index: number): RefereeAbsence {
   }
 }
 
-async function renderUntilSuccess() {
-  const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
-  await waitFor(() => expect(result.current.isSuccess).toBe(true))
-  return result
-}
-
 describe('useAbsences', () => {
   beforeEach(() => {
     useAuthStore.setState({ dataSource: 'api', activeOccupationId: 'occupation-1' })
   })
 
-  // The live endpoint returns 500 when propertyFilters or propertyOrderings
-  // are sent (smoke test, 2026-08-31) - VolleyManager's own page sends
-  // neither. Pin their absence so a regression cannot silently break the
-  // page against the real API.
-  it('sends only offset and limit, no filters or orderings', async () => {
+  // The live endpoint returns the complete list ONLY for a bodyless request:
+  // propertyFilters/propertyOrderings cause a 500, and offset/limit activate
+  // a server-side page clamped to 10 rows (smoke tests, 2026-08-31). Pin the
+  // absence of every searchConfiguration key so a regression cannot silently
+  // truncate or break the page against the real API.
+  it('sends no searchConfiguration at all', async () => {
     let capturedBody: URLSearchParams | null = null
     server.use(
       http.post('*/api%5crefereeabsence/search', async ({ request }) => {
@@ -56,41 +51,41 @@ describe('useAbsences', () => {
       })
     )
 
-    await renderUntilSuccess()
+    const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
     const body: URLSearchParams | null = capturedBody
-    expect(body?.get('searchConfiguration[offset]')).toBe('0')
-    expect(body?.get('searchConfiguration[limit]')).toBe('100')
     for (const key of body?.keys() ?? []) {
-      expect(key).not.toContain('propertyFilters')
-      expect(key).not.toContain('propertyOrderings')
+      expect(key).not.toContain('searchConfiguration')
     }
   })
 
-  // The server caps the requested limit at its own default (observed: 10 rows
-  // back for limit=100), so the fetch must page by rows actually consumed.
-  it('pages through a server that caps the limit, advancing by consumed rows', async () => {
+  it('returns the whole list with truncation and totals derived from it', async () => {
     const all = [createAbsence(0), createAbsence(1), createAbsence(2)]
-    const PAGE_CAP = 2
-    const offsets: string[] = []
-
     server.use(
-      http.post('*/api%5crefereeabsence/search', async ({ request }) => {
-        const body = new URLSearchParams(await request.text())
-        const offset = Number(body.get('searchConfiguration[offset]') ?? '0')
-        offsets.push(String(offset))
-        return HttpResponse.json({
-          items: all.slice(offset, offset + PAGE_CAP),
-          totalItemsCount: all.length,
-        })
-      })
+      http.post('*/api%5crefereeabsence/search', () =>
+        HttpResponse.json({ items: all, totalItemsCount: all.length })
+      )
     )
 
-    const result = await renderUntilSuccess()
+    const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    expect(offsets).toEqual(['0', '2'])
     expect(result.current.data?.absences).toHaveLength(3)
     expect(result.current.data?.totalItemsCount).toBe(3)
     expect(result.current.data?.hasMore).toBe(false)
+  })
+
+  it('flags hasMore when the server reports more rows than it returned', async () => {
+    server.use(
+      http.post('*/api%5crefereeabsence/search', () =>
+        HttpResponse.json({ items: [createAbsence(0)], totalItemsCount: 5 })
+      )
+    )
+
+    const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(result.current.data?.hasMore).toBe(true)
   })
 })

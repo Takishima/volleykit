@@ -266,13 +266,8 @@ describe('queryKeys', () => {
       expect(queryKeys.absences.lists()).toEqual(['absences', 'list'])
     })
 
-    it('should create list key with config', () => {
-      const config: SearchConfiguration = {
-        offset: 0,
-        limit: 100,
-      }
-
-      expect(queryKeys.absences.list(config, 'SV')).toEqual(['absences', 'list', config, 'SV'])
+    it('should create list key with association', () => {
+      expect(queryKeys.absences.list('SV')).toEqual(['absences', 'list', 'SV'])
     })
   })
 

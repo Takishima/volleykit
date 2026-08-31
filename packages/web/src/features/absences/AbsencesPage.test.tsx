@@ -102,4 +102,19 @@ describe('AbsencesPage', () => {
     const backLink = screen.getByLabelText('absences.backToSettings')
     expect(backLink).toHaveAttribute('href', '/settings')
   })
+
+  // The Settings entry is hidden in calendar mode, so the page is only
+  // reachable by bookmark or typed URL there - the header and back link
+  // must survive the calendar-mode branch.
+  it('keeps the header on the calendar-mode empty state', () => {
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({
+        isCalendarMode: () => true,
+      } as unknown as ReturnType<typeof authStore.useAuthStore.getState>)
+    )
+    renderPage([])
+
+    expect(screen.getByText('absences.calendarModeTitle')).toBeInTheDocument()
+    expect(screen.getByLabelText('absences.backToSettings')).toBeInTheDocument()
+  })
 })

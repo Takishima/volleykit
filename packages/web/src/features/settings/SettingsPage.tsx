@@ -8,9 +8,12 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
+// Deep import, not the @/features/absences barrel: feature-isolation.test.ts
+// forbids cross-feature barrel value imports to keep AbsencesPage out of the
+// settings chunk.
+import { AbsencesLinkSection } from '@/features/absences/components/AbsencesLinkSection'
 
 import {
-  AbsencesLinkSection,
   ProfileSection,
   PreferencesSection,
   HomeLocationSection,

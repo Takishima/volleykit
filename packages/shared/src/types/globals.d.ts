@@ -57,12 +57,7 @@ declare class Headers {
 
 type HeadersInit = Headers | Record<string, string> | [string, string][]
 type BodyInit =
-  | string
-  | Blob
-  | ArrayBuffer
-  | FormData
-  | URLSearchParams
-  | ReadableStream<Uint8Array>
+  string | Blob | ArrayBuffer | FormData | URLSearchParams | ReadableStream<Uint8Array>
 
 interface RequestInit {
   method?: string

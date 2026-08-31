@@ -288,12 +288,12 @@ export const queryKeys = {
     /** Parent key for all list queries */
     lists: () => [...queryKeys.absences.all, 'list'] as const,
     /**
-     * Specific list query with search configuration.
-     * @param config - Search configuration filters and sorting
+     * The full absence list for one association. No config slot: the
+     * endpoint takes no search configuration.
      * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
      */
-    list: (config?: SearchConfiguration, associationKey?: string | null) =>
-      [...queryKeys.absences.lists(), config, associationKey] as const,
+    list: (associationKey?: string | null) =>
+      [...queryKeys.absences.lists(), associationKey] as const,
   },
 
   /**

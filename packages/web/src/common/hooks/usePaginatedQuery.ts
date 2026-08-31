@@ -1,6 +1,6 @@
 import { countRowsConsumed } from '@volleykit/shared/api'
 
-import type { SearchConfiguration, Assignment, RefereeAbsence, ApiClient } from '@/api/client'
+import type { SearchConfiguration, Assignment, ApiClient } from '@/api/client'
 import { MS_PER_MINUTE, MS_PER_HOUR, MS_PER_DAY } from '@/common/utils/constants'
 import { createLogger } from '@/common/utils/logger'
 
@@ -172,70 +172,6 @@ export async function fetchAllAssignmentPages(
   }
 
   return allItems
-}
-
-export interface AbsencesFetchResult {
-  absences: RefereeAbsence[]
-  /** The server's total, untouched by client-side validation drops. */
-  totalItemsCount: number
-  /** True when the page cap stopped the fetch before every counted row was seen. */
-  hasMore: boolean
-}
-
-/**
- * Fetches all pages of referee absences.
- *
- * The absence endpoint caps the requested limit at its own server default
- * (observed 2026-08-31: 10 rows back despite limit=100), so the offset
- * advances by the rows each page actually consumed - advancing by the
- * requested limit would skip rows. It also 500s on propertyFilters and
- * propertyOrderings, so pages carry only offset/limit.
- */
-export async function fetchAllAbsencePages(
-  apiClient: Pick<ApiClient, 'searchAbsences'>,
-  signal?: AbortSignal
-): Promise<AbsencesFetchResult> {
-  const absences: RefereeAbsence[] = []
-  let offset = 0
-  let totalCount = 0
-  let pagesFetched = 0
-  let rowsSeen = 0
-
-  do {
-    if (signal?.aborted) {
-      throw new DOMException('Aborted', 'AbortError')
-    }
-
-    const response = await apiClient.searchAbsences({ offset, limit: DEFAULT_PAGE_SIZE })
-
-    if (signal?.aborted) {
-      throw new DOMException('Aborted', 'AbortError')
-    }
-
-    const rowsConsumed = countRowsConsumed(response)
-
-    // Same infinite-loop guard as the assignments fetch: only a page that
-    // consumed nothing at all means the server is out of rows.
-    if (rowsConsumed === 0) {
-      break
-    }
-
-    absences.push(...(response.items ?? []))
-    rowsSeen += rowsConsumed
-    totalCount = response.totalItemsCount ?? 0
-    offset += rowsConsumed
-    pagesFetched++
-  } while (rowsSeen < totalCount && pagesFetched < MAX_FETCH_ALL_PAGES)
-
-  const hasMore = rowsSeen < totalCount
-  if (hasMore) {
-    log.warn(
-      `Fetched ${rowsSeen} of ${totalCount} absences before reaching ` +
-        `MAX_FETCH_ALL_PAGES (${MAX_FETCH_ALL_PAGES}). Some data may be missing.`
-    )
-  }
-
-  return { absences, totalItemsCount: totalCount, hasMore }
 }
 
 // Helper to create mock query results for demo mode
