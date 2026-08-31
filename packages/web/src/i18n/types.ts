@@ -130,7 +130,7 @@ export interface Translations {
     noPastTitle: string
     emptyDescription: string
     noReason: string
-    olderHistoryNote: string
+    truncatedNote: string
     readOnly: string
     readOnlyTooltip: string
     entryLabel: string

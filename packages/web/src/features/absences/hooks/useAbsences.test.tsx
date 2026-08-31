@@ -4,15 +4,11 @@ import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { useAuthStore } from '@/common/stores/auth'
-import { MS_PER_DAY } from '@/common/utils/constants'
 import { server } from '@/test/msw/server'
 
 import { useAbsences } from './useAbsences'
 
 import type { ReactNode } from 'react'
-
-const DAYS_PER_YEAR = 365
-const TOLERANCE_DAYS = 10
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -23,43 +19,43 @@ function createWrapper() {
   )
 }
 
+async function captureSearchBody(): Promise<URLSearchParams> {
+  let capturedBody: URLSearchParams | null = null
+  server.use(
+    http.post('*/api%5crefereeabsence/search', async ({ request }) => {
+      capturedBody = new URLSearchParams(await request.text())
+      return HttpResponse.json({ items: [], totalItemsCount: 0 })
+    })
+  )
+
+  const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
+  await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+  return capturedBody!
+}
+
 describe('useAbsences', () => {
   beforeEach(() => {
     useAuthStore.setState({ dataSource: 'api', activeOccupationId: 'occupation-1' })
   })
 
-  // The window and ordering are load-bearing: without the fromDate range the
-  // server's default ordering decides which entries survive the page limit.
-  it('sends the bounded fromDate window and newest-first ordering', async () => {
-    let capturedBody: URLSearchParams | null = null
-    server.use(
-      http.post('*/api%5crefereeabsence/search', async ({ request }) => {
-        capturedBody = new URLSearchParams(await request.text())
-        return HttpResponse.json({ items: [], totalItemsCount: 0 })
-      })
-    )
+  it('sends only offset and limit', async () => {
+    const body = await captureSearchBody()
 
-    const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(body.get('searchConfiguration[offset]')).toBe('0')
+    expect(body.get('searchConfiguration[limit]')).toBe('100')
+  })
 
-    const body: URLSearchParams | null = capturedBody
-    expect(body?.get('searchConfiguration[propertyFilters][0][propertyName]')).toBe('fromDate')
+  // The live endpoint returns 500 when propertyFilters or propertyOrderings
+  // are sent (smoke test, 2026-08-31) - VolleyManager's own page sends
+  // neither. Pin their absence so a regression cannot silently break the
+  // page against the real API.
+  it('sends neither propertyFilters nor propertyOrderings', async () => {
+    const body = await captureSearchBody()
 
-    const from = body?.get('searchConfiguration[propertyFilters][0][dateRange][from]')
-    const to = body?.get('searchConfiguration[propertyFilters][0][dateRange][to]')
-    expect(from).toBeTruthy()
-    expect(to).toBeTruthy()
-    // Pin the window from both sides: one year back, two years ahead
-    const backwardMs = Date.now() - new Date(from!).getTime()
-    expect(backwardMs).toBeGreaterThan((DAYS_PER_YEAR - TOLERANCE_DAYS) * MS_PER_DAY)
-    expect(backwardMs).toBeLessThan((DAYS_PER_YEAR + TOLERANCE_DAYS) * MS_PER_DAY)
-    const forwardMs = new Date(to!).getTime() - Date.now()
-    expect(forwardMs).toBeGreaterThan((2 * DAYS_PER_YEAR - TOLERANCE_DAYS) * MS_PER_DAY)
-    expect(forwardMs).toBeLessThan((2 * DAYS_PER_YEAR + TOLERANCE_DAYS) * MS_PER_DAY)
-
-    expect(body?.get('searchConfiguration[propertyOrderings][0][propertyName]')).toBe('fromDate')
-    expect(body?.get('searchConfiguration[propertyOrderings][0][descending]')).toBe('true')
-    expect(body?.get('searchConfiguration[limit]')).toBe('100')
-    expect(body?.get('searchConfiguration[offset]')).toBe('0')
+    for (const key of body.keys()) {
+      expect(key).not.toContain('propertyFilters')
+      expect(key).not.toContain('propertyOrderings')
+    }
   })
 })

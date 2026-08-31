@@ -1453,8 +1453,14 @@ paths:
       tags: [Absences]
       summary: Search referee absences
       description: |
-        Search for referee absences with pagination and filtering.
-        Returns a list of absence entries for the current referee.
+        Search for referee absences with pagination.
+        Returns a list of absence entries for the current referee, ordered
+        newest-first by the server's default (observed in all captures).
+
+        Unlike the other search endpoints, this controller returns
+        500 Internal Server Error when searchConfiguration carries
+        propertyFilters or propertyOrderings (smoke-tested 2026-08-31);
+        send only offset and limit.
       operationId: searchRefereeAbsences
       requestBody:
         required: true
@@ -1466,26 +1472,6 @@ paths:
                 __csrfToken:
                   type: string
                   description: CSRF token for request validation
-                searchConfiguration[propertyFilters][0][propertyName]:
-                  type: string
-                  example: 'fromDate'
-                searchConfiguration[propertyFilters][0][dateRange][from]:
-                  type: string
-                  format: date-time
-                  example: '2025-09-01T00:00:00.000Z'
-                searchConfiguration[propertyFilters][0][dateRange][to]:
-                  type: string
-                  format: date-time
-                  example: '2027-08-31T23:59:59.000Z'
-                searchConfiguration[propertyOrderings][0][propertyName]:
-                  type: string
-                  example: 'fromDate'
-                searchConfiguration[propertyOrderings][0][descending]:
-                  type: boolean
-                  example: true
-                searchConfiguration[propertyOrderings][0][isSetByUser]:
-                  type: boolean
-                  example: true
                 searchConfiguration[offset]:
                   type: integer
                   example: 0

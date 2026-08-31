@@ -60,11 +60,14 @@ function AbsenceList({
 }
 
 export function AbsencesPage() {
-  const { t } = useTranslation()
+  const { t, tInterpolate } = useTranslation()
   const isCalendarMode = useAuthStore((state) => state.isCalendarMode())
   const [activeTab, setActiveTab] = useState<AbsenceTab>('upcoming')
 
-  const { data: absences, isLoading, error, refetch } = useAbsences()
+  const { data, isLoading, error, refetch } = useAbsences()
+  const absences = data?.absences
+  const totalItemsCount = data?.totalItemsCount ?? 0
+  const hasMore = data?.hasMore ?? false
 
   // Day-granular date key keeps the memo deps stable across re-renders and
   // regroups on the next render after midnight. parseISO reads the date-only
@@ -131,12 +134,13 @@ export function AbsencesPage() {
             emptyTitle={t('absences.noPastTitle')}
             emptyDescription={t('absences.emptyDescription')}
           />
-          {/* The fetch window is unconditional, so the disclosure is too:
-              "no past absences" alone would be an unqualified claim about
-              the whole account. */}
-          <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
-            {t('absences.olderHistoryNote')}
-          </p>
+          {/* The server default orders newest-first, so what the page limit
+              cuts is the oldest history - disclose it on the Past tab. */}
+          {hasMore && (
+            <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
+              {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
+            </p>
+          )}
         </TabPanel>
       </>
     )

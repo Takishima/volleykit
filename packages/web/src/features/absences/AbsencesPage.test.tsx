@@ -19,7 +19,10 @@ vi.mock('./components/AbsenceCard', () => ({
 }))
 
 vi.mock('@/common/hooks/useTranslation', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string) => key,
+    tInterpolate: (key: string) => key,
+  }),
 }))
 
 // Automock keeps the module shape (other exports stay mocked, not missing)
@@ -39,9 +42,13 @@ function createAbsence(overrides: Partial<RefereeAbsence> = {}): RefereeAbsence 
   }
 }
 
-function renderPage(absences: RefereeAbsence[]) {
+function renderPage(absences: RefereeAbsence[], { hasMore = false } = {}) {
   mockUseAbsences.mockReturnValue({
-    data: absences,
+    data: {
+      absences,
+      totalItemsCount: hasMore ? absences.length + 1 : absences.length,
+      hasMore,
+    },
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -53,8 +60,8 @@ function renderPage(absences: RefereeAbsence[]) {
   )
 }
 
-function renderPastTab(absences: RefereeAbsence[]) {
-  renderPage(absences)
+function renderPastTab(absences: RefereeAbsence[], options: { hasMore?: boolean } = {}) {
+  renderPage(absences, options)
   fireEvent.click(screen.getByText('absences.past'))
 }
 
@@ -69,27 +76,23 @@ describe('AbsencesPage', () => {
     )
   })
 
-  // The fetch window is unconditional, so the Past tab must disclose it in
-  // every state - "no past absences" alone would be an unqualified claim
-  // about the whole account.
-  it('discloses the history window on an empty Past tab', () => {
-    renderPastTab([])
-
-    expect(screen.getByText('absences.noPastTitle')).toBeInTheDocument()
-    expect(screen.getAllByText('absences.olderHistoryNote')).toHaveLength(1)
-  })
-
-  it('discloses the history window exactly once under a non-empty Past tab', () => {
+  it('shows no truncation note when the server returned everything', () => {
     renderPastTab([createAbsence()])
 
     expect(screen.getByTestId('absence-card')).toBeInTheDocument()
-    expect(screen.getAllByText('absences.olderHistoryNote')).toHaveLength(1)
+    expect(screen.queryByText('absences.truncatedNote')).not.toBeInTheDocument()
+  })
+
+  it('discloses truncation on the Past tab when the server holds more rows', () => {
+    renderPastTab([createAbsence()], { hasMore: true })
+
+    expect(screen.getAllByText('absences.truncatedNote')).toHaveLength(1)
   })
 
   it('does not render past entries or the note on the Upcoming tab', () => {
-    renderPage([createAbsence()])
+    renderPage([createAbsence()], { hasMore: true })
 
-    expect(screen.queryByText('absences.olderHistoryNote')).not.toBeInTheDocument()
+    expect(screen.queryByText('absences.truncatedNote')).not.toBeInTheDocument()
     expect(screen.getByText('absences.noUpcomingTitle')).toBeInTheDocument()
   })
 
