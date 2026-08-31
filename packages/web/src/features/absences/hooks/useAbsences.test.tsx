@@ -37,26 +37,9 @@ describe('useAbsences', () => {
     useAuthStore.setState({ dataSource: 'api', activeOccupationId: 'occupation-1' })
   })
 
-  // The live endpoint returns the complete list ONLY for a request with no
-  // body at all: searchConfiguration keys 500 or clamp the page, and even a
-  // body carrying only __csrfToken 500s (smoke tests, 2026-08-31). Pin the
-  // empty body so a regression cannot silently break the page against the
-  // real API.
-  it('sends a POST with no body at all', async () => {
-    let capturedBody: string | null = null
-    server.use(
-      http.post('*/api%5crefereeabsence/search', async ({ request }) => {
-        capturedBody = await request.text()
-        return HttpResponse.json({ items: [], totalItemsCount: 0 })
-      })
-    )
-
-    const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    expect(capturedBody).toBe('')
-  })
-
+  // The wire shape of the request (bodyless POST, no Content-Type, no CSRF
+  // token) is pinned in api/client.test.ts, which owns transport-encoding
+  // concerns; this file covers only the hook's own selection logic.
   it('returns the whole list with truncation and totals derived from it', async () => {
     const all = [createAbsence(0), createAbsence(1), createAbsence(2)]
     server.use(
