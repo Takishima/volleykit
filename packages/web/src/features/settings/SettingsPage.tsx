@@ -1,17 +1,7 @@
-import { Link } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
 import { Button } from '@/common/components/Button'
-import { Card } from '@/common/components/Card'
-import {
-  SlidersHorizontal,
-  MapPin,
-  Info,
-  Lock,
-  AlertTriangle,
-  CalendarX2,
-  ChevronRight,
-} from '@/common/components/icons'
+import { SlidersHorizontal, MapPin, Info, Lock, AlertTriangle } from '@/common/components/icons'
 import { features } from '@/common/config/features'
 import { useTour } from '@/common/hooks/useTour'
 import { useTranslation } from '@/common/hooks/useTranslation'
@@ -20,6 +10,7 @@ import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
 
 import {
+  AbsencesLinkSection,
   ProfileSection,
   PreferencesSection,
   HomeLocationSection,
@@ -72,27 +63,7 @@ export function SettingsPage() {
       {user && <ProfileSection user={user} />}
 
       {/* Absences live on their own page; calendar mode has no session to load them */}
-      {!isCalendarMode && (
-        <Card>
-          <Link
-            to="/absences"
-            data-testid="settings-absences-link"
-            className="w-full px-4 py-3 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset rounded-xl"
-          >
-            <CalendarX2
-              className="w-5 h-5 text-text-muted dark:text-text-muted-dark"
-              aria-hidden="true"
-            />
-            <span className="font-semibold text-text-primary dark:text-text-primary-dark flex-1">
-              {t('absences.title')}
-            </span>
-            <ChevronRight
-              className="w-5 h-5 text-text-muted dark:text-text-muted-dark shrink-0"
-              aria-hidden="true"
-            />
-          </Link>
-        </Card>
-      )}
+      {!isCalendarMode && <AbsencesLinkSection />}
 
       <SettingsGroup
         groupKey="preferences"

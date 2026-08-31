@@ -127,6 +127,19 @@ describe('SettingsPage', () => {
     })
   })
 
+  describe('Absences Link', () => {
+    it('links to the absences page', () => {
+      render(<SettingsPage />, { wrapper: createWrapper() })
+      expect(screen.getByTestId('settings-absences-link')).toHaveAttribute('href', '/absences')
+    })
+
+    it('hides the link in calendar mode', () => {
+      mockAuthStore({ dataSource: 'calendar' })
+      render(<SettingsPage />, { wrapper: createWrapper() })
+      expect(screen.queryByTestId('settings-absences-link')).not.toBeInTheDocument()
+    })
+  })
+
   describe('Language Section', () => {
     it('renders language section with heading', () => {
       render(<SettingsPage />, { wrapper: createWrapper() })
