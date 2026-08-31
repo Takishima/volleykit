@@ -64,10 +64,15 @@ export function AbsencesPage() {
   const isCalendarMode = useAuthStore((state) => state.isCalendarMode())
   const [activeTab, setActiveTab] = useState<AbsenceTab>('upcoming')
 
-  const { data, isLoading, error, refetch } = useAbsences()
+  const { data, isLoading, isPlaceholderData, error, refetch } = useAbsences()
   const absences = data?.absences
   const totalItemsCount = data?.totalItemsCount ?? 0
   const hasMore = data?.hasMore ?? false
+
+  // placeholderData keeps the previous data around while an error is shown
+  // or a new association's fetch is in flight; the badge and the truncation
+  // note describe the rendered list, so both gate on this single flag.
+  const showsFetchedList = !error && !isPlaceholderData
 
   // Day-granular date key keeps the memo deps stable across re-renders and
   // regroups on the next render after midnight. parseISO reads the date-only
@@ -100,10 +105,7 @@ export function AbsencesPage() {
     {
       id: 'upcoming' as const,
       label: t('absences.upcoming'),
-      // Gated on !error like the truncation note: placeholderData keeps the
-      // previous association's data around during a failed refetch, and a
-      // count for a list that is not on screen would sit above ErrorState.
-      badge: !error && upcoming.length > 0 ? String(upcoming.length) : undefined,
+      badge: showsFetchedList && upcoming.length > 0 ? String(upcoming.length) : undefined,
     },
     { id: 'past' as const, label: t('absences.past') },
   ]
@@ -127,10 +129,9 @@ export function AbsencesPage() {
         {/* Server-regression guard: the bodyless request returns everything
             today, so this fires only if the server reintroduces paging.
             Which end a hypothetical page would cut is unknowable, so the
-            disclosure sits above both tab panels - inside the success
-            branch, since it describes the list actually rendered below
-            (placeholderData keeps stale data around during errors). */}
-        {hasMore && (
+            disclosure sits above both tab panels, gated on the same
+            fetched-list flag as the badge. */}
+        {showsFetchedList && hasMore && (
           <p className="text-sm text-text-muted dark:text-text-muted-dark">
             {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
           </p>

@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
 
-import { resilientListSchema, optionalResilientListSchema } from './resilient-list'
-import { getDroppedListItems } from './resilient-list'
+import {
+  resilientListSchema,
+  optionalResilientListSchema,
+  getDroppedListItems,
+} from './resilient-list'
 
 const itemSchema = z.object({ id: z.string() }).passthrough()
 
