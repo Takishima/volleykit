@@ -34,13 +34,12 @@ function AbsenceList({ absences, emptyTitle }: { absences: RefereeAbsence[]; emp
 }
 
 export function AbsencesPage() {
-  const { t, tInterpolate } = useTranslation()
+  const { t } = useTranslation()
   const isCalendarMode = useAuthStore((state) => state.isCalendarMode())
   const [activeTab, setActiveTab] = useState<AbsenceTab>('upcoming')
 
   const { data, isLoading, error, refetch } = useAbsences()
   const absences = data?.absences
-  const totalItemsCount = data?.totalItemsCount ?? 0
   const hasMoreHistory = data?.hasMoreHistory ?? false
 
   // Day-granular date key keeps the memo deps stable across re-renders and
@@ -95,9 +94,11 @@ export function AbsencesPage() {
         </TabPanel>
         <TabPanel tabId="past" activeTab={activeTab}>
           <AbsenceList absences={past} emptyTitle={t('absences.noPastTitle')} />
-          {hasMoreHistory && (
+          {/* The fetch window is unconditional, so disclose it whenever
+              history renders - not only when the page limit truncated. */}
+          {(past.length > 0 || hasMoreHistory) && (
             <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
-              {tInterpolate('absences.olderHistoryNote', { total: totalItemsCount })}
+              {t('absences.olderHistoryNote')}
             </p>
           )}
         </TabPanel>
