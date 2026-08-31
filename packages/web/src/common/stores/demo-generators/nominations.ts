@@ -6,6 +6,7 @@
 import type { NominationList, PossibleNomination, PersonSearchResult } from '@/api/client'
 import { generateDemoUuid } from '@/common/utils/demo-uuid'
 
+import { generateAbsences } from './absences'
 import { generateAssignments } from './assignments'
 import { generateCompensations } from './compensations'
 import { generateExchanges } from './exchanges'
@@ -166,6 +167,7 @@ export function generateDummyData(associationCode: DemoAssociationCode = 'SV') {
     assignments: generateAssignments(associationCode, now),
     compensations: generateCompensations(associationCode, now),
     exchanges: generateExchanges(associationCode, now),
+    absences: generateAbsences(associationCode, now),
     possiblePlayers: generatePossiblePlayers(),
     scorers: generateScorers(),
   }

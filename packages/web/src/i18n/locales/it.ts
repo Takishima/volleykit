@@ -227,6 +227,26 @@ const it: Translations = {
     duty: 'Servizio di picchetto',
     section: 'Servizi di picchetto',
   },
+  absences: {
+    title: 'Assenze',
+    upcoming: 'In arrivo',
+    past: 'Passate',
+    loading: 'Caricamento delle assenze...',
+    errorLoading: 'Impossibile caricare le assenze',
+    noUpcomingTitle: 'Nessuna assenza in arrivo',
+    noPastTitle: 'Nessuna assenza passata',
+    emptyDescription: 'Le date bloccate per l’associazione selezionata appaiono qui.',
+    noReason: 'Nessun motivo indicato',
+    showingPartial: 'Vengono mostrate le {shown} assenze più recenti su {total}.',
+    readOnly: 'Bloccata',
+    readOnlyTooltip:
+      'Questa assenza è stata impostata dall’associazione e non può essere modificata.',
+    entryLabel: 'Assenza',
+    associationScopeHint: 'Le assenze valgono per l’associazione attualmente selezionata.',
+    calendarModeTitle: 'Assenze non disponibili',
+    calendarModeDescription:
+      'La modalità calendario non prevede l’accesso, quindi le assenze non possono essere caricate.',
+  },
   assignments: {
     title: 'Designazioni',
     upcoming: 'In programma',
@@ -405,6 +425,7 @@ const it: Translations = {
     assignments: 'Designazioni',
     compensations: 'Compensi',
     exchange: 'Scambi',
+    absences: 'Assenze',
     settings: 'Impostazioni',
   },
   notifications: {

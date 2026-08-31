@@ -26,6 +26,8 @@ import {
   personSearchResponseSchema,
   personSearchResultSchema,
   possibleNominationsResponseSchema,
+  refereeAbsenceSchema,
+  refereeAbsencesResponseSchema,
   refereeBackupEntrySchema,
   refereeBackupResponseSchema,
   scoresheetSchema,
@@ -57,6 +59,8 @@ export type PossibleNominationsResponse = z.infer<typeof possibleNominationsResp
 export type PersonSearchResponse = z.infer<typeof personSearchResponseSchema>
 export type RefereeBackupEntry = z.infer<typeof refereeBackupEntrySchema>
 export type RefereeBackupSearchResponse = z.infer<typeof refereeBackupResponseSchema>
+export type RefereeAbsence = z.infer<typeof refereeAbsenceSchema>
+export type RefereeAbsencesResponse = z.infer<typeof refereeAbsencesResponseSchema>
 
 // Association settings type (simplified for mobile)
 export interface AssociationSettings {

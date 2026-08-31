@@ -119,6 +119,24 @@ export interface Translations {
     duty: string
     section: string
   }
+  absences: {
+    title: string
+    upcoming: string
+    past: string
+    loading: string
+    errorLoading: string
+    noUpcomingTitle: string
+    noPastTitle: string
+    emptyDescription: string
+    noReason: string
+    showingPartial: string
+    readOnly: string
+    readOnlyTooltip: string
+    entryLabel: string
+    associationScopeHint: string
+    calendarModeTitle: string
+    calendarModeDescription: string
+  }
   assignments: {
     title: string
     upcoming: string
@@ -284,6 +302,7 @@ export interface Translations {
     assignments: string
     compensations: string
     exchange: string
+    absences: string
     settings: string
   }
   notifications: {

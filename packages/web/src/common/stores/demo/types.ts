@@ -8,6 +8,7 @@ import type {
   GameExchange,
   PossibleNomination,
   PersonSearchResult,
+  RefereeAbsence,
 } from '@/api/client'
 import { generateDemoUuid } from '@/common/utils/demo-uuid'
 
@@ -102,6 +103,13 @@ export interface DemoExchangesState {
 }
 
 /**
+ * Absences slice state.
+ */
+export interface DemoAbsencesState {
+  absences: RefereeAbsence[]
+}
+
+/**
  * Nominations slice state.
  */
 export interface DemoNominationsState {
@@ -127,6 +135,7 @@ export interface DemoState
     DemoAssignmentsState,
     DemoCompensationsState,
     DemoExchangesState,
+    DemoAbsencesState,
     DemoNominationsState,
     DemoValidationState {
   // Data lifecycle actions

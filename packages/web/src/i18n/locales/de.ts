@@ -228,6 +228,25 @@ const de: Translations = {
     duty: 'Pikettdienst',
     section: 'Pikettdienste',
   },
+  absences: {
+    title: 'Absenzen',
+    upcoming: 'Bevorstehend',
+    past: 'Vergangen',
+    loading: 'Absenzen werden geladen...',
+    errorLoading: 'Absenzen konnten nicht geladen werden',
+    noUpcomingTitle: 'Keine bevorstehenden Absenzen',
+    noPastTitle: 'Keine vergangenen Absenzen',
+    emptyDescription: 'Gesperrte Daten für den gewählten Verband erscheinen hier.',
+    noReason: 'Kein Grund angegeben',
+    showingPartial: 'Die {shown} neuesten von {total} Absenzen werden angezeigt.',
+    readOnly: 'Gesperrt',
+    readOnlyTooltip: 'Diese Absenz wurde vom Verband gesetzt und kann nicht bearbeitet werden.',
+    entryLabel: 'Absenz',
+    associationScopeHint: 'Absenzen gelten für den aktuell gewählten Verband.',
+    calendarModeTitle: 'Absenzen nicht verfügbar',
+    calendarModeDescription:
+      'Im Kalendermodus besteht keine Anmeldung, daher können keine Absenzen geladen werden.',
+  },
   assignments: {
     title: 'Einsätze',
     upcoming: 'Bevorstehend',
@@ -409,6 +428,7 @@ const de: Translations = {
     assignments: 'Einsätze',
     compensations: 'Entschädigungen',
     exchange: 'Tauschbörse',
+    absences: 'Absenzen',
     settings: 'Einstellungen',
   },
   notifications: {

@@ -9,6 +9,7 @@ describe('useDemoStore', () => {
       assignments: [],
       compensations: [],
       exchanges: [],
+      absences: [],
     })
   })
 
@@ -18,6 +19,7 @@ describe('useDemoStore', () => {
       expect(state.assignments).toHaveLength(0)
       expect(state.compensations).toHaveLength(0)
       expect(state.exchanges).toHaveLength(0)
+      expect(state.absences).toHaveLength(0)
     })
   })
 
@@ -34,6 +36,24 @@ describe('useDemoStore', () => {
       expect(state.assignments.length).toBeGreaterThan(0)
       expect(state.compensations.length).toBeGreaterThan(0)
       expect(state.exchanges.length).toBeGreaterThan(0)
+      expect(state.absences.length).toBeGreaterThan(0)
+    })
+
+    it('generates valid absence data with permission shapes', () => {
+      useDemoStore.getState().initializeDemoData()
+
+      const { absences } = useDemoStore.getState()
+      expect(absences.length).toBeGreaterThan(0)
+
+      const firstAbsence = absences[0]
+      expect(firstAbsence).toHaveProperty('__identity')
+      expect(firstAbsence).toHaveProperty('fromDate')
+      expect(firstAbsence).toHaveProperty('toDate')
+      expect(firstAbsence).toHaveProperty('_permissions')
+
+      // The set includes both a read-only blocking and an editable entry
+      expect(absences.some((a) => a._permissions?.object?.update === false)).toBe(true)
+      expect(absences.some((a) => a._permissions?.object?.update === true)).toBe(true)
     })
 
     it('generates valid assignment data', () => {
@@ -86,6 +106,7 @@ describe('useDemoStore', () => {
       expect(state.assignments).toHaveLength(0)
       expect(state.compensations).toHaveLength(0)
       expect(state.exchanges).toHaveLength(0)
+      expect(state.absences).toHaveLength(0)
     })
   })
 
@@ -114,6 +135,17 @@ describe('useDemoStore', () => {
 
       expect(useDemoStore.getState().activeAssociationCode).toBe('SVRBA')
       expect(useDemoStore.getState().assignments.length).toBeGreaterThan(0)
+    })
+
+    it('regenerates per-association absences', () => {
+      useDemoStore.getState().initializeDemoData('SV')
+      const svAbsenceIds = useDemoStore.getState().absences.map((a) => a.__identity)
+
+      useDemoStore.getState().setActiveAssociation('SVRBA')
+      const svrbaAbsenceIds = useDemoStore.getState().absences.map((a) => a.__identity)
+
+      expect(svrbaAbsenceIds.length).toBeGreaterThan(0)
+      expect(svrbaAbsenceIds).not.toEqual(svAbsenceIds)
     })
   })
 

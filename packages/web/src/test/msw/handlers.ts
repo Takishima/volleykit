@@ -19,6 +19,7 @@ export const defaultResponses = {
   exchanges: { items: [], totalItemsCount: 0 },
   persons: { items: [], totalItemsCount: 0 },
   refereeBackups: { items: [], totalItemsCount: 0 },
+  absences: { items: [], totalItemsCount: 0 },
   possibleNominations: { items: [], totalItemsCount: 0 },
   game: { game: { __identity: 'game-1' } },
   compensationDetails: { convocationCompensation: {} },
@@ -142,6 +143,11 @@ export function createHandlers(overrides: MockResponseOverrides = {}) {
     // Referee backups
     http.post('*/api%5crefereeconvocationrefereebackup/search', () => {
       return HttpResponse.json(responses.refereeBackups)
+    }),
+
+    // Absences
+    http.post('*/api%5crefereeabsence/search', () => {
+      return HttpResponse.json(responses.absences)
     }),
   ]
 }

@@ -20,6 +20,7 @@ import {
   generateMockNominationLists,
   type DemoAssociationCode,
 } from '../demo-generators'
+import { createAbsencesSlice } from './absences'
 import { createAssignmentsSlice } from './assignments'
 import { createCompensationsSlice } from './compensations'
 import { createExchangesSlice } from './exchanges'
@@ -41,6 +42,7 @@ export const useDemoStore = create<DemoState>()(
   persist(
     (set, get, api) => ({
       // Combine all slices
+      ...createAbsencesSlice(set, get, api),
       ...createAssignmentsSlice(set, get, api),
       ...createCompensationsSlice(set, get, api),
       ...createExchangesSlice(set, get, api),
@@ -68,6 +70,7 @@ export const useDemoStore = create<DemoState>()(
           assignments: data.assignments,
           compensations: data.compensations,
           exchanges: data.exchanges,
+          absences: data.absences,
           exchangedAssignments: {},
           nominationLists: generateMockNominationLists(),
           possiblePlayers: data.possiblePlayers,
@@ -84,6 +87,7 @@ export const useDemoStore = create<DemoState>()(
           assignments: [],
           compensations: [],
           exchanges: [],
+          absences: [],
           exchangedAssignments: {},
           nominationLists: {},
           possiblePlayers: [],
@@ -105,6 +109,7 @@ export const useDemoStore = create<DemoState>()(
             assignments: newData.assignments,
             compensations: newData.compensations,
             exchanges: newData.exchanges,
+            absences: newData.absences,
             exchangedAssignments: {},
             nominationLists: generateMockNominationLists(),
             possiblePlayers: newData.possiblePlayers,
@@ -122,6 +127,7 @@ export const useDemoStore = create<DemoState>()(
           assignments: data.assignments,
           compensations: data.compensations,
           exchanges: data.exchanges,
+          absences: data.absences,
           exchangedAssignments: {},
           nominationLists: generateMockNominationLists(),
           possiblePlayers: data.possiblePlayers,
@@ -137,6 +143,7 @@ export const useDemoStore = create<DemoState>()(
         assignments: state.assignments,
         compensations: state.compensations,
         exchanges: state.exchanges,
+        absences: state.absences,
         exchangedAssignments: state.exchangedAssignments,
         nominationLists: state.nominationLists,
         possiblePlayers: state.possiblePlayers,

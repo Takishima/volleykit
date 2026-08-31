@@ -160,3 +160,17 @@ export function refereeBackupListOptions(
     staleTime: 2 * MS_PER_MINUTE,
   })
 }
+
+// ── Absences ─────────────────────────────────────────────────────────
+
+export function absenceListOptions(
+  apiClient: ApiClient,
+  config: SearchConfiguration,
+  associationKey: string | null
+) {
+  return queryOptions({
+    queryKey: queryKeys.absences.list(config, associationKey),
+    queryFn: () => apiClient.searchAbsences(config),
+    staleTime: 2 * MS_PER_MINUTE,
+  })
+}

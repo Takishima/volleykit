@@ -278,6 +278,25 @@ export const queryKeys = {
   },
 
   /**
+   * Referee absence query keys.
+   * Absences are per association: own entries plus association-imposed
+   * read-only blockings for the active party context.
+   */
+  absences: {
+    /** Base key - invalidates ALL absence queries */
+    all: ['absences'] as const,
+    /** Parent key for all list queries */
+    lists: () => [...queryKeys.absences.all, 'list'] as const,
+    /**
+     * Specific list query with search configuration.
+     * @param config - Search configuration filters and sorting
+     * @param associationKey - In demo mode: demoAssociationCode. In production: activeOccupationId.
+     */
+    list: (config?: SearchConfiguration, associationKey?: string | null) =>
+      [...queryKeys.absences.lists(), config, associationKey] as const,
+  },
+
+  /**
    * User profile query keys
    */
   user: {

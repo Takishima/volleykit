@@ -47,6 +47,10 @@ export type RefereeBackupEntry = Schemas['RefereeBackupEntry']
 export type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
 export type BackupRefereeAssignment = Schemas['BackupRefereeAssignment']
 
+// Absence domain
+export type RefereeAbsence = Schemas['RefereeAbsence']
+export type RefereeAbsenceSearchResponse = Schemas['RefereeAbsenceSearchResult']
+
 // Settings domain
 export type AssociationSettings = Schemas['AssociationSettings']
 export type Season = Schemas['Season']

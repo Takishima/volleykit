@@ -25,6 +25,7 @@ import type {
   GameDetails,
   PossibleNominationsResponse,
   PersonSearchResponse,
+  RefereeAbsence,
   RefereeBackupEntry,
   DroppedListItem,
   ResilientList,
@@ -46,6 +47,7 @@ export type {
   GameDetails,
   PossibleNominationsResponse,
   PersonSearchResponse,
+  RefereeAbsence,
   RefereeBackupEntry,
   SearchConfiguration,
 }
@@ -192,6 +194,9 @@ export interface ApiClient {
 
   // Referee backup
   searchRefereeBackups(config?: SearchConfiguration): Promise<PaginatedResponse<RefereeBackupEntry>>
+
+  // Absences (own + association-imposed blocked dates, per active association)
+  searchAbsences(config?: SearchConfiguration): Promise<PaginatedResponse<RefereeAbsence>>
 }
 
 /**

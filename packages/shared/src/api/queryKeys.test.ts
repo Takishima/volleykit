@@ -257,6 +257,25 @@ describe('queryKeys', () => {
     })
   })
 
+  describe('absences', () => {
+    it('should have correct base key', () => {
+      expect(queryKeys.absences.all).toEqual(['absences'])
+    })
+
+    it('should create lists key', () => {
+      expect(queryKeys.absences.lists()).toEqual(['absences', 'list'])
+    })
+
+    it('should create list key with config', () => {
+      const config: SearchConfiguration = {
+        offset: 0,
+        limit: 100,
+      }
+
+      expect(queryKeys.absences.list(config, 'SV')).toEqual(['absences', 'list', config, 'SV'])
+    })
+  })
+
   describe('user', () => {
     it('should create profile key', () => {
       expect(queryKeys.user.profile()).toEqual(['user', 'profile'])

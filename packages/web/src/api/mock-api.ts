@@ -45,6 +45,7 @@ import type {
   PersonSearchResponse,
   PersonSearchResult,
   RefereeBackupSearchResponse,
+  RefereeAbsenceSearchResponse,
   PickExchangeResponse,
 } from './client'
 
@@ -846,6 +847,21 @@ export const mockApi = {
     return {
       items: [],
       totalItemsCount: 0,
+    }
+  },
+
+  /**
+   * Search referee absences.
+   * Reads the demo store's per-association set: editable own entries plus
+   * one read-only association-imposed blocking.
+   */
+  async searchAbsences(_config: SearchConfiguration = {}): Promise<RefereeAbsenceSearchResponse> {
+    await delay(MOCK_NETWORK_DELAY_MS)
+
+    const { absences } = useDemoStore.getState()
+    return {
+      items: absences,
+      totalItemsCount: absences.length,
     }
   },
 } satisfies ApiClient

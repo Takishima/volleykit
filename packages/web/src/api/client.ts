@@ -37,6 +37,8 @@ export type {
   RefereeBackupEntry,
   RefereeBackupSearchResponse,
   BackupRefereeAssignment,
+  RefereeAbsence,
+  RefereeAbsenceSearchResponse,
   PickExchangeResponse,
   PersonSearchFilter,
 } from './types'

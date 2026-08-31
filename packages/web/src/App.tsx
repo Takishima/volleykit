@@ -43,6 +43,9 @@ const ExchangePage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('@/features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 )
+const AbsencesPage = lazy(() =>
+  import('@/features/absences/AbsencesPage').then((m) => ({ default: m.AbsencesPage }))
+)
 
 // Lazy load TourProvider since it's only needed for first-time users (features.helpTours)
 const TourProvider = features.helpTours
@@ -137,6 +140,16 @@ export default function App() {
                       <PageErrorBoundary pageName="ExchangePage">
                         <Suspense fallback={<LoadingState />}>
                           <ExchangePage />
+                        </Suspense>
+                      </PageErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/absences"
+                    element={
+                      <PageErrorBoundary pageName="AbsencesPage">
+                        <Suspense fallback={<LoadingState />}>
+                          <AbsencesPage />
                         </Suspense>
                       </PageErrorBoundary>
                     }

@@ -52,6 +52,7 @@ import type {
   PossibleNominationsResponse,
   PersonSearchResponse,
   RefereeBackupSearchResponse,
+  RefereeAbsenceSearchResponse,
   PickExchangeResponse,
 } from '@/api/client'
 import type { components } from '@/api/schema'
@@ -303,5 +304,9 @@ export const calendarApi = {
 
   async searchRefereeBackups(): Promise<RefereeBackupSearchResponse> {
     throw new CalendarModeNotSupportedError('Referee backups')
+  },
+
+  async searchAbsences(): Promise<RefereeAbsenceSearchResponse> {
+    throw new CalendarModeNotSupportedError('Absences')
   },
 } satisfies ApiClient

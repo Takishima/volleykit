@@ -228,6 +228,25 @@ const fr: Translations = {
     duty: 'Service de piquet',
     section: 'Services de piquet',
   },
+  absences: {
+    title: 'Absences',
+    upcoming: 'À venir',
+    past: 'Passées',
+    loading: 'Chargement des absences...',
+    errorLoading: 'Impossible de charger les absences',
+    noUpcomingTitle: 'Aucune absence à venir',
+    noPastTitle: 'Aucune absence passée',
+    emptyDescription: 'Les dates bloquées pour l’association sélectionnée apparaissent ici.',
+    noReason: 'Aucune raison indiquée',
+    showingPartial: 'Affichage des {shown} absences les plus récentes sur {total}.',
+    readOnly: 'Verrouillée',
+    readOnlyTooltip: 'Cette absence a été définie par l’association et ne peut pas être modifiée.',
+    entryLabel: 'Absence',
+    associationScopeHint: 'Les absences s’appliquent à l’association actuellement sélectionnée.',
+    calendarModeTitle: 'Absences indisponibles',
+    calendarModeDescription:
+      'Le mode calendrier ne comporte pas de connexion, les absences ne peuvent donc pas être chargées.',
+  },
   assignments: {
     title: 'Désignations',
     upcoming: 'À venir',
@@ -409,6 +428,7 @@ const fr: Translations = {
     assignments: 'Désignations',
     compensations: 'Indemnités',
     exchange: 'Échanges',
+    absences: 'Absences',
     settings: 'Paramètres',
   },
   notifications: {

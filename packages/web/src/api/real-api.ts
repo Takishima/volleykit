@@ -29,6 +29,7 @@ import {
   seasonSchema,
   possibleNominationsResponseSchema,
   refereeBackupResponseSchema,
+  refereeAbsencesResponseSchema,
   validateResponse,
 } from './validation'
 import { scoreNameMatch } from './search-utils'
@@ -64,6 +65,7 @@ type Scoresheet = Schemas['Scoresheet']
 type ScoresheetValidation = Schemas['ScoresheetValidation']
 type FileResource = Schemas['FileResource']
 type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
+type RefereeAbsenceSearchResponse = Schemas['RefereeAbsenceSearchResult']
 
 /** Properties requested from the Elasticsearch person search endpoint */
 const PERSON_SEARCH_PROPERTIES = [
@@ -772,5 +774,30 @@ export const api = {
       refereeBackupResponseSchema,
       'searchRefereeBackups'
     ) as RefereeBackupSearchResponse
+  },
+
+  // Absences
+  /**
+   * Search referee absences for the active association.
+   * Returns the referee's own entries plus association-imposed read-only
+   * blockings (e.g. national-squad duty dates); `_permissions` on each item
+   * says whether it is editable.
+   *
+   * @param config - Search configuration with filters and sorting
+   * @returns Promise with referee absence entries
+   */
+  async searchAbsences(config: SearchConfiguration = {}): Promise<RefereeAbsenceSearchResponse> {
+    const data = await apiRequest<unknown>(
+      '/indoorvolleyball.refadmin/api%5crefereeabsence/search',
+      'POST',
+      {
+        searchConfiguration: config,
+      }
+    )
+    return validateResponse(
+      data,
+      refereeAbsencesResponseSchema,
+      'searchAbsences'
+    ) as RefereeAbsenceSearchResponse
   },
 }
