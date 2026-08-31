@@ -163,7 +163,8 @@ export async function apiRequest<T>(
     // only __csrfToken and misbehaves on every searchConfiguration body
     // tried (docs/api/captures/absence_endpoints.md). Defaulting the body
     // or attaching the token to every state-changing request would
-    // silently reintroduce that 500.
+    // reintroduce that 500; the shape is pinned by the searchAbsences
+    // test in api/client.test.ts.
     if (method !== 'GET' && body) {
       headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
     }

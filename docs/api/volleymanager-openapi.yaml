@@ -1456,8 +1456,9 @@ paths:
         Returns absence entries for the current referee, ordered newest-first
         by the server's default (observed in all captures).
 
-        This controller handles request bodies unlike every other search
-        endpoint (smoke-tested 2026-08-31): propertyFilters or
+        This controller rejects or mishandles request bodies that every
+        other search endpoint accepts (smoke-tested 2026-08-31):
+        propertyFilters or
         propertyOrderings cause a 500 Internal Server Error; offset/limit
         activate a server-side page clamped to 10 rows regardless of the
         requested limit; even a urlencoded body carrying only __csrfToken

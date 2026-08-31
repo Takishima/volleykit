@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -100,15 +100,18 @@ describe('AbsencesPage', () => {
   // A failed refetch keeps the last successful data in the query cache;
   // nothing derived from it may render above the error state.
   it('hides the truncation note and badge when the refetch failed', () => {
-    // A future entry, so the upcoming badge would be '1' without the gate
+    // A far-future entry, so the upcoming badge would be '1' without the
+    // gate. The year keeps the assertion meaningful against the real clock
+    // for the foreseeable life of the test.
     const upcoming = createAbsence({
-      fromDate: '2030-01-02T05:00:00.000000+00:00',
-      toDate: '2030-01-02T22:59:59.000000+00:00',
+      fromDate: '2099-01-02T05:00:00.000000+00:00',
+      toDate: '2099-01-02T22:59:59.000000+00:00',
     })
     renderPage([upcoming], { hasMore: true, error: new Error('boom') })
 
     expect(screen.queryByText('absences.truncatedNote')).not.toBeInTheDocument()
-    expect(screen.queryByText('1')).not.toBeInTheDocument()
+    const upcomingTab = screen.getByRole('tab', { name: 'absences.upcoming' })
+    expect(within(upcomingTab).queryByText('1')).not.toBeInTheDocument()
     expect(screen.getByText('boom')).toBeInTheDocument()
   })
 

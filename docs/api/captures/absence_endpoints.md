@@ -283,8 +283,8 @@ no `__csrfToken` (the action does not enforce CSRF; the session cookie suffices)
 POST /api/indoorvolleyball.refadmin/api\refereeabsence/search
 ```
 
-**Smoke-tested 2026-08-31** (four rounds). This controller handles request bodies
-unlike every other VolleyManager search endpoint:
+**Smoke-tested 2026-08-31** (four rounds). This controller rejects or mishandles
+request bodies that every other VolleyManager search endpoint accepts:
 
 - `propertyFilters` (a `fromDate` dateRange) or `propertyOrderings` → **500 Internal
   Server Error**.
