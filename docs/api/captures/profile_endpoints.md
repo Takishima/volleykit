@@ -31,10 +31,11 @@ GET /api/sportmanager.volleyball/api\person/showWithNestedObjects
 ```
 
 **Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| person[\_\_identity] | UUID | The person identifier |
-| propertyRenderConfiguration[0] | string | "\_permissions" |
+
+| Parameter                      | Type   | Description           |
+| ------------------------------ | ------ | --------------------- |
+| person[\_\_identity]           | UUID   | The person identifier |
+| propertyRenderConfiguration[0] | string | "\_permissions"       |
 
 **Example:**
 
@@ -104,9 +105,10 @@ GET /api/indoorvolleyball.refadmin/api\indoorreferee/getIndoorRefereeByActivePer
 ```
 
 **Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| person | UUID | The person identifier |
+
+| Parameter | Type | Description           |
+| --------- | ---- | --------------------- |
+| person    | UUID | The person identifier |
 
 **Example:**
 
@@ -462,8 +464,9 @@ GET /api/indoorvolleyball.refadmin/api\refereemandate/getRefereeMandatesByManagi
 ```
 
 **Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
+
+| Parameter           | Type | Description                         |
+| ------------------- | ---- | ----------------------------------- |
 | managingAssociation | UUID | The managing association identifier |
 
 **Example:**

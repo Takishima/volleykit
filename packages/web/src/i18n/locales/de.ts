@@ -238,7 +238,7 @@ const de: Translations = {
     noPastTitle: 'Keine vergangenen Absenzen',
     emptyDescription: 'Gesperrte Daten für den gewählten Verband erscheinen hier.',
     noReason: 'Kein Grund angegeben',
-    showingPartial: 'Die {shown} neuesten von {total} Absenzen werden angezeigt.',
+    olderHistoryNote: 'Ältere Absenzen werden nicht angezeigt (insgesamt {total}).',
     readOnly: 'Gesperrt',
     readOnlyTooltip: 'Diese Absenz wurde vom Verband gesetzt und kann nicht bearbeitet werden.',
     entryLabel: 'Absenz',

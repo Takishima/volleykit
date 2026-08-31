@@ -5,9 +5,8 @@ import { Card, CardContent } from '@/common/components/Card'
 import { Lock } from '@/common/components/icons'
 import { useDateFormat } from '@/common/hooks/useDateFormat'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { MS_PER_DAY } from '@/common/utils/constants'
 
-import { isAbsenceReadOnly } from '../utils/absence-helpers'
+import { isAbsenceReadOnly, isSingleDayAbsence } from '../utils/absence-helpers'
 
 const DATE_PATTERN = 'EEE, d. MMM yyyy'
 
@@ -20,11 +19,8 @@ function AbsenceCardComponent({ absence }: AbsenceCardProps) {
   const from = useDateFormat(absence.fromDate, DATE_PATTERN)
   const to = useDateFormat(absence.toDate, DATE_PATTERN)
 
-  // Duration-based instead of isSameDay: the API anchors full Swiss local
-  // days (e.g. 05:00Z-22:59Z), so a device in a different timezone could see
-  // the two instants on different local days even for a one-day absence.
   const isSingleDay =
-    from.date !== null && to.date !== null && to.date.getTime() - from.date.getTime() < MS_PER_DAY
+    from.date !== null && to.date !== null && isSingleDayAbsence(from.date, to.date)
   const dateText = isSingleDay ? from.dateLabel : `${from.dateLabel} – ${to.dateLabel}`
   const readOnly = isAbsenceReadOnly(absence)
   const reason = absence.detailedReason?.trim()

@@ -21,8 +21,9 @@ GET /api/indoorvolleyball.refadmin/api\refereeconvocation/findConvocationCompens
 ```
 
 **Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
+
+| Parameter          | Type | Description                |
+| ------------------ | ---- | -------------------------- |
 | refereeConvocation | UUID | The convocation identifier |
 
 **Example:**
@@ -42,8 +43,9 @@ GET /api/indoorvolleyball.refadmin/api\associationcompensationsettings/getAssoci
 ```
 
 **Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
+
+| Parameter          | Type | Description                |
+| ------------------ | ---- | -------------------------- |
 | refereeConvocation | UUID | The convocation identifier |
 
 **Example:**
@@ -63,10 +65,11 @@ GET /api/indoorvolleyball.refadmin/api\convocationcompensation/showWithNestedObj
 ```
 
 **Query Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| convocationCompensation[\_\_identity] | UUID | The compensation record identifier |
-| propertyRenderConfiguration[] | Array | Properties to include |
+
+| Parameter                             | Type  | Description                        |
+| ------------------------------------- | ----- | ---------------------------------- |
+| convocationCompensation[\_\_identity] | UUID  | The compensation record identifier |
+| propertyRenderConfiguration[]         | Array | Properties to include              |
 
 **Property Render Configuration:**
 

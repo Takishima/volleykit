@@ -129,7 +129,7 @@ export interface Translations {
     noPastTitle: string
     emptyDescription: string
     noReason: string
-    showingPartial: string
+    olderHistoryNote: string
     readOnly: string
     readOnlyTooltip: string
     entryLabel: string

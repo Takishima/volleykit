@@ -1,4 +1,5 @@
 import type { RefereeAbsence } from '@/api/client'
+import { MS_PER_DAY } from '@/common/utils/constants'
 
 /**
  * An absence the referee cannot edit: association-imposed blockings (e.g.
@@ -20,12 +21,24 @@ export interface GroupedAbsences {
   past: RefereeAbsence[]
 }
 
-// The API varies the UTC offset it serializes with, so ordering goes through
-// Date rather than string comparison. The schema requires fromDate/toDate;
-// the ?? fallbacks only satisfy the generated types, and a missing date
-// yields NaN, which every comparison treats as "not past".
+// Ordering goes through Date rather than string comparison so any RFC3339
+// offset is handled (captured payloads are all +00:00; only the wall-clock
+// anchor shifts across DST, but Date comparison stays correct either way).
+// The schema requires fromDate/toDate; the ?? fallbacks only satisfy the
+// generated types, and a missing date yields NaN, which every comparison
+// treats as "not past".
 function compareByFromDate(a: RefereeAbsence, b: RefereeAbsence): number {
   return new Date(a.fromDate ?? '').getTime() - new Date(b.fromDate ?? '').getTime()
+}
+
+/**
+ * Whether an absence covers a single day. Duration-based instead of a
+ * calendar-day comparison: the API anchors full Swiss local days (e.g.
+ * 05:00Z-22:59Z), so a device in a different timezone could see the two
+ * instants on different local days even for a one-day absence.
+ */
+export function isSingleDayAbsence(from: Date, to: Date): boolean {
+  return to.getTime() - from.getTime() < MS_PER_DAY
 }
 
 /**

@@ -237,7 +237,7 @@ const it: Translations = {
     noPastTitle: 'Nessuna assenza passata',
     emptyDescription: 'Le date bloccate per l’associazione selezionata appaiono qui.',
     noReason: 'Nessun motivo indicato',
-    showingPartial: 'Vengono mostrate le {shown} assenze più recenti su {total}.',
+    olderHistoryNote: 'Le assenze meno recenti non vengono mostrate ({total} in totale).',
     readOnly: 'Bloccata',
     readOnlyTooltip:
       'Questa assenza è stata impostata dall’associazione e non può essere modificata.',

@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
+import { countRowsConsumed } from '@volleykit/shared/api'
+import { startOfDay, endOfDay, addYears, subYears, format } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type RefereeAbsence } from '@/api/client'
 import { absenceListOptions } from '@/api/queryOptions'
@@ -8,17 +10,36 @@ import { DEFAULT_PAGE_SIZE } from '@/common/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 
+/** How far back the fetched window reaches (feeds the Past tab). */
+const HISTORY_YEARS = 1
+/** How far ahead the fetched window reaches (covers the current + next season). */
+const FUTURE_YEARS = 2
+
+// Format date as YYYY-MM-DD for stable comparison (no time component)
+const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd')
+
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_ABSENCES: RefereeAbsence[] = []
+
+export interface AbsencesResult {
+  absences: RefereeAbsence[]
+  /** The server's total across all pages, untouched by client-side drops. */
+  totalItemsCount: number
+  /**
+   * True when the server holds more rows in the window than this page
+   * consumed - i.e. real truncation, not items dropped by validation.
+   */
+  hasMoreHistory: boolean
+}
 
 /**
  * Hook to fetch referee absences for the active association.
  *
  * Absences are stored per association: the list holds the referee's own
- * entries plus association-imposed read-only blockings. Calendar mode has no
+ * entries plus association-imposed read-only blockings. The query fetches a
+ * bounded fromDate window (the spec-documented filter, so it holds regardless
+ * of server-side default ordering), newest-first. Calendar mode has no
  * session, so the query is disabled there.
- *
- * @returns Query result with referee absence entries
  */
 export function useAbsences() {
   const dataSource = useAuthStore((state) => state.dataSource)
@@ -30,13 +51,26 @@ export function useAbsences() {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
 
-  // Newest-first ordering keeps upcoming absences inside the page even when a
-  // referee accumulates more than one page of history: absence entries are
-  // never pruned server-side, so oldest-first would truncate the future away.
+  // Day keys keep the query key stable across re-renders (no new Date() in
+  // the deps array), same as useRefereeBackups.
+  const fromKey = formatDateKey(subYears(new Date(), HISTORY_YEARS))
+  const toKey = formatDateKey(addYears(new Date(), FUTURE_YEARS))
+
   const config = useMemo<SearchConfiguration>(
     () => ({
       offset: 0,
       limit: DEFAULT_PAGE_SIZE,
+      propertyFilters: [
+        {
+          propertyName: 'fromDate',
+          dateRange: {
+            from: startOfDay(new Date(fromKey)).toISOString(),
+            to: endOfDay(new Date(toKey)).toISOString(),
+          },
+        },
+      ],
+      // Newest-first so that even if the window somehow exceeds the page
+      // limit, what falls off is the oldest history, not upcoming entries.
       propertyOrderings: [
         {
           propertyName: 'fromDate',
@@ -45,15 +79,26 @@ export function useAbsences() {
         },
       ],
     }),
-    []
+    [fromKey, toKey]
   )
 
-  // Select items plus the server's total, so callers can tell a truncated
-  // page from a complete one. Stable empty array keeps re-renders cheap.
+  // countRowsConsumed distinguishes truncation from validation drops: the
+  // resilient list schema removes invalid items from `items` but leaves
+  // `totalItemsCount` untouched, so `items.length` alone would report a
+  // dropped item as truncation.
   const selectAbsences = useMemo(() => {
-    return (data: { items?: RefereeAbsence[]; totalItemsCount?: number }) => {
+    return (data: {
+      items?: RefereeAbsence[]
+      totalItemsCount?: number
+      droppedItems?: unknown[]
+    }): AbsencesResult => {
       const absences = data.items ?? EMPTY_ABSENCES
-      return { absences, totalItemsCount: data.totalItemsCount ?? absences.length }
+      const totalItemsCount = data.totalItemsCount ?? absences.length
+      return {
+        absences,
+        totalItemsCount,
+        hasMoreHistory: totalItemsCount > countRowsConsumed(data),
+      }
     }
   }, [])
 

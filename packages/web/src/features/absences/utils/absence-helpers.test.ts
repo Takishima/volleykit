@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { groupAbsences, isAbsenceReadOnly } from './absence-helpers'
+import { groupAbsences, isAbsenceReadOnly, isSingleDayAbsence } from './absence-helpers'
 
 import type { RefereeAbsence } from '@/api/client'
 
@@ -110,6 +110,8 @@ describe('groupAbsences', () => {
   })
 
   it('compares mixed UTC offsets chronologically, not lexically', () => {
+    // Synthetic payload: captured API responses all use +00:00, but the
+    // Date-based comparison stays correct for any RFC3339 offset.
     // '2027-01-10T06:00:00+05:00' is 01:00Z — chronologically before
     // '2027-01-10T04:00:00.000000+00:00', though a string comparison would
     // order it after.
@@ -130,5 +132,34 @@ describe('groupAbsences', () => {
       earlierInstant.__identity,
       laterInstant.__identity,
     ])
+  })
+})
+
+describe('isSingleDayAbsence', () => {
+  it('treats a full local day (05:00Z-22:59Z) as a single day', () => {
+    expect(
+      isSingleDayAbsence(
+        new Date('2027-01-02T05:00:00.000000+00:00'),
+        new Date('2027-01-02T22:59:59.000000+00:00')
+      )
+    ).toBe(true)
+  })
+
+  it('treats a multi-day span as not single-day', () => {
+    expect(
+      isSingleDayAbsence(
+        new Date('2027-01-14T05:00:00.000000+00:00'),
+        new Date('2027-01-17T22:59:59.000000+00:00')
+      )
+    ).toBe(false)
+  })
+
+  it('treats consecutive full days as not single-day', () => {
+    expect(
+      isSingleDayAbsence(
+        new Date('2026-11-21T05:00:00.000000+00:00'),
+        new Date('2026-11-22T22:59:59.000000+00:00')
+      )
+    ).toBe(false)
   })
 })

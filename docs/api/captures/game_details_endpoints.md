@@ -151,31 +151,31 @@ GET /api/sportmanager.indoorvolleyball/api\game/showWithNestedObjects
 
 ### Property Render Configuration Fields
 
-| Index | Property Path                                                                 | Description                 |
+| Index | Property Path | Description |
 | ----- | ----------------------------------------------------------------------------- | --------------------------- | ------------------- | --- |
-| 0     | number                                                                        | Match number (e.g., 382215) |
-| 1     | group.phase.league.leagueCategory.displayNameWithManagingAssociationShortName | "SVRZ                       | 2L"                 |
-| 2     | group.phase.league.displayName                                                | "#6651                      | 2L                  | ♂"  |
-| 3     | group.phase.league.genderUnicodeSign                                          | "♂" or "♀"                  |
-| 4     | group.phase.displayName                                                       | "#13011                     | Hin- und Rückrunde" |
-| 5     | group.displayName                                                             | "#27106                     | Herren 2. Liga"     |
-| 6     | gameDayIndex                                                                  | Match day number (e.g., 4)  |
-| 7     | startingDateTime                                                              | Game start date/time        |
-| 8     | hall.displayName                                                              | "#74                        | [Hall Name]..."     |
-| 9     | hall.primaryPostalAddress.streetAndHouseNumber                                | "[Street Address]"          |
-| 10    | hall.primaryPostalAddress.combinedAddress                                     | Full address                |
-| 11    | hall.primaryPostalAddress.additionToAddress                                   | Additional address info     |
-| 12    | hall.primaryPostalAddress.postalCodeAndCity                                   | "[Postal Code] [City]"      |
-| 13    | hall.primaryPostalAddress.geographicalLocation.plusCode                       | "[Plus Code]"               |
-| 14    | encounter.teamHomeGroupRankDisplayName                                        | Group rank display          |
-| 15    | encounter.teamHome.displayName                                                | "#2328                      | [Team Name]..."     |
-| 16    | encounter.teamHomeDefinitive                                                  | Whether team is definitive  |
-| 17    | encounter.teamAwayGroupRankDisplayName                                        | Group rank display          |
-| 18    | encounter.teamAwayDefinitive                                                  | Whether team is definitive  |
-| 19    | encounter.teamAway.displayName                                                | Away team display name      |
-| 20    | status                                                                        | Game status                 |
-| 21    | result.summarizedResult                                                       | Game result summary         |
-| 22    | result.summarizedSets                                                         | Set scores                  |
+| 0 | number | Match number (e.g., 382215) |
+| 1 | group.phase.league.leagueCategory.displayNameWithManagingAssociationShortName | "SVRZ | 2L" |
+| 2 | group.phase.league.displayName | "#6651 | 2L | ♂" |
+| 3 | group.phase.league.genderUnicodeSign | "♂" or "♀" |
+| 4 | group.phase.displayName | "#13011 | Hin- und Rückrunde" |
+| 5 | group.displayName | "#27106 | Herren 2. Liga" |
+| 6 | gameDayIndex | Match day number (e.g., 4) |
+| 7 | startingDateTime | Game start date/time |
+| 8 | hall.displayName | "#74 | [Hall Name]..." |
+| 9 | hall.primaryPostalAddress.streetAndHouseNumber | "[Street Address]" |
+| 10 | hall.primaryPostalAddress.combinedAddress | Full address |
+| 11 | hall.primaryPostalAddress.additionToAddress | Additional address info |
+| 12 | hall.primaryPostalAddress.postalCodeAndCity | "[Postal Code] [City]" |
+| 13 | hall.primaryPostalAddress.geographicalLocation.plusCode | "[Plus Code]" |
+| 14 | encounter.teamHomeGroupRankDisplayName | Group rank display |
+| 15 | encounter.teamHome.displayName | "#2328 | [Team Name]..." |
+| 16 | encounter.teamHomeDefinitive | Whether team is definitive |
+| 17 | encounter.teamAwayGroupRankDisplayName | Group rank display |
+| 18 | encounter.teamAwayDefinitive | Whether team is definitive |
+| 19 | encounter.teamAway.displayName | Away team display name |
+| 20 | status | Game status |
+| 21 | result.summarizedResult | Game result summary |
+| 22 | result.summarizedSets | Set scores |
 
 ---
 
@@ -183,23 +183,23 @@ GET /api/sportmanager.indoorvolleyball/api\game/showWithNestedObjects
 
 The dialog displays:
 
-| Field                | Example Value                          |
+| Field | Example Value |
 | -------------------- | -------------------------------------- | ---------------------------------- | -------------------------------------- |
-| N° match             | #382215                                |
-| Catégorie de ligue   | SVRZ                                   | 2L                                 |
-| Ligue                | #6651                                  | 2L                                 | ♂                                      |
-| Genre                | ♂                                      |
-| Phase                | #13011                                 | Hin- und Rückrunde                 |
-| Groupe               | #27106                                 | Herren 2. Liga                     |
-| Jour de match        | 4                                      |
-| Date/heure de début  | 13.12.2025 13:00                       |
-| Salle                | #74                                    | [Hall Name]                        | [Street Address], [Postal Code] [City] |
-| Plus code            | [Plus Code] (linked to Google Maps)    |
-| Equipe recevante     | #2328                                  | [Team Name] (2L, ♂, SVRZ)          |
+| N° match | #382215 |
+| Catégorie de ligue | SVRZ | 2L |
+| Ligue | #6651 | 2L | ♂ |
+| Genre | ♂ |
+| Phase | #13011 | Hin- und Rückrunde |
+| Groupe | #27106 | Herren 2. Liga |
+| Jour de match | 4 |
+| Date/heure de début | 13.12.2025 13:00 |
+| Salle | #74 | [Hall Name] | [Street Address], [Postal Code] [City] |
+| Plus code | [Plus Code] (linked to Google Maps) |
+| Equipe recevante | #2328 | [Team Name] (2L, ♂, SVRZ) |
 | Responsable d'équipe | Multiple contacts with email and phone |
-| Equipe visiteuse     | #12849                                 | [Team Name] (2L, ♂, [Association]) |
+| Equipe visiteuse | #12849 | [Team Name] (2L, ♂, [Association]) |
 | Responsable d'équipe | Multiple contacts with email and phone |
-| Arbitres             | ARB 1, ARB 2 with emails and phones    |
+| Arbitres | ARB 1, ARB 2 with emails and phones |
 
 ---
 

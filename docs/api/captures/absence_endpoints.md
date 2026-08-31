@@ -284,8 +284,11 @@ Content-Type: application/x-www-form-urlencoded
 
 searchConfiguration[offset]=0
 &searchConfiguration[limit]=100
+&searchConfiguration[propertyFilters][0][propertyName]=fromDate
+&searchConfiguration[propertyFilters][0][dateRange][from]=<today minus 1 year>
+&searchConfiguration[propertyFilters][0][dateRange][to]=<today plus 2 years>
 &searchConfiguration[propertyOrderings][0][propertyName]=fromDate
-&searchConfiguration[propertyOrderings][0][descending]=false
+&searchConfiguration[propertyOrderings][0][descending]=true
 &searchConfiguration[propertyOrderings][0][isSetByUser]=true
 &__csrfToken=<csrf-token>
 ```

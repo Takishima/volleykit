@@ -41,6 +41,7 @@ not in localStorage. We never store passwords or authentication tokens locally.
 | Modified demo assignments   | Persist demo mode changes | Until reset or logout |
 | Modified demo compensations | Persist demo mode changes | Until reset or logout |
 | Modified demo exchanges     | Persist demo mode changes | Until reset or logout |
+| Demo absences               | Persist demo mode changes | Until reset or logout |
 
 ## How to Clear Your Data
 

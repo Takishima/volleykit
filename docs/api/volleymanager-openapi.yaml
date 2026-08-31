@@ -1469,6 +1469,23 @@ paths:
                 searchConfiguration[propertyFilters][0][propertyName]:
                   type: string
                   example: 'fromDate'
+                searchConfiguration[propertyFilters][0][dateRange][from]:
+                  type: string
+                  format: date-time
+                  example: '2025-09-01T00:00:00.000Z'
+                searchConfiguration[propertyFilters][0][dateRange][to]:
+                  type: string
+                  format: date-time
+                  example: '2027-08-31T23:59:59.000Z'
+                searchConfiguration[propertyOrderings][0][propertyName]:
+                  type: string
+                  example: 'fromDate'
+                searchConfiguration[propertyOrderings][0][descending]:
+                  type: boolean
+                  example: true
+                searchConfiguration[propertyOrderings][0][isSetByUser]:
+                  type: boolean
+                  example: true
                 searchConfiguration[offset]:
                   type: integer
                   example: 0

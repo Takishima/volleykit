@@ -41,6 +41,7 @@ export function AbsencesPage() {
   const { data, isLoading, error, refetch } = useAbsences()
   const absences = data?.absences
   const totalItemsCount = data?.totalItemsCount ?? 0
+  const hasMoreHistory = data?.hasMoreHistory ?? false
 
   // Day-granular date key keeps the memo deps stable across re-renders and
   // regroups on the next render after midnight (same trick as
@@ -53,12 +54,6 @@ export function AbsencesPage() {
     () => groupAbsences(absences ?? [], parseISO(todayKey)),
     [absences, todayKey]
   )
-
-  // The hook fetches newest-first with a page limit, so anything beyond the
-  // page is the oldest history; say so instead of pretending the list is
-  // complete.
-  const shownCount = absences?.length ?? 0
-  const isTruncated = totalItemsCount > shownCount
 
   if (isCalendarMode) {
     return (
@@ -100,12 +95,9 @@ export function AbsencesPage() {
         </TabPanel>
         <TabPanel tabId="past" activeTab={activeTab}>
           <AbsenceList absences={past} emptyTitle={t('absences.noPastTitle')} />
-          {isTruncated && (
+          {hasMoreHistory && (
             <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
-              {tInterpolate('absences.showingPartial', {
-                shown: shownCount,
-                total: totalItemsCount,
-              })}
+              {tInterpolate('absences.olderHistoryNote', { total: totalItemsCount })}
             </p>
           )}
         </TabPanel>
