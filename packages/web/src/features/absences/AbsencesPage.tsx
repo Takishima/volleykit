@@ -64,15 +64,15 @@ export function AbsencesPage() {
   const isCalendarMode = useAuthStore((state) => state.isCalendarMode())
   const [activeTab, setActiveTab] = useState<AbsenceTab>('upcoming')
 
-  const { data, isLoading, isPlaceholderData, error, refetch } = useAbsences()
+  const { data, isLoading, error, refetch } = useAbsences()
   const absences = data?.absences
   const totalItemsCount = data?.totalItemsCount ?? 0
   const hasMore = data?.hasMore ?? false
 
-  // placeholderData keeps the previous data around while an error is shown
-  // or a new association's fetch is in flight; the badge and the truncation
-  // note describe the rendered list, so both gate on this single flag.
-  const showsFetchedList = !error && !isPlaceholderData
+  // A failed refetch keeps the last successful data in the query cache while
+  // the error state renders; the badge and the truncation note describe a
+  // rendered list, so neither may sit above the error on that stale data.
+  const showsFetchedList = !error
 
   // Day-granular date key keeps the memo deps stable across re-renders and
   // regroups on the next render after midnight. parseISO reads the date-only

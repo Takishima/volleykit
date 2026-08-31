@@ -52,10 +52,12 @@ export function useAbsences() {
   // Use appropriate key for cache invalidation when switching associations
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
 
+  // No placeholderData: an association switch is a context change, so the
+  // page shows a spinner instead of the previous association's rows under
+  // the new association's header.
   return useQuery({
     ...absenceListOptions(apiClient, associationKey),
     select: selectAbsences,
     enabled: dataSource !== 'calendar',
-    placeholderData: (prev) => prev,
   })
 }
