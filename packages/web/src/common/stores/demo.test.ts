@@ -149,6 +149,13 @@ describe('useDemoStore', () => {
       expect(svrbaFromDates.length).toBeGreaterThan(0)
       expect(svrbaFromDates).not.toEqual(svFromDates)
     })
+
+    it('seeds absences newest-first, matching the live server-default order', () => {
+      useDemoStore.getState().initializeDemoData('SV')
+      const fromDates = useDemoStore.getState().absences.map((a) => a.fromDate)
+
+      expect([...fromDates].sort().reverse()).toEqual(fromDates)
+    })
   })
 
   describe('initializeDemoData with association', () => {

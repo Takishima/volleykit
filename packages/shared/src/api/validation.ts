@@ -149,8 +149,8 @@ type AssertTrue<T extends true> = T
 // job — and web typechecks this package's *source* with `noUnusedLocals`, so a
 // module-local alias fails web's build (TS6196) even though shared's own
 // tsconfig would accept it.
-// Covers `optionalResilientListSchema`, which person search and possible
-// nominations use.
+// Covers `optionalResilientListSchema`, which person search, possible
+// nominations and absences use.
 export type PersonSearchItemsAreSchemaOutput = AssertTrue<
   Exact<PersonSearchResponse['items'][number], ValidatedPersonSearchResult>
 >

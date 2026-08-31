@@ -121,6 +121,17 @@ export function AbsencesPage() {
 
     return (
       <>
+        {/* Server-regression guard: the bodyless request returns everything
+            today, so this fires only if the server reintroduces paging.
+            Which end a hypothetical page would cut is unknowable, so the
+            disclosure sits above both tab panels - inside the success
+            branch, since it describes the list actually rendered below
+            (placeholderData keeps stale data around during errors). */}
+        {hasMore && (
+          <p className="text-sm text-text-muted dark:text-text-muted-dark">
+            {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
+          </p>
+        )}
         <TabPanel tabId="upcoming" activeTab={activeTab}>
           <AbsenceList
             absences={upcoming}
@@ -156,15 +167,6 @@ export function AbsencesPage() {
           onTabChange={(tabId) => setActiveTab(tabId as AbsenceTab)}
           ariaLabel={t('absences.title')}
         />
-        {/* Server-regression guard: the bodyless request returns everything
-            today, so this fires only if the server reintroduces paging.
-            Which end a hypothetical page would cut is unknowable, so the
-            disclosure sits above the tabs and renders on both. */}
-        {hasMore && (
-          <p className="text-sm text-text-muted dark:text-text-muted-dark">
-            {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
-          </p>
-        )}
         {renderContent()}
       </div>
     </PullToRefresh>

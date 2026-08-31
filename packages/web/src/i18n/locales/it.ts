@@ -238,7 +238,7 @@ const it: Translations = {
     noPastTitle: 'Nessuna assenza passata',
     emptyDescription: 'Le date bloccate per l’associazione selezionata appaiono qui.',
     noReason: 'Nessun motivo indicato',
-    truncatedNote: 'Non è stato possibile caricare tutte le assenze ({total} in totale).',
+    truncatedNote: 'Il server non ha restituito l’elenco completo ({total} assenze in totale).',
     readOnly: 'Bloccata',
     readOnlyTooltip:
       'Questa assenza è stata impostata dall’associazione e non può essere modificata.',

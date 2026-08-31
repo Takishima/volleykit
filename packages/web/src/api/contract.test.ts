@@ -173,6 +173,16 @@ describe('Mock data contract tests', () => {
         expect(absence._permissions?.object).toBeDefined()
       })
     })
+
+    // The schema deliberately uses optionalResilientListSchema: whether an
+    // empty account gets `items: []` or no `items` key at all is unverified
+    // against a live account, so the missing-key shape must parse.
+    it('parses a response without an items key (empty account)', () => {
+      const result = refereeAbsencesResponseSchema.safeParse({ totalItemsCount: 0 })
+
+      expect(result.success).toBe(true)
+      expect(result.success && result.data.items).toEqual([])
+    })
   })
 
   describe('Exchanges', () => {

@@ -239,7 +239,8 @@ const de: Translations = {
     noPastTitle: 'Keine vergangenen Absenzen',
     emptyDescription: 'Gesperrte Daten für den gewählten Verband erscheinen hier.',
     noReason: 'Kein Grund angegeben',
-    truncatedNote: 'Nicht alle Absenzen konnten geladen werden (insgesamt {total}).',
+    truncatedNote:
+      'Der Server hat nicht die vollständige Liste geliefert (insgesamt {total} Absenzen).',
     readOnly: 'Gesperrt',
     readOnlyTooltip: 'Diese Absenz wurde vom Verband gesetzt und kann nicht bearbeitet werden.',
     entryLabel: 'Absenz',
