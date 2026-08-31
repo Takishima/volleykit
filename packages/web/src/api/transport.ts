@@ -22,6 +22,15 @@ if (!import.meta.env.DEV && !getApiBaseUrl()) {
 }
 
 /**
+ * Endpoint as it may appear in error messages: query string stripped, because
+ * error messages are rendered on screen (and land in screenshots and support
+ * tickets) and the query can carry the CSRF token (searchAbsences).
+ */
+function endpointLabel(endpoint: string): string {
+  return endpoint.split('?')[0] ?? endpoint
+}
+
+/**
  * Shared error handling for all transport functions.
  * Handles session expiry detection, error parsing, and session token capture.
  */
@@ -50,7 +59,7 @@ async function handleResponse(response: Response, method: string, endpoint: stri
     }
 
     const errorMessage = await parseErrorResponse(response)
-    throw new Error(`${method} ${endpoint}: ${errorMessage}`)
+    throw new Error(`${method} ${endpointLabel(endpoint)}: ${errorMessage}`)
   }
 }
 
@@ -120,7 +129,7 @@ function parseJsonResponse<T>(response: Response, method: string, endpoint: stri
     }
 
     throw new Error(
-      `${method} ${endpoint}: Invalid JSON response (Content-Type: ${contentType || 'unknown'}, status: ${response.status})`
+      `${method} ${endpointLabel(endpoint)}: Invalid JSON response (Content-Type: ${contentType || 'unknown'}, status: ${response.status})`
     )
   })
 }

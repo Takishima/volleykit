@@ -385,6 +385,26 @@ describe('API Client', () => {
       expect(capturedBody).toBe('')
       expect(capturedContentType).toBeNull()
     })
+
+    // Error messages are rendered on screen, so the query-borne token must
+    // never appear in them.
+    it('keeps the CSRF token out of error messages', async () => {
+      setCsrfToken('absence-csrf-token')
+
+      server.use(
+        http.post('*/api%5crefereeabsence/search', () => {
+          return new HttpResponse(null, { status: 500, statusText: 'Internal Server Error' })
+        })
+      )
+
+      const error = await api.searchAbsences().then(
+        () => null,
+        (e: unknown) => e as Error
+      )
+
+      expect(error?.message).toContain('refereeabsence/search')
+      expect(error?.message).not.toContain('absence-csrf-token')
+    })
   })
 
   describe('searchExchanges', () => {
