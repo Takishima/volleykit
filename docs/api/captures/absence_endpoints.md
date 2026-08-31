@@ -276,26 +276,26 @@ Observations:
 
 The web app's read-only **Absences** page (`packages/web/src/features/absences/`) uses
 `refereeabsence/search` via `api.searchAbsences()` in `packages/web/src/api/real-api.ts`.
-The request the app sends is deliberately **bodyless** (only the CSRF token):
+The request the app sends is a POST with **no body at all** - no form Content-Type and
+no `__csrfToken` (the action does not enforce CSRF; the session cookie suffices):
 
 ```
 POST /api/indoorvolleyball.refadmin/api\refereeabsence/search
-Content-Type: application/x-www-form-urlencoded
-
-__csrfToken=<csrf-token>
 ```
 
-**Smoke-tested 2026-08-31** (three rounds). This controller handles
-`searchConfiguration` unlike every other VolleyManager search endpoint:
+**Smoke-tested 2026-08-31** (four rounds). This controller handles request bodies
+unlike every other VolleyManager search endpoint:
 
 - `propertyFilters` (a `fromDate` dateRange) or `propertyOrderings` → **500 Internal
   Server Error**.
 - `offset`/`limit` only → **200**, but the server clamps the page to **10 rows**
   regardless of the requested limit (`limit=100` returned 10 items of
   `totalItemsCount: 54`).
-- **No `searchConfiguration` at all** → **200 with the complete list** (all 54 items in
-  one response), `_permissions` per item, ordered `fromDate` descending. This matches
-  VolleyManager's own page, whose copy-as-cURL carries no body.
+- A urlencoded body carrying **only `__csrfToken`** → **500** (smoke-tested from the
+  deployed app).
+- **No body at all** → **200 with the complete list** (all 54 items in one response),
+  `_permissions` per item, ordered `fromDate` descending. This matches VolleyManager's
+  own page, whose copy-as-cURL carries no body.
 
 No `propertyRenderConfiguration` is sent - the captured responses returned all needed
 fields (including `_permissions`) without one. Responses are parsed with

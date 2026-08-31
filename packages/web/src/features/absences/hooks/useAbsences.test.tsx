@@ -37,16 +37,16 @@ describe('useAbsences', () => {
     useAuthStore.setState({ dataSource: 'api', activeOccupationId: 'occupation-1' })
   })
 
-  // The live endpoint returns the complete list ONLY for a bodyless request:
-  // propertyFilters/propertyOrderings cause a 500, and offset/limit activate
-  // a server-side page clamped to 10 rows (smoke tests, 2026-08-31). Pin the
-  // absence of every searchConfiguration key so a regression cannot silently
-  // truncate or break the page against the real API.
-  it('sends no searchConfiguration at all', async () => {
-    let capturedBody: URLSearchParams | null = null
+  // The live endpoint returns the complete list ONLY for a request with no
+  // body at all: searchConfiguration keys 500 or clamp the page, and even a
+  // body carrying only __csrfToken 500s (smoke tests, 2026-08-31). Pin the
+  // empty body so a regression cannot silently break the page against the
+  // real API.
+  it('sends a POST with no body at all', async () => {
+    let capturedBody: string | null = null
     server.use(
       http.post('*/api%5crefereeabsence/search', async ({ request }) => {
-        capturedBody = new URLSearchParams(await request.text())
+        capturedBody = await request.text()
         return HttpResponse.json({ items: [], totalItemsCount: 0 })
       })
     )
@@ -54,10 +54,7 @@ describe('useAbsences', () => {
     const { result } = renderHook(() => useAbsences(), { wrapper: createWrapper() })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    const body: URLSearchParams | null = capturedBody
-    for (const key of body?.keys() ?? []) {
-      expect(key).not.toContain('searchConfiguration')
-    }
+    expect(capturedBody).toBe('')
   })
 
   it('returns the whole list with truncation and totals derived from it', async () => {

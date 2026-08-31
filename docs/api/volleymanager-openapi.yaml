@@ -1456,23 +1456,15 @@ paths:
         Returns absence entries for the current referee, ordered newest-first
         by the server's default (observed in all captures).
 
-        This controller handles searchConfiguration unlike every other search
+        This controller handles request bodies unlike every other search
         endpoint (smoke-tested 2026-08-31): propertyFilters or
         propertyOrderings cause a 500 Internal Server Error; offset/limit
         activate a server-side page clamped to 10 rows regardless of the
-        requested limit; and a request with NO searchConfiguration at all
-        returns the complete list in one response. Send only the CSRF token.
+        requested limit; even a urlencoded body carrying only __csrfToken
+        causes a 500. A POST with NO body at all returns the complete list
+        in one response; the action does not enforce CSRF (the session
+        cookie suffices).
       operationId: searchRefereeAbsences
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                __csrfToken:
-                  type: string
-                  description: CSRF token for request validation
       responses:
         '200':
           description: Referee absences search result
