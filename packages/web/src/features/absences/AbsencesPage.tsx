@@ -38,9 +38,7 @@ export function AbsencesPage() {
   const isCalendarMode = useAuthStore((state) => state.isCalendarMode())
   const [activeTab, setActiveTab] = useState<AbsenceTab>('upcoming')
 
-  const { data, isLoading, error, refetch } = useAbsences()
-  const absences = data?.absences
-  const hasMoreHistory = data?.hasMoreHistory ?? false
+  const { data: absences, isLoading, error, refetch } = useAbsences()
 
   // Day-granular date key keeps the memo deps stable across re-renders and
   // regroups on the next render after midnight. parseISO reads the date-only
@@ -95,8 +93,8 @@ export function AbsencesPage() {
         <TabPanel tabId="past" activeTab={activeTab}>
           <AbsenceList absences={past} emptyTitle={t('absences.noPastTitle')} />
           {/* The fetch window is unconditional, so disclose it whenever
-              history renders - not only when the page limit truncated. */}
-          {(past.length > 0 || hasMoreHistory) && (
+              history renders. */}
+          {past.length > 0 && (
             <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
               {t('absences.olderHistoryNote')}
             </p>

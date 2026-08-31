@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { countRowsConsumed } from '@volleykit/shared/api'
 import { startOfDay, endOfDay, addYears, subYears } from 'date-fns'
 
 import {
@@ -17,7 +16,9 @@ import { useDemoStore } from '@/common/stores/demo'
 
 /**
  * How far back the fetched window reaches (feeds the Past tab). Anything
- * older is deliberately not fetched; the page discloses this bound.
+ * older is deliberately not fetched; the page discloses this bound via
+ * `absences.olderHistoryNote`, whose four locale strings hardcode "one
+ * year" - keep them in sync when changing this.
  */
 const HISTORY_YEARS = 1
 /**
@@ -30,17 +31,6 @@ const FUTURE_YEARS = 2
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_ABSENCES: RefereeAbsence[] = []
-
-export interface AbsencesResult {
-  absences: RefereeAbsence[]
-  /** The server's total within the fetched window, untouched by client-side drops. */
-  totalItemsCount: number
-  /**
-   * True when the window holds more rows than this page consumed - i.e. real
-   * page-limit truncation, not items dropped by validation.
-   */
-  hasMoreHistory: boolean
-}
 
 /**
  * Hook to fetch referee absences for the active association.
@@ -90,20 +80,13 @@ export function useAbsences() {
     [fromIso, toIso]
   )
 
-  // countRowsConsumed distinguishes truncation from validation drops: the
-  // resilient list schema removes invalid items from `items` but leaves
-  // `totalItemsCount` untouched, so `items.length` alone would report a
-  // dropped item as truncation. It reads `droppedItems` through `unknown`,
-  // since the generated response type deliberately does not carry the field.
+  // Select items from the response, providing a stable empty array fallback.
+  // No truncation bookkeeping: the bounded window plus newest-first ordering
+  // make a >100-row page an edge case, and the page discloses the window
+  // itself whenever history renders.
   const selectAbsences = useMemo(() => {
-    return (data: RefereeAbsenceSearchResponse): AbsencesResult => {
-      const absences = data.items ?? EMPTY_ABSENCES
-      const totalItemsCount = data.totalItemsCount ?? absences.length
-      return {
-        absences,
-        totalItemsCount,
-        hasMoreHistory: totalItemsCount > countRowsConsumed(data),
-      }
+    return (data: RefereeAbsenceSearchResponse): RefereeAbsence[] => {
+      return data.items ?? EMPTY_ABSENCES
     }
   }, [])
 
