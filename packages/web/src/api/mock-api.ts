@@ -867,11 +867,13 @@ export const mockApi = {
       items,
       totalItemsCount: total,
     }
-    return validateResponse(
-      response,
-      refereeAbsencesResponseSchema,
-      'mock:searchAbsences'
-    ) as RefereeAbsenceSearchResponse
+
+    // Surfaces envelope-level drift in demo mode. Return the RAW response, not
+    // the parsed one: the resilient list schema strips failing items during
+    // parsing, so returning parsed output would make the droppedItems
+    // assertion in contract.test.ts unconditionally pass.
+    validateResponse(response, refereeAbsencesResponseSchema, 'mock:searchAbsences')
+    return response
   },
 } satisfies ApiClient
 

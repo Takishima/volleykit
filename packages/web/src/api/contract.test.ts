@@ -180,6 +180,8 @@ describe('Mock data contract tests', () => {
       })
 
       const fromDates = (response.items ?? []).map((a) => new Date(a.fromDate ?? '').getTime())
+      // Guard against a trivially-green assertion on an empty or one-item list
+      expect(fromDates.length).toBeGreaterThan(1)
       const sorted = [...fromDates].sort((a, b) => b - a)
       expect(fromDates).toEqual(sorted)
     })

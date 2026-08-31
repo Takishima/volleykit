@@ -44,10 +44,10 @@ export function AbsencesPage() {
   const hasMoreHistory = data?.hasMoreHistory ?? false
 
   // Day-granular date key keeps the memo deps stable across re-renders and
-  // regroups on the next render after midnight (same trick as
-  // useRefereeBackups). parseISO reads the date-only key as LOCAL midnight -
-  // native new Date('yyyy-MM-dd') would parse UTC and yield the previous
-  // local day west of UTC. Day precision is enough: absences end at day
+  // regroups on the next render after midnight. parseISO reads the date-only
+  // key as LOCAL midnight (unlike the native new Date('yyyy-MM-dd') UTC parse
+  // used by the older hooks that share this idiom, which yields the previous
+  // local day west of UTC). Day precision is enough: absences end at day
   // boundaries.
   const todayKey = format(new Date(), 'yyyy-MM-dd')
   const { upcoming, past } = useMemo(
