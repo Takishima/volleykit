@@ -161,3 +161,12 @@ When `EVENT TYPE` is `synchronize`:
 - DO acknowledge fixed issues with "Fixed: [issue]"
 - DO flag NEW architectural issues in latest commits
 - Focus on changes since last review
+
+### Convergence Rules (re-reviews)
+
+Each review round costs a full fix-push-review cycle. The goal of a re-review is to converge, not to find something:
+
+- **Scope**: review only the commits pushed since your last review, plus regressions of issues you flagged. Do NOT raise new findings on code unchanged since the last round — that code was already reviewed.
+- **Severity floor**: on the first re-review, flag `bug` and `risk` only from unchanged code; from the second re-review onward, flag `bug` only, anywhere. Structural preferences found late (file splits, extraction suggestions, tidier job layouts) are omitted, not listed — at most a one-line "optional follow-up" note in Recommendations.
+- **Respect recorded decisions**: if a commit message or PR comment documents a suggestion as "Not taken" with a rationale, do not re-raise it unless you can show the rationale is factually wrong (e.g. a concrete failing case).
+- **Declare convergence**: "No issues found" is a successful review. If your remaining findings are judgment calls with defensible alternatives on both sides, say so and stop instead of listing them.

@@ -6,6 +6,16 @@ Open a PR for the current branch and address Claude Code Review comments (both c
 
 - Current branch must be pushed to origin
 - Commits ready for PR (run `/build` first if needed)
+- Self-check the "Recurring Findings" table in docs/REVIEW_CHECKLIST.md — those classes have each cost multiple review rounds when caught late
+
+## Convergence Rules (read before any fix round)
+
+Both reviewers re-run on EVERY push to the PR — the `fix(review):` / `fix(ci):` prefixes do NOT suppress re-review; they only mark the commit's purpose. So each push costs a full review round. To keep rounds low:
+
+1. **One push per round**: collect ALL fixes for a round (both reviews + CI) into commits locally, then push once. Never push fixes one by one.
+2. **No scope widening**: a review fix changes only what the finding requires. New gates, refactors, features, or cleanups a finding merely inspires go to a follow-up issue, not into this PR — widening creates fresh review surface and spawns new rounds.
+3. **Record "Not taken" decisions**: for each finding you deliberately don't implement, state the rationale in the commit message or a PR comment. Reviewers are instructed not to re-raise documented decisions.
+4. **Round cap**: from the third fix round onward, address only `bug`-severity findings; file everything else as a follow-up issue and say so in a PR comment. If reviews stop converging (each fix draws a new or reshaped finding), stop pushing, summarize the open judgment calls in one PR comment, and hand the decision to the user.
 
 ## Steps
 
@@ -131,9 +141,9 @@ After addressing ALL review issues:
 git add -A && git commit -m "fix(review): address PR review comments"
 ```
 
-Do NOT push yet - wait until CI fixes are also committed.
+Do NOT push yet - wait until CI fixes are also committed (Convergence Rule 1: one push per round).
 
-The `fix(review):` prefix prevents infinite review loops.
+The `fix(review):` prefix marks the commit's purpose; it does NOT prevent re-review — the next push triggers both reviewers again.
 
 ### Step 9: Fix CI Failures (if any)
 
@@ -176,7 +186,7 @@ Note: Match the local commands to the specific CI check that failed. The `html_u
 git add -A && git commit -m "fix(ci): address CI failure in <check_name>"
 ```
 
-The `fix(ci):` prefix (like `fix(review):`) prevents infinite review loops.
+The `fix(ci):` prefix (like `fix(review):`) marks purpose only — it does not suppress re-review.
 
 If no CI failures were found in Step 6, skip this step.
 
@@ -205,6 +215,14 @@ If checks are still `in_progress`, wait 2 minutes and retry (max 5 retries, ~10.
 If all checks pass (`conclusion: "success"`), inform user and complete.
 
 If any check fails, return to Step 9 to fix and push again.
+
+### Step 12: Handle Re-Review Rounds
+
+Each push in Step 10 triggered a fresh review round. Repeat Steps 5-11 for the new review comments, applying the Convergence Rules:
+
+- Round 2: address all severities, one push.
+- Round 3+: address `bug` findings only; file the rest as follow-up issues and note it in a PR comment.
+- Not converging (fixes keep drawing new or reshaped findings): stop pushing, summarize open judgment calls in one PR comment, hand the decision to the user.
 
 ## Output
 
