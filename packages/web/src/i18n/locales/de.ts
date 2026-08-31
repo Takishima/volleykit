@@ -230,6 +230,7 @@ const de: Translations = {
   },
   absences: {
     title: 'Absenzen',
+    backToSettings: 'Zurück zu den Einstellungen',
     upcoming: 'Bevorstehend',
     past: 'Vergangen',
     loading: 'Absenzen werden geladen...',
@@ -428,7 +429,6 @@ const de: Translations = {
     assignments: 'Einsätze',
     compensations: 'Entschädigungen',
     exchange: 'Tauschbörse',
-    absences: 'Absenzen',
     settings: 'Einstellungen',
   },
   notifications: {

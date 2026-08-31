@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 
 import { format, parseISO } from 'date-fns'
+import { Link } from 'react-router-dom'
 
 import type { RefereeAbsence } from '@/api/client'
+import { ArrowLeft } from '@/common/components/icons'
 import { LoadingState, ErrorState, EmptyState } from '@/common/components/LoadingSpinner'
 import { PullToRefresh } from '@/common/components/PullToRefresh'
 import { Tabs, TabPanel } from '@/common/components/Tabs'
@@ -122,6 +124,19 @@ export function AbsencesPage() {
       }}
     >
       <div className="space-y-3">
+        {/* Reached from Settings, not the bottom nav, so give a way back */}
+        <div className="flex items-center gap-2">
+          <Link
+            to="/settings"
+            aria-label={t('absences.backToSettings')}
+            className="p-1 -ml-1 rounded-lg text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          >
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+          </Link>
+          <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+            {t('absences.title')}
+          </h1>
+        </div>
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t('absences.associationScopeHint')}
         </p>

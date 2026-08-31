@@ -12,7 +12,6 @@ import {
   ArrowLeftRight,
   Settings,
   Calendar,
-  CalendarX2,
 } from '@/common/components/icons'
 import { OfflineIndicator } from '@/common/components/OfflineIndicator'
 import { PendingActionsIndicator } from '@/common/components/PendingActionsIndicator'
@@ -50,12 +49,11 @@ const allNavItems: NavItem[] = [
     testId: 'nav-compensations',
   },
   { path: '/exchange', labelKey: 'nav.exchange', icon: ArrowLeftRight, testId: 'nav-exchange' },
-  { path: '/absences', labelKey: 'nav.absences', icon: CalendarX2, testId: 'nav-absences' },
   { path: '/settings', labelKey: 'nav.settings', icon: Settings, testId: 'nav-settings' },
 ]
 
 // Paths that are hidden in calendar mode (read-only view)
-const CALENDAR_MODE_HIDDEN_PATHS = ['/compensations', '/exchange', '/absences']
+const CALENDAR_MODE_HIDDEN_PATHS = ['/compensations', '/exchange']
 
 export function AppShell() {
   const { t } = useTranslation()

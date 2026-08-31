@@ -230,6 +230,7 @@ const fr: Translations = {
   },
   absences: {
     title: 'Absences',
+    backToSettings: 'Retour aux paramètres',
     upcoming: 'À venir',
     past: 'Passées',
     loading: 'Chargement des absences...',
@@ -428,7 +429,6 @@ const fr: Translations = {
     assignments: 'Désignations',
     compensations: 'Indemnités',
     exchange: 'Échanges',
-    absences: 'Absences',
     settings: 'Paramètres',
   },
   notifications: {

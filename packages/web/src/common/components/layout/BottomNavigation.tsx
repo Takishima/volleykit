@@ -7,8 +7,7 @@ import type { LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   path: string
-  labelKey:
-    'nav.assignments' | 'nav.compensations' | 'nav.exchange' | 'nav.absences' | 'nav.settings'
+  labelKey: 'nav.assignments' | 'nav.compensations' | 'nav.exchange' | 'nav.settings'
   icon: LucideIcon
   testId: string
 }

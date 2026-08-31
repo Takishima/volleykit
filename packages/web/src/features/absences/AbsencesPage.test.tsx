@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as authStore from '@/common/stores/auth'
@@ -38,14 +39,22 @@ function createAbsence(overrides: Partial<RefereeAbsence> = {}): RefereeAbsence 
   }
 }
 
-function renderPastTab(absences: RefereeAbsence[]) {
+function renderPage(absences: RefereeAbsence[]) {
   mockUseAbsences.mockReturnValue({
     data: absences,
     isLoading: false,
     error: null,
     refetch: vi.fn(),
   })
-  render(<AbsencesPage />)
+  render(
+    <MemoryRouter>
+      <AbsencesPage />
+    </MemoryRouter>
+  )
+}
+
+function renderPastTab(absences: RefereeAbsence[]) {
+  renderPage(absences)
   fireEvent.click(screen.getByText('absences.past'))
 }
 
@@ -78,15 +87,16 @@ describe('AbsencesPage', () => {
   })
 
   it('does not render past entries or the note on the Upcoming tab', () => {
-    mockUseAbsences.mockReturnValue({
-      data: [createAbsence()],
-      isLoading: false,
-      error: null,
-      refetch: vi.fn(),
-    })
-    render(<AbsencesPage />)
+    renderPage([createAbsence()])
 
     expect(screen.queryByText('absences.olderHistoryNote')).not.toBeInTheDocument()
     expect(screen.getByText('absences.noUpcomingTitle')).toBeInTheDocument()
+  })
+
+  it('links back to settings', () => {
+    renderPage([])
+
+    const backLink = screen.getByLabelText('absences.backToSettings')
+    expect(backLink).toHaveAttribute('href', '/settings')
   })
 })

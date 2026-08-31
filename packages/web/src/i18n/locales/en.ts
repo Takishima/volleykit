@@ -225,6 +225,7 @@ const en: Translations = {
   },
   absences: {
     title: 'Absences',
+    backToSettings: 'Back to settings',
     upcoming: 'Upcoming',
     past: 'Past',
     loading: 'Loading absences...',
@@ -416,7 +417,6 @@ const en: Translations = {
     assignments: 'Assignments',
     compensations: 'Compensations',
     exchange: 'Exchange',
-    absences: 'Absences',
     settings: 'Settings',
   },
   notifications: {

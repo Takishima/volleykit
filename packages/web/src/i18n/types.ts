@@ -121,6 +121,7 @@ export interface Translations {
   }
   absences: {
     title: string
+    backToSettings: string
     upcoming: string
     past: string
     loading: string
@@ -302,7 +303,6 @@ export interface Translations {
     assignments: string
     compensations: string
     exchange: string
-    absences: string
     settings: string
   }
   notifications: {
