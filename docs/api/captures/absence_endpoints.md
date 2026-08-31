@@ -66,8 +66,13 @@ Returns the current referee's own absence entries for the active association.
 POST /api/indoorvolleyball.refadmin/api\refereeabsence/search
 ```
 
-**Content-Type:** `application/x-www-form-urlencoded` (searchConfiguration + `__csrfToken`,
-same pattern as the other search endpoints).
+**No request body** - unlike the other search endpoints, this controller must be called
+with no body at all (see the body-behaviour matrix under Implementation Status). CSRF is
+still enforced, so the token has to travel outside the body: VolleyManager's own page
+presumably sends it as an `X-Flow-Csrftoken` header (the pasted copy-as-cURL captures
+were redacted of auth headers, so this is inferred, not observed); VolleyKit sends it as
+a `__csrfToken` query parameter, which Flow merges into the same internal-argument
+check.
 
 ### Response (Anonymized)
 
@@ -276,14 +281,14 @@ Observations:
 
 The web app's read-only **Absences** page (`packages/web/src/features/absences/`) uses
 `refereeabsence/search` via `api.searchAbsences()` in `packages/web/src/api/real-api.ts`.
-The request the app sends is a POST with **no body at all** - no form Content-Type and
-no `__csrfToken` (the action does not enforce CSRF; the session cookie suffices):
+The request the app sends is a POST with **no body at all** - no form Content-Type - and
+the CSRF token as a query parameter:
 
 ```
-POST /api/indoorvolleyball.refadmin/api\refereeabsence/search
+POST /api/indoorvolleyball.refadmin/api\refereeabsence/search?__csrfToken=<token>
 ```
 
-**Smoke-tested 2026-08-31** (four rounds). This controller rejects or mishandles
+**Smoke-tested 2026-08-31** (five rounds). This controller rejects or mishandles
 request bodies that every other VolleyManager search endpoint accepts:
 
 - `propertyFilters` (a `fromDate` dateRange) or `propertyOrderings` → **500 Internal
@@ -293,14 +298,20 @@ request bodies that every other VolleyManager search endpoint accepts:
   `totalItemsCount: 54`).
 - A urlencoded body carrying **only `__csrfToken`** → **500** (smoke-tested from the
   deployed app).
-- **No body at all** → **200 with the complete list** (all 54 items in one response),
-  `_permissions` per item, ordered `fromDate` descending. This matches VolleyManager's
-  own page, whose copy-as-cURL carries no body.
+- **No body at all, no token anywhere**, valid session → **403 Access denied** (Flow
+  HTML error page; smoke-tested from the deployed app with a fresh login). CSRF **is**
+  enforced - the earlier "no CSRF" conclusion came from pasted copy-as-cURL captures
+  that had been redacted of auth headers. Without a valid session the same request
+  gets a **303** to `/login` instead.
+- **No body at all, token outside the body** → **200 with the complete list** (all 54
+  items in one response), `_permissions` per item, ordered `fromDate` descending. This
+  matches VolleyManager's own page, whose copy-as-cURL carries no body.
 
-Note the asymmetry between the last three rows: the `offset`/`limit` body (which also
+Note the asymmetry among the body-carrying rows: the `offset`/`limit` body (which also
 carried `__csrfToken`) returned 200, while a body carrying _only_ `__csrfToken` 500s.
 `offset`/`limit` is the only body observed to return 200, and it truncates; every other
-body tried 500s. No body at all is the only shape that returns the complete list.
+body tried 500s. No body at all - with the token in the query string - is the only
+shape that returns the complete list.
 
 No `propertyRenderConfiguration` is sent - the captured responses returned all needed
 fields (including `_permissions`) without one. Responses are parsed with

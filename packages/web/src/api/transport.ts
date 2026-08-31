@@ -158,9 +158,10 @@ export async function apiRequest<T>(
 
     // Both `&& body` conjuncts (here and on the fetch body below) are
     // load-bearing for searchAbsences: an omitted body must produce a
-    // request with no Content-Type and no injected __csrfToken, or the
-    // server 500s (why: docs/api/captures/absence_endpoints.md). Pinned
-    // by the searchAbsences case in api/client.test.ts.
+    // request with no Content-Type and nothing in the body - its CSRF
+    // token rides the query string instead - or the server 500s (why:
+    // docs/api/captures/absence_endpoints.md). Pinned by the
+    // searchAbsences case in api/client.test.ts.
     if (method !== 'GET' && body) {
       headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
     }

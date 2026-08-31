@@ -785,16 +785,20 @@ export const api = {
    *
    * Deliberately a POST with NO body at all - not an empty body: omitting
    * the argument keeps the transport from setting a form Content-Type or
-   * injecting __csrfToken, and only that shape returns the complete list
-   * (the action does not enforce CSRF; the session cookie suffices). The
-   * full body-behaviour matrix lives in
-   * docs/api/captures/absence_endpoints.md.
+   * putting anything in the body, and only that shape returns the complete
+   * list. CSRF IS enforced (an authenticated bodyless POST without a token
+   * gets 403 Access denied), so the token travels as a __csrfToken query
+   * parameter - the one place it can go when the body must stay absent and
+   * the proxy's CORS allow-list has no X-Flow-Csrftoken header. The full
+   * body-behaviour matrix lives in docs/api/captures/absence_endpoints.md.
    *
    * @returns Promise with all referee absence entries
    */
   async searchAbsences(): Promise<RefereeAbsenceSearchResponse> {
+    const csrfToken = getCsrfToken()
+    const csrfQuery = csrfToken ? `?__csrfToken=${encodeURIComponent(csrfToken)}` : ''
     const data = await apiRequest<unknown>(
-      '/indoorvolleyball.refadmin/api%5crefereeabsence/search',
+      `/indoorvolleyball.refadmin/api%5crefereeabsence/search${csrfQuery}`,
       'POST'
     )
     return validateResponse(

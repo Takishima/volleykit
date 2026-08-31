@@ -1463,8 +1463,18 @@ paths:
         activate a server-side page clamped to 10 rows regardless of the
         requested limit; even a urlencoded body carrying only __csrfToken
         causes a 500. A POST with NO body at all returns the complete list
-        in one response; the action does not enforce CSRF (the session
-        cookie suffices).
+        in one response. CSRF is enforced: an authenticated bodyless POST
+        without a token gets 403 Access denied (an unauthenticated one a
+        303 to /login), so the token must travel outside the body - as the
+        __csrfToken query parameter, or presumably the X-Flow-Csrftoken
+        header VolleyManager's own page uses.
+      parameters:
+        - name: __csrfToken
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Flow CSRF token; must ride the query string because the body must stay absent.
       operationId: searchRefereeAbsences
       responses:
         '200':

@@ -360,16 +360,19 @@ describe('API Client', () => {
   describe('searchAbsences', () => {
     // The live endpoint returns the complete list ONLY for a request with no
     // body at all: searchConfiguration keys 500 or clamp the page, and even a
-    // body carrying only __csrfToken 500s (smoke tests, 2026-08-31). The
-    // Content-Type header is what separates a truly bodyless POST from an
-    // empty form body, and the token is set first to prove none is injected.
-    it('sends a POST with no body, no Content-Type, and no CSRF token', async () => {
+    // body carrying only __csrfToken 500s (smoke tests, 2026-08-31). CSRF is
+    // still enforced (bodyless without a token → 403), so the token must ride
+    // the query string. The Content-Type header is what separates a truly
+    // bodyless POST from an empty form body.
+    it('sends a bodyless POST with the CSRF token in the query string', async () => {
       setCsrfToken('absence-csrf-token')
 
+      let capturedUrl: string | null = null
       let capturedBody: string | null = null
       let capturedContentType: string | null = null
       server.use(
         http.post('*/api%5crefereeabsence/search', async ({ request }) => {
+          capturedUrl = request.url
           capturedBody = await request.text()
           capturedContentType = request.headers.get('Content-Type')
           return HttpResponse.json({ items: [], totalItemsCount: 0 })
@@ -378,6 +381,7 @@ describe('API Client', () => {
 
       await api.searchAbsences()
 
+      expect(capturedUrl).toContain('__csrfToken=absence-csrf-token')
       expect(capturedBody).toBe('')
       expect(capturedContentType).toBeNull()
     })
