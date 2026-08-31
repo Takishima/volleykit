@@ -94,6 +94,31 @@ describe('AbsencesPage', () => {
     expect(screen.getAllByText('absences.truncatedNote')).toHaveLength(1)
   })
 
+  // placeholderData keeps the previous association's data during a failed
+  // refetch; nothing derived from it may render above the error state.
+  it('hides the truncation note and badge when the refetch failed', () => {
+    // A future entry, so the upcoming badge would be '1' without the gate
+    const upcoming = createAbsence({
+      fromDate: '2030-01-02T05:00:00.000000+00:00',
+      toDate: '2030-01-02T22:59:59.000000+00:00',
+    })
+    mockUseAbsences.mockReturnValue({
+      data: { absences: [upcoming], totalItemsCount: 9, hasMore: true },
+      isLoading: false,
+      error: new Error('boom'),
+      refetch: vi.fn(),
+    })
+    render(
+      <MemoryRouter>
+        <AbsencesPage />
+      </MemoryRouter>
+    )
+
+    expect(screen.queryByText('absences.truncatedNote')).not.toBeInTheDocument()
+    expect(screen.queryByText('1')).not.toBeInTheDocument()
+    expect(screen.getByText('boom')).toBeInTheDocument()
+  })
+
   it('does not render past entries on the Upcoming tab', () => {
     renderPage([createAbsence()])
 
