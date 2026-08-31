@@ -1,0 +1,1 @@
+var e=globalThis.localStorage?.getItem(`volleykit:debug`)===`true`;function t(t){let n=`[VolleyKit][${t}]`;return{debug:(...t)=>{e&&console.log(n,...t)},info:(...t)=>{e&&console.info(n,...t)},warn:(...e)=>{console.warn(n,...e)},error:(...e)=>{console.error(n,...e)}}}var n=t(`App`);export{n,t};
