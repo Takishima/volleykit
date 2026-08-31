@@ -137,15 +137,17 @@ describe('useDemoStore', () => {
       expect(useDemoStore.getState().assignments.length).toBeGreaterThan(0)
     })
 
-    it('regenerates per-association absences', () => {
+    it('regenerates per-association absences with shifted dates', () => {
       useDemoStore.getState().initializeDemoData('SV')
-      const svAbsenceIds = useDemoStore.getState().absences.map((a) => a.__identity)
+      const svFromDates = useDemoStore.getState().absences.map((a) => a.fromDate)
 
       useDemoStore.getState().setActiveAssociation('SVRBA')
-      const svrbaAbsenceIds = useDemoStore.getState().absences.map((a) => a.__identity)
+      const svrbaFromDates = useDemoStore.getState().absences.map((a) => a.fromDate)
 
-      expect(svrbaAbsenceIds.length).toBeGreaterThan(0)
-      expect(svrbaAbsenceIds).not.toEqual(svAbsenceIds)
+      // fromDate assertion (not __identity, which differs by construction)
+      // actually covers the per-association day offsets
+      expect(svrbaFromDates.length).toBeGreaterThan(0)
+      expect(svrbaFromDates).not.toEqual(svFromDates)
     })
   })
 

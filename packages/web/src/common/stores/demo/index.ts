@@ -58,7 +58,11 @@ export const useDemoStore = create<DemoState>()(
       // Data lifecycle actions
       initializeDemoData: (associationCode: DemoAssociationCode = 'SV') => {
         const currentState = get()
-        const hasExistingData = currentState.assignments.length > 0
+        // Absences shipped after assignments: a persisted blob from before
+        // they existed has assignments but no absences, and the persist merge
+        // keeps that shape - so treat it as missing data and regenerate.
+        const hasExistingData =
+          currentState.assignments.length > 0 && currentState.absences.length > 0
         const isSameAssociation = currentState.activeAssociationCode === associationCode
 
         if (hasExistingData && isSameAssociation) {

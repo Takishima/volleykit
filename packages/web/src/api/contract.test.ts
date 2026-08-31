@@ -18,10 +18,12 @@ import {
   compensationRecordSchema,
   gameExchangeSchema,
   personSearchResultSchema,
+  refereeAbsenceSchema,
   assignmentsResponseSchema,
   compensationsResponseSchema,
   exchangesResponseSchema,
   personSearchResponseSchema,
+  refereeAbsencesResponseSchema,
 } from './validation'
 
 /** Structural type for Zod validation errors that works with both Zod 3 and 4. */
@@ -130,6 +132,56 @@ describe('Mock data contract tests', () => {
         expect(comp.convocationCompensation).toBeDefined()
         expect(comp.refereeGame).toBeDefined()
       })
+    })
+  })
+
+  describe('Absences', () => {
+    it('each absence passes schema validation', () => {
+      const { absences } = useDemoStore.getState()
+
+      expect(absences.length).toBeGreaterThan(0)
+
+      absences.forEach((absence, index) => {
+        const result = refereeAbsenceSchema.safeParse(absence)
+        if (!result.success) {
+          throw validationError('Absence', index, result.error, absence)
+        }
+        expect(result.success).toBe(true)
+      })
+    })
+
+    it('searchAbsences response passes schema validation', async () => {
+      const response = await mockApi.searchAbsences()
+
+      const result = refereeAbsencesResponseSchema.safeParse(response)
+      if (!result.success) {
+        throw responseValidationError('Absences response', result.error)
+      }
+      expect(result.success).toBe(true)
+      // Resilient list schemas parse successfully even when items drop, so the
+      // drop list is what actually detects fixture drift.
+      expect(result.data?.droppedItems).toEqual([])
+    })
+
+    it('absences have required fields for UI', () => {
+      const { absences } = useDemoStore.getState()
+
+      absences.forEach((absence) => {
+        expect(absence.__identity).toBeDefined()
+        expect(absence.fromDate).toBeDefined()
+        expect(absence.toDate).toBeDefined()
+        expect(absence._permissions?.object).toBeDefined()
+      })
+    })
+
+    it('searchAbsences applies the requested ordering', async () => {
+      const response = await mockApi.searchAbsences({
+        propertyOrderings: [{ propertyName: 'fromDate', descending: true, isSetByUser: true }],
+      })
+
+      const fromDates = (response.items ?? []).map((a) => new Date(a.fromDate ?? '').getTime())
+      const sorted = [...fromDates].sort((a, b) => b - a)
+      expect(fromDates).toEqual(sorted)
     })
   })
 

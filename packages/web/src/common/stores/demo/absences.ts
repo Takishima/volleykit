@@ -9,6 +9,10 @@ import type { StateCreator } from 'zustand'
 
 export type AbsencesSlice = DemoAbsencesState
 
-export const createAbsencesSlice: StateCreator<DemoState, [], [], AbsencesSlice> = () => ({
+export const createAbsencesSlice: StateCreator<DemoState, [], [], AbsencesSlice> = (
+  _set,
+  _get,
+  _api
+) => ({
   absences: [],
 })

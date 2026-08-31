@@ -56,6 +56,7 @@ export {
   seasonSchema,
   possibleNominationsResponseSchema,
   refereeBackupResponseSchema,
+  refereeAbsenceSchema,
   refereeAbsencesResponseSchema,
   type ValidatedPersonSearchResult,
 } from '@volleykit/shared/api'

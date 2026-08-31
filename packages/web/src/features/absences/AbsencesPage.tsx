@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 
-import { format, startOfDay } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 
 import type { RefereeAbsence } from '@/api/client'
 import { LoadingState, ErrorState, EmptyState } from '@/common/components/LoadingSpinner'
@@ -42,13 +42,15 @@ export function AbsencesPage() {
   const absences = data?.absences
   const totalItemsCount = data?.totalItemsCount ?? 0
 
-  // Day-granular date key keeps the memo deps stable across re-renders while
-  // still regrouping when the page stays open past midnight (same trick as
-  // useRefereeBackups). Absences end at day boundaries, so day precision is
-  // enough for the upcoming/past split.
+  // Day-granular date key keeps the memo deps stable across re-renders and
+  // regroups on the next render after midnight (same trick as
+  // useRefereeBackups). parseISO reads the date-only key as LOCAL midnight -
+  // native new Date('yyyy-MM-dd') would parse UTC and yield the previous
+  // local day west of UTC. Day precision is enough: absences end at day
+  // boundaries.
   const todayKey = format(new Date(), 'yyyy-MM-dd')
   const { upcoming, past } = useMemo(
-    () => groupAbsences(absences ?? [], startOfDay(new Date(todayKey))),
+    () => groupAbsences(absences ?? [], parseISO(todayKey)),
     [absences, todayKey]
   )
 

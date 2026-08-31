@@ -17,6 +17,7 @@ import {
   compensationsResponseSchema,
   exchangesResponseSchema,
   personSearchResponseSchema,
+  refereeAbsencesResponseSchema,
   validateResponse,
 } from './validation'
 
@@ -853,16 +854,24 @@ export const mockApi = {
   /**
    * Search referee absences.
    * Reads the demo store's per-association set: editable own entries plus
-   * one read-only association-imposed blocking.
+   * one read-only association-imposed blocking. Applies the same
+   * filter/sort/paginate pipeline as the other store-backed searches.
    */
-  async searchAbsences(_config: SearchConfiguration = {}): Promise<RefereeAbsenceSearchResponse> {
+  async searchAbsences(config: SearchConfiguration = {}): Promise<RefereeAbsenceSearchResponse> {
     await delay(MOCK_NETWORK_DELAY_MS)
 
-    const { absences } = useDemoStore.getState()
-    return {
-      items: absences,
-      totalItemsCount: absences.length,
+    const store = useDemoStore.getState()
+    const { items, total } = processSearchRequest(store.absences, config)
+
+    const response: RefereeAbsenceSearchResponse = {
+      items,
+      totalItemsCount: total,
     }
+    return validateResponse(
+      response,
+      refereeAbsencesResponseSchema,
+      'mock:searchAbsences'
+    ) as RefereeAbsenceSearchResponse
   },
 } satisfies ApiClient
 
