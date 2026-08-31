@@ -32,6 +32,7 @@ import {
   COMPENSATIONS_STALE_TIME_MS,
   SETTINGS_STALE_TIME_MS,
   SEASON_STALE_TIME_MS,
+  fetchAllAbsencePages,
 } from '@/common/hooks/usePaginatedQuery'
 import { MS_PER_MINUTE } from '@/common/utils/constants'
 
@@ -163,14 +164,12 @@ export function refereeBackupListOptions(
 
 // ── Absences ─────────────────────────────────────────────────────────
 
-export function absenceListOptions(
-  apiClient: ApiClient,
-  config: SearchConfiguration,
-  associationKey: string | null
-) {
+export function absenceListOptions(apiClient: ApiClient, associationKey: string | null) {
   return queryOptions({
-    queryKey: queryKeys.absences.list(config, associationKey),
-    queryFn: () => apiClient.searchAbsences(config),
+    queryKey: queryKeys.absences.list(undefined, associationKey),
+    // Multi-page: the endpoint caps the requested limit at its server
+    // default, so a single request cannot return the whole list.
+    queryFn: ({ signal }) => fetchAllAbsencePages(apiClient, signal),
     staleTime: 2 * MS_PER_MINUTE,
   })
 }

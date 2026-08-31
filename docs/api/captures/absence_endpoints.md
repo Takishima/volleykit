@@ -287,13 +287,18 @@ searchConfiguration[offset]=0
 &__csrfToken=<csrf-token>
 ```
 
-**Smoke-tested 2026-08-31**: sending `propertyFilters` (a `fromDate` dateRange) or
-`propertyOrderings` makes this controller return **500 Internal Server Error** - unlike
-every other VolleyManager search endpoint. VolleyManager's own page sends no
-`searchConfiguration` at all (copy-as-cURL of its request carries no body); the server
-defaults appear to be limit 10, ordered `fromDate` descending (association B returned
-10 of 61 items, newest first). The app therefore relies on the default ordering and
-sends only `offset`/`limit`.
+**Smoke-tested 2026-08-31** (two rounds):
+
+- Sending `propertyFilters` (a `fromDate` dateRange) or `propertyOrderings` makes this
+  controller return **500 Internal Server Error** - unlike every other VolleyManager
+  search endpoint. VolleyManager's own page sends no `searchConfiguration` at all
+  (copy-as-cURL of its request carries no body).
+- The offset/limit-only request returns **200** with `_permissions` per item, ordered
+  `fromDate` descending by server default - but the server **caps the requested limit
+  at 10**: `limit=100` still returned 10 items of `totalItemsCount: 54`. The app
+  therefore pages by offset until every counted row is seen
+  (`fetchAllAbsencePages` in `packages/web/src/common/hooks/usePaginatedQuery.ts`),
+  advancing by rows actually consumed rather than by the requested limit.
 
 No `propertyRenderConfiguration` is sent - the captured responses returned all needed
 fields (including `_permissions`) without one. Responses are parsed with
@@ -308,10 +313,6 @@ used by the app (they feed VolleyManager's create form, which VolleyKit does not
   associations (captured before season start; ranges may appear later in the season).
   UI must handle the empty case as the common one, so the exact `DateRange` field shapes
   remain unverified against live data.
-- The offset/limit-only request (above) has not itself been smoke-tested yet - the
-  2026-08-31 smoke test established the 500 on filters/orderings, not that the reduced
-  request succeeds. Confirm it returns 200 with `_permissions` per item, and whether the
-  server honours `limit=100` or caps lower.
 - Absence create/update/delete request formats not yet captured.
 - Whether `refereeabsence/search` can return an `absenceReason` reference via
   `propertyRenderConfiguration` is unverified.
