@@ -32,6 +32,14 @@ const FUTURE_YEARS = 2
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_ABSENCES: RefereeAbsence[] = []
 
+// Module-scoped pure transform: stable by construction, no memo needed.
+// No truncation bookkeeping: a referee blocking single days every week can
+// exceed the page limit within the window, but newest-first ordering means
+// what falls off is the oldest history - the direction the disclosure on the
+// Past tab already describes.
+const selectAbsences = (data: RefereeAbsenceSearchResponse): RefereeAbsence[] =>
+  data.items ?? EMPTY_ABSENCES
+
 /**
  * Hook to fetch referee absences for the active association.
  *
@@ -79,16 +87,6 @@ export function useAbsences() {
     }),
     [fromIso, toIso]
   )
-
-  // Select items from the response, providing a stable empty array fallback.
-  // No truncation bookkeeping: the bounded window plus newest-first ordering
-  // make a >100-row page an edge case, and the page discloses the window
-  // itself whenever history renders.
-  const selectAbsences = useMemo(() => {
-    return (data: RefereeAbsenceSearchResponse): RefereeAbsence[] => {
-      return data.items ?? EMPTY_ABSENCES
-    }
-  }, [])
 
   return useQuery({
     ...absenceListOptions(apiClient, config, associationKey),
