@@ -1,6 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import * as authStore from '@/common/stores/auth'
+
 import { AbsencesPage } from './AbsencesPage'
 
 import type { RefereeAbsence } from '@/api/client'
@@ -19,10 +21,8 @@ vi.mock('@/common/hooks/useTranslation', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }))
 
-vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: (selector: (state: { isCalendarMode: () => boolean }) => unknown) =>
-    selector({ isCalendarMode: () => false }),
-}))
+// Automock keeps the module shape (other exports stay mocked, not missing)
+vi.mock('@/common/stores/auth')
 
 vi.mock('@/common/components/PullToRefresh', () => ({
   PullToRefresh: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -52,6 +52,12 @@ function renderPastTab(absences: RefereeAbsence[]) {
 describe('AbsencesPage', () => {
   beforeEach(() => {
     mockUseAbsences.mockReset()
+
+    vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+      selector({
+        isCalendarMode: () => false,
+      } as unknown as ReturnType<typeof authStore.useAuthStore.getState>)
+    )
   })
 
   // The fetch window is unconditional, so the Past tab must disclose it in
