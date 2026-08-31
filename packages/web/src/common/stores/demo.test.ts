@@ -56,6 +56,13 @@ describe('useDemoStore', () => {
       expect(absences.some((a) => a._permissions?.object?.update === true)).toBe(true)
     })
 
+    it('seeds absences newest-first, matching the live server-default order', () => {
+      useDemoStore.getState().initializeDemoData('SV')
+      const fromDates = useDemoStore.getState().absences.map((a) => a.fromDate)
+
+      expect([...fromDates].sort().reverse()).toEqual(fromDates)
+    })
+
     it('generates valid assignment data', () => {
       useDemoStore.getState().initializeDemoData()
 
@@ -148,13 +155,6 @@ describe('useDemoStore', () => {
       // actually covers the per-association day offsets
       expect(svrbaFromDates.length).toBeGreaterThan(0)
       expect(svrbaFromDates).not.toEqual(svFromDates)
-    })
-
-    it('seeds absences newest-first, matching the live server-default order', () => {
-      useDemoStore.getState().initializeDemoData('SV')
-      const fromDates = useDemoStore.getState().absences.map((a) => a.fromDate)
-
-      expect([...fromDates].sort().reverse()).toEqual(fromDates)
     })
   })
 

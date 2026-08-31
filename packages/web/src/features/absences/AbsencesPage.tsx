@@ -100,7 +100,10 @@ export function AbsencesPage() {
     {
       id: 'upcoming' as const,
       label: t('absences.upcoming'),
-      badge: upcoming.length > 0 ? String(upcoming.length) : undefined,
+      // Gated on !error like the truncation note: placeholderData keeps the
+      // previous association's data around during a failed refetch, and a
+      // count for a list that is not on screen would sit above ErrorState.
+      badge: !error && upcoming.length > 0 ? String(upcoming.length) : undefined,
     },
     { id: 'past' as const, label: t('absences.past') },
   ]

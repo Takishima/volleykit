@@ -176,7 +176,9 @@ describe('Mock data contract tests', () => {
 
     // The schema deliberately uses optionalResilientListSchema: whether an
     // empty account gets `items: []` or no `items` key at all is unverified
-    // against a live account, so the missing-key shape must parse.
+    // against a live account, so the missing-key shape must parse. The
+    // factory itself is covered in shared's resilient-list.test.ts; this
+    // pins that absences stays on the optional variant.
     it('parses a response without an items key (empty account)', () => {
       const result = refereeAbsencesResponseSchema.safeParse({ totalItemsCount: 0 })
 
