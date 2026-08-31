@@ -795,6 +795,9 @@ export const api = {
     const data = await apiRequest<unknown>(
       '/indoorvolleyball.refadmin/api%5crefereeabsence/search',
       'POST',
+      // The empty object is load-bearing: a truthy body is what makes the
+      // transport set the form content type and inject __csrfToken via
+      // buildFormData - passing undefined would send neither.
       {}
     )
     return validateResponse(

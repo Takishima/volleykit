@@ -32,20 +32,22 @@ export function generateAbsences(
 ): RefereeAbsence[] {
   const offset = ASSOCIATION_DAY_OFFSETS[associationCode]
 
+  // Ordered fromDate descending, matching the live endpoint's server-default
+  // ordering, so demo mode feeds the page the same input shape as production.
   return [
-    {
-      __identity: generateDemoUuid(`demo-absence-blocking-${associationCode}`),
-      fromDate: startOfDay(addDays(now, 7 + offset)).toISOString(),
-      toDate: endOfDay(addDays(now, 7 + offset)).toISOString(),
-      detailedReason: 'National squad duty',
-      _permissions: READ_ONLY_PERMISSIONS,
-    },
     {
       __identity: generateDemoUuid(`demo-absence-vacation-${associationCode}`),
       fromDate: startOfDay(addDays(now, 14 + offset)).toISOString(),
       toDate: endOfDay(addDays(now, 21 + offset)).toISOString(),
       detailedReason: 'Vacation',
       _permissions: EDITABLE_PERMISSIONS,
+    },
+    {
+      __identity: generateDemoUuid(`demo-absence-blocking-${associationCode}`),
+      fromDate: startOfDay(addDays(now, 7 + offset)).toISOString(),
+      toDate: endOfDay(addDays(now, 7 + offset)).toISOString(),
+      detailedReason: 'National squad duty',
+      _permissions: READ_ONLY_PERMISSIONS,
     },
     {
       __identity: generateDemoUuid(`demo-absence-past-${associationCode}`),

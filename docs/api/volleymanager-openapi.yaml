@@ -1473,12 +1473,6 @@ paths:
                 __csrfToken:
                   type: string
                   description: CSRF token for request validation
-                searchConfiguration[offset]:
-                  type: integer
-                  example: 0
-                searchConfiguration[limit]:
-                  type: integer
-                  example: 25
       responses:
         '200':
           description: Referee absences search result

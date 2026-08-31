@@ -9,7 +9,7 @@
 import { z } from 'zod'
 
 import { uuidSchema } from './primitives'
-import { resilientListSchema } from './resilient-list'
+import { optionalResilientListSchema } from './resilient-list'
 
 const absenceObjectPermissionsSchema = z
   .object({
@@ -40,4 +40,7 @@ export const refereeAbsenceSchema = z
   })
   .passthrough()
 
-export const refereeAbsencesResponseSchema = resilientListSchema(refereeAbsenceSchema)
+// Optional variant: both captured associations held rows, so whether an
+// empty account gets `items: []` or no `items` key at all is unverified -
+// the optional variant costs nothing when the key is present.
+export const refereeAbsencesResponseSchema = optionalResilientListSchema(refereeAbsenceSchema)

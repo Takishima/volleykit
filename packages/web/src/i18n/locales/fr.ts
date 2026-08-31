@@ -239,7 +239,7 @@ const fr: Translations = {
     noPastTitle: 'Aucune absence passée',
     emptyDescription: 'Les dates bloquées pour l’association sélectionnée apparaissent ici.',
     noReason: 'Aucune raison indiquée',
-    truncatedNote: 'Seules les absences les plus récentes sont affichées ({total} au total).',
+    truncatedNote: 'Toutes les absences n’ont pas pu être chargées ({total} au total).',
     readOnly: 'Verrouillée',
     readOnlyTooltip: 'Cette absence a été définie par l’association et ne peut pas être modifiée.',
     entryLabel: 'Absence',

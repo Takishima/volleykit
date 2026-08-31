@@ -134,13 +134,6 @@ export function AbsencesPage() {
             emptyTitle={t('absences.noPastTitle')}
             emptyDescription={t('absences.emptyDescription')}
           />
-          {/* The server default orders newest-first, so what the page limit
-              cuts is the oldest history - disclose it on the Past tab. */}
-          {hasMore && (
-            <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
-              {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
-            </p>
-          )}
         </TabPanel>
       </>
     )
@@ -163,6 +156,15 @@ export function AbsencesPage() {
           onTabChange={(tabId) => setActiveTab(tabId as AbsenceTab)}
           ariaLabel={t('absences.title')}
         />
+        {/* Server-regression guard: the bodyless request returns everything
+            today, so this fires only if the server reintroduces paging.
+            Which end a hypothetical page would cut is unknowable, so the
+            disclosure sits above the tabs and renders on both. */}
+        {hasMore && (
+          <p className="text-sm text-text-muted dark:text-text-muted-dark">
+            {tInterpolate('absences.truncatedNote', { total: totalItemsCount })}
+          </p>
+        )}
         {renderContent()}
       </div>
     </PullToRefresh>

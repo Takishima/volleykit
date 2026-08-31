@@ -83,16 +83,21 @@ describe('AbsencesPage', () => {
     expect(screen.queryByText('absences.truncatedNote')).not.toBeInTheDocument()
   })
 
-  it('discloses truncation on the Past tab when the server holds more rows', () => {
-    renderPastTab([createAbsence()], { hasMore: true })
+  // The note is a server-regression guard: which end a reintroduced page
+  // would cut is unknowable, so it renders above the tabs on both.
+  it('discloses server truncation on either tab', () => {
+    renderPage([createAbsence()], { hasMore: true })
 
+    expect(screen.getAllByText('absences.truncatedNote')).toHaveLength(1)
+
+    fireEvent.click(screen.getByText('absences.past'))
     expect(screen.getAllByText('absences.truncatedNote')).toHaveLength(1)
   })
 
-  it('does not render past entries or the note on the Upcoming tab', () => {
-    renderPage([createAbsence()], { hasMore: true })
+  it('does not render past entries on the Upcoming tab', () => {
+    renderPage([createAbsence()])
 
-    expect(screen.queryByText('absences.truncatedNote')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('absence-card')).not.toBeInTheDocument()
     expect(screen.getByText('absences.noUpcomingTitle')).toBeInTheDocument()
   })
 
