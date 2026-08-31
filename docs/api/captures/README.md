@@ -6,6 +6,7 @@ This directory contains raw captured request/response data from the VolleyManage
 
 ### Core Functionality
 
+- [absence_endpoints.md](absence_endpoints.md) - Referee absences and blocked dates
 - [assignment_actions.md](assignment_actions.md) - Assignment confirmation/actions
 - [compensation_edit_endpoints.md](compensation_edit_endpoints.md) - Compensation editing
 - [compensation_pdf_download.md](compensation_pdf_download.md) - Compensation PDF receipt download
@@ -13,6 +14,7 @@ This directory contains raw captured request/response data from the VolleyManage
 - [exchange_actions.md](exchange_actions.md) - Exchange apply/withdraw
 - [game_details_endpoints.md](game_details_endpoints.md) - Game information
 - [profile_endpoints.md](profile_endpoints.md) - User profile management
+- [referee_backup_endpoints.md](referee_backup_endpoints.md) - Referee backup (Pikett) schedules
 - [role_selection.md](role_selection.md) - Role/context switching
 - [ical_calendar.md](ical_calendar.md) - Calendar export
 

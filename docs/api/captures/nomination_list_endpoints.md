@@ -162,9 +162,9 @@ Returns a wrapper object with the updated nomination list.
     "createdByPersistenceIdentifier": "System",
     "deletedAt": null,
     "updatedAt": "2026-02-24T21:29:17.562049+00:00",
-    "updatedBy": "damien_nguyen2",
-    "updatedByIpAddress": "144.2.105.99",
-    "updatedByPersistenceIdentifier": "2b1dae47-...",
+    "updatedBy": "<username>",
+    "updatedByIpAddress": "<ip-address>",
+    "updatedByPersistenceIdentifier": "<user-uuid>",
     "firstReminderAboutIncompleteNominationListSentAt": null,
     "secondReminderAboutIncompleteNominationListSentAt": null,
     "thirdReminderAboutIncompleteNominationListSentAt": null

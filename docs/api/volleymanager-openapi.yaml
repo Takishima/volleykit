@@ -130,7 +130,7 @@ paths:
               schema:
                 type: string
               description: Redirect to dashboard
-              example: "https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard"
+              example: 'https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard'
             Set-Cookie:
               schema:
                 type: string
@@ -184,7 +184,7 @@ paths:
               schema:
                 type: string
               description: Always redirects to `/login`
-              example: "https://volleymanager.volleyball.ch/login"
+              example: 'https://volleymanager.volleyball.ch/login'
   # ==================== Party/Association Switching ====================
   /sportmanager.security/api\party/switchRoleAndAttribute:
     put:
@@ -218,11 +218,11 @@ paths:
                   type: string
                   format: uuid
                   description: The __identity UUID of the AttributeValue (occupation) to switch to
-                  example: "00000000-0000-0000-0000-000000000001"
+                  example: '00000000-0000-0000-0000-000000000001'
                 __csrfToken:
                   type: string
                   description: CSRF token from the session
-                  example: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  example: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
       responses:
         '200':
           description: Successfully switched association
@@ -477,7 +477,7 @@ paths:
             type: string
             format: uuid
           description: The convocation identifier
-          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+          example: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
         - name: propertyRenderConfiguration
           in: query
           required: true
@@ -531,7 +531,7 @@ paths:
             type: string
             format: uuid
           description: The convocation identifier
-          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+          example: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
       responses:
         '200':
           description: Successful response
@@ -578,7 +578,7 @@ paths:
             type: string
             format: uuid
           description: The compensation record identifier
-          example: "cccccccc-cccc-cccc-cccc-cccccccccccc"
+          example: 'cccccccc-cccc-cccc-cccc-cccccccccccc'
         - name: propertyRenderConfiguration
           in: query
           required: true
@@ -620,7 +620,7 @@ paths:
                 searchConfiguration[propertyFilters][0][propertyName]:
                   type: string
                   description: Property to filter on
-                  example: "convocationCompensation.Persistence_Object_Identifier"
+                  example: 'convocationCompensation.Persistence_Object_Identifier'
                 searchConfiguration[propertyFilters][0][values][0]:
                   type: string
                   format: uuid
@@ -631,7 +631,7 @@ paths:
                 searchConfiguration[propertyOrderings][0][propertyName]:
                   type: string
                   description: Property to order by
-                  example: "name"
+                  example: 'name'
                 searchConfiguration[propertyOrderings][0][descending]:
                   type: boolean
                   example: false
@@ -650,13 +650,13 @@ paths:
                   example: AND
                 propertyRenderConfiguration[0]:
                   type: string
-                  example: "name"
+                  example: 'name'
                 propertyRenderConfiguration[1]:
                   type: string
-                  example: "type"
+                  example: 'type'
                 propertyRenderConfiguration[2]:
                   type: string
-                  example: "sumFormatted"
+                  example: 'sumFormatted'
                 __csrfToken:
                   type: string
       responses:
@@ -702,13 +702,13 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
-              required: ["convocationCompensation[__identity]", __csrfToken]
+              required: ['convocationCompensation[__identity]', __csrfToken]
               properties:
                 convocationCompensation[__identity]:
                   type: string
                   format: uuid
                   description: The compensation record identifier (nested inside convocationCompensation)
-                  example: "cccccccc-cccc-cccc-cccc-cccccccccccc"
+                  example: 'cccccccc-cccc-cccc-cccc-cccccccccccc'
                 convocationCompensation[distanceInMetres]:
                   type: integer
                   description: Distance in metres for travel expense calculation
@@ -716,10 +716,10 @@ paths:
                 convocationCompensation[correctionReason]:
                   type: string
                   description: Reason for any correction to the compensation
-                  example: "Ich wohne in Oberengstringen"
+                  example: 'Ich wohne in Oberengstringen'
                 convocationCompensation[payTravelExpenses]:
                   type: string
-                  enum: ["0", "1"]
+                  enum: ['0', '1']
                   description: Whether travel expenses should be paid
                 convocationCompensation[travelExpensesPercentageWeighting]:
                   type: number
@@ -762,7 +762,7 @@ paths:
             type: string
             format: uuid
           description: The referee convocation identifier
-          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          example: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
       responses:
         '200':
           description: PDF document containing referee statement of expenses
@@ -807,7 +807,7 @@ paths:
             type: string
             format: uuid
           description: The game identifier
-          example: "dddddddd-dddd-dddd-dddd-dddddddddddd"
+          example: 'dddddddd-dddd-dddd-dddd-dddddddddddd'
       responses:
         '200':
           description: Successful response
@@ -904,7 +904,7 @@ paths:
             type: string
             format: uuid
           description: The person identifier
-          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          example: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
         - name: propertyRenderConfiguration
           in: query
           required: false
@@ -956,7 +956,7 @@ paths:
             type: string
             format: uuid
           description: The person identifier (UUID)
-          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          example: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
       responses:
         '200':
           description: |
@@ -1053,7 +1053,7 @@ paths:
             type: string
             format: uuid
           description: The managing association identifier
-          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+          example: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
       responses:
         '200':
           description: Successful response
@@ -1248,14 +1248,14 @@ paths:
                   description: The nomination list identifier
                 onlyFromMyTeam:
                   type: string
-                  enum: ["true", "false"]
+                  enum: ['true', 'false']
                   description: Only show players from the team
-                  example: "true"
+                  example: 'true'
                 onlyRelevantGender:
                   type: string
-                  enum: ["true", "false"]
+                  enum: ['true', 'false']
                   description: Only show players matching the league gender
-                  example: "true"
+                  example: 'true'
                 __csrfToken:
                   type: string
       responses:
@@ -1301,7 +1301,7 @@ paths:
           in: query
           schema:
             type: string
-          example: "associationId"
+          example: 'associationId'
         - name: searchConfiguration[propertyFilters][0][text]
           in: query
           schema:
@@ -1311,7 +1311,7 @@ paths:
           in: query
           schema:
             type: string
-          example: "firstName"
+          example: 'firstName'
         - name: searchConfiguration[propertyFilters][1][text]
           in: query
           schema:
@@ -1321,7 +1321,7 @@ paths:
           in: query
           schema:
             type: string
-          example: "lastName"
+          example: 'lastName'
         - name: searchConfiguration[propertyFilters][2][text]
           in: query
           schema:
@@ -1331,7 +1331,7 @@ paths:
           in: query
           schema:
             type: string
-          example: "yearOfBirth"
+          example: 'yearOfBirth'
         - name: searchConfiguration[propertyFilters][3][text]
           in: query
           schema:
@@ -1418,7 +1418,7 @@ paths:
             The data table identifier, e.g.:
             - editNominationList.indoorPlayerNominations
             - editNominationList.indoorPlayerNominationWhichCanBeAddedList
-          example: "editNominationList.indoorPlayerNominations"
+          example: 'editNominationList.indoorPlayerNominations'
       responses:
         '200':
           description: Filter settings
@@ -1468,7 +1468,7 @@ paths:
                   description: CSRF token for request validation
                 searchConfiguration[propertyFilters][0][propertyName]:
                   type: string
-                  example: "fromDate"
+                  example: 'fromDate'
                 searchConfiguration[offset]:
                   type: integer
                   example: 0
@@ -1482,6 +1482,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefereeAbsenceSearchResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /indoorvolleyball.refadmin/api\refereeabsencereason/listWithNestedObjects:
+    get:
+      tags: [Absences]
+      summary: List absence reasons
+      description: |
+        Returns the association-defined catalog of absence reasons with translations
+        (de/fr/it, no en). Reasons are maintained by association administrators and
+        scoped to the active association (party context); visibility is role-based
+        via rolesAllowedToRead.
+      operationId: listRefereeAbsenceReasons
+      parameters:
+        - name: propertyRenderConfiguration[0]
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 'rolesAllowedToRead.*'
+          description: Property render configuration for nested objects
+      responses:
+        '200':
+          description: Absence reasons list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefereeAbsenceReasonListResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
   # ==================== Referee Backup (Pikett) Endpoints ====================
@@ -1541,7 +1568,7 @@ components:
             properties:
               error:
                 type: string
-                example: "Session expired. Please log in again."
+                example: 'Session expired. Please log in again.'
     Forbidden:
       description: Authenticated but not authorized for this resource
       content:
@@ -1551,7 +1578,7 @@ components:
             properties:
               error:
                 type: string
-                example: "Access denied"
+                example: 'Access denied'
     BadRequest:
       description: |
         Invalid request. Common causes:
@@ -1562,7 +1589,7 @@ components:
           schema:
             type: string
             description: Error message in HTML format
-            example: "No resource specified"
+            example: 'No resource specified'
   schemas:
     # ==================== Authentication Schemas ====================
     AuthenticationRequest:
@@ -1586,42 +1613,42 @@ components:
         __referrer[@package]:
           type: string
           description: Referrer package name
-          example: "SportManager.Volleyball"
+          example: 'SportManager.Volleyball'
         __referrer[@subpackage]:
           type: string
           description: Referrer subpackage (usually empty)
-          example: ""
+          example: ''
         __referrer[@controller]:
           type: string
           description: Referrer controller name
-          example: "Public"
+          example: 'Public'
         __referrer[@action]:
           type: string
           description: Referrer action name
-          example: "login"
+          example: 'login'
         __referrer[arguments]:
           type: string
           description: |
             Serialized referrer arguments with HMAC signature.
             Format: Base64-encoded serialized array + HMAC hash.
             This is generated by the login page and should be passed through unchanged.
-          example: "YTowOnt9<hmac-signature>"
+          example: 'YTowOnt9<hmac-signature>'
         __trustedProperties:
           type: string
           description: |
             HMAC-signed list of trusted properties.
             Generated by the login page for CSRF protection.
             Format: Serialized PHP array + HMAC signature.
-          example: "a:0:{}<hmac-signature>"
+          example: 'a:0:{}<hmac-signature>'
         __authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]:
           type: string
           description: User's login username
-          example: "my_username"
+          example: 'my_username'
         __authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][password]:
           type: string
           format: password
           description: User's login password
-          example: "my_password"
+          example: 'my_password'
     # ==================== Request Schemas ====================
     AssignmentsSearchRequest:
       type: object
@@ -1643,7 +1670,7 @@ components:
         __csrfToken:
           type: string
           description: CSRF token for request validation
-          example: "<csrf-token>"
+          example: '<csrf-token>'
     CompensationsSearchRequest:
       type: object
       properties:
@@ -1659,7 +1686,7 @@ components:
                     properties:
                       name:
                         type: string
-                        example: "archivedRefereeConvocations"
+                        example: 'archivedRefereeConvocations'
         propertyRenderConfiguration:
           type: array
           items:
@@ -1698,7 +1725,7 @@ components:
                         type: string
                         description: Filter name
                         enum: [myReferees]
-                        example: "myReferees"
+                        example: 'myReferees'
         propertyRenderConfiguration:
           type: array
           description: |
@@ -1715,11 +1742,11 @@ components:
           items:
             type: string
           example:
-            - "date"
-            - "weekday"
-            - "calendarWeek"
-            - "joinedNlaReferees"
-            - "joinedNlbReferees"
+            - 'date'
+            - 'weekday'
+            - 'calendarWeek'
+            - 'joinedNlaReferees'
+            - 'joinedNlbReferees'
         __csrfToken:
           type: string
           description: CSRF token for request validation
@@ -1755,36 +1782,36 @@ components:
         propertyName:
           type: string
           description: Dot-notation path to the property
-          example: "refereeGame.game.startingDateTime"
+          example: 'refereeGame.game.startingDateTime'
         dateRange:
           type: object
           properties:
             from:
               type: string
               format: date-time
-              example: "2025-12-07T23:00:00.000Z"
+              example: '2025-12-07T23:00:00.000Z'
             to:
               type: string
               format: date-time
-              example: "2025-12-15T22:59:59.000Z"
+              example: '2025-12-15T22:59:59.000Z'
         values:
           type: array
           description: Filter by specific values
           items:
             type: string
-          example: ["NOT_NULL"]
+          example: ['NOT_NULL']
         enumValues:
           type: array
           description: Filter by enum values (for status fields)
           items:
             type: string
-          example: ["open"]
+          example: ['open']
     PropertyOrdering:
       type: object
       properties:
         propertyName:
           type: string
-          example: "refereeGame.game.startingDateTime"
+          example: 'refereeGame.game.startingDateTime'
         descending:
           type: boolean
           default: false
@@ -1811,13 +1838,13 @@ components:
         __identity:
           type: string
           format: uuid
-          example: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+          example: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
         refereeGame:
           $ref: '#/components/schemas/RefereeGame'
         refereeConvocationStatus:
           type: string
           enum: [active, cancelled, archived]
-          example: "active"
+          example: 'active'
         refereePosition:
           $ref: '#/components/schemas/RefereePosition'
         confirmationStatus:
@@ -1910,7 +1937,14 @@ components:
           example: 2
     CompensationRecord:
       type: object
-      required: [__identity, refereeGame, convocationCompensation, refereeConvocationStatus, refereePosition]
+      required:
+        [
+          __identity,
+          refereeGame,
+          convocationCompensation,
+          refereeConvocationStatus,
+          refereePosition,
+        ]
       properties:
         __identity:
           type: string
@@ -1973,7 +2007,7 @@ components:
           type: string
           enum: [car, train, public_transport, other]
           nullable: true
-          example: "car"
+          example: 'car'
         paymentValueDate:
           type: string
           format: date
@@ -2001,31 +2035,31 @@ components:
         gameCompensationFormatted:
           type: string
           description: Formatted game compensation with decimals
-          example: "50.00"
+          example: '50.00'
         hasFlexibleTravelExpenses:
           type: boolean
         travelExpensesFormatted:
           type: string
-          example: "20.00"
+          example: '20.00'
         hasFlexibleOvernightStayExpenses:
           type: boolean
         overnightStayExpensesFormatted:
           type: string
-          example: "0.00"
+          example: '0.00'
         hasFlexibleCateringExpenses:
           type: boolean
         cateringExpensesFormatted:
           type: string
-          example: "0.00"
+          example: '0.00'
         costFormatted:
           type: string
           description: Total compensation formatted
-          example: "70.00"
+          example: '70.00'
         distanceFormatted:
           type: string
           nullable: true
           description: Distance in km with one decimal
-          example: "96.3"
+          example: '96.3'
     ExchangesResponse:
       type: object
       required: [items, totalItemsCount]
@@ -2054,7 +2088,7 @@ components:
           type: string
           format: uuid
           description: Unique identifier for this exchange
-          example: "d5a2a8e1-2ae7-4400-be39-8da8ecbce16f"
+          example: 'd5a2a8e1-2ae7-4400-be39-8da8ecbce16f'
         persistenceObjectIdentifier:
           type: string
           format: uuid
@@ -2063,7 +2097,7 @@ components:
           type: string
           enum: [open, applied, closed]
           description: Current status of the exchange
-          example: "applied"
+          example: 'applied'
         refereePosition:
           $ref: '#/components/schemas/RefereePosition'
         refereeGame:
@@ -2074,12 +2108,12 @@ components:
           type: string
           enum: [referee, admin]
           description: Who submitted the exchange request
-          example: "referee"
+          example: 'referee'
         submittedAt:
           type: string
           format: date-time
           description: When the exchange was submitted
-          example: "2026-01-22T12:58:18.000000+00:00"
+          example: '2026-01-22T12:58:18.000000+00:00'
         submittedByPerson:
           type: object
           nullable: true
@@ -2093,7 +2127,7 @@ components:
           format: date-time
           nullable: true
           description: When someone applied for this exchange
-          example: "2026-01-23T20:38:41.954034+00:00"
+          example: '2026-01-23T20:38:41.954034+00:00'
         requiredRefereeLevel:
           $ref: '#/components/schemas/RefereeLevel'
         requiredRefereeLevelGradationValue:
@@ -2131,11 +2165,11 @@ components:
           type: string
           format: date-time
           description: Creation timestamp
-          example: "2026-01-22T12:58:18.000000+00:00"
+          example: '2026-01-22T12:58:18.000000+00:00'
         createdBy:
           type: string
           description: Username who created this exchange
-          example: "yannic_weber"
+          example: 'yannic_weber'
         createdByPersistenceIdentifier:
           type: string
           format: uuid
@@ -2144,7 +2178,7 @@ components:
           type: string
           nullable: true
           description: IP address of the creator
-          example: "193.47.169.32"
+          example: '193.47.169.32'
         updatedAt:
           type: string
           format: date-time
@@ -2152,7 +2186,7 @@ components:
         updatedBy:
           type: string
           description: Username who last updated this exchange
-          example: "System"
+          example: 'System'
         updatedByPersistenceIdentifier:
           type: string
           description: Persistence identifier of the last updater
@@ -2199,16 +2233,16 @@ components:
           type: string
           format: uuid
           description: Unique identifier for this backup entry
-          example: "11111111-aaaa-bbbb-cccc-222222222222"
+          example: '11111111-aaaa-bbbb-cccc-222222222222'
         date:
           type: string
           format: date-time
           description: The date for which backup referees are assigned (ISO 8601)
-          example: "2025-01-10T23:00:00.000000+00:00"
+          example: '2025-01-10T23:00:00.000000+00:00'
         weekday:
           type: string
           description: Short weekday name (locale-dependent)
-          example: "So"
+          example: 'So'
         calendarWeek:
           type: integer
           description: Calendar week number
@@ -2221,7 +2255,7 @@ components:
             Formatted string of NLA backup referees with contact info.
             Format: "#associationId | Name (email, phone)"
             Multiple referees separated by newlines.
-          example: "#12345 | Max Mustermann (max@example.com, +41791234567)"
+          example: '#12345 | Max Mustermann (max@example.com, +41791234567)'
         joinedNlbReferees:
           type: string
           description: |
@@ -2248,7 +2282,7 @@ components:
           type: string
           format: uuid
           description: Unique identifier for this assignment
-          example: "33333333-dddd-eeee-ffff-444444444444"
+          example: '33333333-dddd-eeee-ffff-444444444444'
         indoorReferee:
           $ref: '#/components/schemas/BackupIndoorReferee'
         isDispensed:
@@ -2274,7 +2308,7 @@ components:
         createdBy:
           type: string
           description: Username of creator
-          example: "System"
+          example: 'System'
         createdByPersistenceIdentifier:
           type: string
           description: UUID of creator
@@ -2292,33 +2326,33 @@ components:
           type: string
           format: uuid
           description: Referee identifier
-          example: "55555555-aaaa-bbbb-cccc-666666666666"
+          example: '55555555-aaaa-bbbb-cccc-666666666666'
         __identity:
           type: string
           format: uuid
-          example: "55555555-aaaa-bbbb-cccc-666666666666"
+          example: '55555555-aaaa-bbbb-cccc-666666666666'
         person:
           $ref: '#/components/schemas/BackupRefereePerson'
         refereeInformation:
           type: string
           description: Formatted referee info string
-          example: "Mustermann Max (12345, 1990-01-15, )"
+          example: 'Mustermann Max (12345, 1990-01-15, )'
         transportationMode:
           type: string
           enum: [car, public_transport, bicycle, on_foot]
           description: Preferred transportation mode
-          example: "car"
+          example: 'car'
         validated:
           type: boolean
           description: Whether referee data is validated
         mobilePhoneNumbers:
           type: string
           description: Mobile phone number(s)
-          example: "+41791234567"
+          example: '+41791234567'
         privatePostalAddresses:
           type: string
           description: Private postal address
-          example: "Musterstrasse 1, 8000 Zürich"
+          example: 'Musterstrasse 1, 8000 Zürich'
         hasPlusCode:
           type: boolean
           description: Whether location has a Plus Code
@@ -2338,42 +2372,42 @@ components:
         persistenceObjectIdentifier:
           type: string
           format: uuid
-          example: "77777777-aaaa-bbbb-cccc-888888888888"
+          example: '77777777-aaaa-bbbb-cccc-888888888888'
         __identity:
           type: string
           format: uuid
-          example: "77777777-aaaa-bbbb-cccc-888888888888"
+          example: '77777777-aaaa-bbbb-cccc-888888888888'
         associationId:
           type: integer
           description: Swiss Volley association ID
           example: 12345
         firstName:
           type: string
-          example: "Max"
+          example: 'Max'
         lastName:
           type: string
-          example: "Mustermann"
+          example: 'Mustermann'
         displayName:
           type: string
           description: Full display name
-          example: "Max Mustermann"
+          example: 'Max Mustermann'
         fullName:
           type: string
           description: Full name
-          example: "Max Mustermann"
+          example: 'Max Mustermann'
         gender:
           type: string
           enum: [m, f]
-          example: "m"
+          example: 'm'
         correspondenceLanguage:
           type: string
           enum: [de, fr, it, en]
           description: Preferred language for correspondence
-          example: "de"
+          example: 'de'
         language:
           type: string
           enum: [de, fr, it, en]
-          example: "de"
+          example: 'de'
         age:
           type: integer
           description: Age in years
@@ -2385,7 +2419,7 @@ components:
           type: string
           format: date
           description: Birthday in YYYY-MM-DD format
-          example: "1990-01-15"
+          example: '1990-01-15'
         hasAccount:
           type: boolean
           description: Whether person has a VolleyManager account
@@ -2400,12 +2434,21 @@ components:
           $ref: '#/components/schemas/PhoneNumber'
     GameExchange:
       type: object
-      required: [__identity, refereeGame, status, submittedAt, submittedByPerson, submittingType, refereePosition]
+      required:
+        [
+          __identity,
+          refereeGame,
+          status,
+          submittedAt,
+          submittedByPerson,
+          submittingType,
+          refereePosition,
+        ]
       properties:
         __identity:
           type: string
           format: uuid
-          example: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+          example: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
         refereeGame:
           $ref: '#/components/schemas/RefereeGameForExchange'
         status:
@@ -2415,17 +2458,17 @@ components:
             - open: Available for application
             - applied: Someone has applied (waiting for assignment)
             - closed: Exchange completed or cancelled
-          example: "open"
+          example: 'open'
         submittedAt:
           type: string
           format: date-time
-          example: "2025-12-07T23:17:47.000000+00:00"
+          example: '2025-12-07T23:17:47.000000+00:00'
         submittedByPerson:
           $ref: '#/components/schemas/PersonSummary'
         submittingType:
           type: string
           enum: [referee, admin]
-          example: "referee"
+          example: 'referee'
         refereePosition:
           $ref: '#/components/schemas/RefereePosition'
         requiredRefereeLevel:
@@ -2437,7 +2480,7 @@ components:
             - 1: Highest gradation for position
             - 2: Second tier
             - 3: Third tier
-          example: "1"
+          example: '1'
         appliedBy:
           type: object
           nullable: true
@@ -2466,7 +2509,7 @@ components:
           $ref: '#/components/schemas/Game'
         isGameInFuture:
           type: string
-          enum: ["0", "1"]
+          enum: ['0', '1']
           description: Boolean as string (quirk of the backend)
         activeRefereeConvocationFirstHeadReferee:
           $ref: '#/components/schemas/RefereeConvocationRef'
@@ -2512,14 +2555,14 @@ components:
               type: integer
         isGameInFuture:
           type: string
-          enum: ["0", "1"]
+          enum: ['0', '1']
         activeFirstHeadRefereeName:
           type: string
           description: Display name of current first head referee
-          example: "Nick Leo Kunz"
+          example: 'Nick Leo Kunz'
         activeSecondHeadRefereeName:
           type: string
-          example: "Julija Saric"
+          example: 'Julija Saric'
         activeFirstLinesmanRefereeName:
           type: string
         activeSecondLinesmanRefereeName:
@@ -2554,7 +2597,7 @@ components:
         startingDateTime:
           type: string
           format: date-time
-          example: "2025-12-08T19:30:00.000000+00:00"
+          example: '2025-12-08T19:30:00.000000+00:00'
         number:
           type: integer
           description: Match number
@@ -2562,11 +2605,11 @@ components:
         playingWeekday:
           type: string
           enum: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
-          example: "Mon"
+          example: 'Mon'
         status:
           type: string
           description: Game status (e.g., "approved", "scheduled", "completed")
-          example: "approved"
+          example: 'approved'
         encounter:
           $ref: '#/components/schemas/Encounter'
         group:
@@ -2631,7 +2674,7 @@ components:
         displayName:
           type: string
           description: Full formatted display name for the game
-          example: "#382417 | 08.12.2025 20:30 | #3926 | Volley Uster H2 — #85 | VC Tornado Adliswil H1 (3L, ♂, Hin- und Rückrunde, Herren 3. Liga Gruppe B)"
+          example: '#382417 | 08.12.2025 20:30 | #3926 | Volley Uster H2 — #85 | VC Tornado Adliswil H1 (3L, ♂, Hin- und Rückrunde, Herren 3. Liga Gruppe B)'
         shortDisplayName:
           type: string
         shortDisplayNameWithoutStartingDate:
@@ -2678,20 +2721,20 @@ components:
           example: 5459
         name:
           type: string
-          example: "VBC Züri Unterland"
+          example: 'VBC Züri Unterland'
         displayName:
           type: string
-          example: "#5459 | VB Therwil (1L, ♂, SV)"
+          example: '#5459 | VB Therwil (1L, ♂, SV)'
         clubDisplayName:
           type: string
-          example: "#909740 | VB Therwil"
+          example: '#909740 | VB Therwil'
         # Gender
         gender:
           type: string
           enum: [m, f]
         genderUnicodeSign:
           type: string
-          example: "♂"
+          example: '♂'
         # Status
         active:
           type: boolean
@@ -2712,7 +2755,7 @@ components:
         defaultPlayingTime:
           type: string
           description: Default playing time
-          example: "19:30"
+          example: '19:30'
         strengthClass:
           type: integer
           nullable: true
@@ -2791,13 +2834,13 @@ components:
         identifier:
           type: string
           description: Club identifier code
-          example: "909020"
+          example: '909020'
         name:
           type: string
-          example: "VBC Allschwil"
+          example: 'VBC Allschwil'
         displayName:
           type: string
-          example: "#909020 | VBC Allschwil"
+          example: '#909020 | VBC Allschwil'
         shortName:
           type: string
           nullable: true
@@ -2819,7 +2862,7 @@ components:
           nullable: true
         localeIdentifier:
           type: string
-          example: "1"
+          example: '1'
         username:
           type: string
           nullable: true
@@ -2894,10 +2937,10 @@ components:
           format: uuid
         name:
           type: string
-          example: "Herren 3. Liga Gruppe B"
+          example: 'Herren 3. Liga Gruppe B'
         displayName:
           type: string
-          example: "#27106 | Herren 2. Liga"
+          example: '#27106 | Herren 2. Liga'
         shortName:
           type: string
         identifier:
@@ -2932,7 +2975,7 @@ components:
           format: uuid
         name:
           type: string
-          example: "Hin- und Rückrunde"
+          example: 'Hin- und Rückrunde'
         league:
           $ref: '#/components/schemas/League'
     League:
@@ -2971,19 +3014,19 @@ components:
             - 1L, 2L, 3L, 4L, 5L: Regional leagues
             - Mobilière Volley Cup: Cup competition
             - U23, U19, etc.: Junior categories
-          example: "NLB"
+          example: 'NLB'
         shortName:
           type: string
           description: Short abbreviation
-          example: "NLB"
+          example: 'NLB'
         displayName:
           type: string
           description: Display name with identifier prefix
-          example: "#2 | NLB"
+          example: '#2 | NLB'
         displayNameWithManagingAssociationShortName:
           type: string
           description: Display name with association prefix
-          example: "SV | NLB"
+          example: 'SV | NLB'
         translations:
           type: object
           properties:
@@ -3083,7 +3126,7 @@ components:
           format: uuid
         name:
           type: string
-          example: "Krämeracker 1-2"
+          example: 'Krämeracker 1-2'
         primaryPostalAddress:
           $ref: '#/components/schemas/PostalAddress'
     PostalAddress:
@@ -3099,25 +3142,25 @@ components:
         # Address components
         street:
           type: string
-          example: "Gartenstrasse"
+          example: 'Gartenstrasse'
         houseNumber:
           type: string
-          example: "9"
+          example: '9'
         streetAndHouseNumber:
           type: string
-          example: "Gartenstrasse 9"
+          example: 'Gartenstrasse 9'
         postBox:
           type: string
           nullable: true
         postalCode:
           type: string
-          example: "8102"
+          example: '8102'
         city:
           type: string
-          example: "Oberengstringen"
+          example: 'Oberengstringen'
         postalCodeAndCity:
           type: string
-          example: "8102 Oberengstringen"
+          example: '8102 Oberengstringen'
         additionToAddress:
           type: string
           nullable: true
@@ -3127,7 +3170,7 @@ components:
         asMultilineText:
           type: string
           description: Address formatted with HTML line breaks
-          example: "Gartenstrasse 9<br />8102 Oberengstringen<br />Suisse"
+          example: 'Gartenstrasse 9<br />8102 Oberengstringen<br />Suisse'
         type:
           type: string
           enum: [full, address_only, po_box_only]
@@ -3202,33 +3245,33 @@ components:
           format: uuid
         countryCode:
           type: string
-          example: "CH"
+          example: 'CH'
         countryName:
           type: string
-          example: "Suisse"
+          example: 'Suisse'
         countryFlag:
           type: string
           description: SVG representation of country flag
         # ISO codes
         isoAlpha3:
           type: string
-          example: "CHE"
+          example: 'CHE'
         isoNumeric:
           type: integer
           example: 756
         # Sports codes
         fifaCode:
           type: string
-          example: "SUI"
+          example: 'SUI'
         fipsCode:
           type: string
-          example: "SZ"
+          example: 'SZ'
         iocCode:
           type: string
-          example: "SUI"
+          example: 'SUI'
         iocCodeOrIsoAlpha3:
           type: string
-          example: "SUI"
+          example: 'SUI'
         geonameId:
           type: integer
           example: 2658434
@@ -3266,14 +3309,14 @@ components:
         adminCode1:
           type: string
           description: Administrative code (e.g., canton abbreviation)
-          example: "ZH"
+          example: 'ZH'
         adminName1:
           type: string
           description: Administrative name
-          example: "Zürich"
+          example: 'Zürich'
         toponymName:
           type: string
-          example: "Kanton Zürich"
+          example: 'Kanton Zürich'
         geonameId:
           type: integer
         lat:
@@ -3320,7 +3363,7 @@ components:
         plusCode:
           type: string
           description: Google Plus Code for precise location
-          example: "8FVC9G4F+5H"
+          example: '8FVC9G4F+5H'
         # Status
         isPrimary:
           type: boolean
@@ -3390,13 +3433,13 @@ components:
           format: uuid
         firstName:
           type: string
-          example: "Nick Leo"
+          example: 'Nick Leo'
         lastName:
           type: string
-          example: "Kunz"
+          example: 'Kunz'
         displayName:
           type: string
-          example: "Nick Leo Kunz"
+          example: 'Nick Leo Kunz'
         fullName:
           type: string
           description: Full formatted name
@@ -3487,7 +3530,7 @@ components:
         - linesman-four
         - standby-head
         - standby-linesman
-      example: "head-one"
+      example: 'head-one'
     RefereeLevel:
       type: string
       description: |
@@ -3497,7 +3540,7 @@ components:
         - N3: National level 3
         - N4: National level 4 (lowest - regional leagues)
       enum: [N1, N2, N3, N4]
-      example: "N3"
+      example: 'N3'
     Permissions:
       type: object
       description: Access control permissions for the current user
@@ -3537,21 +3580,21 @@ components:
         name:
           type: string
           description: Season identifier year
-          example: "2025"
+          example: '2025'
         displayName:
           type: string
           description: Full display format
-          example: "2025/2026"
+          example: '2025/2026'
         seasonStartDate:
           type: string
           format: date-time
           description: Season start date with timezone
-          example: "2025-05-20T22:00:00.000000+00:00"
+          example: '2025-05-20T22:00:00.000000+00:00'
         seasonEndDate:
           type: string
           format: date-time
           description: Season end date with timezone
-          example: "2026-05-20T21:59:59.000000+00:00"
+          example: '2026-05-20T21:59:59.000000+00:00'
         active:
           type: boolean
           description: Whether this is the current active season
@@ -3602,10 +3645,10 @@ components:
           format: uuid
         name:
           type: string
-          example: "2024"
+          example: '2024'
         displayName:
           type: string
-          example: "2024/2025"
+          example: '2024/2025'
         active:
           type: boolean
         publicApiActive:
@@ -3648,7 +3691,7 @@ components:
           items:
             type: string
             enum: [head-one, head-two, linesman-one, linesman-two]
-          example: ["head-one", "head-two"]
+          example: ['head-one', 'head-two']
         hoursBeforeGameStartIgnoringConvocationCriteriaInGameExchange:
           type: integer
           nullable: true
@@ -3737,7 +3780,7 @@ components:
           items:
             type: string
           description: Criteria to determine referee home location
-          example: ["", "officiatesForClub"]
+          example: ['', 'officiatesForClub']
         maxDistanceInKmBetweenRefereeAndHall:
           type: integer
           nullable: true
@@ -3774,7 +3817,7 @@ components:
         propertyName:
           type: string
           description: Name of the property being configured
-          example: "hasRetirementWish"
+          example: 'hasRetirementWish'
         active:
           type: boolean
           description: Whether this setting is active
@@ -3814,7 +3857,7 @@ components:
       properties:
         name:
           type: string
-          example: "Bienz Nick"
+          example: 'Bienz Nick'
         firstName:
           type: string
         lastName:
@@ -3822,10 +3865,10 @@ components:
         email:
           type: string
           format: email
-          example: "contact@example.com"
+          example: 'contact@example.com'
         phone:
           type: string
-          example: "+41 XX XXX XX XX"
+          example: '+41 XX XXX XX XX'
         role:
           type: string
           description: Role/title of the contact (e.g., "Responsable d'équipe")
@@ -3856,7 +3899,7 @@ components:
               format: uuid
             displayName:
               type: string
-              example: "#27106 | Herren 2. Liga"
+              example: '#27106 | Herren 2. Liga'
             isTournamentGroup:
               type: boolean
               description: Whether this is a tournament group (affects nomination workflow)
@@ -3871,7 +3914,7 @@ components:
                   format: uuid
                 displayName:
                   type: string
-                  example: "#13011 | Hin- und Rückrunde"
+                  example: '#13011 | Hin- und Rückrunde'
                 league:
                   type: object
                   properties:
@@ -3880,16 +3923,16 @@ components:
                       format: uuid
                     displayName:
                       type: string
-                      example: "#6651 | 2L | ♂"
+                      example: '#6651 | 2L | ♂'
                     genderUnicodeSign:
                       type: string
-                      enum: ["♂", "♀"]
+                      enum: ['♂', '♀']
                     leagueCategory:
                       type: object
                       properties:
                         displayNameWithManagingAssociationShortName:
                           type: string
-                          example: "SVRZ | 2L"
+                          example: 'SVRZ | 2L'
         hall:
           type: object
           properties:
@@ -3898,13 +3941,13 @@ components:
               format: uuid
             displayName:
               type: string
-              example: "#74 | Sporthalle Ruebisbach Halle 1-3 (A) | Talacherstrasse 2, 8302 Kloten"
+              example: '#74 | Sporthalle Ruebisbach Halle 1-3 (A) | Talacherstrasse 2, 8302 Kloten'
             primaryPostalAddress:
               type: object
               properties:
                 streetAndHouseNumber:
                   type: string
-                  example: "Talacherstrasse 2"
+                  example: 'Talacherstrasse 2'
                 combinedAddress:
                   type: string
                 additionToAddress:
@@ -3912,13 +3955,13 @@ components:
                   nullable: true
                 postalCodeAndCity:
                   type: string
-                  example: "8302 Kloten"
+                  example: '8302 Kloten'
                 geographicalLocation:
                   type: object
                   properties:
                     plusCode:
                       type: string
-                      example: "8FVCFH6H+V5"
+                      example: '8FVCFH6H+V5'
         encounter:
           type: object
           properties:
@@ -3933,7 +3976,7 @@ components:
                   format: uuid
                 displayName:
                   type: string
-                  example: "#2328 | VBC Züri Unterland H2 (2L, ♂, SVRZ)"
+                  example: '#2328 | VBC Züri Unterland H2 (2L, ♂, SVRZ)'
             teamHomeDefinitive:
               type: boolean
             teamHomeGroupRankDisplayName:
@@ -3947,7 +3990,7 @@ components:
                   format: uuid
                 displayName:
                   type: string
-                  example: "#12849 | RTG Volley Talents Rapperswil Jona (2L, ♂, SVRGSGL)"
+                  example: '#12849 | RTG Volley Talents Rapperswil Jona (2L, ♂, SVRGSGL)'
             teamAwayDefinitive:
               type: boolean
             teamAwayGroupRankDisplayName:
@@ -4099,7 +4142,7 @@ components:
                       type: string
                     displayName:
                       type: string
-                      example: "Thamayanth Kanagalingam"
+                      example: 'Thamayanth Kanagalingam'
                     associationId:
                       type: integer
                       description: Swiss Volley referee association ID
@@ -4119,13 +4162,13 @@ components:
           format: uuid
         firstName:
           type: string
-          example: "[First Name] [Middle Name]"
+          example: '[First Name] [Middle Name]'
         lastName:
           type: string
-          example: "[Last Name]"
+          example: '[Last Name]'
         displayName:
           type: string
-          example: "[First Name] [Middle Name] [Last Name]"
+          example: '[First Name] [Middle Name] [Last Name]'
         primaryEmailAddress:
           $ref: '#/components/schemas/EmailAddressSimple'
         primaryPhoneNumber:
@@ -4139,19 +4182,19 @@ components:
           format: uuid
         streetAndHouseNumber:
           type: string
-          example: "Zürichstr. 31"
+          example: 'Zürichstr. 31'
         postalCode:
           type: string
-          example: "8610"
+          example: '8610'
         city:
           type: string
-          example: "Uster"
+          example: 'Uster'
         postalCodeAndCity:
           type: string
-          example: "8610 Uster"
+          example: '8610 Uster'
         combinedAddress:
           type: string
-          example: "Zürichstr. 31, 8610 Uster"
+          example: 'Zürichstr. 31, 8610 Uster'
         additionToAddress:
           type: string
           nullable: true
@@ -4160,7 +4203,7 @@ components:
           properties:
             countryCode:
               type: string
-              example: "CH"
+              example: 'CH'
         geographicalLocation:
           type: object
           properties:
@@ -4170,7 +4213,7 @@ components:
             plusCode:
               type: string
               description: Google Plus Code for precise location
-              example: "8FVC9P25+C9"
+              example: '8FVC9P25+C9'
             latitude:
               type: number
               format: double
@@ -4187,7 +4230,7 @@ components:
         mailAddress:
           type: string
           format: email
-          example: "dispatcher@example.com"
+          example: 'dispatcher@example.com'
     PhoneNumberSimple:
       type: object
       description: Simple phone number entity (used in team contact info)
@@ -4197,7 +4240,7 @@ components:
           format: uuid
         formattedPhoneNumber:
           type: string
-          example: "+41 XX XXX XX XX"
+          example: '+41 XX XXX XX XX'
     # ==================== Compensation Edit Schemas ====================
     ConvocationCompensationSettings:
       type: object
@@ -4313,7 +4356,7 @@ components:
             genderUnicodeSign:
               type: string
               description: Unicode symbol for gender (♂ or ♀)
-              example: "♂"
+              example: '♂'
             # Related entities
             leagueCategory:
               $ref: '#/components/schemas/LeagueCategory'
@@ -4493,7 +4536,7 @@ components:
             gameCompensationFormatted:
               type: string
               description: Formatted game compensation with decimals
-              example: "50.00"
+              example: '50.00'
             calculatedGameCompensation:
               type: number
               description: System-calculated game compensation (CHF)
@@ -4510,7 +4553,7 @@ components:
             travelExpensesFormatted:
               type: string
               description: Formatted travel expenses with decimals
-              example: "20.00"
+              example: '20.00'
             calculatedTravelExpenses:
               type: number
               description: System-calculated travel expenses (CHF)
@@ -4526,7 +4569,7 @@ components:
             publicTransportExpensesFormatted:
               type: string
               description: Formatted public transport expenses
-              example: "0.00"
+              example: '0.00'
             # Distance and transportation
             distanceInMetres:
               type: integer
@@ -4535,7 +4578,7 @@ components:
             distanceFormatted:
               type: string
               description: Distance formatted in km
-              example: "88.5"
+              example: '88.5'
             durationInSeconds:
               type: integer
               description: Travel duration in seconds
@@ -4543,7 +4586,7 @@ components:
             durationFormatted:
               type: string
               description: Travel duration formatted
-              example: "1 h 03 m"
+              example: '1 h 03 m'
             transportationMode:
               type: string
               enum: [car, train, public_transport, other]
@@ -4556,18 +4599,18 @@ components:
               example: 0
             cateringExpensesFormatted:
               type: string
-              example: "0.00"
+              example: '0.00'
             calculatedOvernightStayExpenses:
               type: number
               description: System-calculated overnight stay expenses (CHF)
               example: 0
             overnightStayExpensesFormatted:
               type: string
-              example: "0.00"
+              example: '0.00'
             additionalExpensesFormatted:
               type: string
               description: Total additional expenses formatted
-              example: "0.00"
+              example: '0.00'
             # Total cost
             cost:
               type: number
@@ -4576,7 +4619,7 @@ components:
             costFormatted:
               type: string
               description: Total cost formatted with decimals
-              example: "70.00"
+              example: '70.00'
             compensationShareTeamHome:
               type: number
               description: Share paid by home team (0-1)
@@ -4603,7 +4646,7 @@ components:
               type: string
               nullable: true
               description: Reason provided by referee for correction
-              example: "Ich wohne in Oberengstringen"
+              example: 'Ich wohne in Oberengstringen'
             correctionTime:
               type: string
               format: date-time
@@ -4709,7 +4752,7 @@ components:
         name:
           type: string
           description: Name of the compensation type
-          example: "Frais de repas"
+          example: 'Frais de repas'
         defaultAmount:
           type: number
           nullable: true
@@ -4722,7 +4765,7 @@ components:
           format: uuid
         name:
           type: string
-          example: "Frais supplémentaires"
+          example: 'Frais supplémentaires'
     FlexibleCompensationsResponse:
       type: object
       description: Response from flexibleadditionalcompensation/search endpoint
@@ -4788,7 +4831,7 @@ components:
         amountFormatted:
           type: string
           description: Formatted amount with decimals
-          example: "30.00"
+          example: '30.00'
         refereeType:
           type: string
           enum: [head, linesman]
@@ -4808,19 +4851,19 @@ components:
         identifier:
           type: string
           description: Association identifier code
-          example: "912000"
+          example: '912000'
         name:
           type: string
           description: Full association name
-          example: "Swiss Volley Région Zurich"
+          example: 'Swiss Volley Région Zurich'
         displayName:
           type: string
           description: Display name (may be translated)
-          example: "Swiss Volley Région Zurich"
+          example: 'Swiss Volley Région Zurich'
         shortName:
           type: string
           description: Short abbreviation
-          example: "SVRZ"
+          example: 'SVRZ'
         translations:
           type: object
           properties:
@@ -4844,7 +4887,7 @@ components:
           example: 12
         localeIdentifier:
           type: string
-          example: "1"
+          example: '1'
         active:
           type: boolean
         accountActive:
@@ -4868,7 +4911,7 @@ components:
         __identity:
           type: string
           format: uuid
-          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          example: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
         persistenceObjectIdentifier:
           type: string
           format: uuid
@@ -4884,48 +4927,48 @@ components:
         externalId:
           type: string
           description: External ID (same as associationId as string)
-          example: "12345"
+          example: '12345'
         uniqueId:
           type: string
           format: uuid
         # Personal information
         firstName:
           type: string
-          example: "Jean"
+          example: 'Jean'
         lastName:
           type: string
-          example: "Dupont"
+          example: 'Dupont'
         displayName:
           type: string
           description: Full display name
-          example: "Jean Dupont"
+          example: 'Jean Dupont'
         fullName:
           type: string
           description: Full name (same as displayName)
-          example: "Jean Dupont"
+          example: 'Jean Dupont'
         gender:
           type: string
           enum: [m, f]
           description: Gender (m = male, f = female)
-          example: "m"
+          example: 'm'
         genderNoun:
           type: string
           description: Localized gender noun
-          example: "Homme"
+          example: 'Homme'
         genderAdjective:
           type: string
           description: Localized gender adjective
-          example: "masculin"
+          example: 'masculin'
         birthday:
           type: string
           format: date-time
           description: Birthday in ISO 8601 format
-          example: "1989-08-07T22:00:00.000000+00:00"
+          example: '1989-08-07T22:00:00.000000+00:00'
         formattedAndTimezoneIndependentBirthday:
           type: string
           format: date
           description: Birthday in YYYY-MM-DD format
-          example: "1989-08-08"
+          example: '1989-08-08'
         yearOfBirth:
           type: integer
           example: 1989
@@ -4943,7 +4986,7 @@ components:
           type: string
           enum: [fr, de, it, en]
           description: Preferred language for correspondence
-          example: "fr"
+          example: 'fr'
         language:
           type: string
           nullable: true
@@ -4987,7 +5030,7 @@ components:
         activeRoleIdentifier:
           type: string
           description: Current role identifier
-          example: "Indoorvolleyball.RefAdmin:Referee"
+          example: 'Indoorvolleyball.RefAdmin:Referee'
         # Accounts
         accounts:
           type: array
@@ -5086,11 +5129,11 @@ components:
         username:
           type: string
           description: Login username
-          example: "jean_dupont"
+          example: 'jean_dupont'
         localeIdentifier:
           type: string
           description: Locale identifier for UI preferences
-          example: "1"
+          example: '1'
         lastLoginDate:
           type: string
           format: date-time
@@ -5111,11 +5154,11 @@ components:
         attributeIdentifier:
           type: string
           description: Type of attribute
-          example: "Indoorvolleyball.RefAdmin:AbstractAssociation"
+          example: 'Indoorvolleyball.RefAdmin:AbstractAssociation'
         roleIdentifier:
           type: string
           description: Role within this association
-          example: "Indoorvolleyball.RefAdmin:Referee"
+          example: 'Indoorvolleyball.RefAdmin:Referee'
         type:
           type: string
           description: Domain model type
@@ -5155,21 +5198,21 @@ components:
       properties:
         identifier:
           type: string
-          example: "Indoorvolleyball.RefAdmin:Referee"
+          example: 'Indoorvolleyball.RefAdmin:Referee'
         title:
           type: string
           description: Translation key for title
-          example: "attribute.Indoorvolleyball.RefAdmin:Referee.title"
+          example: 'attribute.Indoorvolleyball.RefAdmin:Referee.title'
         description:
           type: string
           description: Translation key for description
-          example: "attribute.Indoorvolleyball.RefAdmin:Referee.description"
+          example: 'attribute.Indoorvolleyball.RefAdmin:Referee.description'
         attribute:
           type: boolean
         userContextGranularity:
           type: string
           enum: [attribute, global]
-          example: "attribute"
+          example: 'attribute'
         userContextGroupByAttributeProperty:
           type: string
           nullable: true
@@ -5184,11 +5227,11 @@ components:
           type: string
           enum: [bank, postal]
           description: Type of payment connection
-          example: "bank"
+          example: 'bank'
         iban:
           type: string
           description: IBAN for bank transfers
-          example: "CH00 0000 0000 0000 0000 0"
+          example: 'CH00 0000 0000 0000 0000 0'
         name:
           type: string
           nullable: true
@@ -5196,7 +5239,7 @@ components:
         payee:
           type: string
           description: Name of the payee
-          example: "Jean Dupont"
+          example: 'Jean Dupont'
         financialInstitutionName:
           type: string
           nullable: true
@@ -5235,7 +5278,7 @@ components:
         emailAddress:
           type: string
           format: email
-          example: "user@example.com"
+          example: 'user@example.com'
         isPrimary:
           type: boolean
         primary:
@@ -5293,10 +5336,10 @@ components:
           format: uuid
         phoneNumber:
           type: string
-          example: "+41791234567"
+          example: '+41791234567'
         formattedPhoneNumber:
           type: string
-          example: "+41 79 123 45 67"
+          example: '+41 79 123 45 67'
         isPrimary:
           type: boolean
         primary:
@@ -5335,13 +5378,13 @@ components:
         sourceName:
           type: string
           description: Name of the source system
-          example: "VolleyManager1"
+          example: 'VolleyManager1'
         externalId:
           type: string
-          example: "18294"
+          example: '18294'
         entityClassPath:
           type: string
-          example: "SportManagerCoreDomainModelPerson"
+          example: 'SportManagerCoreDomainModelPerson'
         duplicate:
           type: boolean
         duplicateType:
@@ -5386,11 +5429,11 @@ components:
         systemName:
           type: string
           description: Name of the external system
-          example: "abacusCustomerNumber"
+          example: 'abacusCustomerNumber'
         identifier:
           type: string
           description: The external identifier value
-          example: "1018294"
+          example: '1018294'
         referenceIdentifier:
           type: string
           format: uuid
@@ -5444,7 +5487,7 @@ components:
         refereeInformation:
           type: string
           description: Formatted referee info string
-          example: "Jean Dupont (12345, 1989-08-08, )"
+          example: 'Jean Dupont (12345, 1989-08-08, )'
         refereeSinceDate:
           type: string
           format: date
@@ -5476,7 +5519,7 @@ components:
         mobilePhoneNumbers:
           type: string
           description: Formatted mobile phone numbers
-          example: "+41 79 123 45 67"
+          example: '+41 79 123 45 67'
         fixnetPhoneNumbers:
           type: string
           description: Formatted landline numbers
@@ -5657,10 +5700,10 @@ components:
           format: uuid
         name:
           type: string
-          example: "Suisse"
+          example: 'Suisse'
         isoCode:
           type: string
-          example: "CH"
+          example: 'CH'
     SeasonalRefereeData:
       type: object
       description: |
@@ -5813,7 +5856,7 @@ components:
         name:
           type: string
           description: Workload name
-          example: "15. halbes Mandat (5 Schireinsätze)"
+          example: '15. halbes Mandat (5 Schireinsätze)'
         refereeWorkloadType:
           type: string
           enum: [free_range, fixed, minimum, maximum]
@@ -5917,7 +5960,7 @@ components:
               format: uuid
             shortName:
               type: string
-              example: "SVRZ"
+              example: 'SVRZ'
     # ==================== eScoresheet Schemas ====================
     Scoresheet:
       type: object
@@ -5999,70 +6042,70 @@ components:
     ScoresheetCreateRequest:
       type: object
       description: Request to create a new scoresheet (no scoresheet[__identity] — server generates it)
-      required: ["scoresheet[game][__identity]", __csrfToken]
+      required: ['scoresheet[game][__identity]', __csrfToken]
       properties:
-        "scoresheet[game][__identity]":
+        'scoresheet[game][__identity]':
           type: string
           format: uuid
           description: The game identifier (required)
-        "scoresheet[isSimpleScoresheet]":
+        'scoresheet[isSimpleScoresheet]':
           type: string
-          enum: ["true", "false"]
-        "scoresheet[writerPerson][__identity]":
+          enum: ['true', 'false']
+        'scoresheet[writerPerson][__identity]':
           type: string
           format: uuid
-        "scoresheet[scoresheetValidation][__identity]":
+        'scoresheet[scoresheetValidation][__identity]':
           type: string
           format: uuid
           description: Validation record from prior validate call
-        "scoresheet[file][__identity]":
+        'scoresheet[file][__identity]':
           type: string
           format: uuid
           description: File resource from prior upload
-        "scoresheet[hasFile]":
+        'scoresheet[hasFile]':
           type: string
-          enum: ["true", "false"]
-        "scoresheet[closedAt]":
+          enum: ['true', 'false']
+        'scoresheet[closedAt]':
           type: string
-        "scoresheet[closedBy]":
+        'scoresheet[closedBy]':
           type: string
-        "scoresheet[emergencySubstituteReferees]":
+        'scoresheet[emergencySubstituteReferees]':
           type: string
-        "scoresheet[notFoundButNominatedPersons]":
+        'scoresheet[notFoundButNominatedPersons]':
           type: string
-        "scoresheet[reminderAboutOpenScoresheetSentAt]":
+        'scoresheet[reminderAboutOpenScoresheetSentAt]':
           type: string
         __csrfToken:
           type: string
     ScoresheetUpdateRequest:
       type: object
       description: Request to update a scoresheet
-      required: ["scoresheet[__identity]", __csrfToken]
+      required: ['scoresheet[__identity]', __csrfToken]
       properties:
-        "scoresheet[__identity]":
+        'scoresheet[__identity]':
           type: string
           format: uuid
           description: The scoresheet identifier
-        "scoresheet[game][__identity]":
+        'scoresheet[game][__identity]':
           type: string
           format: uuid
-        "scoresheet[isSimpleScoresheet]":
+        'scoresheet[isSimpleScoresheet]':
           type: string
-          enum: ["true", "false"]
-        "scoresheet[writerPerson][__identity]":
+          enum: ['true', 'false']
+        'scoresheet[writerPerson][__identity]':
           type: string
           format: uuid
-        "scoresheet[file][__identity]":
+        'scoresheet[file][__identity]':
           type: string
           format: uuid
           description: Reference to uploaded file (JPEG, PNG, or PDF)
-        "scoresheet[hasFile]":
+        'scoresheet[hasFile]':
           type: string
-          enum: ["true", "false"]
-        "scoresheet[closedAt]":
+          enum: ['true', 'false']
+        'scoresheet[closedAt]':
           type: string
           format: date-time
-        "scoresheet[closedBy]":
+        'scoresheet[closedBy]':
           type: string
         __csrfToken:
           type: string
@@ -6071,61 +6114,61 @@ components:
       description: Request to validate a scoresheet
       required: [__csrfToken]
       properties:
-        "scoresheet[game][__identity]":
+        'scoresheet[game][__identity]':
           type: string
           format: uuid
-        "scoresheet[isSimpleScoresheet]":
+        'scoresheet[isSimpleScoresheet]':
           type: string
-          enum: ["true", "false"]
-        "scoresheet[writerPerson][__identity]":
+          enum: ['true', 'false']
+        'scoresheet[writerPerson][__identity]':
           type: string
           format: uuid
-        "scoresheet[scoresheetValidation]":
+        'scoresheet[scoresheetValidation]':
           type: string
           description: Empty string for initial validation
-        "scoresheet[notFoundButNominatedPersons]":
+        'scoresheet[notFoundButNominatedPersons]':
           type: string
           description: Empty string if none
-        "scoresheet[emergencySubstituteReferees]":
+        'scoresheet[emergencySubstituteReferees]':
           type: string
           description: Empty string if none
-        "scoresheet[closedAt]":
+        'scoresheet[closedAt]':
           type: string
-        "scoresheet[closedBy]":
+        'scoresheet[closedBy]':
           type: string
-        "scoresheet[file]":
+        'scoresheet[file]':
           type: string
-        "scoresheet[hasFile]":
+        'scoresheet[hasFile]':
           type: string
-          enum: ["true", "false"]
+          enum: ['true', 'false']
         __csrfToken:
           type: string
     ScoresheetFinalizeRequest:
       type: object
       description: Request to finalize a scoresheet
-      required: ["scoresheet[__identity]", "scoresheet[file][__identity]", __csrfToken]
+      required: ['scoresheet[__identity]', 'scoresheet[file][__identity]', __csrfToken]
       properties:
-        "scoresheet[__identity]":
+        'scoresheet[__identity]':
           type: string
           format: uuid
-        "scoresheet[game][__identity]":
+        'scoresheet[game][__identity]':
           type: string
           format: uuid
-        "scoresheet[isSimpleScoresheet]":
+        'scoresheet[isSimpleScoresheet]':
           type: string
-          enum: ["true", "false"]
-        "scoresheet[writerPerson][__identity]":
+          enum: ['true', 'false']
+        'scoresheet[writerPerson][__identity]':
           type: string
           format: uuid
-        "scoresheet[file][__identity]":
+        'scoresheet[file][__identity]':
           type: string
           format: uuid
           description: Reference to uploaded file (required for finalization)
-        "scoresheet[hasFile]":
+        'scoresheet[hasFile]':
           type: string
-          enum: ["true"]
+          enum: ['true']
           description: Must be true for finalization
-        "scoresheet[scoresheetValidation][__identity]":
+        'scoresheet[scoresheetValidation][__identity]':
           type: string
           format: uuid
         __csrfToken:
@@ -6263,80 +6306,80 @@ components:
     NominationListUpdateRequest:
       type: object
       description: Request to update a nomination list
-      required: ["nominationList[__identity]", __csrfToken]
+      required: ['nominationList[__identity]', __csrfToken]
       properties:
-        "nominationList[__identity]":
+        'nominationList[__identity]':
           type: string
           format: uuid
-        "nominationList[game][__identity]":
+        'nominationList[game][__identity]':
           type: string
           format: uuid
-        "nominationList[team][__identity]":
+        'nominationList[team][__identity]':
           type: string
           format: uuid
-        "nominationList[coachPerson][__identity]":
+        'nominationList[coachPerson][__identity]':
           type: string
           format: uuid
-        "nominationList[firstAssistantCoachPerson][__identity]":
+        'nominationList[firstAssistantCoachPerson][__identity]':
           type: string
           format: uuid
-        "nominationList[secondAssistantCoachPerson]":
+        'nominationList[secondAssistantCoachPerson]':
           type: string
           description: Empty string to clear
-        "nominationList[indoorPlayerNominations][0][__identity]":
+        'nominationList[indoorPlayerNominations][0][__identity]':
           type: string
           format: uuid
           description: First player nomination (array indexed)
-        "nominationList[closed]":
+        'nominationList[closed]':
           type: string
-          enum: ["true", "false"]
-        "nominationList[closedAt]":
+          enum: ['true', 'false']
+        'nominationList[closedAt]':
           type: string
-        "nominationList[closedBy]":
+        'nominationList[closedBy]':
           type: string
-        "nominationList[checked]":
+        'nominationList[checked]':
           type: string
-          enum: ["true", "false"]
-        "nominationList[isClosedForTeam]":
+          enum: ['true', 'false']
+        'nominationList[isClosedForTeam]':
           type: string
-          enum: ["true", "false"]
+          enum: ['true', 'false']
         __csrfToken:
           type: string
     NominationListFinalizeRequest:
       type: object
       description: Request to finalize a nomination list
-      required: ["nominationList[__identity]", __csrfToken]
+      required: ['nominationList[__identity]', __csrfToken]
       properties:
-        "nominationList[__identity]":
+        'nominationList[__identity]':
           type: string
           format: uuid
-        "nominationList[game][__identity]":
+        'nominationList[game][__identity]':
           type: string
           format: uuid
-        "nominationList[team][__identity]":
+        'nominationList[team][__identity]':
           type: string
           format: uuid
-        "nominationList[coachPerson][__identity]":
+        'nominationList[coachPerson][__identity]':
           type: string
           format: uuid
-        "nominationList[firstAssistantCoachPerson][__identity]":
+        'nominationList[firstAssistantCoachPerson][__identity]':
           type: string
           format: uuid
-        "nominationList[secondAssistantCoachPerson]":
+        'nominationList[secondAssistantCoachPerson]':
           type: string
           description: Empty string to clear, or use [__identity] suffix with UUID to set
-        "nominationList[indoorPlayerNominations][0][__identity]":
+        'nominationList[indoorPlayerNominations][0][__identity]':
           type: string
           format: uuid
-        "nominationList[closed]":
+        'nominationList[closed]':
           type: string
-          enum: ["false"]
+          enum: ['false']
           description: Set to false before finalization
-        "nominationList[isClosedForTeam]":
+        'nominationList[isClosedForTeam]':
           type: string
-          enum: ["true"]
+          enum: ['true']
           description: Must be true to finalize
-        "nominationList[nominationListValidation][__identity]":
+        'nominationList[nominationListValidation][__identity]':
           type: string
           format: uuid
         __csrfToken:
@@ -6493,7 +6536,7 @@ components:
           format: uuid
         displayName:
           type: string
-          example: "Jean Dupont"
+          example: 'Jean Dupont'
         associationId:
           type: integer
           description: Swiss Volley association ID
@@ -6572,11 +6615,11 @@ components:
               format: uuid
             filename:
               type: string
-              example: "scoresheet.jpg"
+              example: 'scoresheet.jpg'
             mediaType:
               type: string
-              description: "MIME type (image/jpeg, image/png, or application/pdf)"
-              example: "image/jpeg"
+              description: 'MIME type (image/jpeg, image/png, or application/pdf)'
+              example: 'image/jpeg'
             fileSize:
               type: integer
               description: File size in bytes
@@ -6619,12 +6662,12 @@ components:
           type: string
           format: date-time
           description: Earliest date for which absences can be created
-          example: "2025-12-10T23:00:00.000000+00:00"
+          example: '2025-12-10T23:00:00.000000+00:00'
         maximumDate:
           type: string
           format: date-time
           description: Latest date for which absences can be created
-          example: "2026-05-20T21:59:59.000000+00:00"
+          example: '2026-05-20T21:59:59.000000+00:00'
         forbiddenDateRanges:
           type: array
           description: List of date ranges where absences cannot be created
@@ -6662,39 +6705,39 @@ components:
           type: string
           format: uuid
           description: Unique identifier for the absence
-          example: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+          example: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
         fromDate:
           type: string
           format: date-time
           description: Start date and time of the absence
-          example: "2025-10-17T04:00:00.000000+00:00"
+          example: '2025-10-17T04:00:00.000000+00:00'
         toDate:
           type: string
           format: date-time
           description: End date and time of the absence
-          example: "2025-11-02T22:59:59.000000+00:00"
+          example: '2025-11-02T22:59:59.000000+00:00'
         detailedReason:
           type: string
           description: Optional detailed reason for the absence
-          example: ""
+          example: ''
         createdAt:
           type: string
           format: date-time
           description: When the absence was created
-          example: "2025-05-25T15:25:00.000000+00:00"
+          example: '2025-05-25T15:25:00.000000+00:00'
         createdBy:
           type: string
           description: Username of the creator
-          example: "jean_dupont"
+          example: 'jean_dupont'
         updatedAt:
           type: string
           format: date-time
           description: When the absence was last updated
-          example: "2025-05-25T15:25:00.000000+00:00"
+          example: '2025-05-25T15:25:00.000000+00:00'
         updatedBy:
           type: string
           description: Username of the last modifier
-          example: "jean_dupont"
+          example: 'jean_dupont'
         _permissions:
           $ref: '#/components/schemas/RefereeAbsencePermissions'
     RefereeAbsencePermissions:
@@ -6724,3 +6767,92 @@ components:
                 read:
                   type: boolean
                   description: Whether the user can read the detailed reason
+    RefereeAbsenceReasonListResult:
+      type: object
+      description: List of absence reasons (no pagination wrapper)
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RefereeAbsenceReason'
+    RefereeAbsenceReason:
+      type: object
+      description: An association-defined absence reason with translations
+      properties:
+        __identity:
+          type: string
+          format: uuid
+          description: Unique identifier for the absence reason
+          example: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+        active:
+          type: boolean
+          description: Whether the reason is currently selectable
+        description:
+          type: string
+          description: Default description (matches one of the translation values; no English)
+          example: 'Vacances'
+        translations:
+          type: object
+          description: Translated descriptions (de/fr/it, no en)
+          properties:
+            de:
+              type: object
+              properties:
+                description:
+                  type: string
+                  example: 'Ferien'
+            fr:
+              type: object
+              properties:
+                description:
+                  type: string
+                  example: 'Vacances'
+            it:
+              type: object
+              properties:
+                description:
+                  type: string
+                  example: 'Vacanze'
+        rolesAllowedToRead:
+          type: array
+          description: Roles allowed to see this reason
+          items:
+            type: string
+            example: 'Indoorvolleyball.RefAdmin:Referee'
+        createdAt:
+          type: string
+          format: date-time
+          description: When the reason was created
+        createdBy:
+          type: string
+          description: Username of the creator
+          example: 'jean_dupont'
+        createdByIpAddress:
+          type: string
+          nullable: true
+        createdByPersistenceIdentifier:
+          type: string
+          format: uuid
+        lastUpdatedByRealUser:
+          type: string
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the reason was last updated
+        updatedBy:
+          type: string
+          description: Username of the last modifier
+          example: 'jean_dupont'
+        updatedByImpersonationSession:
+          type: string
+          nullable: true
+        updatedByIpAddress:
+          type: string
+          nullable: true
+        updatedByPersistenceIdentifier:
+          type: string
+          format: uuid
+        _permissions:
+          type: object
+          description: Object- and property-level permissions (delete is false for referees)
