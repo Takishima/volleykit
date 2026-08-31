@@ -99,20 +99,17 @@ export function AbsencesPage() {
           />
         </TabPanel>
         <TabPanel tabId="past" activeTab={activeTab}>
-          {/* The fetch window is unconditional, so the Past tab always
-              discloses it - as the note under the list, or as the empty
-              state's description ("no past absences" would otherwise be an
-              unqualified claim about the whole account). */}
           <AbsenceList
             absences={past}
             emptyTitle={t('absences.noPastTitle')}
-            emptyDescription={t('absences.olderHistoryNote')}
+            emptyDescription={t('absences.emptyDescription')}
           />
-          {past.length > 0 && (
-            <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
-              {t('absences.olderHistoryNote')}
-            </p>
-          )}
+          {/* The fetch window is unconditional, so the disclosure is too:
+              "no past absences" alone would be an unqualified claim about
+              the whole account. */}
+          <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
+            {t('absences.olderHistoryNote')}
+          </p>
         </TabPanel>
       </>
     )
