@@ -4,14 +4,15 @@ import { http, HttpResponse } from 'msw'
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { useAuthStore } from '@/common/stores/auth'
+import { MS_PER_DAY } from '@/common/utils/constants'
 import { server } from '@/test/msw/server'
 
 import { useAbsences } from './useAbsences'
 
 import type { ReactNode } from 'react'
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000
 const DAYS_PER_YEAR = 365
+const TOLERANCE_DAYS = 10
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -48,13 +49,13 @@ describe('useAbsences', () => {
     const to = body?.get('searchConfiguration[propertyFilters][0][dateRange][to]')
     expect(from).toBeTruthy()
     expect(to).toBeTruthy()
-    // Roughly one year back and two years ahead
-    expect(Date.now() - new Date(from!).getTime()).toBeGreaterThan(
-      (DAYS_PER_YEAR - 10) * MS_PER_DAY
-    )
-    expect(new Date(to!).getTime() - Date.now()).toBeGreaterThan(
-      (2 * DAYS_PER_YEAR - 10) * MS_PER_DAY
-    )
+    // Pin the window from both sides: one year back, two years ahead
+    const backwardMs = Date.now() - new Date(from!).getTime()
+    expect(backwardMs).toBeGreaterThan((DAYS_PER_YEAR - TOLERANCE_DAYS) * MS_PER_DAY)
+    expect(backwardMs).toBeLessThan((DAYS_PER_YEAR + TOLERANCE_DAYS) * MS_PER_DAY)
+    const forwardMs = new Date(to!).getTime() - Date.now()
+    expect(forwardMs).toBeGreaterThan((2 * DAYS_PER_YEAR - TOLERANCE_DAYS) * MS_PER_DAY)
+    expect(forwardMs).toBeLessThan((2 * DAYS_PER_YEAR + TOLERANCE_DAYS) * MS_PER_DAY)
 
     expect(body?.get('searchConfiguration[propertyOrderings][0][propertyName]')).toBe('fromDate')
     expect(body?.get('searchConfiguration[propertyOrderings][0][descending]')).toBe('true')

@@ -15,13 +15,17 @@ import { groupAbsences } from './utils/absence-helpers'
 
 type AbsenceTab = 'upcoming' | 'past'
 
-function AbsenceList({ absences, emptyTitle }: { absences: RefereeAbsence[]; emptyTitle: string }) {
-  const { t } = useTranslation()
-
+function AbsenceList({
+  absences,
+  emptyTitle,
+  emptyDescription,
+}: {
+  absences: RefereeAbsence[]
+  emptyTitle: string
+  emptyDescription: string
+}) {
   if (absences.length === 0) {
-    return (
-      <EmptyState icon="calendar" title={emptyTitle} description={t('absences.emptyDescription')} />
-    )
+    return <EmptyState icon="calendar" title={emptyTitle} description={emptyDescription} />
   }
 
   return (
@@ -88,12 +92,22 @@ export function AbsencesPage() {
     return (
       <>
         <TabPanel tabId="upcoming" activeTab={activeTab}>
-          <AbsenceList absences={upcoming} emptyTitle={t('absences.noUpcomingTitle')} />
+          <AbsenceList
+            absences={upcoming}
+            emptyTitle={t('absences.noUpcomingTitle')}
+            emptyDescription={t('absences.emptyDescription')}
+          />
         </TabPanel>
         <TabPanel tabId="past" activeTab={activeTab}>
-          <AbsenceList absences={past} emptyTitle={t('absences.noPastTitle')} />
-          {/* The fetch window is unconditional, so disclose it whenever
-              history renders. */}
+          {/* The fetch window is unconditional, so the Past tab always
+              discloses it - as the note under the list, or as the empty
+              state's description ("no past absences" would otherwise be an
+              unqualified claim about the whole account). */}
+          <AbsenceList
+            absences={past}
+            emptyTitle={t('absences.noPastTitle')}
+            emptyDescription={t('absences.olderHistoryNote')}
+          />
           {past.length > 0 && (
             <p className="mt-3 text-sm text-text-muted dark:text-text-muted-dark">
               {t('absences.olderHistoryNote')}
