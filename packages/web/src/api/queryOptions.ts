@@ -166,9 +166,8 @@ export function refereeBackupListOptions(
 export function absenceListOptions(apiClient: ApiClient, associationKey: string | null) {
   return queryOptions({
     queryKey: queryKeys.absences.list(associationKey),
-    // Bodyless single request: sending any searchConfiguration either 500s
-    // (filters/orderings) or activates a 10-row server page (offset/limit),
-    // while no configuration returns the complete list. See the capture doc.
+    // Takes no config on purpose: the request must be a POST with no body
+    // at all - see searchAbsences in real-api.ts and the capture doc.
     queryFn: () => apiClient.searchAbsences(),
     staleTime: ASSIGNMENTS_STALE_TIME_MS,
   })

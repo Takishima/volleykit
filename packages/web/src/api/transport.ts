@@ -158,13 +158,9 @@ export async function apiRequest<T>(
 
     // Both `&& body` conjuncts (here and on the fetch body below) are
     // load-bearing for searchAbsences: an omitted body must produce a
-    // request with no Content-Type and no injected __csrfToken, because
-    // the refereeabsence/search controller 500s on a form body carrying
-    // only __csrfToken and misbehaves on every searchConfiguration body
-    // tried (docs/api/captures/absence_endpoints.md). Defaulting the body
-    // or attaching the token to every state-changing request would
-    // reintroduce that 500; the shape is pinned by the searchAbsences
-    // test in api/client.test.ts.
+    // request with no Content-Type and no injected __csrfToken, or the
+    // server 500s (why: docs/api/captures/absence_endpoints.md). Pinned
+    // by the searchAbsences case in api/client.test.ts.
     if (method !== 'GET' && body) {
       headers['Content-Type'] = requestContentType ?? 'application/x-www-form-urlencoded'
     }
@@ -176,6 +172,7 @@ export async function apiRequest<T>(
       // Explicitly convert URLSearchParams to string to ensure correct serialization
       // on iOS Safari PWA where passing URLSearchParams with a non-default Content-Type
       // (e.g. text/plain) may result in an empty or malformed request body.
+      // The `&& body` conjunct is load-bearing - see the note above.
       body: method !== 'GET' && body ? buildFormData(body).toString() : undefined,
     })
 

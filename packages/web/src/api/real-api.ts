@@ -783,14 +783,12 @@ export const api = {
    * blockings (e.g. national-squad duty dates); `_permissions` on each item
    * says whether it is editable.
    *
-   * Deliberately a POST with NO body at all: every urlencoded body tried
-   * misbehaved - propertyFilters/propertyOrderings 500, offset/limit clamps
-   * the page to 10 rows, and a body carrying only __csrfToken 500s
-   * (smoke-tested from the deployed app). A bare POST with just the session
-   * cookie returns the complete list newest-first, and the action does not
-   * enforce CSRF. Omitting the body argument keeps the transport from
-   * setting a form Content-Type or injecting the token.
-   * See docs/api/captures/absence_endpoints.md.
+   * Deliberately a POST with NO body at all - not an empty body: omitting
+   * the argument keeps the transport from setting a form Content-Type or
+   * injecting __csrfToken, and only that shape returns the complete list
+   * (the action does not enforce CSRF; the session cookie suffices). The
+   * full body-behaviour matrix lives in
+   * docs/api/captures/absence_endpoints.md.
    *
    * @returns Promise with all referee absence entries
    */
