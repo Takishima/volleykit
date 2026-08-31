@@ -17,6 +17,26 @@ import { groupAbsences } from './utils/absence-helpers'
 
 type AbsenceTab = 'upcoming' | 'past'
 
+// Reached from Settings, not the bottom nav, so give a way back
+function AbsencesHeader() {
+  const { t } = useTranslation()
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link
+        to="/settings"
+        aria-label={t('absences.backToSettings')}
+        className="p-1 -ml-1 rounded-lg text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+      >
+        <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+      </Link>
+      <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
+        {t('absences.title')}
+      </h1>
+    </div>
+  )
+}
+
 function AbsenceList({
   absences,
   emptyTitle,
@@ -58,13 +78,18 @@ export function AbsencesPage() {
     [absences, todayKey]
   )
 
+  // Calendar mode hides the Settings entry, so this page is only reachable
+  // by bookmark or typed URL there - keep the header and back link anyway.
   if (isCalendarMode) {
     return (
-      <EmptyState
-        icon="calendar"
-        title={t('absences.calendarModeTitle')}
-        description={t('absences.calendarModeDescription')}
-      />
+      <div className="space-y-3">
+        <AbsencesHeader />
+        <EmptyState
+          icon="calendar"
+          title={t('absences.calendarModeTitle')}
+          description={t('absences.calendarModeDescription')}
+        />
+      </div>
     )
   }
 
@@ -124,19 +149,7 @@ export function AbsencesPage() {
       }}
     >
       <div className="space-y-3">
-        {/* Reached from Settings, not the bottom nav, so give a way back */}
-        <div className="flex items-center gap-2">
-          <Link
-            to="/settings"
-            aria-label={t('absences.backToSettings')}
-            className="p-1 -ml-1 rounded-lg text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-          >
-            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
-          </Link>
-          <h1 className="text-2xl font-bold text-text-primary dark:text-text-primary-dark">
-            {t('absences.title')}
-          </h1>
-        </div>
+        <AbsencesHeader />
         <p className="text-sm text-text-muted dark:text-text-muted-dark">
           {t('absences.associationScopeHint')}
         </p>
