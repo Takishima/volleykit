@@ -1,18 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { createElement, type ReactNode } from 'react'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import {
   fetchCalendarAssignments,
   type CalendarAssignment,
 } from '@/common/services/calendar/calendar-api'
 import { useAuthStore, type Occupation, type UserProfile } from '@/common/stores/auth'
-import {
-  useCrossAssociationGamesStore,
-  buildNoticeKey,
-  toLocalDateKey,
-} from '@/common/stores/cross-association-games'
+import { useCrossAssociationGamesStore } from '@/common/stores/cross-association-games'
+import { buildNoticeKey, toLocalDateKey } from '@/common/utils/cross-association-notices'
 
 import { useCrossAssociationGameNotices } from './useCrossAssociationGames'
 
@@ -55,6 +52,9 @@ function renderNotices() {
 }
 
 beforeEach(() => {
+  // Fixed local noon so "today at 18:00" test dates are always in the future
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  vi.setSystemTime(new Date(2026, 8, 17, 12, 0, 0))
   vi.mocked(fetchCalendarAssignments).mockReset()
   vi.mocked(fetchCalendarAssignments).mockResolvedValue([])
   act(() => {
@@ -68,6 +68,10 @@ beforeEach(() => {
     })
     useCrossAssociationGamesStore.setState({ dismissedNotices: [] })
   })
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe('useCrossAssociationGameNotices', () => {
@@ -127,6 +131,39 @@ describe('useCrossAssociationGameNotices', () => {
 
     await waitFor(() => expect(fetchCalendarAssignments).toHaveBeenCalled())
     expect(result.current).toEqual([])
+  })
+
+  it('ignores games that already started', async () => {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    vi.mocked(fetchCalendarAssignments).mockResolvedValue([
+      makeCalendarAssignment(oneHourAgo, 'SVRBA'),
+    ])
+
+    const { result } = renderNotices()
+
+    await waitFor(() => expect(fetchCalendarAssignments).toHaveBeenCalled())
+    expect(result.current).toEqual([])
+  })
+
+  it('prefers the referee occupation when an association has several roles', async () => {
+    const gameDate = isoDaysFromNow(1)
+    act(() => {
+      useAuthStore.setState({
+        user: createUser([
+          createOccupation({ id: 'occ-svrz', associationCode: 'SVRZ' }),
+          createOccupation({ id: 'occ-svrba-player', associationCode: 'SVRBA', type: 'player' }),
+          createOccupation({ id: 'occ-svrba-referee', associationCode: 'SVRBA' }),
+        ]),
+      })
+    })
+    vi.mocked(fetchCalendarAssignments).mockResolvedValue([
+      makeCalendarAssignment(gameDate, 'SVRBA'),
+    ])
+
+    const { result } = renderNotices()
+
+    await waitFor(() => expect(result.current).toHaveLength(1))
+    expect(result.current[0]?.occupationId).toBe('occ-svrba-referee')
   })
 
   it('ignores dismissed notices', async () => {

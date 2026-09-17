@@ -65,11 +65,11 @@ function NoticePill({
 export function CrossAssociationGameNotices({ onSwitch }: CrossAssociationGameNoticesProps) {
   const notices = useCrossAssociationGameNotices()
 
-  if (notices.length === 0) return null
-
+  // The live region stays mounted even when empty: assistive technology
+  // only announces mutations inside an already-present aria-live container.
   return (
     <div
-      className="fixed bottom-20 right-4 z-40 flex flex-col items-end gap-2"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-4 z-40 flex flex-col items-end gap-2"
       role="status"
       aria-live="polite"
       data-testid="cross-association-game-notices"

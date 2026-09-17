@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import {
   fetchCalendarAssignments,
@@ -53,6 +53,9 @@ function renderNotices(onSwitch = vi.fn()) {
 
 beforeEach(async () => {
   await setLocale('en')
+  // Fixed local noon so "today at 18:00" test dates are always in the future
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  vi.setSystemTime(new Date(2026, 8, 17, 12, 0, 0))
   vi.mocked(fetchCalendarAssignments).mockReset()
   vi.mocked(fetchCalendarAssignments).mockResolvedValue([])
   act(() => {
@@ -68,11 +71,16 @@ beforeEach(async () => {
   })
 })
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('CrossAssociationGameNotices', () => {
-  it('renders nothing when no other association has an imminent game', () => {
+  it('renders an empty live region when no other association has an imminent game', () => {
     renderNotices()
 
-    expect(screen.queryByTestId('cross-association-game-notices')).not.toBeInTheDocument()
+    // The aria-live container stays mounted so AT announces later notices
+    expect(screen.getByTestId('cross-association-game-notices')).toBeEmptyDOMElement()
   })
 
   it('shows a notice for a game today in another association', async () => {
@@ -102,7 +110,8 @@ describe('CrossAssociationGameNotices', () => {
     ])
 
     renderNotices(onSwitch)
-    await userEvent.click(await screen.findByText('Game today in SVRBA'))
+    const clickUser = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    await clickUser.click(await screen.findByText('Game today in SVRBA'))
 
     expect(onSwitch).toHaveBeenCalledWith('occ-svrba')
   })
@@ -114,9 +123,11 @@ describe('CrossAssociationGameNotices', () => {
 
     renderNotices()
     await screen.findByText('Game today in SVRBA')
-    await userEvent.click(screen.getByRole('button', { name: 'Dismiss notification' }))
+    const clickUser = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    await clickUser.click(screen.getByRole('button', { name: 'Dismiss notification' }))
 
-    expect(screen.queryByTestId('cross-association-game-notices')).not.toBeInTheDocument()
+    expect(screen.queryByText('Game today in SVRBA')).not.toBeInTheDocument()
+    expect(screen.getByTestId('cross-association-game-notices')).toBeEmptyDOMElement()
   })
 
   it('disables switching while an association switch is in progress', async () => {

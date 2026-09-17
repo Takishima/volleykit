@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
-import {
-  useCrossAssociationGamesStore,
-  buildNoticeKey,
-  toLocalDateKey,
-} from './cross-association-games'
+import { buildNoticeKey, toLocalDateKey } from '@/common/utils/cross-association-notices'
+
+import { useCrossAssociationGamesStore } from './cross-association-games'
 
 function isoDaysFromNow(days: number, hour = 18): string {
   const date = new Date()
@@ -15,17 +13,6 @@ function isoDaysFromNow(days: number, hour = 18): string {
 
 beforeEach(() => {
   useCrossAssociationGamesStore.setState({ dismissedNotices: [] })
-})
-
-describe('buildNoticeKey / toLocalDateKey', () => {
-  it('builds notice keys with date and day relation', () => {
-    expect(buildNoticeKey('SVRZ', '2026-09-16', 'today')).toBe('SVRZ:2026-09-16:today')
-  })
-
-  it('extracts the local calendar date from an ISO string', () => {
-    const date = new Date(2026, 8, 16, 20, 30)
-    expect(toLocalDateKey(date.toISOString())).toBe('2026-09-16')
-  })
 })
 
 describe('dismissNotice', () => {

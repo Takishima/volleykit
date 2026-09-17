@@ -11,26 +11,9 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-/**
- * Builds the dismissal key for a notice. Includes the game's local date and
- * the today/tomorrow relation, so each stage of the reminder can be
- * dismissed independently.
- */
-export function buildNoticeKey(
-  associationCode: string,
-  gameDateKey: string,
-  day: 'today' | 'tomorrow'
-): string {
-  return `${associationCode}:${gameDateKey}:${day}`
-}
+import { toLocalDateKey } from '@/common/utils/cross-association-notices'
 
-/** Extracts the local calendar date (yyyy-mm-dd) from an ISO date string. */
-export function toLocalDateKey(isoDate: string): string {
-  const date = new Date(isoDate)
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
+const CROSS_ASSOCIATION_GAMES_STORE_VERSION = 1
 
 /** Keeps only dismissal keys whose game date is today or later. */
 function pruneDismissedNotices(dismissed: string[]): string[] {
@@ -63,6 +46,7 @@ export const useCrossAssociationGamesStore = create<CrossAssociationGamesState>(
     }),
     {
       name: 'volleykit-cross-association-games',
+      version: CROSS_ASSOCIATION_GAMES_STORE_VERSION,
     }
   )
 )

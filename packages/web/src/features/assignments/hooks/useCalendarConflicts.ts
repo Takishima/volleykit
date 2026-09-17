@@ -16,7 +16,7 @@ import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
-import { fetchCalendarAssignments } from '@/common/services/calendar/calendar-api'
+import { calendarAssignmentsOptions } from '@/common/services/calendar/calendar-queries'
 import type { CalendarAssignment } from '@/common/services/calendar/ical/types'
 import { useAuthStore } from '@/common/stores/auth'
 import { generateDemoCalendarAssignments } from '@/common/stores/demo-generators'
@@ -176,20 +176,14 @@ export function useCalendarConflicts(
   const isDemoMode = useAuthStore((state) => state.dataSource === 'demo')
 
   const query: UseQueryResult<CalendarAssignment[], Error> = useQuery({
-    queryKey: isDemoMode
-      ? queryKeys.calendar.assignmentsByCode('demo')
-      : queryKeys.calendar.assignmentsByCode(calendarCode ?? ''),
-    queryFn: ({ signal }) => {
-      // In demo mode, return mock calendar data with conflicts
-      if (isDemoMode) {
-        return Promise.resolve(generateDemoCalendarAssignments() as CalendarAssignment[])
-      }
-
-      if (!calendarCode) {
-        return Promise.resolve([])
-      }
-      return fetchCalendarAssignments(calendarCode, signal)
-    },
+    // In demo mode, return mock calendar data with conflicts;
+    // otherwise share the common calendar feed query config.
+    ...(isDemoMode
+      ? {
+          queryKey: queryKeys.calendar.assignmentsByCode('demo'),
+          queryFn: () => Promise.resolve(generateDemoCalendarAssignments() as CalendarAssignment[]),
+        }
+      : calendarAssignmentsOptions(calendarCode)),
     // Enable for demo mode OR when authenticated with calendar code
     enabled: isDemoMode || (isAuthenticated && !!calendarCode),
     staleTime: CALENDAR_CONFLICTS_STALE_TIME_MS,

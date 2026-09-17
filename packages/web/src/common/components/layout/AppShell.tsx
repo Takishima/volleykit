@@ -314,10 +314,10 @@ export function AppShell() {
         <Outlet />
       </main>
 
-      {/* Subtle reminder for games today/tomorrow in other associations */}
-      {isAuthenticated && !isCalendarMode && (
-        <CrossAssociationGameNotices onSwitch={handleOccupationSelect} />
-      )}
+      {/* Subtle reminder for games today/tomorrow in other associations.
+          Gating (API mode, calendar code, multiple associations) lives in
+          the hook; the component renders an empty live region otherwise. */}
+      <CrossAssociationGameNotices onSwitch={handleOccupationSelect} />
 
       <BottomNavigation navItems={navItems} />
 

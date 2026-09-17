@@ -7,16 +7,9 @@
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { queryKeys } from '@/api/queryKeys'
-import { ASSIGNMENTS_STALE_TIME_MS } from '@/common/hooks/usePaginatedQuery'
-import {
-  fetchCalendarAssignments,
-  type CalendarAssignment,
-} from '@/common/services/calendar/calendar-api'
+import type { CalendarAssignment } from '@/common/services/calendar/calendar-api'
+import { calendarAssignmentsOptions } from '@/common/services/calendar/calendar-queries'
 import { useAuthStore } from '@/common/stores/auth'
-
-// Stable empty array to prevent unnecessary re-renders
-const EMPTY_ASSIGNMENTS: CalendarAssignment[] = []
 
 /**
  * Fetches assignments from the calendar iCal feed.
@@ -51,18 +44,9 @@ export function useCalendarAssignments(): UseQueryResult<CalendarAssignment[], E
   const isCalendarMode = dataSource === 'calendar'
 
   return useQuery({
-    queryKey: queryKeys.calendar.assignmentsByCode(calendarCode ?? ''),
-    queryFn: ({ signal }) => {
-      if (!calendarCode) {
-        return Promise.resolve(EMPTY_ASSIGNMENTS)
-      }
-      return fetchCalendarAssignments(calendarCode, signal)
-    },
+    ...calendarAssignmentsOptions(calendarCode),
     // Only fetch when in calendar mode with a valid code
     enabled: isCalendarMode && !!calendarCode,
-    staleTime: ASSIGNMENTS_STALE_TIME_MS,
-    // Use empty array as placeholder to avoid undefined data
-    placeholderData: EMPTY_ASSIGNMENTS,
   })
 }
 
