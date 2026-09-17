@@ -106,19 +106,21 @@ export function useCrossAssociationGameNotices(): CrossAssociationGameNotice[] {
   )
   const dismissedNotices = useCrossAssociationGamesStore((state) => state.dismissedNotices)
 
-  // Tick once per minute so a finished game's notice disappears and
-  // "tomorrow" flips to "today" after midnight without a reload.
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const intervalId = setInterval(() => setNow(Date.now()), NOTICE_REFRESH_INTERVAL_MS)
-    return () => clearInterval(intervalId)
-  }, [])
-
   const occupations = user?.occupations
   const distinctAssociationCount = new Set(
     (occupations ?? []).map((o) => o.associationCode).filter(Boolean)
   ).size
   const enabled = dataSource === 'api' && !!calendarCode && distinctAssociationCount >= 2
+
+  // Tick once per minute so a finished game's notice disappears and
+  // "tomorrow" flips to "today" after midnight without a reload.
+  // Only ticks while the feature is active to avoid idle re-renders.
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!enabled) return
+    const intervalId = setInterval(() => setNow(Date.now()), NOTICE_REFRESH_INTERVAL_MS)
+    return () => clearInterval(intervalId)
+  }, [enabled])
 
   const { data: assignments } = useQuery({
     ...calendarAssignmentsOptions(calendarCode),
