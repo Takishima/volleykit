@@ -26,6 +26,7 @@ import { createLogger } from '@/common/utils/logger'
 import { getOccupationLabelKey } from '@/common/utils/occupation-labels'
 
 import { BottomNavigation, type NavItem } from './BottomNavigation'
+import { CrossAssociationGameNotices } from './CrossAssociationGameNotices'
 import { HeaderDropdown } from './HeaderDropdown'
 
 const log = createLogger('AppShell')
@@ -312,6 +313,11 @@ export function AppShell() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 pb-16">
         <Outlet />
       </main>
+
+      {/* Subtle reminder for games today/tomorrow in other associations.
+          Gating (API mode, calendar code, multiple associations) lives in
+          the hook; the component renders an empty live region otherwise. */}
+      <CrossAssociationGameNotices onSwitch={handleOccupationSelect} />
 
       <BottomNavigation navItems={navItems} />
 

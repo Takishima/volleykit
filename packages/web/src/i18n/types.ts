@@ -33,6 +33,9 @@ export interface Translations {
     selectRole: string
     selectOccupation: string
     switchAssociationFailed: string
+    crossAssociationGameToday: string
+    crossAssociationGameTomorrow: string
+    crossAssociationSwitchTo: string
     vs: string
     unknown: string
     unknownDate: string
