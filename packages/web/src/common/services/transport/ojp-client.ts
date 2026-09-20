@@ -9,6 +9,7 @@
 
 import { getApiBaseUrl } from '@/api/constants'
 
+import { selectBestEbikeTrainTrip } from './ebike-trip-adapter'
 import {
   selectBestTrip,
   extractOriginStation,
@@ -17,7 +18,7 @@ import {
   extractFinalWalkingMinutes,
   parseDurationToMinutes,
 } from './ojp-trip-helpers'
-import { TransportApiError } from './types'
+import { TransportApiError, DEFAULT_MAX_BIKE_DISTANCE_KM } from './types'
 
 import type { OjpTrip } from './ojp-trip-helpers'
 import type { Coordinates, TravelTimeResult, TravelTimeOptions } from './types'
@@ -162,6 +163,34 @@ export async function calculateTravelTime(
     // Map trip results to our OjpTrip interface (each tripResult has a trip property)
     const trips = tripResults.map((tr) => tr.trip as OjpTrip)
 
+    // E-bike + train mode: replace access/egress legs with estimated cycling
+    // times around the rail portion. Falls back to regular public transport
+    // when no trip has an adaptable rail portion within the cycling limit.
+    if (options.travelMode === 'ebikeTrain') {
+      const adaptation = selectBestEbikeTrainTrip(
+        trips,
+        from,
+        to,
+        options.maxBikeDistanceKm ?? DEFAULT_MAX_BIKE_DISTANCE_KM,
+        options.targetArrivalTime
+      )
+
+      if (adaptation) {
+        return {
+          durationMinutes: adaptation.durationMinutes,
+          departureTime: adaptation.departureTime,
+          arrivalTime: adaptation.arrivalTime,
+          transfers: adaptation.transfers,
+          originStation: adaptation.originStation,
+          destinationStation: adaptation.destinationStation,
+          finalWalkingMinutes: 0,
+          travelMode: 'ebikeTrain',
+          bikeLegs: adaptation.bikeLegs,
+          tripData: options.includeTrips ? adaptation.sourceTrip : undefined,
+        }
+      }
+    }
+
     // Select the best trip based on target arrival time or take earliest departure
     const trip = selectBestTrip(trips, options.targetArrivalTime)
 
@@ -184,6 +213,7 @@ export async function calculateTravelTime(
       originStation,
       destinationStation,
       finalWalkingMinutes,
+      travelMode: 'publicTransport',
       tripData: options.includeTrips ? trip : undefined,
     }
   } catch (error) {

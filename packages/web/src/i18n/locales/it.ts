@@ -491,6 +491,12 @@ const it: Translations = {
       sbbDestinationDescription: 'Scegli dove deve portare il link FFS',
       sbbDestinationAddress: 'Palestra (incl. cammino)',
       sbbDestinationStation: 'Ultima fermata trasporto pubblico',
+      travelMode: 'Calcolo del percorso',
+      travelModeDescription: 'Come vengono calcolati i tempi di viaggio verso la palestra',
+      travelModePublicTransport: 'Trasporto pubblico (porta a porta)',
+      travelModeEbikeTrain: 'E-bike + treno (in bici da e per la stazione)',
+      maxBikeDistance: 'Distanza massima in bici',
+      maxBikeDistanceDescription: 'Oltre questa distanza si usa il trasporto pubblico',
       cacheInfo:
         'I tempi di viaggio sono memorizzati in cache per tipo di giorno (feriale/sabato/domenica) per 14 giorni.',
       cacheEntries: '{count} percorsi in cache',

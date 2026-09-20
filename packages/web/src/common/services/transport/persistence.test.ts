@@ -33,7 +33,15 @@ describe('persistence', () => {
   describe('buildCacheKey', () => {
     it('builds key from hallId, homeLocationHash, and dayType', () => {
       const key = buildCacheKey('hall-123', '47.377,8.542', 'weekday')
-      expect(key).toBe('hall-123:47.377,8.542:weekday')
+      expect(key).toBe('hall-123:47.377,8.542:weekday:publicTransport')
+    })
+
+    it('builds different keys for different travel modes', () => {
+      const publicTransportKey = buildCacheKey('hall-123', '47.377,8.542', 'weekday')
+      const ebikeKey = buildCacheKey('hall-123', '47.377,8.542', 'weekday', 'ebikeTrain-15')
+
+      expect(ebikeKey).toBe('hall-123:47.377,8.542:weekday:ebikeTrain-15')
+      expect(publicTransportKey).not.toBe(ebikeKey)
     })
 
     it('builds different keys for different day types', () => {

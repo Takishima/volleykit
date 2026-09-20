@@ -365,6 +365,12 @@ export interface Translations {
       sbbDestinationDescription: string
       sbbDestinationAddress: string
       sbbDestinationStation: string
+      travelMode: string
+      travelModeDescription: string
+      travelModePublicTransport: string
+      travelModeEbikeTrain: string
+      maxBikeDistance: string
+      maxBikeDistanceDescription: string
       cacheInfo: string
       cacheEntries: string
       refreshCache: string

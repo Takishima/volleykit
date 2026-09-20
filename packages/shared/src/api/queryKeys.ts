@@ -238,9 +238,17 @@ export const queryKeys = {
     all: ['travelTime'] as const,
     /** Parent key for all hall travel time queries */
     halls: () => [...queryKeys.travelTime.all, 'hall'] as const,
-    /** Travel time to a specific hall from user's home location for a day type */
-    hall: (hallId: string, homeLocationHash: string, dayType: 'weekday' | 'saturday' | 'sunday') =>
-      [...queryKeys.travelTime.halls(), hallId, homeLocationHash, dayType] as const,
+    /**
+     * Travel time to a specific hall from user's home location for a day type.
+     * @param travelModeKey Travel-mode key segment, e.g. "publicTransport" or "ebikeTrain-15"
+     */
+    hall: (
+      hallId: string,
+      homeLocationHash: string,
+      dayType: 'weekday' | 'saturday' | 'sunday',
+      travelModeKey: string = 'publicTransport'
+    ) =>
+      [...queryKeys.travelTime.halls(), hallId, homeLocationHash, dayType, travelModeKey] as const,
   },
 
   /**

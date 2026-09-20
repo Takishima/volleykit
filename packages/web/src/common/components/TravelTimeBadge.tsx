@@ -1,9 +1,10 @@
 import { memo } from 'react'
 
 import { Badge } from '@/common/components/Badge'
-import { TrainFront } from '@/common/components/icons'
+import { Bike, TrainFront } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { formatTravelTime } from '@/common/hooks/useTravelTime'
+import { useSettingsStore } from '@/common/stores/settings'
 
 interface TravelTimeBadgeProps {
   /** Travel time in minutes */
@@ -23,11 +24,15 @@ function TravelTimeBadgeComponent({
   className = '',
 }: TravelTimeBadgeProps) {
   const { t } = useTranslation()
+  const isEbikeTrainMode = useSettingsStore(
+    (state) => state.travelTimeFilter?.travelMode === 'ebikeTrain'
+  )
 
   if (isLoading) {
     return (
       <Badge variant="neutral" className={`animate-pulse ${className}`}>
         <span className="flex items-center gap-1">
+          {isEbikeTrainMode && <Bike className="w-3 h-3" aria-hidden="true" />}
           <TrainFront className="w-3 h-3" aria-hidden="true" />
           <span>...</span>
         </span>
@@ -42,6 +47,7 @@ function TravelTimeBadgeComponent({
   return (
     <Badge variant="neutral" className={className} title={t('exchange.travelTime')}>
       <span className="flex items-center gap-1">
+        {isEbikeTrainMode && <Bike className="w-3 h-3" aria-hidden="true" />}
         <TrainFront className="w-3 h-3" aria-hidden="true" />
         <span>{formatTravelTime(durationMinutes)}</span>
       </span>

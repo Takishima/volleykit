@@ -20,6 +20,9 @@ import {
   getCachedTravelTime,
   setCachedTravelTime,
   removeCachedTravelTime,
+  getTravelModeKey,
+  DEFAULT_TRAVEL_MODE,
+  DEFAULT_MAX_BIKE_DISTANCE_KM,
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
   type Coordinates,
@@ -60,6 +63,12 @@ export function useTravelTime(
   const transportEnabledByAssociation = useSettingsStore(
     (state) => state.transportEnabledByAssociation
   )
+  const travelMode = useSettingsStore(
+    (state) => state.travelTimeFilter?.travelMode ?? DEFAULT_TRAVEL_MODE
+  )
+  const maxBikeDistanceKm = useSettingsStore(
+    (state) => state.travelTimeFilter?.maxBikeDistanceKm ?? DEFAULT_MAX_BIKE_DISTANCE_KM
+  )
   const queryClient = useQueryClient()
   const associationCode = useActiveAssociationCode()
 
@@ -89,7 +98,15 @@ export function useTravelTime(
     (isDemoMode || isCalendarMode || isOjpConfigured())
   )
 
-  const queryKey = queryKeys.travelTime.hall(hallId ?? '', homeLocationHash ?? '', dayType)
+  // Travel-mode segment keeps cached results per mode (and per bike distance limit)
+  const travelModeKey = getTravelModeKey(travelMode, maxBikeDistanceKm)
+
+  const queryKey = queryKeys.travelTime.hall(
+    hallId ?? '',
+    homeLocationHash ?? '',
+    dayType,
+    travelModeKey
+  )
 
   const query = useQuery<TravelTimeResult>({
     queryKey,
@@ -99,7 +116,7 @@ export function useTravelTime(
       }
 
       // Check localStorage cache first (survives browser sessions)
-      const cached = getCachedTravelTime(hallId, homeLocationHash ?? '', dayType)
+      const cached = getCachedTravelTime(hallId, homeLocationHash ?? '', dayType, travelModeKey)
       if (cached) {
         return cached
       }
@@ -115,13 +132,18 @@ export function useTravelTime(
       if (isOjpConfigured()) {
         result = await calculateTravelTime(fromCoords, hallCoords, {
           targetArrivalTime,
+          travelMode,
+          maxBikeDistanceKm,
         })
       } else {
-        result = await calculateMockTravelTime(fromCoords, hallCoords)
+        result = await calculateMockTravelTime(fromCoords, hallCoords, {
+          travelMode,
+          maxBikeDistanceKm,
+        })
       }
 
       // Persist successful result to localStorage
-      setCachedTravelTime(hallId, homeLocationHash ?? '', dayType, result)
+      setCachedTravelTime(hallId, homeLocationHash ?? '', dayType, result, travelModeKey)
 
       return result
     },
@@ -142,11 +164,11 @@ export function useTravelTime(
   const refresh = useCallback(() => {
     if (hallId && homeLocationHash) {
       // Remove from localStorage first
-      removeCachedTravelTime(hallId, homeLocationHash, dayType)
+      removeCachedTravelTime(hallId, homeLocationHash, dayType, travelModeKey)
     }
     // Then invalidate TanStack Query cache to trigger refetch
     queryClient.invalidateQueries({ queryKey })
-  }, [queryClient, queryKey, hallId, homeLocationHash, dayType])
+  }, [queryClient, queryKey, hallId, homeLocationHash, dayType, travelModeKey])
 
   return {
     ...query,

@@ -21,6 +21,9 @@ vi.mock('@/common/services/transport', () => ({
   getCachedTravelTime: vi.fn(() => null),
   setCachedTravelTime: vi.fn(),
   removeCachedTravelTime: vi.fn(),
+  getTravelModeKey: vi.fn(() => 'publicTransport'),
+  DEFAULT_TRAVEL_MODE: 'publicTransport',
+  DEFAULT_MAX_BIKE_DISTANCE_KM: 15,
   TRAVEL_TIME_STALE_TIME: 14 * 24 * 60 * 60 * 1000,
   TRAVEL_TIME_GC_TIME: 14 * 24 * 60 * 60 * 1000,
 }))
@@ -196,7 +199,8 @@ describe('useTravelTime', () => {
 
       expect(calculateMockTravelTime).toHaveBeenCalledWith(
         { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
-        mockHallCoords
+        mockHallCoords,
+        { travelMode: 'publicTransport', maxBikeDistanceKm: 15 }
       )
       expect(result.current.data?.durationMinutes).toBe(75)
     })
@@ -234,7 +238,7 @@ describe('useTravelTime', () => {
       expect(calculateTravelTime).toHaveBeenCalledWith(
         { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
         mockHallCoords,
-        { targetArrivalTime: undefined }
+        { targetArrivalTime: undefined, travelMode: 'publicTransport', maxBikeDistanceKm: 15 }
       )
       expect(result.current.data?.durationMinutes).toBe(75)
     })
@@ -550,7 +554,8 @@ describe('localStorage persistence', () => {
       'hall-1',
       expect.any(String),
       expect.stringMatching(/^(weekday|saturday|sunday)$/),
-      mockTravelTimeResult
+      mockTravelTimeResult,
+      'publicTransport'
     )
   })
 
@@ -592,7 +597,8 @@ describe('localStorage persistence', () => {
     expect(removeCachedTravelTime).toHaveBeenCalledWith(
       'hall-1',
       expect.any(String),
-      expect.stringMatching(/^(weekday|saturday|sunday)$/)
+      expect.stringMatching(/^(weekday|saturday|sunday)$/),
+      'publicTransport'
     )
   })
 })

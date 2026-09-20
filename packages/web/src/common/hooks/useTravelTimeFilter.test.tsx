@@ -21,6 +21,9 @@ vi.mock('@/common/services/transport', () => ({
   getDayType: vi.fn(() => 'weekday'),
   getCachedTravelTime: vi.fn(() => null),
   setCachedTravelTime: vi.fn(),
+  getTravelModeKey: vi.fn(() => 'publicTransport'),
+  DEFAULT_TRAVEL_MODE: 'publicTransport',
+  DEFAULT_MAX_BIKE_DISTANCE_KM: 15,
   TRAVEL_TIME_STALE_TIME: 14 * 24 * 60 * 60 * 1000,
   TRAVEL_TIME_GC_TIME: 14 * 24 * 60 * 60 * 1000,
 }))

@@ -17,6 +17,8 @@ vi.mock('@/common/stores/settings', () => ({
   MAX_ARRIVAL_BUFFER_MINUTES: 120,
   DEFAULT_MAX_DISTANCE_KM: 50,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES: 120,
+  DEFAULT_TRAVEL_MODE: 'publicTransport',
+  DEFAULT_MAX_BIKE_DISTANCE_KM: 15,
 }))
 
 vi.mock('@/common/hooks/useActiveAssociation', () => ({
@@ -30,6 +32,8 @@ vi.mock('@/common/hooks/useTravelTime', () => ({
 vi.mock('@/common/services/transport', () => ({
   clearTravelTimeCache: vi.fn(),
   getTravelTimeCacheStats: vi.fn(() => ({ entryCount: 5, oldestEntryAge: null })),
+  MIN_MAX_BIKE_DISTANCE_KM: 1,
+  MAX_MAX_BIKE_DISTANCE_KM: 30,
 }))
 
 function createWrapper() {

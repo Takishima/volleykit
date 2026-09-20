@@ -45,6 +45,9 @@ export const SETTINGS_GROUP_EXPANDED_VERSION = 10
 /** Version that removed non-conformant feature gate (now always enabled) */
 export const REMOVE_NON_CONFORMANT_GATE_VERSION = 11
 
+/** Version that added the travel mode (e-bike + train) settings */
+export const TRAVEL_MODE_VERSION = 12
+
 // ============================================================================
 // Migration Type Shapes
 // ============================================================================
@@ -186,6 +189,22 @@ export function addHideOwnExchangesByAssociation(state: StateWithModes): void {
 }
 
 /**
+ * Add travel mode settings for v11→v12 migration.
+ */
+export function addTravelModeSettings(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (!settings?.travelTimeFilter) continue
+
+    settings.travelTimeFilter.travelMode ??= DEFAULT_MODE_SETTINGS.travelTimeFilter.travelMode
+    settings.travelTimeFilter.maxBikeDistanceKm ??=
+      DEFAULT_MODE_SETTINGS.travelTimeFilter.maxBikeDistanceKm
+  }
+}
+
+/**
  * Run all migrations from the given version to latest.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -240,6 +259,11 @@ export function runMigrations(persisted: any, version: number): unknown {
   // v10 → v11: Remove non-conformant feature gate (now always enabled)
   if (version < REMOVE_NON_CONFORMANT_GATE_VERSION) {
     delete (state as Record<string, unknown>).isNonConformantEnabled
+  }
+
+  // v11 → v12: Add travel mode (e-bike + train) settings
+  if (version < TRAVEL_MODE_VERSION) {
+    addTravelModeSettings(state as StateWithModes)
   }
 
   return state

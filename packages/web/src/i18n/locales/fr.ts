@@ -496,6 +496,12 @@ const fr: Translations = {
       sbbDestinationDescription: 'Choisissez où le lien CFF doit mener',
       sbbDestinationAddress: 'Salle de sport (y.c. marche)',
       sbbDestinationStation: 'Dernier arrêt de transport public',
+      travelMode: "Calcul de l'itinéraire",
+      travelModeDescription: 'Comment les temps de trajet vers la salle sont calculés',
+      travelModePublicTransport: 'Transports publics (porte à porte)',
+      travelModeEbikeTrain: 'Vélo électrique + train (à vélo vers et depuis la gare)',
+      maxBikeDistance: 'Distance maximale à vélo',
+      maxBikeDistanceDescription: 'Au-delà, les transports publics sont utilisés',
       cacheInfo:
         'Les temps de trajet sont mis en cache par type de jour (semaine/samedi/dimanche) pendant 14 jours.',
       cacheEntries: '{count} trajets en cache',

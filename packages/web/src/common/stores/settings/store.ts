@@ -17,6 +17,7 @@ import type {
   UserLocation,
   ValidationReferenceMode,
   SbbDestinationType,
+  TravelMode,
 } from './types'
 
 /**
@@ -297,6 +298,22 @@ export const useSettingsStore = create<SettingsState>()(
           )
         },
 
+        setTravelMode: (mode: TravelMode) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: { ...current.travelTimeFilter, travelMode: mode },
+            }))
+          )
+        },
+
+        setMaxBikeDistanceKm: (km: number) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              travelTimeFilter: { ...current.travelTimeFilter, maxBikeDistanceKm: km },
+            }))
+          )
+        },
+
         setLevelFilterEnabled: (enabled: boolean) => {
           set((state) => updateModeAndTopLevel(state, () => ({ levelFilterEnabled: enabled })))
         },
@@ -371,7 +388,7 @@ export const useSettingsStore = create<SettingsState>()(
       }),
       {
         name: 'volleykit-settings',
-        version: 11,
+        version: 12,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -435,6 +452,12 @@ export const useSettingsStore = create<SettingsState>()(
                     sbbDestinationType:
                       persistedModeSettings.travelTimeFilter?.sbbDestinationType ??
                       DEFAULT_MODE_SETTINGS.travelTimeFilter.sbbDestinationType,
+                    travelMode:
+                      persistedModeSettings.travelTimeFilter?.travelMode ??
+                      DEFAULT_MODE_SETTINGS.travelTimeFilter.travelMode,
+                    maxBikeDistanceKm:
+                      persistedModeSettings.travelTimeFilter?.maxBikeDistanceKm ??
+                      DEFAULT_MODE_SETTINGS.travelTimeFilter.maxBikeDistanceKm,
                   },
                   levelFilterEnabled:
                     persistedModeSettings.levelFilterEnabled ??

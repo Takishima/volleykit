@@ -12,7 +12,15 @@ import {
 } from '@/common/utils/constants'
 import { calculateDistanceKm } from '@/common/utils/distance'
 
-import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from './types'
+import { estimateBikeMinutes } from './ebike-trip-adapter'
+
+import type {
+  Coordinates,
+  TravelTimeResult,
+  TravelTimeOptions,
+  StationInfo,
+  BikeLegs,
+} from './types'
 
 /** Network delay for realistic demo behavior */
 const MOCK_DELAY_MS = 100
@@ -35,6 +43,11 @@ const WALKING_TIME_BASE_MINUTES = 5
 const WALKING_TIME_VARIATION = 6
 const WALKING_COORD_MULTIPLIER_LAT = 100
 const WALKING_COORD_MULTIPLIER_LON = 10
+
+// Mock cycling distances for the e-bike + train mode (km).
+// Deterministic variation keeps demo results stable per hall.
+const BIKE_DISTANCE_BASE_KM = 2
+const BIKE_DISTANCE_VARIATION_KM = 6
 
 /**
  * Estimate travel time based on straight-line distance.
@@ -143,6 +156,27 @@ export async function calculateMockTravelTime(
         to.latitude * WALKING_COORD_MULTIPLIER_LAT + to.longitude * WALKING_COORD_MULTIPLIER_LON
       )
     ) % WALKING_TIME_VARIATION
+
+  // E-bike + train mode: replace walking with deterministic mock cycling legs
+  if (options.travelMode === 'ebikeTrain') {
+    const bikeLegs = generateMockBikeLegs(from, to)
+    const ebikeDuration = durationMinutes + bikeLegs.toStationMinutes + bikeLegs.fromStationMinutes
+    const ebikeArrival = new Date(departureTime.getTime() + ebikeDuration * MS_PER_MINUTE)
+
+    return {
+      durationMinutes: ebikeDuration,
+      departureTime: departureTime.toISOString(),
+      arrivalTime: ebikeArrival.toISOString(),
+      transfers,
+      originStation,
+      destinationStation,
+      finalWalkingMinutes: 0,
+      travelMode: 'ebikeTrain',
+      bikeLegs,
+      tripData: undefined,
+    }
+  }
+
   const finalWalkingMinutes = WALKING_TIME_BASE_MINUTES + coordHash
 
   return {
@@ -153,6 +187,30 @@ export async function calculateMockTravelTime(
     originStation,
     destinationStation,
     finalWalkingMinutes,
+    travelMode: 'publicTransport',
     tripData: undefined,
+  }
+}
+
+/**
+ * Generate deterministic mock cycling legs for demo mode.
+ */
+function generateMockBikeLegs(from: Coordinates, to: Coordinates): BikeLegs {
+  const hashOf = (coords: Coordinates) =>
+    Math.abs(
+      Math.round(
+        coords.latitude * WALKING_COORD_MULTIPLIER_LAT +
+          coords.longitude * WALKING_COORD_MULTIPLIER_LON
+      )
+    ) % BIKE_DISTANCE_VARIATION_KM
+
+  const toStationKm = BIKE_DISTANCE_BASE_KM + hashOf(from)
+  const fromStationKm = BIKE_DISTANCE_BASE_KM + hashOf(to)
+
+  return {
+    toStationKm,
+    toStationMinutes: estimateBikeMinutes(toStationKm),
+    fromStationKm,
+    fromStationMinutes: estimateBikeMinutes(fromStationKm),
   }
 }

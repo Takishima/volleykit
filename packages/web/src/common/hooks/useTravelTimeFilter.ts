@@ -17,6 +17,9 @@ import {
   getDayType,
   getCachedTravelTime,
   setCachedTravelTime,
+  getTravelModeKey,
+  DEFAULT_TRAVEL_MODE,
+  DEFAULT_MAX_BIKE_DISTANCE_KM,
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
   type Coordinates,
@@ -87,6 +90,12 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   const arrivalBufferByAssociation = useSettingsStore(
     (state) => state.travelTimeFilter.arrivalBufferByAssociation
   )
+  const travelMode = useSettingsStore(
+    (state) => state.travelTimeFilter?.travelMode ?? DEFAULT_TRAVEL_MODE
+  )
+  const maxBikeDistanceKm = useSettingsStore(
+    (state) => state.travelTimeFilter?.maxBikeDistanceKm ?? DEFAULT_MAX_BIKE_DISTANCE_KM
+  )
   const associationCode = useActiveAssociationCode()
 
   // Check if transport is enabled for current association
@@ -132,20 +141,33 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   // Determine day type for caching (based on today)
   const dayType = getDayType()
 
+  // Travel-mode segment keeps cached results per mode (and per bike distance limit)
+  const travelModeKey = getTravelModeKey(travelMode, maxBikeDistanceKm)
+
   // Check if we should fetch travel times
   const canFetch = Boolean(isTransportEnabled && homeLocation && (isDemoMode || isOjpConfigured()))
 
   // Create queries for each unique hall
   const queries = useQueries({
     queries: hallInfos.map((hallInfo) => ({
-      queryKey: queryKeys.travelTime.hall(hallInfo.id, homeLocationHash ?? '', dayType),
+      queryKey: queryKeys.travelTime.hall(
+        hallInfo.id,
+        homeLocationHash ?? '',
+        dayType,
+        travelModeKey
+      ),
       queryFn: async (): Promise<TravelTimeResult> => {
         if (!homeLocation || !hallInfo.coords) {
           throw new Error('Missing location data')
         }
 
         // Check localStorage cache first
-        const cached = getCachedTravelTime(hallInfo.id, homeLocationHash ?? '', dayType)
+        const cached = getCachedTravelTime(
+          hallInfo.id,
+          homeLocationHash ?? '',
+          dayType,
+          travelModeKey
+        )
         if (cached) {
           return cached
         }
@@ -163,15 +185,20 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
 
         let result: TravelTimeResult
         if (isDemoMode) {
-          result = await calculateMockTravelTime(fromCoords, hallInfo.coords)
+          result = await calculateMockTravelTime(fromCoords, hallInfo.coords, {
+            travelMode,
+            maxBikeDistanceKm,
+          })
         } else {
           result = await calculateTravelTime(fromCoords, hallInfo.coords, {
             targetArrivalTime,
+            travelMode,
+            maxBikeDistanceKm,
           })
         }
 
         // Persist to localStorage
-        setCachedTravelTime(hallInfo.id, homeLocationHash ?? '', dayType, result)
+        setCachedTravelTime(hallInfo.id, homeLocationHash ?? '', dayType, result, travelModeKey)
 
         return result
       },

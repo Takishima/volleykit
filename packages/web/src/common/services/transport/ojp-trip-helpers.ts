@@ -14,9 +14,17 @@ import type { StationInfo } from './types'
 // =============================================================================
 
 /**
+ * Timetabled/estimated time pair on a stop point.
+ */
+interface OjpServiceTime {
+  timetabledTime: string
+  estimatedTime?: string
+}
+
+/**
  * Stop point info from a timed leg's legBoard or legAlight.
  */
-interface OjpStopPoint {
+export interface OjpStopPoint {
   stopPointRef: string
   stopPointName: {
     text: string
@@ -24,14 +32,36 @@ interface OjpStopPoint {
   nameSuffix?: {
     text: string
   }
+  serviceArrival?: OjpServiceTime
+  serviceDeparture?: OjpServiceTime
 }
 
 /**
  * Timed leg from OJP SDK representing a public transport segment.
  */
-interface OjpTimedLeg {
+export interface OjpTimedLeg {
   legBoard: OjpStopPoint
   legAlight: OjpStopPoint
+  service?: {
+    mode?: {
+      ptMode?: string
+    }
+  }
+}
+
+/**
+ * Geographic position on a leg endpoint.
+ */
+export interface OjpGeoPosition {
+  longitude: number
+  latitude: number
+}
+
+/**
+ * Endpoint of a continuous or transfer leg (station, address, or coordinates).
+ */
+export interface OjpLegEndpoint {
+  geoPosition?: OjpGeoPosition
 }
 
 /**
@@ -40,14 +70,26 @@ interface OjpTimedLeg {
 interface OjpContinuousLeg {
   /** ISO 8601 duration string (e.g., "PT5M" for 5 minutes walking) */
   duration: string
+  legStart?: OjpLegEndpoint
+  legEnd?: OjpLegEndpoint
+}
+
+/**
+ * Transfer leg from OJP SDK (e.g., walking between platforms or stops).
+ */
+interface OjpTransferLeg {
+  duration: string
+  legStart?: OjpLegEndpoint
+  legEnd?: OjpLegEndpoint
 }
 
 /**
  * Leg structure from OJP SDK. A trip consists of multiple legs.
  */
-interface OjpLeg {
+export interface OjpLeg {
   timedLeg?: OjpTimedLeg
   continuousLeg?: OjpContinuousLeg
+  transferLeg?: OjpTransferLeg
 }
 
 /**
@@ -148,7 +190,9 @@ function buildStationName(stopPoint: OjpStopPoint): string {
 /**
  * Extract station info from a stop point.
  */
-function extractStationFromStopPoint(stopPoint: OjpStopPoint | undefined): StationInfo | undefined {
+export function extractStationFromStopPoint(
+  stopPoint: OjpStopPoint | undefined
+): StationInfo | undefined {
   if (!stopPoint) return undefined
 
   const id = extractDidokId(stopPoint.stopPointRef)
