@@ -76,6 +76,12 @@ export function usePullToRefresh({
       }
       if (isRefreshing) return
 
+      // Ignore touches that begin inside an open dialog: modals render inside
+      // this container (not in a portal), so their inner scroll gestures would
+      // otherwise be misread as a page pull and trigger a refresh
+      const target = e.target as HTMLElement | null
+      if (target?.closest?.('[role="dialog"]')) return
+
       // Only enable pull-to-refresh when at the top of the scroll container
       // Check both window scroll and the element's scroll position
       const element = e.currentTarget as HTMLElement

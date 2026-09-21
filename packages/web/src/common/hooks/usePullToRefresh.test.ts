@@ -190,6 +190,42 @@ describe('usePullToRefresh', () => {
       expect(result.current.pullDistance).toBe(0)
     })
 
+    it('does not track pull when touch starts inside a dialog', () => {
+      const { result } = renderHook(() =>
+        usePullToRefresh({ onRefresh: mockOnRefresh, enabled: true })
+      )
+
+      // Simulate a modal rendered inside the pull-to-refresh container
+      const dialog = document.createElement('div')
+      dialog.setAttribute('role', 'dialog')
+      const scrollableContent = document.createElement('div')
+      dialog.appendChild(scrollableContent)
+      document.body.appendChild(dialog)
+
+      const mockElement = { scrollTop: 0 } as HTMLElement
+
+      act(() => {
+        result.current.containerProps.onTouchStart({
+          touches: [{ clientY: 100 }],
+          currentTarget: mockElement,
+          target: scrollableContent,
+        } as unknown as React.TouchEvent)
+      })
+
+      // Swiping down inside the dialog (scrolling its content up) must not
+      // register as a pull gesture
+      act(() => {
+        result.current.containerProps.onTouchMove({
+          touches: [{ clientY: 200 }],
+          preventDefault: vi.fn(),
+        } as unknown as React.TouchEvent)
+      })
+
+      expect(result.current.pullDistance).toBe(0)
+
+      document.body.removeChild(dialog)
+    })
+
     it('resets pull distance on upward scroll', () => {
       const { result } = renderHook(() =>
         usePullToRefresh({ onRefresh: mockOnRefresh, enabled: true })
