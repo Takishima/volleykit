@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react'
 
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
+import { useTravelTimeSource } from '@/common/hooks/useTravelTimeSource'
 import {
   isOjpConfigured,
   hashLocation,
@@ -105,19 +106,21 @@ function buildSbbUrlParams(
 
 /**
  * Fetch or retrieve cached trip data.
- * Uses the same travel mode as the travel time hooks so the SBB link
- * shares their cache namespace (in e-bike + train mode the result carries
- * the rail stations, giving a station-to-station SBB connection).
+ * Uses the same travel mode and data source as the travel time hooks so the
+ * SBB link shares their cache namespace. In e-bike + train mode the result
+ * carries the rail stations of the adapted trip: with SBB destination
+ * "station" the link becomes station-to-station, with "address" it routes
+ * from the boarding rail station to the hall address.
  */
 async function fetchTripData(
   homeLocation: UserLocation,
   hallCoords: Coordinates,
   hallId: string,
   gameDate: Date,
-  city: string,
   arrivalTime: Date,
   travelMode: TravelMode,
-  maxBikeDistanceKm: number
+  maxBikeDistanceKm: number,
+  useMock: boolean
 ): Promise<TravelTimeResult> {
   return getOrFetchTravelTime({
     hallId,
@@ -128,9 +131,7 @@ async function fetchTripData(
     travelMode,
     maxBikeDistanceKm,
     targetArrivalTime: arrivalTime,
-    useMock: !isOjpConfigured(),
-    originLabel: 'Home',
-    destinationLabel: city,
+    useMock,
   })
 }
 
@@ -158,6 +159,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     (state) => state.travelTimeFilter.sbbDestinationType ?? 'address'
   ) as SbbDestinationType
   const { travelMode, maxBikeDistanceKm } = useTravelModeSettings()
+  const { useMock } = useTravelTimeSource()
 
   const openSbbConnection = useCallback(async () => {
     if (!city || !gameStartTime) {
@@ -218,25 +220,28 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         hallCoords,
         hallId,
         gameDate,
-        city,
         arrivalTime,
         travelMode,
-        maxBikeDistanceKm
+        maxBikeDistanceKm,
+        useMock
       )
+
+      // Last mile from the alighting station: cycling minutes for e-bike +
+      // train results, walking minutes otherwise
+      const lastMileMinutes =
+        tripResult.bikeLegs?.fromStationMinutes ?? tripResult.finalWalkingMinutes ?? 0
 
       // Update state with station info for future clicks
       if (tripResult.originStation) setOriginStation(tripResult.originStation)
       if (tripResult.destinationStation) setDestinationStation(tripResult.destinationStation)
-      if (tripResult.finalWalkingMinutes !== undefined)
-        setFinalWalkingMinutes(tripResult.finalWalkingMinutes)
+      setFinalWalkingMinutes(lastMileMinutes)
 
-      // Recalculate arrival time with actual walking minutes if routing to station
-      const walkingMinutes = tripResult.finalWalkingMinutes ?? 0
+      // Recalculate arrival time with the actual last-mile time if routing to station
       const urlArrivalTime = getAdjustedArrivalTime(
         gameDate,
         arrivalBuffer,
         routeToStation,
-        walkingMinutes
+        lastMileMinutes
       )
 
       const params = buildSbbUrlParams(
@@ -281,6 +286,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     isDemoMode,
     travelMode,
     maxBikeDistanceKm,
+    useMock,
   ])
 
   return {

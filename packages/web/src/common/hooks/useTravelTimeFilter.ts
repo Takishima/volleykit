@@ -10,6 +10,7 @@ import type { GameExchange } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
+import { useTravelTimeSource } from '@/common/hooks/useTravelTimeSource'
 import {
   isOjpConfigured,
   hashLocation,
@@ -89,6 +90,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
     (state) => state.travelTimeFilter.arrivalBufferByAssociation
   )
   const { travelMode, maxBikeDistanceKm, travelModeKey } = useTravelModeSettings()
+  const { useMock } = useTravelTimeSource()
   const associationCode = useActiveAssociationCode()
 
   // Check if transport is enabled for current association
@@ -166,7 +168,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
           travelMode,
           maxBikeDistanceKm,
           targetArrivalTime,
-          useMock: isDemoMode,
+          useMock,
         })
       },
       enabled: canFetch && hallInfo.coords !== null,

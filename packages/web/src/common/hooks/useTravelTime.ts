@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
+import { useTravelTimeSource } from '@/common/hooks/useTravelTimeSource'
 import {
   isOjpConfigured,
   hashLocation,
@@ -59,6 +60,7 @@ export function useTravelTime(
     (state) => state.transportEnabledByAssociation
   )
   const { travelMode, maxBikeDistanceKm, travelModeKey } = useTravelModeSettings()
+  const { useMock } = useTravelTimeSource()
   const queryClient = useQueryClient()
   const associationCode = useActiveAssociationCode()
 
@@ -102,8 +104,6 @@ export function useTravelTime(
         throw new Error('Missing home location or hall coordinates')
       }
 
-      // Prefer real OJP API when configured, fall back to mock transport
-      // This matches the logic in useSbbUrl for consistency
       return getOrFetchTravelTime({
         hallId,
         from: { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
@@ -113,7 +113,7 @@ export function useTravelTime(
         travelMode,
         maxBikeDistanceKm,
         targetArrivalTime,
-        useMock: !isOjpConfigured(),
+        useMock,
       })
     },
     enabled: shouldFetch,

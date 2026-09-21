@@ -34,10 +34,6 @@ export interface GetOrFetchTravelTimeParams {
   targetArrivalTime?: Date
   /** Use the demo-mode mock instead of the OJP API */
   useMock: boolean
-  /** Origin label for mock station names */
-  originLabel?: string
-  /** Destination label for mock station names */
-  destinationLabel?: string
 }
 
 /**
@@ -56,8 +52,6 @@ export async function getOrFetchTravelTime(
     maxBikeDistanceKm,
     targetArrivalTime,
     useMock,
-    originLabel,
-    destinationLabel,
   } = params
 
   const travelModeKey = getTravelModeKey(travelMode, maxBikeDistanceKm)
@@ -71,8 +65,6 @@ export async function getOrFetchTravelTime(
     ? await calculateMockTravelTime(from, to, {
         travelMode,
         maxBikeDistanceKm,
-        originLabel,
-        destinationLabel,
       })
     : await calculateTravelTime(from, to, {
         targetArrivalTime,

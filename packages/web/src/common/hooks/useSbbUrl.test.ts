@@ -277,4 +277,54 @@ describe('useSbbUrl', () => {
       })
     )
   })
+
+  // Keep last in this file: it overrides the settings-store mock implementation
+  it('subtracts the cycling egress from the arrival time when routing to the station in e-bike mode', async () => {
+    const { useSettingsStore } = await import('@/common/stores/settings')
+    vi.mocked(useSettingsStore).mockImplementation((selector: (state: unknown) => unknown) =>
+      selector({
+        homeLocation: {
+          latitude: 47.3769,
+          longitude: 8.5417,
+          label: 'Zurich, Switzerland',
+          source: 'geocoded',
+        },
+        getArrivalBufferForAssociation: () => 30,
+        travelTimeFilter: {
+          sbbDestinationType: 'station',
+          travelMode: 'ebikeTrain',
+          maxBikeDistanceKm: 15,
+        },
+      })
+    )
+
+    mockGetOrFetchTravelTime.mockResolvedValue({
+      durationMinutes: 80,
+      transfers: 0,
+      originStation: { id: 'origin-id', name: 'Origin Station' },
+      destinationStation: { id: 'dest-id', name: 'Dest Station' },
+      finalWalkingMinutes: 0,
+      travelMode: 'ebikeTrain',
+      bikeLegs: {
+        toStationMinutes: 10,
+        toStationKm: 4,
+        fromStationMinutes: 27,
+        fromStationKm: 11,
+      },
+    })
+
+    const { result } = renderHook(() => useSbbUrl(defaultOptions))
+
+    await act(async () => {
+      await result.current.openSbbConnection()
+    })
+
+    // Game 14:00, buffer 30 min, cycling egress 27 min -> station arrival 13:03
+    const expectedArrival = new Date(defaultOptions.gameStartTime)
+    expectedArrival.setMinutes(expectedArrival.getMinutes() - 30 - 27)
+
+    expect(mockGenerateSbbUrl).toHaveBeenCalledWith(
+      expect.objectContaining({ arrivalTime: expectedArrival })
+    )
+  })
 })

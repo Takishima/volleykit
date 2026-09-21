@@ -93,9 +93,7 @@ describe('getOrFetchTravelTime', () => {
     const { calculateTravelTime } = await import('./ojp-client')
     vi.mocked(calculateMockTravelTime).mockResolvedValue(mockResult)
 
-    const result = await getOrFetchTravelTime(
-      makeParams({ useMock: true, originLabel: 'Home', destinationLabel: 'Zurich' })
-    )
+    const result = await getOrFetchTravelTime(makeParams({ useMock: true }))
 
     expect(result).toBe(mockResult)
     expect(calculateTravelTime).not.toHaveBeenCalled()
@@ -105,8 +103,6 @@ describe('getOrFetchTravelTime', () => {
       {
         travelMode: 'publicTransport',
         maxBikeDistanceKm: 15,
-        originLabel: 'Home',
-        destinationLabel: 'Zurich',
       }
     )
   })
