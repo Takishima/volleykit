@@ -22,7 +22,7 @@ import type { BikeLegs, Coordinates, StationInfo } from './types'
  * Average speed pedelec (fast e-bike) speed including stops and traffic.
  * Legal top speed is 45 km/h; realistic urban/rural average is much lower.
  */
-export const EBIKE_AVERAGE_SPEED_KMH = 25
+export const EBIKE_AVERAGE_SPEED_KMH = 30
 
 /** OJP mode identifier for rail services */
 const RAIL_PT_MODE = 'rail'

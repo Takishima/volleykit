@@ -93,8 +93,8 @@ describe('estimateBikeMinutes', () => {
   })
 
   it('rounds up to whole minutes', () => {
-    // 1 km at 25 km/h = 2.4 minutes -> 3
-    expect(estimateBikeMinutes(1)).toBe(3)
+    // 1.4 km at 30 km/h = 2.8 minutes -> 3
+    expect(estimateBikeMinutes(1.4)).toBe(3)
   })
 })
 
