@@ -242,6 +242,9 @@ export default tseslint.config(
       // readable per-case tests; fixed waits are sometimes needed in e2e flows.
       'sonarjs/parameterized-tests': 'off',
       'sonarjs/no-fixed-wait-in-tests': 'off',
+      // New in eslint-plugin-sonarjs 4.2.1 - networkidle waits are intentional
+      // in e2e/screenshot specs to let the PWA settle before capturing.
+      'sonarjs/no-networkidle-wait': 'off',
       // Import ordering is relaxed for tests - mocks need to be set up before imports
       'import-x/order': 'off',
     },
