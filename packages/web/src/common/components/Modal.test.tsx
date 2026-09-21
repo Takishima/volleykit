@@ -292,6 +292,52 @@ describe('Modal', () => {
       expect(shiftPreventDefaultSpy).not.toHaveBeenCalled()
     })
   })
+
+  describe('touch event isolation from PullToRefresh', () => {
+    it('does not propagate touchstart from the dialog content to parent handlers', () => {
+      const parentTouchStart = vi.fn()
+      const onClose = vi.fn()
+
+      render(
+        <div onTouchStart={parentTouchStart}>
+          <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
+            <ModalHeader title="Test Modal" titleId="test-modal-title" />
+            <p>Modal content</p>
+          </Modal>
+        </div>
+      )
+
+      // Swiping inside the modal (e.g. scrolling its content) must not reach
+      // an ancestor PullToRefresh, which would arm a pull gesture
+      fireEvent.touchStart(screen.getByText('Modal content'), {
+        touches: [{ clientX: 100, clientY: 100, identifier: 0 }],
+      })
+
+      expect(parentTouchStart).not.toHaveBeenCalled()
+    })
+
+    it('does not propagate touchstart from the backdrop to parent handlers', () => {
+      const parentTouchStart = vi.fn()
+      const onClose = vi.fn()
+
+      const { container } = render(
+        <div onTouchStart={parentTouchStart}>
+          <Modal isOpen={true} onClose={onClose} titleId="test-modal-title">
+            <ModalHeader title="Test Modal" titleId="test-modal-title" />
+          </Modal>
+        </div>
+      )
+
+      // The backdrop is a sibling of the dialog, so it must be guarded too
+      const backdrop = container.querySelector('[aria-hidden="true"]')
+      expect(backdrop).not.toBeNull()
+      fireEvent.touchStart(backdrop as Element, {
+        touches: [{ clientX: 100, clientY: 100, identifier: 0 }],
+      })
+
+      expect(parentTouchStart).not.toHaveBeenCalled()
+    })
+  })
 })
 
 describe('ModalHeader', () => {

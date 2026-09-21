@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 
 import { X } from '@/common/components/icons'
+import { stopOverlayTouchStart } from '@/common/hooks/useOverlayTouchGuard'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ParsedGameSheet, ParsedOfficial } from '@/features/ocr'
 import { EasterEggModal } from '@/features/ocr/components/EasterEggModal'
@@ -365,6 +366,7 @@ export function OCREntryModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="ocr-entry-title"
+      onTouchStart={stopOverlayTouchStart}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-default dark:border-border-default-dark">

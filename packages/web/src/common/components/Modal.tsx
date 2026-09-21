@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
 import { useModalDismissal } from '@/common/hooks/useModalDismissal'
+import { stopOverlayTouchStart } from '@/common/hooks/useOverlayTouchGuard'
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
@@ -138,7 +139,11 @@ export function Modal({
   // Placing aria-hidden on the outer wrapper would hide the dialog too.
   // Click-to-close is a convenience feature; keyboard users close via Escape.
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex }}>
+    <div
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex }}
+      onTouchStart={stopOverlayTouchStart}
+    >
       {/* Backdrop: purely decorative overlay */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50"

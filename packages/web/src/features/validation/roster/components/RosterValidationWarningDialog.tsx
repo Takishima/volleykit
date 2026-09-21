@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react'
 
 import { Button } from '@/common/components/Button'
 import { AlertTriangle } from '@/common/components/icons'
+import { stopOverlayTouchStart } from '@/common/hooks/useOverlayTouchGuard'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { MIN_PLAYERS_REQUIRED } from '@/features/validation/utils/roster-validation'
 import type { RosterValidationStatus } from '@/features/validation/utils/roster-validation'
@@ -110,18 +111,24 @@ export function RosterValidationWarningDialog({
     }
   }
 
-  // Backdrop pattern: aria-hidden="true" hides the backdrop from screen readers since it's
-  // purely decorative. Click-to-close is a convenience feature; keyboard users close via Escape.
+  // Backdrop and dialog are siblings: aria-hidden="true" on the wrapper would
+  // hide the alertdialog from assistive technology too, so it sits on the
+  // purely decorative backdrop only (same pattern as Modal).
+  // Click-to-close is a convenience feature; keyboard users close via Escape.
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      className="fixed inset-0 flex items-center justify-center p-4"
       style={{ zIndex: Z_INDEX_WARNING_DIALOG }}
-      onClick={handleBackdropClick}
-      aria-hidden="true"
+      onTouchStart={stopOverlayTouchStart}
     >
       <div
+        className="absolute inset-0 bg-black bg-opacity-50"
+        onClick={handleBackdropClick}
+        aria-hidden="true"
+      />
+      <div
         ref={dialogRef}
-        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-md w-full p-6"
+        className="relative bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-md w-full p-6"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="roster-warning-title"

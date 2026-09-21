@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useModalDismissal } from '@/common/hooks/useModalDismissal'
+import { stopOverlayTouchStart } from '@/common/hooks/useOverlayTouchGuard'
 
 interface ResponsiveSheetProps {
   isOpen: boolean
@@ -46,7 +47,7 @@ export function ResponsiveSheet({ isOpen, onClose, titleId, children }: Responsi
   if (!isOpen) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[55]">
+    <div className="fixed inset-0 z-[55]" onTouchStart={stopOverlayTouchStart}>
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
         aria-hidden="true"
