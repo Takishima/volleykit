@@ -36,17 +36,17 @@ interface TravelTimeCache {
   entries: Record<string, CachedTravelTime>
 }
 
-/** Default travel-mode key segment (see getTravelModeKey in cache.ts) */
-const DEFAULT_TRAVEL_MODE_KEY = 'publicTransport'
-
 /**
  * Build a cache key from the route parameters.
+ *
+ * @param travelModeKey Travel-mode key segment (see getTravelModeKey in cache.ts).
+ *   Required so every call site makes an explicit mode decision.
  */
 export function buildCacheKey(
   hallId: string,
   homeLocationHash: string,
   dayType: DayType,
-  travelModeKey: string = DEFAULT_TRAVEL_MODE_KEY
+  travelModeKey: string
 ): string {
   return `${hallId}:${homeLocationHash}:${dayType}:${travelModeKey}`
 }
@@ -102,7 +102,7 @@ export function getCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
   dayType: DayType,
-  travelModeKey?: string
+  travelModeKey: string
 ): TravelTimeResult | null {
   const cache = loadCache()
   const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)
@@ -138,7 +138,7 @@ export function setCachedTravelTime(
   homeLocationHash: string,
   dayType: DayType,
   result: TravelTimeResult,
-  travelModeKey?: string
+  travelModeKey: string
 ): void {
   const cache = loadCache()
   const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)
@@ -171,7 +171,7 @@ export function removeCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
   dayType: DayType,
-  travelModeKey?: string
+  travelModeKey: string
 ): void {
   const cache = loadCache()
   const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)

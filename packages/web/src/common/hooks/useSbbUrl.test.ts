@@ -32,18 +32,16 @@ vi.mock('@/common/hooks/useActiveAssociation', () => ({
 }))
 
 // Mock transport services
-const mockCalculateMockTravelTime = vi.fn()
-const mockGetCachedTravelTime = vi.fn()
-const mockSetCachedTravelTime = vi.fn()
+const mockGetOrFetchTravelTime = vi.fn()
 
 vi.mock('@/common/services/transport', () => ({
-  calculateTravelTime: vi.fn(),
-  calculateMockTravelTime: (...args: unknown[]) => mockCalculateMockTravelTime(...args),
+  getOrFetchTravelTime: (...args: unknown[]) => mockGetOrFetchTravelTime(...args),
   isOjpConfigured: () => false, // Always use mock transport
   hashLocation: () => 'location-hash',
   getDayType: () => 'weekday',
-  getCachedTravelTime: (...args: unknown[]) => mockGetCachedTravelTime(...args),
-  setCachedTravelTime: (...args: unknown[]) => mockSetCachedTravelTime(...args),
+  getTravelModeKey: () => 'publicTransport',
+  DEFAULT_TRAVEL_MODE: 'publicTransport',
+  DEFAULT_MAX_BIKE_DISTANCE_KM: 15,
 }))
 
 // Mock SBB URL utils
@@ -73,7 +71,6 @@ describe('useSbbUrl', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGenerateSbbUrl.mockReturnValue('https://sbb.ch/test')
-    mockGetCachedTravelTime.mockReturnValue(null)
   })
 
   it('returns initial state', () => {
@@ -107,12 +104,14 @@ describe('useSbbUrl', () => {
   })
 
   it('uses cached trip result when available', async () => {
+    // Caching lives inside getOrFetchTravelTime (see travel-time-fetcher.test);
+    // the hook simply consumes whatever it resolves.
     const cachedResult = {
       travelTimeMinutes: 45,
       originStation: { id: 'origin-123', name: 'Zurich HB' },
       destinationStation: { id: 'dest-456', name: 'Basel SBB' },
     }
-    mockGetCachedTravelTime.mockReturnValue(cachedResult)
+    mockGetOrFetchTravelTime.mockResolvedValue(cachedResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -120,13 +119,12 @@ describe('useSbbUrl', () => {
       await result.current.openSbbConnection()
     })
 
-    // Should use cache, not call API
-    expect(mockCalculateMockTravelTime).not.toHaveBeenCalled()
+    expect(mockGetOrFetchTravelTime).toHaveBeenCalledTimes(1)
     expect(mockOpenSbbUrl).toHaveBeenCalled()
   })
 
   it('fetches trip data when not cached', async () => {
-    mockCalculateMockTravelTime.mockResolvedValue({
+    mockGetOrFetchTravelTime.mockResolvedValue({
       travelTimeMinutes: 30,
       originStation: { id: 'mock-origin', name: 'Mock Origin' },
       destinationStation: { id: 'mock-dest', name: 'Mock Dest' },
@@ -138,7 +136,7 @@ describe('useSbbUrl', () => {
       await result.current.openSbbConnection()
     })
 
-    expect(mockCalculateMockTravelTime).toHaveBeenCalled()
+    expect(mockGetOrFetchTravelTime).toHaveBeenCalled()
     expect(mockOpenSbbUrl).toHaveBeenCalled()
   })
 
@@ -148,7 +146,7 @@ describe('useSbbUrl', () => {
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
     }
-    mockCalculateMockTravelTime.mockResolvedValue(tripResult)
+    mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -160,13 +158,13 @@ describe('useSbbUrl', () => {
     expect(result.current.destinationStation).toEqual(tripResult.destinationStation)
   })
 
-  it('caches trip result after fetch', async () => {
+  it('requests the trip with the shared travel-mode parameters', async () => {
     const tripResult = {
       travelTimeMinutes: 30,
       originStation: { id: 's1', name: 'S1' },
       destinationStation: { id: 's2', name: 'S2' },
     }
-    mockCalculateMockTravelTime.mockResolvedValue(tripResult)
+    mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -174,16 +172,20 @@ describe('useSbbUrl', () => {
       await result.current.openSbbConnection()
     })
 
-    expect(mockSetCachedTravelTime).toHaveBeenCalledWith(
-      defaultOptions.hallId,
-      expect.any(String),
-      expect.any(String),
-      tripResult
+    // Same params (incl. travel mode) as the travel time hooks, so the SBB
+    // link shares their cache namespace instead of double-fetching
+    expect(mockGetOrFetchTravelTime).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hallId: defaultOptions.hallId,
+        travelMode: 'publicTransport',
+        maxBikeDistanceKm: 15,
+        useMock: true,
+      })
     )
   })
 
   it('handles fetch error gracefully and opens URL with fallback', async () => {
-    mockCalculateMockTravelTime.mockRejectedValue(new Error('Network error'))
+    mockGetOrFetchTravelTime.mockRejectedValue(new Error('Network error'))
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -198,7 +200,7 @@ describe('useSbbUrl', () => {
   })
 
   it('converts non-Error exceptions to Error', async () => {
-    mockCalculateMockTravelTime.mockRejectedValue('string error')
+    mockGetOrFetchTravelTime.mockRejectedValue('string error')
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -216,7 +218,7 @@ describe('useSbbUrl', () => {
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
     }
-    mockCalculateMockTravelTime.mockResolvedValue(tripResult)
+    mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -240,7 +242,7 @@ describe('useSbbUrl', () => {
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
     }
-    mockCalculateMockTravelTime.mockResolvedValue(tripResult)
+    mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -261,7 +263,7 @@ describe('useSbbUrl', () => {
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
     }
-    mockCalculateMockTravelTime.mockResolvedValue(tripResult)
+    mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl({ ...defaultOptions, hallAddress: null }))
 

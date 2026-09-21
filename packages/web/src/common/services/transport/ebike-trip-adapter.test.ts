@@ -330,7 +330,7 @@ describe('selectBestEbikeTrainTrip', () => {
     )
   })
 
-  it('falls back to the first adaptation when nothing arrives on time', () => {
+  it('returns undefined when nothing arrives on time, so callers fall back to public transport', () => {
     const trip = makeStandardTrip()
 
     const adaptation = selectBestEbikeTrainTrip(
@@ -341,6 +341,6 @@ describe('selectBestEbikeTrainTrip', () => {
       new Date('2026-01-10T09:00:00.000Z')
     )
 
-    expect(adaptation).toBeDefined()
+    expect(adaptation).toBeUndefined()
   })
 })

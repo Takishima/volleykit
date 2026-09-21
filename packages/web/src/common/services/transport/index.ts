@@ -40,6 +40,10 @@ export type { OjpTrip } from './ojp-client'
 
 export { calculateMockTravelTime } from './mock-transport'
 
+export { getOrFetchTravelTime } from './travel-time-fetcher'
+
+export type { GetOrFetchTravelTimeParams } from './travel-time-fetcher'
+
 export type { DayType } from './cache'
 
 export {

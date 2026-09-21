@@ -7,9 +7,6 @@ import type { TravelMode } from '@/common/services/transport/types'
 
 import type { DataSource } from '../auth'
 
-export type { TravelMode }
-export { DEFAULT_TRAVEL_MODE, DEFAULT_MAX_BIKE_DISTANCE_KM }
-
 /**
  * Source of the user's home location.
  * Designed for extensibility - future routing APIs can use the same location.

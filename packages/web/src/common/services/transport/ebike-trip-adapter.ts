@@ -11,7 +11,7 @@
  */
 
 import { MINUTES_PER_HOUR, MS_PER_MINUTE } from '@/common/utils/constants'
-import { calculateDistanceKm, ROAD_DISTANCE_MULTIPLIER } from '@/common/utils/distance'
+import { calculateCarDistanceKm } from '@/common/utils/distance'
 
 import { extractStationFromStopPoint } from './ojp-trip-helpers'
 
@@ -51,10 +51,12 @@ export interface EbikeTrainAdaptation {
 
 /**
  * Estimate the cycling distance between two points in kilometres.
- * Uses straight-line distance with the empirically validated road multiplier.
+ * Reuses the road-distance estimate (straight line x 1.33). The multiplier
+ * was validated against Swiss car routes; bike routes are assumed comparable
+ * as a first approximation.
  */
 export function estimateBikeDistanceKm(from: Coordinates, to: Coordinates): number {
-  return calculateDistanceKm(from, to) * ROAD_DISTANCE_MULTIPLIER
+  return calculateCarDistanceKm(from, to)
 }
 
 /**
@@ -265,7 +267,8 @@ export function adaptTripForEbikeTrain(
  * 2. Prefer fewer transfers
  * 3. Prefer arrival closest to target time
  *
- * Returns undefined when no trip can be adapted (caller should fall back
+ * Returns undefined when no trip can be adapted, or when a target arrival
+ * time is set and no adaptation arrives on time (caller should fall back
  * to the regular public transport result).
  */
 export function selectBestEbikeTrainTrip(
@@ -286,7 +289,10 @@ export function selectBestEbikeTrainTrip(
   const onTime = adaptations.filter(
     (adaptation) => new Date(adaptation.arrivalTime).getTime() <= targetTime
   )
-  if (onTime.length === 0) return adaptations[0]
+  // No adaptation arrives on time: let the caller fall back to the regular
+  // public transport selection, which may still find an on-time connection
+  // (e.g. a feeder bus faster than the replaced cycling leg).
+  if (onTime.length === 0) return undefined
 
   return onTime.reduce((best, adaptation) => {
     if (adaptation.transfers < best.transfers) return adaptation

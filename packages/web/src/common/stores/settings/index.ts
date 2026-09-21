@@ -8,17 +8,10 @@
  */
 
 // Re-export everything from types
-export type {
-  UserLocation,
-  DistanceFilter,
-  SbbDestinationType,
-  ModeSettings,
-  TravelMode,
-} from './types'
+// (travel-mode types/constants live in @/common/services/transport)
+export type { UserLocation, DistanceFilter, SbbDestinationType, ModeSettings } from './types'
 
 export {
-  DEFAULT_TRAVEL_MODE,
-  DEFAULT_MAX_BIKE_DISTANCE_KM,
   DEFAULT_ARRIVAL_BUFFER_SV_MINUTES,
   DEFAULT_ARRIVAL_BUFFER_REGIONAL_MINUTES,
   MIN_ARRIVAL_BUFFER_MINUTES,

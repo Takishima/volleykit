@@ -165,6 +165,7 @@ export function ExchangePage() {
                           }
                           carDistanceKm={homeLocation ? carDistanceKm : null}
                           travelTimeMinutes={travelTimeData?.minutes}
+                          travelTimeMode={travelTimeData?.travelMode}
                           travelTimeLoading={travelTimeData?.isLoading}
                         />
                       )}

@@ -32,8 +32,11 @@ vi.mock('@/common/hooks/useTravelTime', () => ({
 vi.mock('@/common/services/transport', () => ({
   clearTravelTimeCache: vi.fn(),
   getTravelTimeCacheStats: vi.fn(() => ({ entryCount: 5, oldestEntryAge: null })),
+  getTravelModeKey: vi.fn(() => 'publicTransport'),
   MIN_MAX_BIKE_DISTANCE_KM: 1,
   MAX_MAX_BIKE_DISTANCE_KM: 30,
+  DEFAULT_TRAVEL_MODE: 'publicTransport',
+  DEFAULT_MAX_BIKE_DISTANCE_KM: 15,
 }))
 
 function createWrapper() {

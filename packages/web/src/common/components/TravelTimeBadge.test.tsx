@@ -115,6 +115,26 @@ describe('TravelTimeBadge', () => {
       expect(screen.getByText("2h30'")).toBeInTheDocument()
     })
 
+    it('shows only the train icon for public transport results', () => {
+      const { container } = render(
+        <TravelTimeBadge durationMinutes={30} travelMode="publicTransport" />
+      )
+
+      expect(container.querySelectorAll('svg')).toHaveLength(1)
+    })
+
+    it('shows bike and train icons for e-bike + train results', () => {
+      const { container } = render(<TravelTimeBadge durationMinutes={30} travelMode="ebikeTrain" />)
+
+      expect(container.querySelectorAll('svg')).toHaveLength(2)
+    })
+
+    it('shows only the train icon when the travel mode is unknown', () => {
+      const { container } = render(<TravelTimeBadge durationMinutes={30} />)
+
+      expect(container.querySelectorAll('svg')).toHaveLength(1)
+    })
+
     it('shows train icon with travel time', () => {
       const { container } = render(<TravelTimeBadge durationMinutes={30} />)
 

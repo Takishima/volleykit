@@ -6,16 +6,15 @@
 import { useState, useCallback } from 'react'
 
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
 import {
-  calculateTravelTime,
-  calculateMockTravelTime,
   isOjpConfigured,
   hashLocation,
   getDayType,
-  getCachedTravelTime,
-  setCachedTravelTime,
+  getOrFetchTravelTime,
   type Coordinates,
   type StationInfo,
+  type TravelMode,
   type TravelTimeResult,
 } from '@/common/services/transport'
 import { useAuthStore } from '@/common/stores/auth'
@@ -106,6 +105,9 @@ function buildSbbUrlParams(
 
 /**
  * Fetch or retrieve cached trip data.
+ * Uses the same travel mode as the travel time hooks so the SBB link
+ * shares their cache namespace (in e-bike + train mode the result carries
+ * the rail stations, giving a station-to-station SBB connection).
  */
 async function fetchTripData(
   homeLocation: UserLocation,
@@ -113,38 +115,23 @@ async function fetchTripData(
   hallId: string,
   gameDate: Date,
   city: string,
-  arrivalTime: Date
+  arrivalTime: Date,
+  travelMode: TravelMode,
+  maxBikeDistanceKm: number
 ): Promise<TravelTimeResult> {
-  const homeLocationHash = hashLocation(homeLocation)
-  const dayType = getDayType(gameDate)
-
-  // Check cache first
-  const cachedResult = getCachedTravelTime(hallId, homeLocationHash, dayType)
-  if (cachedResult) {
-    return cachedResult
-  }
-
-  // Fetch trip data
-  const fromCoords: Coordinates = {
-    latitude: homeLocation.latitude,
-    longitude: homeLocation.longitude,
-  }
-
-  let tripResult: TravelTimeResult
-  if (isOjpConfigured()) {
-    tripResult = await calculateTravelTime(fromCoords, hallCoords, {
-      targetArrivalTime: arrivalTime,
-    })
-  } else {
-    tripResult = await calculateMockTravelTime(fromCoords, hallCoords, {
-      originLabel: 'Home',
-      destinationLabel: city,
-    })
-  }
-
-  // Cache the result
-  setCachedTravelTime(hallId, homeLocationHash, dayType, tripResult)
-  return tripResult
+  return getOrFetchTravelTime({
+    hallId,
+    from: { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
+    to: hallCoords,
+    homeLocationHash: hashLocation(homeLocation),
+    dayType: getDayType(gameDate),
+    travelMode,
+    maxBikeDistanceKm,
+    targetArrivalTime: arrivalTime,
+    useMock: !isOjpConfigured(),
+    originLabel: 'Home',
+    destinationLabel: city,
+  })
 }
 
 /**
@@ -170,6 +157,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
   const sbbDestinationType = useSettingsStore(
     (state) => state.travelTimeFilter.sbbDestinationType ?? 'address'
   ) as SbbDestinationType
+  const { travelMode, maxBikeDistanceKm } = useTravelModeSettings()
 
   const openSbbConnection = useCallback(async () => {
     if (!city || !gameStartTime) {
@@ -231,7 +219,9 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         hallId,
         gameDate,
         city,
-        arrivalTime
+        arrivalTime,
+        travelMode,
+        maxBikeDistanceKm
       )
 
       // Update state with station info for future clicks
@@ -289,6 +279,8 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     hallCoords,
     hallId,
     isDemoMode,
+    travelMode,
+    maxBikeDistanceKm,
   ])
 
   return {

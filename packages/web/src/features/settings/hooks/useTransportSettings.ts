@@ -5,12 +5,15 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
 import { useTravelTimeAvailable } from '@/common/hooks/useTravelTime'
 import {
   clearTravelTimeCache,
   getTravelTimeCacheStats,
   MIN_MAX_BIKE_DISTANCE_KM,
   MAX_MAX_BIKE_DISTANCE_KM,
+  DEFAULT_MAX_BIKE_DISTANCE_KM,
+  type TravelMode,
 } from '@/common/services/transport'
 import {
   useSettingsStore,
@@ -19,11 +22,8 @@ import {
   MAX_ARRIVAL_BUFFER_MINUTES,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-  DEFAULT_TRAVEL_MODE,
-  DEFAULT_MAX_BIKE_DISTANCE_KM,
   type DistanceFilter,
   type SbbDestinationType,
-  type TravelMode,
 } from '@/common/stores/settings'
 
 const DEBOUNCE_MS = 300
@@ -59,9 +59,7 @@ export function useTransportSettings() {
     setArrivalBufferForAssociation,
     sbbDestinationType,
     setSbbDestinationType,
-    travelMode,
     setTravelMode,
-    maxBikeDistanceKm,
     setMaxBikeDistanceKm,
   } = useSettingsStore(
     useShallow((state) => ({
@@ -78,12 +76,12 @@ export function useTransportSettings() {
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
       sbbDestinationType: state.travelTimeFilter.sbbDestinationType ?? 'address',
       setSbbDestinationType: state.setSbbDestinationType,
-      travelMode: state.travelTimeFilter?.travelMode ?? DEFAULT_TRAVEL_MODE,
       setTravelMode: state.setTravelMode,
-      maxBikeDistanceKm: state.travelTimeFilter?.maxBikeDistanceKm ?? DEFAULT_MAX_BIKE_DISTANCE_KM,
       setMaxBikeDistanceKm: state.setMaxBikeDistanceKm,
     }))
   )
+
+  const { travelMode, maxBikeDistanceKm } = useTravelModeSettings()
 
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   // Incremented by handleClearCache to trigger a re-render so cacheEntryCount is recomputed.
@@ -177,7 +175,11 @@ export function useTransportSettings() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
+      if (
+        !isNaN(value) &&
+        value >= MIN_ARRIVAL_BUFFER_MINUTES &&
+        value <= MAX_ARRIVAL_BUFFER_MINUTES
+      ) {
         setLocalArrivalBuffer(value)
         if (arrivalDebounceRef.current) {
           clearTimeout(arrivalDebounceRef.current)
@@ -194,7 +196,7 @@ export function useTransportSettings() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_MAX_DISTANCE_KM) {
+      if (!isNaN(value) && value >= MIN_MAX_DISTANCE_KM && value <= MAX_MAX_DISTANCE_KM) {
         setLocalMaxDistance(value)
         if (distanceDebounceRef.current) {
           clearTimeout(distanceDebounceRef.current)
@@ -211,7 +213,11 @@ export function useTransportSettings() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_MAX_TRAVEL_TIME_MINUTES) {
+      if (
+        !isNaN(value) &&
+        value >= MIN_MAX_TRAVEL_TIME_MINUTES &&
+        value <= MAX_MAX_TRAVEL_TIME_MINUTES
+      ) {
         setLocalMaxTravelTime(value)
         if (travelTimeDebounceRef.current) {
           clearTimeout(travelTimeDebounceRef.current)
@@ -241,7 +247,7 @@ export function useTransportSettings() {
   const handleMaxBikeDistanceChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_MAX_BIKE_DISTANCE_KM) {
+      if (!isNaN(value) && value >= MIN_MAX_BIKE_DISTANCE_KM && value <= MAX_MAX_BIKE_DISTANCE_KM) {
         setLocalMaxBikeDistance(value)
         if (bikeDistanceDebounceRef.current) {
           clearTimeout(bikeDistanceDebounceRef.current)

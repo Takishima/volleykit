@@ -242,6 +242,47 @@ describe('mock-transport', () => {
       expect(result.tripData).toBeUndefined()
     })
 
+    it('returns e-bike + train result with cycling legs replacing the access base', async () => {
+      const ptPromise = calculateMockTravelTime(zurich, bern)
+      await vi.advanceTimersByTimeAsync(150)
+      const ptResult = await ptPromise
+
+      const ebikePromise = calculateMockTravelTime(zurich, bern, {
+        travelMode: 'ebikeTrain',
+        maxBikeDistanceKm: 15,
+      })
+      await vi.advanceTimersByTimeAsync(150)
+      const ebikeResult = await ebikePromise
+
+      expect(ebikeResult.travelMode).toBe('ebikeTrain')
+      expect(ebikeResult.finalWalkingMinutes).toBe(0)
+      expect(ebikeResult.bikeLegs).toBeDefined()
+      expect(ebikeResult.bikeLegs!.toStationKm).toBeGreaterThan(0)
+      expect(ebikeResult.bikeLegs!.fromStationKm).toBeGreaterThan(0)
+
+      // Cycling replaces the 15-minute PT access base (5 min station wait remains)
+      expect(ebikeResult.durationMinutes).toBe(
+        ptResult.durationMinutes -
+          15 +
+          5 +
+          ebikeResult.bikeLegs!.toStationMinutes +
+          ebikeResult.bikeLegs!.fromStationMinutes
+      )
+    })
+
+    it('falls back to public transport when mock cycling legs exceed the limit', async () => {
+      const promise = calculateMockTravelTime(zurich, bern, {
+        travelMode: 'ebikeTrain',
+        maxBikeDistanceKm: 1,
+      })
+      await vi.advanceTimersByTimeAsync(150)
+      const result = await promise
+
+      expect(result.travelMode).toBe('publicTransport')
+      expect(result.bikeLegs).toBeUndefined()
+      expect(result.finalWalkingMinutes).toBeGreaterThan(0)
+    })
+
     it('handles same origin and destination coordinates', async () => {
       const promise = calculateMockTravelTime(zurich, zurich)
       await vi.advanceTimersByTimeAsync(150)

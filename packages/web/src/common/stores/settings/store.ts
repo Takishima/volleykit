@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 
 import type { NotificationPreference, ReminderTime } from '@/common/services/notifications'
+import type { TravelMode } from '@/common/services/transport/types'
 
 import { runMigrations } from './migrations'
 import {
@@ -17,7 +18,6 @@ import type {
   UserLocation,
   ValidationReferenceMode,
   SbbDestinationType,
-  TravelMode,
 } from './types'
 
 /**

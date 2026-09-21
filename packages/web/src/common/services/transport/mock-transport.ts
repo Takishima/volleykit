@@ -13,6 +13,7 @@ import {
 import { calculateDistanceKm } from '@/common/utils/distance'
 
 import { estimateBikeMinutes } from './ebike-trip-adapter'
+import { DEFAULT_MAX_BIKE_DISTANCE_KM } from './types'
 
 import type {
   Coordinates,
@@ -49,6 +50,12 @@ const WALKING_COORD_MULTIPLIER_LON = 10
 const BIKE_DISTANCE_BASE_KM = 2
 const BIKE_DISTANCE_VARIATION_KM = 6
 
+/** Base time for public transport access and waiting (part of the PT estimate) */
+const PT_BASE_ACCESS_MINUTES = 15
+
+/** Waiting time at the station in the e-bike + train estimate */
+const EBIKE_STATION_WAIT_MINUTES = 5
+
 /**
  * Estimate travel time based on straight-line distance.
  * Uses a formula that approximates Swiss public transport:
@@ -60,11 +67,10 @@ const BIKE_DISTANCE_VARIATION_KM = 6
  * @returns Estimated travel time in minutes
  */
 function estimateTravelTimeFromDistance(distanceKm: number): number {
-  const baseTimeMinutes = 15 // Getting to station, waiting
   const averageSpeedKmh = 40 // Average speed including stops
   const travelMinutes = (distanceKm / averageSpeedKmh) * MINUTES_PER_HOUR
 
-  return Math.round(baseTimeMinutes + travelMinutes)
+  return Math.round(PT_BASE_ACCESS_MINUTES + travelMinutes)
 }
 
 /**
@@ -157,24 +163,36 @@ export async function calculateMockTravelTime(
       )
     ) % WALKING_TIME_VARIATION
 
-  // E-bike + train mode: replace walking with deterministic mock cycling legs
+  // E-bike + train mode: replace the PT access base with deterministic mock
+  // cycling legs. Mirrors the real client's fallback: legs beyond the
+  // configured maximum cycling distance yield the public transport result.
   if (options.travelMode === 'ebikeTrain') {
     const bikeLegs = generateMockBikeLegs(from, to)
-    const ebikeDuration = durationMinutes + bikeLegs.toStationMinutes + bikeLegs.fromStationMinutes
-    const ebikeArrival = new Date(departureTime.getTime() + ebikeDuration * MS_PER_MINUTE)
+    const maxBikeDistanceKm = options.maxBikeDistanceKm ?? DEFAULT_MAX_BIKE_DISTANCE_KM
 
-    return {
-      durationMinutes: ebikeDuration,
-      departureTime: departureTime.toISOString(),
-      arrivalTime: ebikeArrival.toISOString(),
-      transfers,
-      originStation,
-      destinationStation,
-      finalWalkingMinutes: 0,
-      travelMode: 'ebikeTrain',
-      bikeLegs,
-      tripData: undefined,
+    if (bikeLegs.toStationKm <= maxBikeDistanceKm && bikeLegs.fromStationKm <= maxBikeDistanceKm) {
+      const ebikeDuration =
+        durationMinutes -
+        PT_BASE_ACCESS_MINUTES +
+        EBIKE_STATION_WAIT_MINUTES +
+        bikeLegs.toStationMinutes +
+        bikeLegs.fromStationMinutes
+      const ebikeArrival = new Date(departureTime.getTime() + ebikeDuration * MS_PER_MINUTE)
+
+      return {
+        durationMinutes: ebikeDuration,
+        departureTime: departureTime.toISOString(),
+        arrivalTime: ebikeArrival.toISOString(),
+        transfers,
+        originStation,
+        destinationStation,
+        finalWalkingMinutes: 0,
+        travelMode: 'ebikeTrain',
+        bikeLegs,
+        tripData: undefined,
+      }
     }
+    // Fall through to the public transport result
   }
 
   const finalWalkingMinutes = WALKING_TIME_BASE_MINUTES + coordHash

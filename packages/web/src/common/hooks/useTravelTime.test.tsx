@@ -13,8 +13,7 @@ type AnyFunction = (...args: any[]) => any
 
 // Mock the transport service
 vi.mock('@/common/services/transport', () => ({
-  calculateTravelTime: vi.fn(),
-  calculateMockTravelTime: vi.fn(),
+  getOrFetchTravelTime: vi.fn(),
   isOjpConfigured: vi.fn(() => false),
   hashLocation: vi.fn((coords: Coordinates) => `${coords.latitude},${coords.longitude}`),
   getDayType: vi.fn(() => 'weekday'),
@@ -85,7 +84,7 @@ describe('useTravelTime', () => {
 
   describe('query enabling conditions', () => {
     it('does not fetch when transport is disabled', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
@@ -102,11 +101,11 @@ describe('useTravelTime', () => {
 
       expect(result.current.isLoading).toBe(false)
       expect(result.current.data).toBeUndefined()
-      expect(calculateMockTravelTime).not.toHaveBeenCalled()
+      expect(getOrFetchTravelTime).not.toHaveBeenCalled()
     })
 
     it('does not fetch when home location is not set', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
@@ -123,11 +122,11 @@ describe('useTravelTime', () => {
 
       expect(result.current.isLoading).toBe(false)
       expect(result.current.data).toBeUndefined()
-      expect(calculateMockTravelTime).not.toHaveBeenCalled()
+      expect(getOrFetchTravelTime).not.toHaveBeenCalled()
     })
 
     it('does not fetch when hall coordinates are null', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
@@ -144,11 +143,11 @@ describe('useTravelTime', () => {
 
       expect(result.current.isLoading).toBe(false)
       expect(result.current.data).toBeUndefined()
-      expect(calculateMockTravelTime).not.toHaveBeenCalled()
+      expect(getOrFetchTravelTime).not.toHaveBeenCalled()
     })
 
     it('does not fetch when hall ID is undefined', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
@@ -165,13 +164,13 @@ describe('useTravelTime', () => {
 
       expect(result.current.isLoading).toBe(false)
       expect(result.current.data).toBeUndefined()
-      expect(calculateMockTravelTime).not.toHaveBeenCalled()
+      expect(getOrFetchTravelTime).not.toHaveBeenCalled()
     })
   })
 
   describe('demo mode', () => {
     it('uses mock transport in demo mode', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -187,7 +186,7 @@ describe('useTravelTime', () => {
         })
       )
 
-      vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult)
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
 
       const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
         wrapper: createWrapper(),
@@ -197,10 +196,14 @@ describe('useTravelTime', () => {
         expect(result.current.data).toBeDefined()
       })
 
-      expect(calculateMockTravelTime).toHaveBeenCalledWith(
-        { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
-        mockHallCoords,
-        { travelMode: 'publicTransport', maxBikeDistanceKm: 15 }
+      expect(getOrFetchTravelTime).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
+          to: mockHallCoords,
+          travelMode: 'publicTransport',
+          maxBikeDistanceKm: 15,
+          useMock: true,
+        })
       )
       expect(result.current.data?.durationMinutes).toBe(75)
     })
@@ -208,7 +211,7 @@ describe('useTravelTime', () => {
 
   describe('production mode with OJP API', () => {
     it('uses real transport API when OJP is configured', async () => {
-      const { calculateTravelTime, isOjpConfigured } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime, isOjpConfigured } = await import('@/common/services/transport')
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -225,7 +228,7 @@ describe('useTravelTime', () => {
       )
 
       vi.mocked(isOjpConfigured).mockReturnValue(true)
-      vi.mocked(calculateTravelTime).mockResolvedValue(mockTravelTimeResult)
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
 
       const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
         wrapper: createWrapper(),
@@ -235,16 +238,21 @@ describe('useTravelTime', () => {
         expect(result.current.data).toBeDefined()
       })
 
-      expect(calculateTravelTime).toHaveBeenCalledWith(
-        { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
-        mockHallCoords,
-        { targetArrivalTime: undefined, travelMode: 'publicTransport', maxBikeDistanceKm: 15 }
+      expect(getOrFetchTravelTime).toHaveBeenCalledWith(
+        expect.objectContaining({
+          from: { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
+          to: mockHallCoords,
+          targetArrivalTime: undefined,
+          travelMode: 'publicTransport',
+          maxBikeDistanceKm: 15,
+          useMock: false,
+        })
       )
       expect(result.current.data?.durationMinutes).toBe(75)
     })
 
     it('does not fetch when OJP API is not configured and not in demo mode', async () => {
-      const { calculateTravelTime, isOjpConfigured } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime, isOjpConfigured } = await import('@/common/services/transport')
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -268,13 +276,13 @@ describe('useTravelTime', () => {
 
       expect(result.current.isLoading).toBe(false)
       expect(result.current.data).toBeUndefined()
-      expect(calculateTravelTime).not.toHaveBeenCalled()
+      expect(getOrFetchTravelTime).not.toHaveBeenCalled()
     })
   })
 
   describe('error handling', () => {
     it('handles API errors gracefully', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -290,7 +298,7 @@ describe('useTravelTime', () => {
         })
       )
 
-      vi.mocked(calculateMockTravelTime).mockRejectedValue(new Error('API error'))
+      vi.mocked(getOrFetchTravelTime).mockRejectedValue(new Error('API error'))
 
       const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
         wrapper: createWrapper(),
@@ -397,7 +405,7 @@ describe('day type caching', () => {
   })
 
   it('uses getDayType to determine cache key', async () => {
-    const { getDayType, calculateMockTravelTime } = await import('@/common/services/transport')
+    const { getDayType, getOrFetchTravelTime } = await import('@/common/services/transport')
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -414,7 +422,7 @@ describe('day type caching', () => {
     )
 
     vi.mocked(getDayType).mockReturnValue('saturday')
-    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult)
+    vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
 
     const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
       wrapper: createWrapper(),
@@ -429,7 +437,7 @@ describe('day type caching', () => {
   })
 
   it('accepts date option for day type calculation', async () => {
-    const { getDayType, calculateMockTravelTime } = await import('@/common/services/transport')
+    const { getDayType, getOrFetchTravelTime } = await import('@/common/services/transport')
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -446,7 +454,7 @@ describe('day type caching', () => {
     )
 
     vi.mocked(getDayType).mockReturnValue('sunday')
-    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult)
+    vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
 
     const testDate = new Date('2024-01-14') // A Sunday
 
@@ -483,9 +491,8 @@ describe('localStorage persistence', () => {
     vi.clearAllMocks()
   })
 
-  it('returns cached result from localStorage without API call', async () => {
-    const { getCachedTravelTime, calculateMockTravelTime } =
-      await import('@/common/services/transport')
+  it('delegates fetching (cache check, calculation, persistence) to getOrFetchTravelTime', async () => {
+    const { getOrFetchTravelTime, getDayType } = await import('@/common/services/transport')
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
@@ -501,8 +508,8 @@ describe('localStorage persistence', () => {
       })
     )
 
-    // Return cached result
-    vi.mocked(getCachedTravelTime).mockReturnValue(mockTravelTimeResult)
+    vi.mocked(getDayType).mockReturnValue('weekday')
+    vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
 
     const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
       wrapper: createWrapper(),
@@ -512,55 +519,21 @@ describe('localStorage persistence', () => {
       expect(result.current.data).toBeDefined()
     })
 
-    // Should use cached result, not call API
-    expect(getCachedTravelTime).toHaveBeenCalled()
-    expect(calculateMockTravelTime).not.toHaveBeenCalled()
+    expect(getOrFetchTravelTime).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hallId: 'hall-1',
+        from: { latitude: mockHomeLocation.latitude, longitude: mockHomeLocation.longitude },
+        to: mockHallCoords,
+        dayType: 'weekday',
+        travelMode: 'publicTransport',
+        maxBikeDistanceKm: 15,
+      })
+    )
     expect(result.current.data?.durationMinutes).toBe(75)
   })
 
-  it('persists API result to localStorage', async () => {
-    const { getCachedTravelTime, setCachedTravelTime, calculateMockTravelTime, getDayType } =
-      await import('@/common/services/transport')
-    const { useAuthStore } = await import('@/common/stores/auth')
-    const { useSettingsStore } = await import('@/common/stores/settings')
-
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', user: null, activeOccupationId: null })
-    )
-
-    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        homeLocation: mockHomeLocation,
-        transportEnabled: true,
-        isTransportEnabledForAssociation: () => true,
-      })
-    )
-
-    // Set up mocks
-    vi.mocked(getDayType).mockReturnValue('weekday')
-    vi.mocked(getCachedTravelTime).mockReturnValue(null)
-    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult)
-
-    const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
-      wrapper: createWrapper(),
-    })
-
-    await waitFor(() => {
-      expect(result.current.data).toBeDefined()
-    })
-
-    // Should persist result to localStorage with the day type
-    expect(setCachedTravelTime).toHaveBeenCalledWith(
-      'hall-1',
-      expect.any(String),
-      expect.stringMatching(/^(weekday|saturday|sunday)$/),
-      mockTravelTimeResult,
-      'publicTransport'
-    )
-  })
-
   it('provides refresh function that clears cache', async () => {
-    const { getCachedTravelTime, removeCachedTravelTime, calculateMockTravelTime, getDayType } =
+    const { getCachedTravelTime, removeCachedTravelTime, getOrFetchTravelTime, getDayType } =
       await import('@/common/services/transport')
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
@@ -580,7 +553,7 @@ describe('localStorage persistence', () => {
     // Set up mocks
     vi.mocked(getDayType).mockReturnValue('weekday')
     vi.mocked(getCachedTravelTime).mockReturnValue(null)
-    vi.mocked(calculateMockTravelTime).mockResolvedValue(mockTravelTimeResult)
+    vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
 
     const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
       wrapper: createWrapper(),
