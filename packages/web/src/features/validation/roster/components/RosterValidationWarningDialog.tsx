@@ -117,6 +117,9 @@ export function RosterValidationWarningDialog({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{ zIndex: Z_INDEX_WARNING_DIALOG }}
       onClick={handleBackdropClick}
+      // Stop touch propagation at the overlay root so PullToRefresh ancestors
+      // never misread gestures on this dialog as a page pull
+      onTouchStart={(e) => e.stopPropagation()}
       aria-hidden="true"
     >
       <div

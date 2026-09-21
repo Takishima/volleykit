@@ -46,7 +46,9 @@ export function ResponsiveSheet({ isOpen, onClose, titleId, children }: Responsi
   if (!isOpen) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[55]">
+    // onTouchStart: portal events still bubble through the React tree, so stop
+    // propagation at the overlay root to keep PullToRefresh from arming a pull
+    <div className="fixed inset-0 z-[55]" onTouchStart={(e) => e.stopPropagation()}>
       <div
         className="absolute inset-0 bg-black/50 transition-opacity"
         aria-hidden="true"
