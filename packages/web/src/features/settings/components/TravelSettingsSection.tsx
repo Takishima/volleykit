@@ -1,7 +1,7 @@
 import { memo } from 'react'
 
 import { Badge } from '@/common/components/Badge'
-import { MapPin, Clock, Info, TrainFront, Navigation } from '@/common/components/icons'
+import { MapPin, Clock, Info, TrainFront, Navigation, Bike } from '@/common/components/icons'
 import { ToggleSwitch } from '@/common/components/ToggleSwitch'
 import { useTranslation } from '@/common/hooks/useTranslation'
 
@@ -181,6 +181,77 @@ function TravelSettingsSectionComponent() {
                       {t('common.minutesUnit')}
                     </span>
                   </div>
+                </div>
+              </div>
+
+              {/* Travel mode setting */}
+              <div className="pt-2 border-t border-border-subtle dark:border-border-subtle-dark">
+                <div className="py-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Bike className="w-4 h-4 text-text-muted dark:text-text-muted-dark" />
+                    <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                      {t('settings.transport.travelMode')}
+                    </span>
+                  </div>
+                  <div className="text-xs text-text-muted dark:text-text-muted-dark mb-3 ml-6">
+                    {t('settings.transport.travelModeDescription')}
+                  </div>
+                  <div className="flex flex-col gap-2 ml-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="travelMode"
+                        value="publicTransport"
+                        checked={transport.travelMode === 'publicTransport'}
+                        onChange={() => transport.handleTravelModeChange('publicTransport')}
+                        className="w-4 h-4 text-primary-600 border-border-default dark:border-border-default-dark focus:ring-primary-500"
+                      />
+                      <span className="text-sm text-text-primary dark:text-text-primary-dark">
+                        {t('settings.transport.travelModePublicTransport')}
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="travelMode"
+                        value="ebikeTrain"
+                        checked={transport.travelMode === 'ebikeTrain'}
+                        onChange={() => transport.handleTravelModeChange('ebikeTrain')}
+                        className="w-4 h-4 text-primary-600 border-border-default dark:border-border-default-dark focus:ring-primary-500"
+                      />
+                      <span className="text-sm text-text-primary dark:text-text-primary-dark">
+                        {t('settings.transport.travelModeEbikeTrain')}
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Max cycling distance (e-bike + train mode only) */}
+                  {transport.travelMode === 'ebikeTrain' && (
+                    <div className="flex items-center justify-between py-2 ml-6 mt-2">
+                      <div className="flex-1 pr-3">
+                        <span className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
+                          {t('settings.transport.maxBikeDistance')}
+                        </span>
+                        <div className="text-xs text-text-muted dark:text-text-muted-dark mt-0.5">
+                          {t('settings.transport.maxBikeDistanceDescription')}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={transport.minMaxBikeDistance}
+                          max={transport.maxMaxBikeDistance}
+                          value={transport.localMaxBikeDistance}
+                          onChange={transport.handleMaxBikeDistanceChange}
+                          className="w-16 px-2 py-1 text-sm text-right border border-border-default dark:border-border-default-dark rounded-md bg-surface-card dark:bg-surface-card-dark text-text-primary dark:text-text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          aria-label={t('settings.transport.maxBikeDistance')}
+                        />
+                        <span className="text-sm text-text-muted dark:text-text-muted-dark">
+                          {t('common.distanceUnit')}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

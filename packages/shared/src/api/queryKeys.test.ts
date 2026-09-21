@@ -189,29 +189,23 @@ describe('queryKeys', () => {
     })
 
     it('should create hall key with day type', () => {
-      expect(queryKeys.travelTime.hall('hall-123', 'loc-hash', 'weekday')).toEqual([
-        'travelTime',
-        'hall',
-        'hall-123',
-        'loc-hash',
-        'weekday',
-      ])
+      expect(
+        queryKeys.travelTime.hall('hall-123', 'loc-hash', 'weekday', 'publicTransport')
+      ).toEqual(['travelTime', 'hall', 'hall-123', 'loc-hash', 'weekday', 'publicTransport'])
 
-      expect(queryKeys.travelTime.hall('hall-456', 'loc-hash', 'saturday')).toEqual([
-        'travelTime',
-        'hall',
-        'hall-456',
-        'loc-hash',
-        'saturday',
-      ])
+      expect(
+        queryKeys.travelTime.hall('hall-456', 'loc-hash', 'saturday', 'publicTransport')
+      ).toEqual(['travelTime', 'hall', 'hall-456', 'loc-hash', 'saturday', 'publicTransport'])
 
-      expect(queryKeys.travelTime.hall('hall-789', 'loc-hash', 'sunday')).toEqual([
-        'travelTime',
-        'hall',
-        'hall-789',
-        'loc-hash',
-        'sunday',
-      ])
+      expect(
+        queryKeys.travelTime.hall('hall-789', 'loc-hash', 'sunday', 'publicTransport')
+      ).toEqual(['travelTime', 'hall', 'hall-789', 'loc-hash', 'sunday', 'publicTransport'])
+    })
+
+    it('should create hall key with a travel mode segment', () => {
+      expect(queryKeys.travelTime.hall('hall-123', 'loc-hash', 'weekday', 'ebikeTrain-15')).toEqual(
+        ['travelTime', 'hall', 'hall-123', 'loc-hash', 'weekday', 'ebikeTrain-15']
+      )
     })
   })
 

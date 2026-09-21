@@ -8,6 +8,7 @@
  */
 
 // Re-export everything from types
+// (travel-mode types/constants live in @/common/services/transport)
 export type { UserLocation, DistanceFilter, SbbDestinationType, ModeSettings } from './types'
 
 export {

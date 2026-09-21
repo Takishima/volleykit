@@ -6,16 +6,16 @@
 import { useState, useCallback } from 'react'
 
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
+import { useTravelTimeSource } from '@/common/hooks/useTravelTimeSource'
 import {
-  calculateTravelTime,
-  calculateMockTravelTime,
   isOjpConfigured,
   hashLocation,
   getDayType,
-  getCachedTravelTime,
-  setCachedTravelTime,
+  getOrFetchTravelTime,
   type Coordinates,
   type StationInfo,
+  type TravelMode,
   type TravelTimeResult,
 } from '@/common/services/transport'
 import { useAuthStore } from '@/common/stores/auth'
@@ -106,45 +106,33 @@ function buildSbbUrlParams(
 
 /**
  * Fetch or retrieve cached trip data.
+ * Uses the same travel mode and data source as the travel time hooks so the
+ * SBB link shares their cache namespace. In e-bike + train mode the result
+ * carries the rail stations of the adapted trip: with SBB destination
+ * "station" the link becomes station-to-station, with "address" it routes
+ * from the boarding rail station to the hall address.
  */
 async function fetchTripData(
   homeLocation: UserLocation,
   hallCoords: Coordinates,
   hallId: string,
   gameDate: Date,
-  city: string,
-  arrivalTime: Date
+  arrivalTime: Date,
+  travelMode: TravelMode,
+  maxBikeDistanceKm: number,
+  useMock: boolean
 ): Promise<TravelTimeResult> {
-  const homeLocationHash = hashLocation(homeLocation)
-  const dayType = getDayType(gameDate)
-
-  // Check cache first
-  const cachedResult = getCachedTravelTime(hallId, homeLocationHash, dayType)
-  if (cachedResult) {
-    return cachedResult
-  }
-
-  // Fetch trip data
-  const fromCoords: Coordinates = {
-    latitude: homeLocation.latitude,
-    longitude: homeLocation.longitude,
-  }
-
-  let tripResult: TravelTimeResult
-  if (isOjpConfigured()) {
-    tripResult = await calculateTravelTime(fromCoords, hallCoords, {
-      targetArrivalTime: arrivalTime,
-    })
-  } else {
-    tripResult = await calculateMockTravelTime(fromCoords, hallCoords, {
-      originLabel: 'Home',
-      destinationLabel: city,
-    })
-  }
-
-  // Cache the result
-  setCachedTravelTime(hallId, homeLocationHash, dayType, tripResult)
-  return tripResult
+  return getOrFetchTravelTime({
+    hallId,
+    from: { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
+    to: hallCoords,
+    homeLocationHash: hashLocation(homeLocation),
+    dayType: getDayType(gameDate),
+    travelMode,
+    maxBikeDistanceKm,
+    targetArrivalTime: arrivalTime,
+    useMock,
+  })
 }
 
 /**
@@ -170,6 +158,8 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
   const sbbDestinationType = useSettingsStore(
     (state) => state.travelTimeFilter.sbbDestinationType ?? 'address'
   ) as SbbDestinationType
+  const { travelMode, maxBikeDistanceKm } = useTravelModeSettings()
+  const { useMock } = useTravelTimeSource()
 
   const openSbbConnection = useCallback(async () => {
     if (!city || !gameStartTime) {
@@ -230,23 +220,28 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
         hallCoords,
         hallId,
         gameDate,
-        city,
-        arrivalTime
+        arrivalTime,
+        travelMode,
+        maxBikeDistanceKm,
+        useMock
       )
+
+      // Last mile from the alighting station: cycling minutes for e-bike +
+      // train results, walking minutes otherwise
+      const lastMileMinutes =
+        tripResult.bikeLegs?.fromStationMinutes ?? tripResult.finalWalkingMinutes ?? 0
 
       // Update state with station info for future clicks
       if (tripResult.originStation) setOriginStation(tripResult.originStation)
       if (tripResult.destinationStation) setDestinationStation(tripResult.destinationStation)
-      if (tripResult.finalWalkingMinutes !== undefined)
-        setFinalWalkingMinutes(tripResult.finalWalkingMinutes)
+      setFinalWalkingMinutes(lastMileMinutes)
 
-      // Recalculate arrival time with actual walking minutes if routing to station
-      const walkingMinutes = tripResult.finalWalkingMinutes ?? 0
+      // Recalculate arrival time with the actual last-mile time if routing to station
       const urlArrivalTime = getAdjustedArrivalTime(
         gameDate,
         arrivalBuffer,
         routeToStation,
-        walkingMinutes
+        lastMileMinutes
       )
 
       const params = buildSbbUrlParams(
@@ -289,6 +284,9 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
     hallCoords,
     hallId,
     isDemoMode,
+    travelMode,
+    maxBikeDistanceKm,
+    useMock,
   ])
 
   return {

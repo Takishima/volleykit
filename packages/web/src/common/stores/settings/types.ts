@@ -1,4 +1,9 @@
 import type { NotificationPreference, ReminderTime } from '@/common/services/notifications'
+import {
+  DEFAULT_TRAVEL_MODE,
+  DEFAULT_MAX_BIKE_DISTANCE_KM,
+} from '@/common/services/transport/types'
+import type { TravelMode } from '@/common/services/transport/types'
 
 import type { DataSource } from '../auth'
 
@@ -62,6 +67,10 @@ export interface TravelTimeFilter {
   cacheInvalidatedAt: number | null
   /** SBB button destination type - 'address' for sports hall, 'station' for last stop */
   sbbDestinationType: SbbDestinationType
+  /** How travel times are calculated - door-to-door public transport or e-bike + train */
+  travelMode: TravelMode
+  /** Maximum cycling distance per leg for the e-bike + train mode (km) */
+  maxBikeDistanceKm: number
 }
 
 /**
@@ -173,6 +182,8 @@ export const DEFAULT_MODE_SETTINGS: ModeSettings = {
     arrivalBufferByAssociation: {},
     cacheInvalidatedAt: null,
     sbbDestinationType: 'address',
+    travelMode: DEFAULT_TRAVEL_MODE,
+    maxBikeDistanceKm: DEFAULT_MAX_BIKE_DISTANCE_KM,
   },
   levelFilterEnabled: false,
   notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
@@ -265,6 +276,8 @@ export interface SettingsState {
   getArrivalBufferForAssociation: (associationCode: string | undefined) => number
   invalidateTravelTimeCache: () => void
   setSbbDestinationType: (type: SbbDestinationType) => void
+  setTravelMode: (mode: TravelMode) => void
+  setMaxBikeDistanceKm: (km: number) => void
   setLevelFilterEnabled: (enabled: boolean) => void
   // Notification settings
   setNotificationsEnabled: (enabled: boolean) => void

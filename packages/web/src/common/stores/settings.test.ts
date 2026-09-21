@@ -26,6 +26,8 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     arrivalBufferByAssociation: {},
     cacheInvalidatedAt: null,
     sbbDestinationType: 'address',
+    travelMode: 'publicTransport',
+    maxBikeDistanceKm: 15,
   },
   levelFilterEnabled: false,
   notificationSettings: {
@@ -714,6 +716,75 @@ describe('useSettingsStore', () => {
 
       const { travelTimeFilter } = useSettingsStore.getState()
       expect(travelTimeFilter.arrivalBufferMinutes).toBe(90)
+    })
+
+    it('should default to public transport travel mode', () => {
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.travelMode).toBe('publicTransport')
+      expect(travelTimeFilter.maxBikeDistanceKm).toBe(15)
+    })
+
+    it('should set travel mode', () => {
+      const { setTravelMode } = useSettingsStore.getState()
+
+      setTravelMode('ebikeTrain')
+
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.travelMode).toBe('ebikeTrain')
+    })
+
+    it('should set max bike distance', () => {
+      const { setMaxBikeDistanceKm } = useSettingsStore.getState()
+
+      setMaxBikeDistanceKm(10)
+
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.maxBikeDistanceKm).toBe(10)
+    })
+
+    it('should migrate v11 settings without travel mode fields', () => {
+      const v11Data = {
+        state: {
+          isSafeModeEnabled: true,
+          settingsByMode: {
+            api: {
+              homeLocation: null,
+              distanceFilter: { enabled: false, maxDistanceKm: 50 },
+              distanceFilterByAssociation: {},
+              transportEnabled: true,
+              transportEnabledByAssociation: {},
+              travelTimeFilter: {
+                enabled: true,
+                maxTravelTimeMinutes: 90,
+                maxTravelTimeByAssociation: {},
+                arrivalBufferMinutes: 45,
+                arrivalBufferByAssociation: {},
+                cacheInvalidatedAt: null,
+                sbbDestinationType: 'station',
+              },
+              levelFilterEnabled: false,
+              notificationSettings: {
+                enabled: false,
+                reminderTimes: ['1h'],
+                deliveryPreference: 'native',
+              },
+              gameGapFilter: { enabled: false, minGapMinutes: 120 },
+              hideOwnExchangesByAssociation: {},
+            },
+          },
+        },
+        version: 11,
+      }
+      localStorage.setItem('volleykit-settings', JSON.stringify(v11Data))
+
+      useSettingsStore.persist.rehydrate()
+
+      const state = useSettingsStore.getState()
+      expect(state.settingsByMode.api.travelTimeFilter.travelMode).toBe('publicTransport')
+      expect(state.settingsByMode.api.travelTimeFilter.maxBikeDistanceKm).toBe(15)
+      // Existing settings survive the migration
+      expect(state.settingsByMode.api.travelTimeFilter.sbbDestinationType).toBe('station')
+      expect(state.settingsByMode.api.travelTimeFilter.maxTravelTimeMinutes).toBe(90)
     })
   })
 

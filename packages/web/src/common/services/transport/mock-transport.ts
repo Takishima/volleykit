@@ -12,7 +12,16 @@ import {
 } from '@/common/utils/constants'
 import { calculateDistanceKm } from '@/common/utils/distance'
 
-import type { Coordinates, TravelTimeResult, TravelTimeOptions, StationInfo } from './types'
+import { estimateBikeMinutes } from './ebike-trip-adapter'
+import { DEFAULT_MAX_BIKE_DISTANCE_KM } from './types'
+
+import type {
+  Coordinates,
+  TravelTimeResult,
+  TravelTimeOptions,
+  StationInfo,
+  BikeLegs,
+} from './types'
 
 /** Network delay for realistic demo behavior */
 const MOCK_DELAY_MS = 100
@@ -36,6 +45,17 @@ const WALKING_TIME_VARIATION = 6
 const WALKING_COORD_MULTIPLIER_LAT = 100
 const WALKING_COORD_MULTIPLIER_LON = 10
 
+// Mock cycling distances for the e-bike + train mode (km).
+// Deterministic variation keeps demo results stable per hall.
+const BIKE_DISTANCE_BASE_KM = 2
+const BIKE_DISTANCE_VARIATION_KM = 6
+
+/** Base time for public transport access and waiting (part of the PT estimate) */
+const PT_BASE_ACCESS_MINUTES = 15
+
+/** Waiting time at the station in the e-bike + train estimate */
+const EBIKE_STATION_WAIT_MINUTES = 5
+
 /**
  * Estimate travel time based on straight-line distance.
  * Uses a formula that approximates Swiss public transport:
@@ -47,11 +67,10 @@ const WALKING_COORD_MULTIPLIER_LON = 10
  * @returns Estimated travel time in minutes
  */
 function estimateTravelTimeFromDistance(distanceKm: number): number {
-  const baseTimeMinutes = 15 // Getting to station, waiting
   const averageSpeedKmh = 40 // Average speed including stops
   const travelMinutes = (distanceKm / averageSpeedKmh) * MINUTES_PER_HOUR
 
-  return Math.round(baseTimeMinutes + travelMinutes)
+  return Math.round(PT_BASE_ACCESS_MINUTES + travelMinutes)
 }
 
 /**
@@ -143,6 +162,39 @@ export async function calculateMockTravelTime(
         to.latitude * WALKING_COORD_MULTIPLIER_LAT + to.longitude * WALKING_COORD_MULTIPLIER_LON
       )
     ) % WALKING_TIME_VARIATION
+
+  // E-bike + train mode: replace the PT access base with deterministic mock
+  // cycling legs. Mirrors the real client's fallback: legs beyond the
+  // configured maximum cycling distance yield the public transport result.
+  if (options.travelMode === 'ebikeTrain') {
+    const bikeLegs = generateMockBikeLegs(from, to)
+    const maxBikeDistanceKm = options.maxBikeDistanceKm ?? DEFAULT_MAX_BIKE_DISTANCE_KM
+
+    if (bikeLegs.toStationKm <= maxBikeDistanceKm && bikeLegs.fromStationKm <= maxBikeDistanceKm) {
+      const ebikeDuration =
+        durationMinutes -
+        PT_BASE_ACCESS_MINUTES +
+        EBIKE_STATION_WAIT_MINUTES +
+        bikeLegs.toStationMinutes +
+        bikeLegs.fromStationMinutes
+      const ebikeArrival = new Date(departureTime.getTime() + ebikeDuration * MS_PER_MINUTE)
+
+      return {
+        durationMinutes: ebikeDuration,
+        departureTime: departureTime.toISOString(),
+        arrivalTime: ebikeArrival.toISOString(),
+        transfers,
+        originStation,
+        destinationStation,
+        finalWalkingMinutes: 0,
+        travelMode: 'ebikeTrain',
+        bikeLegs,
+        tripData: undefined,
+      }
+    }
+    // Fall through to the public transport result
+  }
+
   const finalWalkingMinutes = WALKING_TIME_BASE_MINUTES + coordHash
 
   return {
@@ -153,6 +205,30 @@ export async function calculateMockTravelTime(
     originStation,
     destinationStation,
     finalWalkingMinutes,
+    travelMode: 'publicTransport',
     tripData: undefined,
+  }
+}
+
+/**
+ * Generate deterministic mock cycling legs for demo mode.
+ */
+function generateMockBikeLegs(from: Coordinates, to: Coordinates): BikeLegs {
+  const hashOf = (coords: Coordinates) =>
+    Math.abs(
+      Math.round(
+        coords.latitude * WALKING_COORD_MULTIPLIER_LAT +
+          coords.longitude * WALKING_COORD_MULTIPLIER_LON
+      )
+    ) % BIKE_DISTANCE_VARIATION_KM
+
+  const toStationKm = BIKE_DISTANCE_BASE_KM + hashOf(from)
+  const fromStationKm = BIKE_DISTANCE_BASE_KM + hashOf(to)
+
+  return {
+    toStationKm,
+    toStationMinutes: estimateBikeMinutes(toStationKm),
+    fromStationKm,
+    fromStationMinutes: estimateBikeMinutes(fromStationKm),
   }
 }

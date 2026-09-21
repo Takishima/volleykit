@@ -3,9 +3,30 @@
  * Provides travel time calculations using Swiss public transport via OJP 2.0.
  */
 
-export type { TravelTimeResult, TravelTimeOptions, Coordinates, StationInfo } from './types'
+export type {
+  TravelTimeResult,
+  TravelTimeOptions,
+  Coordinates,
+  StationInfo,
+  TravelMode,
+  BikeLegs,
+} from './types'
 
-export { TransportApiError } from './types'
+export {
+  TransportApiError,
+  DEFAULT_TRAVEL_MODE,
+  DEFAULT_MAX_BIKE_DISTANCE_KM,
+  MIN_MAX_BIKE_DISTANCE_KM,
+  MAX_MAX_BIKE_DISTANCE_KM,
+} from './types'
+
+export {
+  adaptTripForEbikeTrain,
+  selectBestEbikeTrainTrip,
+  EBIKE_AVERAGE_SPEED_KMH,
+} from './ebike-trip-adapter'
+
+export type { EbikeTrainAdaptation } from './ebike-trip-adapter'
 
 export {
   calculateTravelTime,
@@ -19,6 +40,10 @@ export type { OjpTrip } from './ojp-client'
 
 export { calculateMockTravelTime } from './mock-transport'
 
+export { getOrFetchTravelTime } from './travel-time-fetcher'
+
+export type { GetOrFetchTravelTimeParams } from './travel-time-fetcher'
+
 export type { DayType } from './cache'
 
 export {
@@ -29,6 +54,7 @@ export {
   getHallCacheKey,
   hashLocation,
   getDayType,
+  getTravelModeKey,
 } from './cache'
 
 export {

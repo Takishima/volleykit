@@ -32,14 +32,27 @@ describe('persistence', () => {
 
   describe('buildCacheKey', () => {
     it('builds key from hallId, homeLocationHash, and dayType', () => {
-      const key = buildCacheKey('hall-123', '47.377,8.542', 'weekday')
-      expect(key).toBe('hall-123:47.377,8.542:weekday')
+      const key = buildCacheKey('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
+      expect(key).toBe('hall-123:47.377,8.542:weekday:publicTransport')
+    })
+
+    it('builds different keys for different travel modes', () => {
+      const publicTransportKey = buildCacheKey(
+        'hall-123',
+        '47.377,8.542',
+        'weekday',
+        'publicTransport'
+      )
+      const ebikeKey = buildCacheKey('hall-123', '47.377,8.542', 'weekday', 'ebikeTrain-15')
+
+      expect(ebikeKey).toBe('hall-123:47.377,8.542:weekday:ebikeTrain-15')
+      expect(publicTransportKey).not.toBe(ebikeKey)
     })
 
     it('builds different keys for different day types', () => {
-      const weekdayKey = buildCacheKey('hall-123', '47.377,8.542', 'weekday')
-      const saturdayKey = buildCacheKey('hall-123', '47.377,8.542', 'saturday')
-      const sundayKey = buildCacheKey('hall-123', '47.377,8.542', 'sunday')
+      const weekdayKey = buildCacheKey('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
+      const saturdayKey = buildCacheKey('hall-123', '47.377,8.542', 'saturday', 'publicTransport')
+      const sundayKey = buildCacheKey('hall-123', '47.377,8.542', 'sunday', 'publicTransport')
 
       expect(weekdayKey).not.toBe(saturdayKey)
       expect(saturdayKey).not.toBe(sundayKey)
@@ -49,14 +62,19 @@ describe('persistence', () => {
 
   describe('setCachedTravelTime and getCachedTravelTime', () => {
     it('stores and retrieves travel time result', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
-      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
+      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
 
       expect(cached).toEqual(mockResult)
     })
 
     it('returns null for non-existent entries', () => {
-      const cached = getCachedTravelTime('nonexistent', '47.377,8.542', 'weekday')
+      const cached = getCachedTravelTime(
+        'nonexistent',
+        '47.377,8.542',
+        'weekday',
+        'publicTransport'
+      )
       expect(cached).toBeNull()
     })
 
@@ -64,55 +82,69 @@ describe('persistence', () => {
       const weekdayResult = { ...mockResult, durationMinutes: 45 }
       const saturdayResult = { ...mockResult, durationMinutes: 60 }
 
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', weekdayResult)
-      setCachedTravelTime('hall-123', '47.377,8.542', 'saturday', saturdayResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', weekdayResult, 'publicTransport')
+      setCachedTravelTime('hall-123', '47.377,8.542', 'saturday', saturdayResult, 'publicTransport')
 
-      expect(getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')?.durationMinutes).toBe(45)
-      expect(getCachedTravelTime('hall-123', '47.377,8.542', 'saturday')?.durationMinutes).toBe(60)
+      expect(
+        getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
+          ?.durationMinutes
+      ).toBe(45)
+      expect(
+        getCachedTravelTime('hall-123', '47.377,8.542', 'saturday', 'publicTransport')
+          ?.durationMinutes
+      ).toBe(60)
     })
 
     it('returns null for expired entries', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
 
       // Advance time past TTL
       vi.advanceTimersByTime(TRAVEL_TIME_CACHE_TTL + 1000)
 
-      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
       expect(cached).toBeNull()
     })
 
     it('returns valid entries before TTL expires', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
 
       // Advance time to just before TTL
       vi.advanceTimersByTime(TRAVEL_TIME_CACHE_TTL - 1000)
 
-      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
       expect(cached).toEqual(mockResult)
     })
   })
 
   describe('removeCachedTravelTime', () => {
     it('removes a specific cached entry', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
-      setCachedTravelTime('hall-456', '47.377,8.542', 'weekday', mockResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
+      setCachedTravelTime('hall-456', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
 
-      removeCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      removeCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
 
-      expect(getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')).toBeNull()
-      expect(getCachedTravelTime('hall-456', '47.377,8.542', 'weekday')).toEqual(mockResult)
+      expect(
+        getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
+      ).toBeNull()
+      expect(getCachedTravelTime('hall-456', '47.377,8.542', 'weekday', 'publicTransport')).toEqual(
+        mockResult
+      )
     })
   })
 
   describe('clearTravelTimeCache', () => {
     it('removes all cached entries', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
-      setCachedTravelTime('hall-456', '47.377,8.542', 'saturday', mockResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
+      setCachedTravelTime('hall-456', '47.377,8.542', 'saturday', mockResult, 'publicTransport')
 
       clearTravelTimeCache()
 
-      expect(getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')).toBeNull()
-      expect(getCachedTravelTime('hall-456', '47.377,8.542', 'saturday')).toBeNull()
+      expect(
+        getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
+      ).toBeNull()
+      expect(
+        getCachedTravelTime('hall-456', '47.377,8.542', 'saturday', 'publicTransport')
+      ).toBeNull()
     })
   })
 
@@ -124,20 +156,20 @@ describe('persistence', () => {
     })
 
     it('returns correct entry count', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
-      setCachedTravelTime('hall-456', '47.377,8.542', 'saturday', mockResult)
-      setCachedTravelTime('hall-789', '47.377,8.542', 'sunday', mockResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
+      setCachedTravelTime('hall-456', '47.377,8.542', 'saturday', mockResult, 'publicTransport')
+      setCachedTravelTime('hall-789', '47.377,8.542', 'sunday', mockResult, 'publicTransport')
 
       const stats = getTravelTimeCacheStats()
       expect(stats.entryCount).toBe(3)
     })
 
     it('returns oldest entry age', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult)
+      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
 
       vi.advanceTimersByTime(5000)
 
-      setCachedTravelTime('hall-456', '47.377,8.542', 'saturday', mockResult)
+      setCachedTravelTime('hall-456', '47.377,8.542', 'saturday', mockResult, 'publicTransport')
 
       const stats = getTravelTimeCacheStats()
       expect(stats.oldestEntryAge).toBe(5000)
@@ -148,14 +180,14 @@ describe('persistence', () => {
     it('handles corrupted localStorage data gracefully', () => {
       localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, 'invalid json')
 
-      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
       expect(cached).toBeNull()
     })
 
     it('handles invalid cache structure gracefully', () => {
       localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, JSON.stringify({ invalid: 'structure' }))
 
-      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
       expect(cached).toBeNull()
     })
 
@@ -179,7 +211,7 @@ describe('persistence', () => {
       localStorage.setItem(TRAVEL_TIME_STORAGE_KEY, JSON.stringify(oldCache))
 
       // Old cache should be invalidated due to version mismatch
-      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday')
+      const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
       expect(cached).toBeNull()
     })
   })

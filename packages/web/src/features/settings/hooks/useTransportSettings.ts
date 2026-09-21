@@ -5,8 +5,16 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
 import { useTravelTimeAvailable } from '@/common/hooks/useTravelTime'
-import { clearTravelTimeCache, getTravelTimeCacheStats } from '@/common/services/transport'
+import {
+  clearTravelTimeCache,
+  getTravelTimeCacheStats,
+  MIN_MAX_BIKE_DISTANCE_KM,
+  MAX_MAX_BIKE_DISTANCE_KM,
+  DEFAULT_MAX_BIKE_DISTANCE_KM,
+  type TravelMode,
+} from '@/common/services/transport'
 import {
   useSettingsStore,
   getDefaultArrivalBuffer,
@@ -51,6 +59,8 @@ export function useTransportSettings() {
     setArrivalBufferForAssociation,
     sbbDestinationType,
     setSbbDestinationType,
+    setTravelMode,
+    setMaxBikeDistanceKm,
   } = useSettingsStore(
     useShallow((state) => ({
       homeLocation: state.homeLocation,
@@ -66,8 +76,12 @@ export function useTransportSettings() {
       setArrivalBufferForAssociation: state.setArrivalBufferForAssociation,
       sbbDestinationType: state.travelTimeFilter.sbbDestinationType ?? 'address',
       setSbbDestinationType: state.setSbbDestinationType,
+      setTravelMode: state.setTravelMode,
+      setMaxBikeDistanceKm: state.setMaxBikeDistanceKm,
     }))
   )
+
+  const { travelMode, maxBikeDistanceKm } = useTravelModeSettings()
 
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   // Incremented by handleClearCache to trigger a re-render so cacheEntryCount is recomputed.
@@ -113,6 +127,7 @@ export function useTransportSettings() {
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer)
   const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm)
   const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime)
+  const [localMaxBikeDistance, setLocalMaxBikeDistance] = useState(maxBikeDistanceKm)
 
   // When the association changes, reset local inputs to the new association's store values.
   // Adjusting state during render (not in an effect) avoids an extra render cycle.
@@ -128,6 +143,7 @@ export function useTransportSettings() {
   const arrivalDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const distanceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const travelTimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bikeDistanceDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Cleanup debounce timeouts on unmount
   useEffect(() => {
@@ -135,6 +151,7 @@ export function useTransportSettings() {
       if (arrivalDebounceRef.current) clearTimeout(arrivalDebounceRef.current)
       if (distanceDebounceRef.current) clearTimeout(distanceDebounceRef.current)
       if (travelTimeDebounceRef.current) clearTimeout(travelTimeDebounceRef.current)
+      if (bikeDistanceDebounceRef.current) clearTimeout(bikeDistanceDebounceRef.current)
     }
   }, [])
 
@@ -158,7 +175,11 @@ export function useTransportSettings() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_ARRIVAL_BUFFER_MINUTES) {
+      if (
+        !isNaN(value) &&
+        value >= MIN_ARRIVAL_BUFFER_MINUTES &&
+        value <= MAX_ARRIVAL_BUFFER_MINUTES
+      ) {
         setLocalArrivalBuffer(value)
         if (arrivalDebounceRef.current) {
           clearTimeout(arrivalDebounceRef.current)
@@ -175,7 +196,7 @@ export function useTransportSettings() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_MAX_DISTANCE_KM) {
+      if (!isNaN(value) && value >= MIN_MAX_DISTANCE_KM && value <= MAX_MAX_DISTANCE_KM) {
         setLocalMaxDistance(value)
         if (distanceDebounceRef.current) {
           clearTimeout(distanceDebounceRef.current)
@@ -192,7 +213,11 @@ export function useTransportSettings() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!associationCode) return
       const value = parseInt(e.target.value, 10)
-      if (!isNaN(value) && value >= MIN_MAX_TRAVEL_TIME_MINUTES) {
+      if (
+        !isNaN(value) &&
+        value >= MIN_MAX_TRAVEL_TIME_MINUTES &&
+        value <= MAX_MAX_TRAVEL_TIME_MINUTES
+      ) {
         setLocalMaxTravelTime(value)
         if (travelTimeDebounceRef.current) {
           clearTimeout(travelTimeDebounceRef.current)
@@ -212,6 +237,29 @@ export function useTransportSettings() {
     [setSbbDestinationType]
   )
 
+  const handleTravelModeChange = useCallback(
+    (mode: TravelMode) => {
+      setTravelMode(mode)
+    },
+    [setTravelMode]
+  )
+
+  const handleMaxBikeDistanceChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = parseInt(e.target.value, 10)
+      if (!isNaN(value) && value >= MIN_MAX_BIKE_DISTANCE_KM && value <= MAX_MAX_BIKE_DISTANCE_KM) {
+        setLocalMaxBikeDistance(value)
+        if (bikeDistanceDebounceRef.current) {
+          clearTimeout(bikeDistanceDebounceRef.current)
+        }
+        bikeDistanceDebounceRef.current = setTimeout(() => {
+          setMaxBikeDistanceKm(value)
+        }, DEBOUNCE_MS)
+      }
+    },
+    [setMaxBikeDistanceKm]
+  )
+
   const hasHomeLocation = Boolean(homeLocation)
   const hasAssociation = Boolean(associationCode)
   const canEnableTransport = hasHomeLocation && isTransportAvailable && hasAssociation
@@ -229,6 +277,8 @@ export function useTransportSettings() {
     hasHomeLocation,
     canEnableTransport,
     sbbDestinationType: sbbDestinationType as SbbDestinationType,
+    travelMode: travelMode as TravelMode,
+    localMaxBikeDistance,
 
     // Constants
     minArrivalBuffer: MIN_ARRIVAL_BUFFER_MINUTES,
@@ -239,6 +289,9 @@ export function useTransportSettings() {
     minMaxTravelTime: MIN_MAX_TRAVEL_TIME_MINUTES,
     maxMaxTravelTime: MAX_MAX_TRAVEL_TIME_MINUTES,
     defaultMaxTravelTime: DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+    minMaxBikeDistance: MIN_MAX_BIKE_DISTANCE_KM,
+    maxMaxBikeDistance: MAX_MAX_BIKE_DISTANCE_KM,
+    defaultMaxBikeDistance: DEFAULT_MAX_BIKE_DISTANCE_KM,
 
     // Actions
     handleToggleTransport,
@@ -247,6 +300,8 @@ export function useTransportSettings() {
     handleMaxDistanceChange,
     handleMaxTravelTimeChange,
     handleSbbDestinationTypeChange,
+    handleTravelModeChange,
+    handleMaxBikeDistanceChange,
     setShowClearConfirm,
   }
 }

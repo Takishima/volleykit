@@ -14,13 +14,15 @@ type AnyFunction = (...args: any[]) => any
 
 // Mock dependencies
 vi.mock('@/common/services/transport', () => ({
-  calculateTravelTime: vi.fn(),
-  calculateMockTravelTime: vi.fn(),
+  getOrFetchTravelTime: vi.fn(),
   isOjpConfigured: vi.fn(() => false),
   hashLocation: vi.fn((coords: Coordinates) => `${coords.latitude},${coords.longitude}`),
   getDayType: vi.fn(() => 'weekday'),
   getCachedTravelTime: vi.fn(() => null),
   setCachedTravelTime: vi.fn(),
+  getTravelModeKey: vi.fn(() => 'publicTransport'),
+  DEFAULT_TRAVEL_MODE: 'publicTransport',
+  DEFAULT_MAX_BIKE_DISTANCE_KM: 15,
   TRAVEL_TIME_STALE_TIME: 14 * 24 * 60 * 60 * 1000,
   TRAVEL_TIME_GC_TIME: 14 * 24 * 60 * 60 * 1000,
 }))
@@ -159,7 +161,7 @@ describe('useTravelTimeFilter', () => {
     })
 
     it('calculates travel time for exchanges', async () => {
-      const { calculateTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
       const mockResult: TravelTimeResult = {
         durationMinutes: 45,
@@ -168,7 +170,7 @@ describe('useTravelTimeFilter', () => {
         transfers: 1,
       }
 
-      vi.mocked(calculateTravelTime).mockResolvedValue(mockResult)
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockResult)
 
       const exchanges = [createMockExchange('hall-1', { lat: 46.948, lon: 7.447 })]
 
@@ -185,7 +187,7 @@ describe('useTravelTimeFilter', () => {
 
     it('uses mock travel time in demo mode', async () => {
       const { useAuthStore } = await import('@/common/stores/auth')
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
         selector({ dataSource: 'demo' })
@@ -198,7 +200,7 @@ describe('useTravelTimeFilter', () => {
         transfers: 0,
       }
 
-      vi.mocked(calculateMockTravelTime).mockResolvedValue(mockResult)
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockResult)
 
       const exchanges = [createMockExchange('hall-1', { lat: 46.948, lon: 7.447 })]
 
@@ -210,7 +212,7 @@ describe('useTravelTimeFilter', () => {
         expect(result.current.exchangesWithTravelTime![0]!.travelTimeMinutes).toBe(30)
       })
 
-      expect(calculateMockTravelTime).toHaveBeenCalled()
+      expect(getOrFetchTravelTime).toHaveBeenCalled()
     })
 
     it('handles exchanges without coordinates', async () => {
@@ -252,7 +254,7 @@ describe('useTravelTimeFilter', () => {
     beforeEach(async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
       const { useAuthStore } = await import('@/common/stores/auth')
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
         selector({ dataSource: 'demo' })
@@ -277,7 +279,7 @@ describe('useTravelTimeFilter', () => {
       )
 
       // Different travel times for different halls
-      vi.mocked(calculateMockTravelTime)
+      vi.mocked(getOrFetchTravelTime)
         .mockResolvedValueOnce({
           durationMinutes: 30, // Under limit
           departureTime: '2025-01-15T17:15:00Z',
@@ -311,10 +313,10 @@ describe('useTravelTimeFilter', () => {
     })
 
     it('includes exchanges without travel time when filtering', async () => {
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
-      vi.mocked(calculateMockTravelTime).mockReset()
-      vi.mocked(calculateMockTravelTime).mockResolvedValue({
+      vi.mocked(getOrFetchTravelTime).mockReset()
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue({
         durationMinutes: 90, // Over limit
         departureTime: '2025-01-15T16:15:00Z',
         arrivalTime: '2025-01-15T17:45:00Z',
@@ -339,7 +341,7 @@ describe('useTravelTimeFilter', () => {
 
     it('returns all exchanges when filtering is disabled', async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
       vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
         selector({
@@ -359,8 +361,8 @@ describe('useTravelTimeFilter', () => {
         })
       )
 
-      vi.mocked(calculateMockTravelTime).mockReset()
-      vi.mocked(calculateMockTravelTime).mockResolvedValue({
+      vi.mocked(getOrFetchTravelTime).mockReset()
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue({
         durationMinutes: 90, // Would be over limit if filtering enabled
         departureTime: '2025-01-15T16:15:00Z',
         arrivalTime: '2025-01-15T17:45:00Z',
@@ -521,7 +523,7 @@ describe('useTravelTimeFilter', () => {
       const { useActiveAssociationCode } =
         await import('@/features/auth/hooks/useActiveAssociation')
       const { useAuthStore } = await import('@/common/stores/auth')
-      const { calculateMockTravelTime } = await import('@/common/services/transport')
+      const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
       vi.mocked(useActiveAssociationCode).mockReturnValue('SPECIAL')
       vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
@@ -548,7 +550,7 @@ describe('useTravelTimeFilter', () => {
         })
       )
 
-      vi.mocked(calculateMockTravelTime).mockResolvedValue({
+      vi.mocked(getOrFetchTravelTime).mockResolvedValue({
         durationMinutes: 30,
         departureTime: '2025-01-15T17:15:00Z',
         arrivalTime: '2025-01-15T17:45:00Z',
@@ -563,7 +565,7 @@ describe('useTravelTimeFilter', () => {
 
       // The hook should use the custom buffer (45 min) for arrival time calculation
       // This is tested by verifying the hook runs without errors
-      expect(calculateMockTravelTime).toBeDefined()
+      expect(getOrFetchTravelTime).toBeDefined()
     })
   })
 })

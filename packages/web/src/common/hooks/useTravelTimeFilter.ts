@@ -9,17 +9,17 @@ import { useQueries } from '@tanstack/react-query'
 import type { GameExchange } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
+import { useTravelTimeSource } from '@/common/hooks/useTravelTimeSource'
 import {
-  calculateTravelTime,
-  calculateMockTravelTime,
   isOjpConfigured,
   hashLocation,
   getDayType,
-  getCachedTravelTime,
-  setCachedTravelTime,
+  getOrFetchTravelTime,
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
   type Coordinates,
+  type TravelMode,
   type TravelTimeResult,
 } from '@/common/services/transport'
 import { useAuthStore } from '@/common/stores/auth'
@@ -40,6 +40,8 @@ interface HallInfo {
 interface ExchangeWithTravelTime<T> {
   item: T
   travelTimeMinutes: number | null
+  /** Travel mode the result was calculated with (from the result, not the setting) */
+  travelMode: TravelMode | undefined
   isLoading: boolean
   isError: boolean
 }
@@ -87,6 +89,8 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   const arrivalBufferByAssociation = useSettingsStore(
     (state) => state.travelTimeFilter.arrivalBufferByAssociation
   )
+  const { travelMode, maxBikeDistanceKm, travelModeKey } = useTravelModeSettings()
+  const { useMock } = useTravelTimeSource()
   const associationCode = useActiveAssociationCode()
 
   // Check if transport is enabled for current association
@@ -138,21 +142,15 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   // Create queries for each unique hall
   const queries = useQueries({
     queries: hallInfos.map((hallInfo) => ({
-      queryKey: queryKeys.travelTime.hall(hallInfo.id, homeLocationHash ?? '', dayType),
+      queryKey: queryKeys.travelTime.hall(
+        hallInfo.id,
+        homeLocationHash ?? '',
+        dayType,
+        travelModeKey
+      ),
       queryFn: async (): Promise<TravelTimeResult> => {
         if (!homeLocation || !hallInfo.coords) {
           throw new Error('Missing location data')
-        }
-
-        // Check localStorage cache first
-        const cached = getCachedTravelTime(hallInfo.id, homeLocationHash ?? '', dayType)
-        if (cached) {
-          return cached
-        }
-
-        const fromCoords: Coordinates = {
-          latitude: homeLocation.latitude,
-          longitude: homeLocation.longitude,
         }
 
         // Calculate target arrival time (game start minus buffer from settings)
@@ -161,19 +159,17 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
           ? new Date(hallInfo.gameStartTime.getTime() - arrivalBufferMs)
           : undefined
 
-        let result: TravelTimeResult
-        if (isDemoMode) {
-          result = await calculateMockTravelTime(fromCoords, hallInfo.coords)
-        } else {
-          result = await calculateTravelTime(fromCoords, hallInfo.coords, {
-            targetArrivalTime,
-          })
-        }
-
-        // Persist to localStorage
-        setCachedTravelTime(hallInfo.id, homeLocationHash ?? '', dayType, result)
-
-        return result
+        return getOrFetchTravelTime({
+          hallId: hallInfo.id,
+          from: { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
+          to: hallInfo.coords,
+          homeLocationHash: homeLocationHash ?? '',
+          dayType,
+          travelMode,
+          maxBikeDistanceKm,
+          targetArrivalTime,
+          useMock,
+        })
       },
       enabled: canFetch && hallInfo.coords !== null,
       staleTime: TRAVEL_TIME_STALE_TIME,
@@ -188,7 +184,15 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   // Build a map of hall ID -> travel time result
   // Uses explicit ID matching instead of index correlation for robustness
   const travelTimeMap = useMemo(() => {
-    const map = new Map<string, { minutes: number | null; isLoading: boolean; isError: boolean }>()
+    const map = new Map<
+      string,
+      {
+        minutes: number | null
+        travelMode: TravelMode | undefined
+        isLoading: boolean
+        isError: boolean
+      }
+    >()
 
     // Create a lookup from query key to result
     const queryByHallId = new Map<string, (typeof queries)[number]>()
@@ -204,6 +208,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
       const query = queryByHallId.get(hallInfo.id)
       map.set(hallInfo.id, {
         minutes: query?.data?.durationMinutes ?? null,
+        travelMode: query?.data?.travelMode,
         isLoading: query?.isLoading ?? false,
         isError: query?.isError ?? false,
       })
@@ -223,6 +228,7 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
       return {
         item: exchange,
         travelTimeMinutes: travelTimeData?.minutes ?? null,
+        travelMode: travelTimeData?.travelMode,
         isLoading: travelTimeData?.isLoading ?? false,
         isError: travelTimeData?.isError ?? false,
       }

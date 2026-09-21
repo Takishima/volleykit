@@ -20,6 +20,7 @@ import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useDateLocale } from '@/common/hooks/useDateFormat'
 import { useSbbUrl } from '@/common/hooks/useSbbUrl'
 import { useTranslation } from '@/common/hooks/useTranslation'
+import type { TravelMode } from '@/common/services/transport'
 import { useSettingsStore } from '@/common/stores/settings'
 import { extractCoordinates } from '@/common/utils/geo-location'
 import { buildMapsUrls } from '@/common/utils/maps-url'
@@ -57,6 +58,8 @@ interface ExchangeCardProps {
   carDistanceKm?: number | null
   /** Travel time in minutes (if available) */
   travelTimeMinutes?: number | null
+  /** Travel mode the displayed travel time was calculated with */
+  travelTimeMode?: TravelMode
   /** Whether travel time is currently loading */
   travelTimeLoading?: boolean
 }
@@ -67,6 +70,7 @@ function ExchangeCardComponent({
   dataTour,
   carDistanceKm,
   travelTimeMinutes,
+  travelTimeMode,
   travelTimeLoading,
 }: ExchangeCardProps) {
   const { t, tInterpolate, locale } = useTranslation()
@@ -193,6 +197,7 @@ function ExchangeCardComponent({
               {features.transport && (travelTimeMinutes !== undefined || travelTimeLoading) && (
                 <TravelTimeBadge
                   durationMinutes={travelTimeMinutes ?? undefined}
+                  travelMode={travelTimeMode}
                   isLoading={travelTimeLoading}
                 />
               )}

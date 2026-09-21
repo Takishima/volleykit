@@ -11,14 +11,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
+import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
+import { useTravelTimeSource } from '@/common/hooks/useTravelTimeSource'
 import {
-  calculateTravelTime,
-  calculateMockTravelTime,
   isOjpConfigured,
   hashLocation,
   getDayType,
-  getCachedTravelTime,
-  setCachedTravelTime,
+  getOrFetchTravelTime,
   removeCachedTravelTime,
   TRAVEL_TIME_STALE_TIME,
   TRAVEL_TIME_GC_TIME,
@@ -60,6 +59,8 @@ export function useTravelTime(
   const transportEnabledByAssociation = useSettingsStore(
     (state) => state.transportEnabledByAssociation
   )
+  const { travelMode, maxBikeDistanceKm, travelModeKey } = useTravelModeSettings()
+  const { useMock } = useTravelTimeSource()
   const queryClient = useQueryClient()
   const associationCode = useActiveAssociationCode()
 
@@ -89,7 +90,12 @@ export function useTravelTime(
     (isDemoMode || isCalendarMode || isOjpConfigured())
   )
 
-  const queryKey = queryKeys.travelTime.hall(hallId ?? '', homeLocationHash ?? '', dayType)
+  const queryKey = queryKeys.travelTime.hall(
+    hallId ?? '',
+    homeLocationHash ?? '',
+    dayType,
+    travelModeKey
+  )
 
   const query = useQuery<TravelTimeResult>({
     queryKey,
@@ -98,32 +104,17 @@ export function useTravelTime(
         throw new Error('Missing home location or hall coordinates')
       }
 
-      // Check localStorage cache first (survives browser sessions)
-      const cached = getCachedTravelTime(hallId, homeLocationHash ?? '', dayType)
-      if (cached) {
-        return cached
-      }
-
-      const fromCoords: Coordinates = {
-        latitude: homeLocation.latitude,
-        longitude: homeLocation.longitude,
-      }
-
-      // Prefer real OJP API when configured, fall back to mock transport
-      // This matches the logic in useSbbUrl for consistency
-      let result: TravelTimeResult
-      if (isOjpConfigured()) {
-        result = await calculateTravelTime(fromCoords, hallCoords, {
-          targetArrivalTime,
-        })
-      } else {
-        result = await calculateMockTravelTime(fromCoords, hallCoords)
-      }
-
-      // Persist successful result to localStorage
-      setCachedTravelTime(hallId, homeLocationHash ?? '', dayType, result)
-
-      return result
+      return getOrFetchTravelTime({
+        hallId,
+        from: { latitude: homeLocation.latitude, longitude: homeLocation.longitude },
+        to: hallCoords,
+        homeLocationHash: homeLocationHash ?? '',
+        dayType,
+        travelMode,
+        maxBikeDistanceKm,
+        targetArrivalTime,
+        useMock,
+      })
     },
     enabled: shouldFetch,
 
@@ -142,11 +133,11 @@ export function useTravelTime(
   const refresh = useCallback(() => {
     if (hallId && homeLocationHash) {
       // Remove from localStorage first
-      removeCachedTravelTime(hallId, homeLocationHash, dayType)
+      removeCachedTravelTime(hallId, homeLocationHash, dayType, travelModeKey)
     }
     // Then invalidate TanStack Query cache to trigger refetch
     queryClient.invalidateQueries({ queryKey })
-  }, [queryClient, queryKey, hallId, homeLocationHash, dayType])
+  }, [queryClient, queryKey, hallId, homeLocationHash, dayType, travelModeKey])
 
   return {
     ...query,

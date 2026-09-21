@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/react/shallow'
 import type { GameExchange } from '@/api/client'
 import { features } from '@/common/config/features'
 import { useTravelTimeFilter } from '@/common/hooks/useTravelTimeFilter'
+import type { TravelMode } from '@/common/services/transport'
 import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
 import { calculateCarDistanceKm } from '@/common/utils/distance'
@@ -69,11 +70,14 @@ export function useExchangeFilters({
   // Build travel time lookup map once for both filtering and rendering
   const travelTimeMap = useMemo(() => {
     if (!exchangesWithTravelTime)
-      return new Map<string, { minutes: number | null; isLoading: boolean }>()
+      return new Map<
+        string,
+        { minutes: number | null; travelMode: TravelMode | undefined; isLoading: boolean }
+      >()
     return new Map(
       exchangesWithTravelTime.map((e) => [
         e.item.__identity,
-        { minutes: e.travelTimeMinutes, isLoading: e.isLoading },
+        { minutes: e.travelTimeMinutes, travelMode: e.travelMode, isLoading: e.isLoading },
       ])
     )
   }, [exchangesWithTravelTime])

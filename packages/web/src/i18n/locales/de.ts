@@ -497,6 +497,12 @@ const de: Translations = {
       sbbDestinationDescription: 'Wählen Sie, wohin der SBB-Link führen soll',
       sbbDestinationAddress: 'Sporthalle (inkl. Fussweg)',
       sbbDestinationStation: 'Letzte ÖV-Haltestelle',
+      travelMode: 'Routenberechnung',
+      travelModeDescription: 'Wie Reisezeiten zur Sporthalle berechnet werden',
+      travelModePublicTransport: 'Öffentlicher Verkehr (Tür zu Tür)',
+      travelModeEbikeTrain: 'E-Bike + Zug (mit dem Velo zum und vom Bahnhof)',
+      maxBikeDistance: 'Maximale Velodistanz',
+      maxBikeDistanceDescription: 'Längere Strecken nutzen den öffentlichen Verkehr',
       cacheInfo:
         'Reisezeiten werden nach Tagestyp (Werktag/Samstag/Sonntag) für 14 Tage zwischengespeichert.',
       cacheEntries: '{count} gespeicherte Routen',

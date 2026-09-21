@@ -11,7 +11,7 @@
 
 import { MS_PER_HOUR, HOURS_PER_DAY } from '@/common/utils/constants'
 
-import type { Coordinates } from './types'
+import type { Coordinates, TravelMode } from './types'
 
 /** Day types for Swiss public transport schedules */
 export type DayType = 'weekday' | 'saturday' | 'sunday'
@@ -73,6 +73,22 @@ export function hashLocation(coords: Coordinates): string {
   const lat = Math.round(coords.latitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER
   const lon = Math.round(coords.longitude * COORD_PRECISION_MULTIPLIER) / COORD_PRECISION_MULTIPLIER
   return `${lat},${lon}`
+}
+
+/**
+ * Build the travel-mode segment of travel time cache/query keys.
+ * The e-bike + train mode includes the max cycling distance so results
+ * calculated with a different limit are not reused.
+ *
+ * @param travelMode Selected travel mode
+ * @param maxBikeDistanceKm Maximum cycling distance (ebikeTrain mode only)
+ * @returns Key segment like "publicTransport" or "ebikeTrain-15"
+ */
+export function getTravelModeKey(travelMode: TravelMode, maxBikeDistanceKm: number): string {
+  if (travelMode === 'ebikeTrain') {
+    return `ebikeTrain-${maxBikeDistanceKm}`
+  }
+  return 'publicTransport'
 }
 
 /**

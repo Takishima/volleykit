@@ -22,8 +22,9 @@ interface CachedTravelTime {
  * Version history:
  * - v1: Initial version
  * - v2: Invalidate cache due to station name cleanup (fix for PLATFORM_NOT_WHEELCHAIR_ACCESSIBLE leak)
+ * - v3: Cache keys gained a travel-mode segment (e-bike + train mode)
  */
-const CACHE_VERSION = 2
+const CACHE_VERSION = 3
 
 /**
  * Cache structure with version for future migrations.
@@ -37,9 +38,17 @@ interface TravelTimeCache {
 
 /**
  * Build a cache key from the route parameters.
+ *
+ * @param travelModeKey Travel-mode key segment (see getTravelModeKey in cache.ts).
+ *   Required so every call site makes an explicit mode decision.
  */
-export function buildCacheKey(hallId: string, homeLocationHash: string, dayType: DayType): string {
-  return `${hallId}:${homeLocationHash}:${dayType}`
+export function buildCacheKey(
+  hallId: string,
+  homeLocationHash: string,
+  dayType: DayType,
+  travelModeKey: string
+): string {
+  return `${hallId}:${homeLocationHash}:${dayType}:${travelModeKey}`
 }
 
 /**
@@ -86,15 +95,17 @@ function saveCache(cache: TravelTimeCache): void {
  * @param hallId Sports hall ID
  * @param homeLocationHash Hashed home location coordinates
  * @param dayType Day type (weekday/saturday/sunday)
+ * @param travelModeKey Travel-mode key segment (see getTravelModeKey)
  * @returns Cached result if valid, null otherwise
  */
 export function getCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
-  dayType: DayType
+  dayType: DayType,
+  travelModeKey: string
 ): TravelTimeResult | null {
   const cache = loadCache()
-  const key = buildCacheKey(hallId, homeLocationHash, dayType)
+  const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)
   const entry = cache.entries[key]
 
   if (!entry) {
@@ -120,15 +131,17 @@ export function getCachedTravelTime(
  * @param homeLocationHash Hashed home location coordinates
  * @param dayType Day type (weekday/saturday/sunday)
  * @param result Travel time result to cache
+ * @param travelModeKey Travel-mode key segment (see getTravelModeKey)
  */
 export function setCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
   dayType: DayType,
-  result: TravelTimeResult
+  result: TravelTimeResult,
+  travelModeKey: string
 ): void {
   const cache = loadCache()
-  const key = buildCacheKey(hallId, homeLocationHash, dayType)
+  const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)
 
   cache.entries[key] = {
     result,
@@ -152,14 +165,16 @@ export function setCachedTravelTime(
  * @param hallId Sports hall ID
  * @param homeLocationHash Hashed home location coordinates
  * @param dayType Day type (weekday/saturday/sunday)
+ * @param travelModeKey Travel-mode key segment (see getTravelModeKey)
  */
 export function removeCachedTravelTime(
   hallId: string,
   homeLocationHash: string,
-  dayType: DayType
+  dayType: DayType,
+  travelModeKey: string
 ): void {
   const cache = loadCache()
-  const key = buildCacheKey(hallId, homeLocationHash, dayType)
+  const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)
   delete cache.entries[key]
   saveCache(cache)
 }
