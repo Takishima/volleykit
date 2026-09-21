@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
 import { useModalDismissal } from '@/common/hooks/useModalDismissal'
+import { stopOverlayTouchStart } from '@/common/hooks/useOverlayTouchGuard'
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
@@ -137,16 +138,11 @@ export function Modal({
   // Backdrop and dialog are siblings: aria-hidden="true" hides ONLY the backdrop from AT.
   // Placing aria-hidden on the outer wrapper would hide the dialog too.
   // Click-to-close is a convenience feature; keyboard users close via Escape.
-  //
-  // onTouchStart stops React synthetic propagation at the overlay root (backdrop
-  // included) so ancestors like PullToRefresh never arm a pull gesture from
-  // touches on the modal — same concern as useOverlayTouchGuard, which stays the
-  // canonical guard for portal-rendered fullscreen overlays with drawing surfaces.
   return (
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
       style={{ zIndex }}
-      onTouchStart={(e) => e.stopPropagation()}
+      onTouchStart={stopOverlayTouchStart}
     >
       {/* Backdrop: purely decorative overlay */}
       <div

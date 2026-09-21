@@ -7,6 +7,24 @@ interface OverlayTouchHandlers {
 }
 
 /**
+ * Canonical touchstart guard for overlay roots (modals, sheets, dialogs).
+ *
+ * Overlays render inside the React tree of pages wrapped in PullToRefresh
+ * (portals included — React synthetic events bubble through the component
+ * hierarchy, not the DOM). Stopping touchstart propagation at the overlay root
+ * prevents usePullToRefresh from ever arming a pull gesture, since it only
+ * arms in its touchstart handler. touchmove/touchend may still bubble;
+ * without an armed gesture they are no-ops.
+ *
+ * Use this for plain overlay roots. Fullscreen portal overlays with drawing
+ * surfaces (canvas) need the full useOverlayTouchGuard below, which also
+ * prevents native scrolling outside [data-scrollable] regions.
+ */
+export function stopOverlayTouchStart(e: React.TouchEvent) {
+  e.stopPropagation()
+}
+
+/**
  * Returns touch event handlers that prevent propagation through React's
  * synthetic event system.
  *

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 
 import { Button } from '@/common/components/Button'
+import { stopOverlayTouchStart } from '@/common/hooks/useOverlayTouchGuard'
 import { useTranslation } from '@/common/hooks/useTranslation'
 
 /** Z-index for confirmation dialog (above main modal) */
@@ -38,18 +39,19 @@ export function UnsavedChangesDialog({
 
   if (!isOpen) return null
 
+  // Backdrop and dialog are siblings: aria-hidden="true" on the wrapper would
+  // hide the alertdialog from assistive technology too, so it sits on the
+  // purely decorative backdrop only (same pattern as Modal).
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      className="fixed inset-0 flex items-center justify-center p-4"
       style={{ zIndex: Z_INDEX_CONFIRMATION_DIALOG }}
-      // Stop touch propagation at the overlay root so PullToRefresh ancestors
-      // never misread gestures on this dialog as a page pull
-      onTouchStart={(e) => e.stopPropagation()}
-      aria-hidden="true"
+      onTouchStart={stopOverlayTouchStart}
     >
+      <div className="absolute inset-0 bg-black bg-opacity-50" aria-hidden="true" />
       <div
         ref={dialogRef}
-        className="bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-sm w-full p-6"
+        className="relative bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-sm w-full p-6"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="unsaved-changes-title"
