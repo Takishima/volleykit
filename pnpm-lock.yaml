@@ -7,10 +7,10 @@ settings:
 overrides:
   react: ^19.3.0
   '@types/react': ^19.3.0
-  serialize-javascript@<7.0.5: '>=7.0.5'
+  serialize-javascript@<7.0.5: ^7.0.5
   js-yaml@>=4.0.0 <4.3.1: ^4.3.1
-  esbuild@>=0.27.3 <0.28.1: '>=0.28.1'
-  sharp@<0.35.0: '>=0.35.0'
+  esbuild@>=0.27.3 <0.28.1: ^0.28.1
+  sharp@<0.35.0: ^0.35.0
   uuid@<11.1.1: ^11.1.1
   ojp-sdk-next>axios: ^1.18.0
   ojp-sdk-next>fast-xml-parser: ^5.11.1
@@ -426,7 +426,7 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.10.0(jiti@2.7.0))
       '@playwright/test':
-        specifier: ^1.63.0
+        specifier: 1.63.0
         version: 1.63.0
       '@rolldown/plugin-babel':
         specifier: ^0.2.4
@@ -4614,7 +4614,7 @@ packages:
     resolution: {integrity: sha512-3WrrOuZiyaaZPWiEt4G3+IffISVC9HYlWueJEBWED4ZH4aIAC2PnkdnuRrR94M+w6yGWn4AglWtJtBI8YqvgoA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     peerDependencies:
-      esbuild: '>=0.28.1'
+      esbuild: ^0.28.1
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -8756,7 +8756,7 @@ packages:
     peerDependencies:
       '@types/node': ^20.19.0 || >=22.12.0
       '@vitejs/devtools': ^0.7.1
-      esbuild: '>=0.28.1'
+      esbuild: ^0.28.1
       jiti: '>=1.21.0'
       less: ^4.0.0
       sass: ^1.70.0
