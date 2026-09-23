@@ -2,7 +2,7 @@
   "expo": {
     "name": "VolleyKit",
     "slug": "volleykit",
-    "version": "1.33.0",
+    "version": "1.34.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "volleykit",

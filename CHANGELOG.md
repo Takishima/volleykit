@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.34.0
+
+### Minor Changes
+
+- [#1184](https://github.com/Takishima/volleykit/pull/1184) [`86e8970`](https://github.com/Takishima/volleykit/commit/86e8970a2142505ee951cc968a913ee188bf6acf) Thanks [@Takishima](https://github.com/Takishima)! - Added a subtle floating notice when another association has a game today or tomorrow, based on the referee's cross-association iCal feed — tap it to switch associations, or dismiss it for the day
+
+- [#1188](https://github.com/Takishima/volleykit/pull/1188) [`c379797`](https://github.com/Takishima/volleykit/commit/c37979783b19427fd88ae204ec1ecd167a39648c) Thanks [@Takishima](https://github.com/Takishima)! - Added e-bike + train travel mode: a new route calculation setting that estimates cycling to/from the train station (speed pedelec) and uses the OJP transport API for the rail portion. Includes a configurable maximum cycling distance with automatic fallback to door-to-door public transport.
+
+### Patch Changes
+
+- [#1190](https://github.com/Takishima/volleykit/pull/1190) [`6d84646`](https://github.com/Takishima/volleykit/commit/6d846462184b20193aa3b8833204e6d86b3fca36) Thanks [@Takishima](https://github.com/Takishima)! - Fixed pull-to-refresh triggering when scrolling up inside the game validation modal (roster step)
+- Updated dependencies [[`c379797`](https://github.com/Takishima/volleykit/commit/c37979783b19427fd88ae204ec1ecd167a39648c)]:
+  - @volleykit/shared@1.34.0
+
 ## 1.33.0
 
 ### Minor Changes

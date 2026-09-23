@@ -1,5 +1,11 @@
 # @volleykit/shared
 
+## 1.34.0
+
+### Minor Changes
+
+- [#1188](https://github.com/Takishima/volleykit/pull/1188) [`c379797`](https://github.com/Takishima/volleykit/commit/c37979783b19427fd88ae204ec1ecd167a39648c) Thanks [@Takishima](https://github.com/Takishima)! - Added e-bike + train travel mode: a new route calculation setting that estimates cycling to/from the train station (speed pedelec) and uses the OJP transport API for the rail portion. Includes a configurable maximum cycling distance with automatic fallback to door-to-door public transport.
+
 ## 1.33.0
 
 ### Minor Changes
