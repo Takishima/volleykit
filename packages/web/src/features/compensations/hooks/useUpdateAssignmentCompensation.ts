@@ -11,6 +11,7 @@ import { useActionQueueStore } from '@/common/stores/action-queue'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import type { MutationCallbacks, OfflineMutationResult } from '@/common/types/mutation'
+import { reassertActiveAssociation } from '@/common/utils/active-association'
 import { createLogger } from '@/common/utils/logger'
 
 import { COMPENSATION_ERROR_KEYS } from './useCompensationsQuery'
@@ -89,6 +90,7 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
 > {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
+  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const isDemoMode = dataSource === 'demo'
   const isOnline = useNetworkStatus()
   const refreshActionQueue = useActionQueueStore((s) => s.refresh)
@@ -155,6 +157,10 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
 
           await apiClient.updateCompensation(compensationId, data)
 
+          // The compensation PUT can reset the server's active association;
+          // re-align it before the refetch so the lists stay on the selected one.
+          await reassertActiveAssociation(apiClient, dataSource, activeOccupationId)
+
           // Invalidate queries
           await queryClient.invalidateQueries({
             queryKey: queryKeys.assignments.detail(assignmentId),
@@ -201,6 +207,8 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
     },
     [
       isDemoMode,
+      dataSource,
+      activeOccupationId,
       isOnline,
       queryClient,
       apiClient,

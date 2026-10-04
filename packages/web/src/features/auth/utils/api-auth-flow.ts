@@ -96,10 +96,16 @@ function deriveUserWithOccupations(
     lastName?: string
     groupedEligibleAttributeValues?: AttributeValue[] | null
     eligibleAttributeValues?: AttributeValue[] | null
+    activeAttributeValue?: AttributeValue | null
   } | null,
   currentUser: UserProfile | null,
   currentActiveOccupationId: string | null
-): { user: UserProfile; activeOccupationId: string | null } {
+): {
+  user: UserProfile
+  activeOccupationId: string | null
+  /** Attribute the server session currently has active, when the dashboard exposes it */
+  serverActiveOccupationId: string | null
+} {
   const attributeValues = activeParty?.groupedEligibleAttributeValues?.length
     ? activeParty.groupedEligibleAttributeValues
     : (activeParty?.eligibleAttributeValues ?? null)
@@ -127,7 +133,34 @@ function deriveUserWithOccupations(
         occupations,
       }
 
-  return { user, activeOccupationId }
+  const serverActiveOccupationId = activeParty?.activeAttributeValue?.__identity ?? null
+
+  return { user, activeOccupationId, serverActiveOccupationId }
+}
+
+/**
+ * Pushes the locally selected association to the server session when the two
+ * disagree.
+ *
+ * Every list endpoint is scoped to the session's active attribute, and some
+ * writes (the compensation PUT) reset it. Without this check a reload keeps the
+ * persisted selection in the UI while the server keeps serving another
+ * association's data. Pass `null` as the server id to force the switch, as the
+ * login flows do.
+ */
+async function syncServerAssociation(
+  activeOccupationId: string | null,
+  serverActiveOccupationId: string | null
+): Promise<void> {
+  if (!activeOccupationId || activeOccupationId === serverActiveOccupationId) {
+    return
+  }
+
+  try {
+    await api.switchRoleAndAttribute(activeOccupationId)
+  } catch (error) {
+    logger.warn('Failed to sync active association with server:', error)
+  }
 }
 
 /**
@@ -153,13 +186,7 @@ async function handleSuccessfulLoginResult(
     return rejectNonRefereeUser(set)
   }
 
-  if (activeOccupationId) {
-    try {
-      await api.switchRoleAndAttribute(activeOccupationId)
-    } catch (error) {
-      logger.warn('Failed to sync active association after login:', error)
-    }
-  }
+  await syncServerAssociation(activeOccupationId, null)
 
   set({
     status: 'authenticated',
@@ -323,13 +350,7 @@ export async function performApiLogin(
       return rejectNonRefereeUser(set)
     }
 
-    if (activeOccupationId) {
-      try {
-        await api.switchRoleAndAttribute(activeOccupationId)
-      } catch (error) {
-        logger.warn('Failed to sync active association after login:', error)
-      }
-    }
+    await syncServerAssociation(activeOccupationId, null)
 
     set({
       status: 'authenticated',
@@ -446,7 +467,7 @@ export async function performApiSessionCheck(
         }
 
         const activeParty = extractActivePartyFromHtml(html)
-        const { user, activeOccupationId } = deriveUserWithOccupations(
+        const { user, activeOccupationId, serverActiveOccupationId } = deriveUserWithOccupations(
           activeParty,
           currentState.user,
           currentState.activeOccupationId
@@ -455,6 +476,9 @@ export async function performApiSessionCheck(
         if (csrfToken) {
           setCsrfToken(csrfToken)
         }
+
+        // Repair server-side drift before the UI issues its first queries
+        await syncServerAssociation(activeOccupationId, serverActiveOccupationId)
 
         set({
           status: 'authenticated',
