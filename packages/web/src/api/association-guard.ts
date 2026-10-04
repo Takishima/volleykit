@@ -8,19 +8,23 @@
  * silently returns another association's data while the local store still
  * shows the association the user selected.
  *
- * The guard makes that drift structurally impossible from the client side by
- * wrapping every method of the real API client:
+ * The guard makes that drift structurally impossible for every request issued
+ * through the guarded client (the lint rule on `@/api/real-api` makes it the
+ * only client in use). It wraps every method of the raw client:
  *
- * - `read`   methods wait for in-flight writes, then make sure the server
- *            session is confirmed to be on the selected occupation, switching
- *            it when it is not.
- * - `write`  methods do the same before the request and mark the server
- *            association as unknown afterwards, so the next read re-confirms it.
+ * - `read`   methods wait for writes that are in flight or queued, then make
+ *            sure the server session is confirmed to be on the selected
+ *            occupation, switching it when it is not.
+ * - `write`  methods wait for other writes, confirm the association the same
+ *            way, then wait for reads already in flight before issuing the
+ *            request (a read served after the reset would carry the wrong
+ *            association), and mark the server association as unknown
+ *            afterwards so the next read re-confirms it.
  * - `switch` is the role switch itself, serialized behind any switch in
  *            flight; a successful call confirms the id.
  *
- * The invariant holds for every request issued through the guarded client,
- * which the lint rule on `@/api/real-api` makes the only client in use.
+ * Reads and writes therefore never overlap on the server session, and writes
+ * are serialized among themselves. Reads still run concurrently with each other.
  *
  * Every method of the raw client must be classified in {@link API_METHOD_SCOPES}.
  * The record is typed over the raw client's keys, so adding a method without
@@ -72,9 +76,15 @@ let confirmedOccupationId: string | null = null
 let pendingSwitch: Promise<void> | null = null
 
 /**
- * Writes in flight. A write may reset the server's active attribute at any
- * point before its response arrives, so a read must not trust a confirmation
- * while one is pending; it waits for them to settle and re-checks.
+ * Reads whose request has been issued and not yet settled. A write waits for
+ * them so the server never serves a read after the write reset the attribute.
+ */
+const inFlightReads = new Set<Promise<unknown>>()
+
+/**
+ * Writes that are queued or in flight. A write may reset the server's active
+ * attribute at any point before its response arrives, so a read must not trust
+ * a confirmation while one is pending; it waits for them to settle and re-checks.
  */
 const inFlightWrites = new Set<Promise<unknown>>()
 
@@ -130,31 +140,47 @@ async function queueSwitch(switcher: Switcher, occupationId: string): Promise<vo
   await startSwitch(switcher, occupationId)
 }
 
-async function settleInFlightWrites(): Promise<void> {
-  while (inFlightWrites.size > 0) {
-    await Promise.allSettled([...inFlightWrites])
+/** Resolves once every read that is currently in flight has settled. */
+async function settleInFlightReads(): Promise<void> {
+  while (inFlightReads.size > 0) {
+    await Promise.allSettled([...inFlightReads])
   }
 }
 
 /**
- * Makes sure the server session is on the locally selected occupation before a
- * scoped request runs. It first lets in-flight writes settle (they void the
- * confirmation when done), then confirms or switches. Concurrent callers share
- * one switch request, and the selection is re-read after each switch so a
- * change made while a switch was in flight is followed. A failed switch
- * propagates so the caller fails instead of reading the wrong association.
+ * Issues a scoped request once the server session is confirmed to be on the
+ * locally selected occupation, and tracks it in `registry` until it settles.
+ *
+ * The check and the issue happen in the same synchronous step, so a write
+ * cannot slip in between a read's confirmation and its request (or vice versa).
+ * Pending writes are awaited first, since they void the confirmation when they
+ * settle. Concurrent callers share one switch request, and the selection is
+ * re-read after each switch so a change made while a switch was in flight is
+ * followed. A failed switch propagates so the caller fails instead of reading
+ * the wrong association.
  */
-async function ensureServerAssociation(
+async function issueWhenConfirmed<T>(
   switcher: Switcher,
-  getExpectedOccupationId: () => string | null
-): Promise<void> {
+  getExpectedOccupationId: () => string | null,
+  issue: () => Promise<T>,
+  registry: Set<Promise<unknown>>
+): Promise<T> {
   for (;;) {
-    await settleInFlightWrites()
+    if (inFlightWrites.size > 0) {
+      await Promise.allSettled([...inFlightWrites])
+      continue
+    }
 
     const expectedOccupationId = getExpectedOccupationId()
     if (!expectedOccupationId || confirmedOccupationId === expectedOccupationId) {
       // Nothing selected locally (not logged in yet), or already confirmed.
-      return
+      const request = issue()
+      registry.add(request)
+      try {
+        return await request
+      } finally {
+        registry.delete(request)
+      }
     }
 
     await (pendingSwitch ?? startSwitch(switcher, expectedOccupationId))
@@ -190,17 +216,27 @@ export function withAssociationGuard(
           return
         }
         case 'read': {
-          await ensureServerAssociation(switcher, getExpectedOccupationId)
-          return method.apply(client, args)
+          return issueWhenConfirmed(
+            switcher,
+            getExpectedOccupationId,
+            () => method.apply(client, args),
+            inFlightReads
+          )
         }
         case 'write': {
-          await ensureServerAssociation(switcher, getExpectedOccupationId)
-          const request: Promise<unknown> = method.apply(client, args)
-          inFlightWrites.add(request)
           try {
-            return await request
+            return await issueWhenConfirmed(
+              switcher,
+              getExpectedOccupationId,
+              async () => {
+                // Registered as a write from here on, so no new read starts
+                // until this one settles; reads already in flight finish first.
+                await settleInFlightReads()
+                return method.apply(client, args)
+              },
+              inFlightWrites
+            )
           } finally {
-            inFlightWrites.delete(request)
             // The server may have reset the active attribute, whether or not
             // the write succeeded. Force a re-check before the next read.
             invalidateServerAssociation()

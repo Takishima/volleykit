@@ -271,6 +271,78 @@ describe('withAssociationGuard', () => {
     })
   })
 
+  describe('writes during reads', () => {
+    it('waits for a read already in flight before issuing the write', async () => {
+      const { raw, guarded } = setup('occupation-b')
+      noteServerAssociation('occupation-b')
+      const read = deferred<string>()
+      raw.searchAssignments.mockReturnValue(read.promise)
+
+      const reading = guarded.searchAssignments({})
+      await calledOnce(raw.searchAssignments)
+      const writing = guarded.updateCompensation('comp-1', { distanceInMetres: 5000 })
+      await flush()
+      // The server must not reset the attribute while it may still serve the read
+      expect(raw.updateCompensation).not.toHaveBeenCalled()
+
+      read.resolve('games')
+      await expect(reading).resolves.toBe('games')
+      await writing
+
+      expect(raw.updateCompensation).toHaveBeenCalledTimes(1)
+      expect(getConfirmedServerAssociation()).toBeNull()
+    })
+
+    it('queues reads that arrive while a write waits for an earlier read', async () => {
+      const { raw, guarded } = setup('occupation-b')
+      noteServerAssociation('occupation-b')
+      const firstRead = deferred<string>()
+      raw.searchAssignments.mockReturnValue(firstRead.promise)
+
+      const reading1 = guarded.searchAssignments({})
+      await calledOnce(raw.searchAssignments)
+      const writing = guarded.updateCompensation('comp-1', { distanceInMetres: 5000 })
+      await flush()
+      const reading2 = guarded.searchCompensations({})
+      await flush()
+      // The later read must line up behind the write, not sneak in before it
+      expect(raw.searchCompensations).not.toHaveBeenCalled()
+
+      firstRead.resolve('games')
+      await Promise.all([reading1, writing, reading2])
+
+      const order = [
+        raw.searchAssignments.mock.invocationCallOrder[0]!,
+        raw.updateCompensation.mock.invocationCallOrder[0]!,
+        raw.switchRoleAndAttribute.mock.invocationCallOrder[0]!,
+        raw.searchCompensations.mock.invocationCallOrder[0]!,
+      ]
+      expect(order).toEqual([...order].sort((a, b) => a - b))
+    })
+
+    it('serializes writes behind each other', async () => {
+      const { raw, guarded } = setup('occupation-b')
+      noteServerAssociation('occupation-b')
+      const firstWrite = deferred<string>()
+      raw.updateCompensation.mockReturnValueOnce(firstWrite.promise)
+
+      const writing1 = guarded.updateCompensation('comp-1', { distanceInMetres: 5000 })
+      await calledOnce(raw.updateCompensation)
+      const writing2 = guarded.addToExchange('conv-1')
+      await flush()
+      expect(raw.addToExchange).not.toHaveBeenCalled()
+
+      firstWrite.resolve('saved')
+      await Promise.all([writing1, writing2])
+
+      // The second write re-confirmed the association the first one voided
+      expect(raw.switchRoleAndAttribute).toHaveBeenCalledTimes(1)
+      expect(raw.switchRoleAndAttribute.mock.invocationCallOrder[0]!).toBeLessThan(
+        raw.addToExchange.mock.invocationCallOrder[0]!
+      )
+    })
+  })
+
   describe('switch', () => {
     it('queues an explicit switch behind a switch a read started', async () => {
       const { raw, guarded } = setup('occupation-a')
