@@ -15,17 +15,23 @@ import type { AuthState } from '@/common/stores/auth'
 
 const mockSwitchRoleAndAttribute = vi.fn()
 
-vi.mock('@/api/client', () => ({
-  api: {
-    switchRoleAndAttribute: (...args: unknown[]) => mockSwitchRoleAndAttribute(...args),
-  },
-  captureSessionToken: vi.fn(),
-  CAPTURE_SESSION_TOKEN_HEADER: 'X-Capture-Session-Token',
-  clearSession: vi.fn(),
-  getSessionHeaders: () => ({}),
-  getSessionToken: () => 'session-token',
-  setCsrfToken: vi.fn(),
-}))
+vi.mock('@/api/client', async () => {
+  // The guard itself stays real so the tests can observe what the check recorded
+  const guard =
+    await vi.importActual<typeof import('@/api/association-guard')>('@/api/association-guard')
+  return {
+    api: {
+      switchRoleAndAttribute: (...args: unknown[]) => mockSwitchRoleAndAttribute(...args),
+    },
+    noteServerAssociation: guard.noteServerAssociation,
+    captureSessionToken: vi.fn(),
+    CAPTURE_SESSION_TOKEN_HEADER: 'X-Capture-Session-Token',
+    clearSession: vi.fn(),
+    getSessionHeaders: () => ({}),
+    getSessionToken: () => 'session-token',
+    setCsrfToken: vi.fn(),
+  }
+})
 
 vi.mock('@/api/constants', () => ({
   getApiBaseUrl: () => 'https://proxy.test',

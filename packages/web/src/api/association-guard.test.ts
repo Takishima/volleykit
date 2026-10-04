@@ -38,6 +38,13 @@ function setup(expectedOccupationId: string | null = 'occupation-b') {
   }
 }
 
+/** Lets every queued microtask and timer callback run before asserting on "not called" */
+const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
+
+/** Waits until the given mock has been called at least once */
+const calledOnce = (mock: ReturnType<typeof vi.fn>) =>
+  vi.waitFor(() => expect(mock).toHaveBeenCalled())
+
 /** Deferred promise helper for controlling the switch request */
 function deferred<T = void>() {
   let resolve!: (value: T) => void
@@ -121,7 +128,8 @@ describe('withAssociationGuard', () => {
         guarded.searchCompensations({}),
         guarded.getAssociationSettings(),
       ])
-      await Promise.resolve()
+      await calledOnce(raw.switchRoleAndAttribute)
+      await flush()
       expect(raw.searchAssignments).not.toHaveBeenCalled()
 
       gate.resolve()
@@ -149,7 +157,7 @@ describe('withAssociationGuard', () => {
       raw.switchRoleAndAttribute.mockReturnValueOnce(firstSwitch.promise)
 
       const read = guarded.searchAssignments({})
-      await Promise.resolve()
+      await calledOnce(raw.switchRoleAndAttribute)
       setExpected('occupation-c')
       firstSwitch.resolve()
       await read
@@ -219,7 +227,88 @@ describe('withAssociationGuard', () => {
     })
   })
 
+  describe('reads during writes', () => {
+    it('waits for an in-flight write and re-asserts the association afterwards', async () => {
+      const { raw, guarded } = setup('occupation-b')
+      noteServerAssociation('occupation-b')
+      const write = deferred<string>()
+      raw.updateCompensation.mockReturnValue(write.promise)
+
+      const writing = guarded.updateCompensation('comp-1', { distanceInMetres: 5000 })
+      await calledOnce(raw.updateCompensation)
+      const reading = guarded.searchAssignments({})
+      await flush()
+      // The read must not trust the confirmation the write is about to void
+      expect(raw.searchAssignments).not.toHaveBeenCalled()
+      expect(raw.switchRoleAndAttribute).not.toHaveBeenCalled()
+
+      write.resolve('saved')
+      await Promise.all([writing, reading])
+
+      const order = [
+        raw.updateCompensation.mock.invocationCallOrder[0]!,
+        raw.switchRoleAndAttribute.mock.invocationCallOrder[0]!,
+        raw.searchAssignments.mock.invocationCallOrder[0]!,
+      ]
+      expect(order).toEqual([...order].sort((a, b) => a - b))
+      expect(getConfirmedServerAssociation()).toBe('occupation-b')
+    })
+
+    it('still lets the read through when the awaited write fails', async () => {
+      const { raw, guarded } = setup('occupation-b')
+      noteServerAssociation('occupation-b')
+      const write = deferred<string>()
+      raw.updateCompensation.mockReturnValue(write.promise)
+
+      const writing = guarded.updateCompensation('comp-1', { distanceInMetres: 5000 })
+      await calledOnce(raw.updateCompensation)
+      const reading = guarded.searchAssignments({})
+      write.reject(new Error('conflict'))
+
+      await expect(writing).rejects.toThrow('conflict')
+      await expect(reading).resolves.toBe('searchAssignments-result')
+      expect(raw.switchRoleAndAttribute).toHaveBeenCalledWith('occupation-b')
+    })
+  })
+
   describe('switch', () => {
+    it('queues an explicit switch behind a switch a read started', async () => {
+      const { raw, guarded } = setup('occupation-a')
+      const readSwitch = deferred()
+      raw.switchRoleAndAttribute.mockReturnValueOnce(readSwitch.promise)
+
+      const reading = guarded.searchAssignments({})
+      await calledOnce(raw.switchRoleAndAttribute)
+      const switching = guarded.switchRoleAndAttribute('occupation-b')
+      await flush()
+      // The explicit switch must not race the one in flight on the server session
+      expect(raw.switchRoleAndAttribute).toHaveBeenCalledTimes(1)
+
+      readSwitch.resolve()
+      await Promise.all([reading, switching])
+
+      expect(raw.switchRoleAndAttribute.mock.calls.map(([id]) => id)).toEqual([
+        'occupation-a',
+        'occupation-b',
+      ])
+      expect(getConfirmedServerAssociation()).toBe('occupation-b')
+    })
+
+    it('runs an explicit switch even when the switch ahead of it failed', async () => {
+      const { raw, guarded } = setup('occupation-a')
+      const readSwitch = deferred()
+      raw.switchRoleAndAttribute.mockReturnValueOnce(readSwitch.promise)
+
+      const reading = guarded.searchAssignments({})
+      await calledOnce(raw.switchRoleAndAttribute)
+      const switching = guarded.switchRoleAndAttribute('occupation-b')
+      readSwitch.reject(new Error('500'))
+
+      await expect(reading).rejects.toThrow('500')
+      await expect(switching).resolves.toBeUndefined()
+      expect(getConfirmedServerAssociation()).toBe('occupation-b')
+    })
+
     it('confirms the switched occupation', async () => {
       const { raw, guarded } = setup('occupation-b')
 

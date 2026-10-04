@@ -12,7 +12,6 @@
  * Demo and calendar modes have their own flows in the store itself.
  */
 
-import { noteServerAssociation } from '@/api/association-guard'
 import {
   api,
   captureSessionToken,
@@ -20,6 +19,7 @@ import {
   clearSession,
   getSessionHeaders,
   getSessionToken,
+  noteServerAssociation,
   setCsrfToken,
 } from '@/api/client'
 import { getApiBaseUrl } from '@/api/constants'

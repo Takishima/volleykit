@@ -63,6 +63,9 @@ export {
  */
 export const api = withAssociationGuard(rawApi, () => useAuthStore.getState().activeOccupationId)
 
+// Association guard hooks for the auth flow (session check seeds what the server has active)
+export { noteServerAssociation } from './association-guard'
+
 // ApiClient type: use the concrete implementation type for web-app consumers.
 // The shared ApiClient interface (from @volleykit/shared/api) defines the
 // cross-platform contract; structural typing via getApiClient() ensures

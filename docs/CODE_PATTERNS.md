@@ -907,9 +907,11 @@ async function getAssignments(): Promise<AssignmentsResponse> {
 
 VolleyManager scopes list and detail endpoints to the attribute (referee occupation, i.e. association) that is active in the **server session**, not to anything the client sends. Some write endpoints reset that attribute. `src/api/association-guard.ts` wraps the real client so this cannot leak into the UI:
 
-- Every `read` method first makes sure the server session is confirmed to be on `activeOccupationId`, switching it when it is not.
+- Every `read` method waits for in-flight writes, then makes sure the server session is confirmed to be on `activeOccupationId`, switching it when it is not.
 - Every `write` method does the same and then marks the server association unknown, so the next read re-confirms it.
-- `switchRoleAndAttribute` confirms the id it switched to; `clearSession()` forgets it; the session check seeds it from the dashboard's `activeAttributeValue`.
+- `switchRoleAndAttribute` is serialized behind any switch in flight and confirms the id it switched to; `clearSession()` forgets it; the session check seeds it from the dashboard's `activeAttributeValue`.
+
+The invariant covers every request made through the guarded client. It cannot cover a request the client never issues, so the guard is only as complete as the lint rule below.
 
 Rules that keep the guarantee intact:
 
