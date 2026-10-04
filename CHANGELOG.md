@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.34.1
+
+### Patch Changes
+
+- [#1195](https://github.com/Takishima/volleykit/pull/1195) [`fc91861`](https://github.com/Takishima/volleykit/commit/fc918616a4011067629152ac0692bbe6c43ed059) Thanks [@Takishima](https://github.com/Takishima)! - Fixed the games list showing another association after saving a compensation distance. The API client now guarantees the server session is on the selected association before every request and re-checks it after every write, and a reload repairs any drift it detects instead of preserving it.
+
 ## 1.34.0
 
 ### Minor Changes
