@@ -9,6 +9,7 @@
  * All consumers that need session management should import from this module.
  */
 
+import { invalidateServerAssociation } from './association-guard'
 import {
   setCsrfToken as setToken,
   clearCsrfToken,
@@ -63,4 +64,6 @@ export { getSessionToken }
 export function clearSession() {
   clearCsrfToken()
   clearSessionToken()
+  // A new server session starts with its own active association
+  invalidateServerAssociation()
 }

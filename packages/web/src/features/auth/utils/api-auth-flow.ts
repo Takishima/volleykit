@@ -19,6 +19,7 @@ import {
   clearSession,
   getSessionHeaders,
   getSessionToken,
+  noteServerAssociation,
   setCsrfToken,
 } from '@/api/client'
 import { getApiBaseUrl } from '@/api/constants'
@@ -96,10 +97,16 @@ function deriveUserWithOccupations(
     lastName?: string
     groupedEligibleAttributeValues?: AttributeValue[] | null
     eligibleAttributeValues?: AttributeValue[] | null
+    activeAttributeValue?: AttributeValue | null
   } | null,
   currentUser: UserProfile | null,
   currentActiveOccupationId: string | null
-): { user: UserProfile; activeOccupationId: string | null } {
+): {
+  user: UserProfile
+  activeOccupationId: string | null
+  /** Attribute the server session currently has active, when the dashboard exposes it */
+  serverActiveOccupationId: string | null
+} {
   const attributeValues = activeParty?.groupedEligibleAttributeValues?.length
     ? activeParty.groupedEligibleAttributeValues
     : (activeParty?.eligibleAttributeValues ?? null)
@@ -127,7 +134,26 @@ function deriveUserWithOccupations(
         occupations,
       }
 
-  return { user, activeOccupationId }
+  const serverActiveOccupationId = activeParty?.activeAttributeValue?.__identity ?? null
+
+  return { user, activeOccupationId, serverActiveOccupationId }
+}
+
+/**
+ * Switches the fresh server session to the persisted association after login.
+ * A failure is logged only: the association guard re-asserts the selection
+ * before the first scoped request anyway.
+ */
+async function switchServerAssociationAfterLogin(activeOccupationId: string | null): Promise<void> {
+  if (!activeOccupationId) {
+    return
+  }
+
+  try {
+    await api.switchRoleAndAttribute(activeOccupationId)
+  } catch (error) {
+    logger.warn('Failed to sync active association with server:', error)
+  }
 }
 
 /**
@@ -153,13 +179,7 @@ async function handleSuccessfulLoginResult(
     return rejectNonRefereeUser(set)
   }
 
-  if (activeOccupationId) {
-    try {
-      await api.switchRoleAndAttribute(activeOccupationId)
-    } catch (error) {
-      logger.warn('Failed to sync active association after login:', error)
-    }
-  }
+  await switchServerAssociationAfterLogin(activeOccupationId)
 
   set({
     status: 'authenticated',
@@ -323,13 +343,7 @@ export async function performApiLogin(
       return rejectNonRefereeUser(set)
     }
 
-    if (activeOccupationId) {
-      try {
-        await api.switchRoleAndAttribute(activeOccupationId)
-      } catch (error) {
-        logger.warn('Failed to sync active association after login:', error)
-      }
-    }
+    await switchServerAssociationAfterLogin(activeOccupationId)
 
     set({
       status: 'authenticated',
@@ -446,7 +460,7 @@ export async function performApiSessionCheck(
         }
 
         const activeParty = extractActivePartyFromHtml(html)
-        const { user, activeOccupationId } = deriveUserWithOccupations(
+        const { user, activeOccupationId, serverActiveOccupationId } = deriveUserWithOccupations(
           activeParty,
           currentState.user,
           currentState.activeOccupationId
@@ -455,6 +469,11 @@ export async function performApiSessionCheck(
         if (csrfToken) {
           setCsrfToken(csrfToken)
         }
+
+        // Tell the association guard what the server session really has
+        // active. If it differs from the persisted selection, the guard
+        // switches the server back before the first scoped request.
+        noteServerAssociation(serverActiveOccupationId)
 
         set({
           status: 'authenticated',

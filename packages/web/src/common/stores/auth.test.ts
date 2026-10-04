@@ -49,6 +49,7 @@ vi.mock('@/api/client', () => ({
   captureSessionToken: mockCaptureSessionToken,
   getSessionHeaders: mockGetSessionHeaders,
   getSessionToken: mockGetSessionToken,
+  noteServerAssociation: vi.fn(),
   api: {
     switchRoleAndAttribute: mockSwitchRoleAndAttribute,
   },
@@ -986,7 +987,7 @@ describe('useAuthStore', () => {
       // The error should be logged but not thrown
       expect(consoleSpy).toHaveBeenCalledWith(
         '[VolleyKit][App]',
-        'Failed to sync active association after login:',
+        'Failed to sync active association with server:',
         expect.any(Error)
       )
 
