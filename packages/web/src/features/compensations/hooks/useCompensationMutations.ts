@@ -9,7 +9,6 @@ import { createAction } from '@/common/services/offline/action-store'
 import { useActionQueueStore } from '@/common/stores/action-queue'
 import { useAuthStore } from '@/common/stores/auth'
 import type { MutationCallbacks, OfflineMutationResult } from '@/common/types/mutation'
-import { reassertActiveAssociation } from '@/common/utils/active-association'
 import { createLogger } from '@/common/utils/logger'
 
 // Import and re-export CompensationUpdateData from shared for backward compatibility
@@ -41,7 +40,6 @@ export function useUpdateCompensation(): OfflineMutationResult<
 > {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const isOnline = useNetworkStatus()
   const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
@@ -70,10 +68,6 @@ export function useUpdateCompensation(): OfflineMutationResult<
           // Online: execute immediately
           log.debug('Updating compensation (online):', { compensationId, data, dataSource })
           await apiClient.updateCompensation(compensationId, data)
-
-          // The compensation PUT can reset the server's active association;
-          // re-align it before the refetch so the lists stay on the selected one.
-          await reassertActiveAssociation(apiClient, dataSource, activeOccupationId)
 
           // Invalidate queries to refetch fresh data
           await queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
@@ -106,7 +100,7 @@ export function useUpdateCompensation(): OfflineMutationResult<
         setIsPending(false)
       }
     },
-    [isOnline, dataSource, activeOccupationId, apiClient, queryClient, refreshActionQueue, reset]
+    [isOnline, dataSource, apiClient, queryClient, refreshActionQueue, reset]
   )
 
   const mutate = useCallback(
@@ -148,7 +142,6 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
 > {
   const queryClient = useQueryClient()
   const dataSource = useAuthStore((state) => state.dataSource)
-  const activeOccupationId = useAuthStore((state) => state.activeOccupationId)
   const isOnline = useNetworkStatus()
   const refreshActionQueue = useActionQueueStore((s) => s.refresh)
   const apiClient = getApiClient(dataSource)
@@ -201,10 +194,6 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
             }
           }
 
-          // The compensation PUT can reset the server's active association;
-          // re-align it before the refetch so the lists stay on the selected one.
-          await reassertActiveAssociation(apiClient, dataSource, activeOccupationId)
-
           // Invalidate queries to refetch fresh data
           await queryClient.invalidateQueries({ queryKey: queryKeys.compensations.lists() })
           await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
@@ -248,7 +237,7 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
         setIsPending(false)
       }
     },
-    [isOnline, dataSource, activeOccupationId, apiClient, queryClient, refreshActionQueue, reset]
+    [isOnline, dataSource, apiClient, queryClient, refreshActionQueue, reset]
   )
 
   const mutate = useCallback(

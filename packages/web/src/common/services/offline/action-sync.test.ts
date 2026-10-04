@@ -37,17 +37,10 @@ const mockApiClient = {
   applyForExchange: vi.fn(),
   addToExchange: vi.fn(),
   removeOwnExchange: vi.fn(),
-  switchRoleAndAttribute: vi.fn(),
 }
 
 vi.mock('@/api/client', () => ({
   getApiClient: vi.fn(() => mockApiClient),
-}))
-
-vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: {
-    getState: () => ({ dataSource: 'api', activeOccupationId: 'occupation-1' }),
-  },
 }))
 
 vi.mock('@/api/queryKeys', () => ({
@@ -236,36 +229,6 @@ describe('syncPendingActions', () => {
     await syncPendingActions(mockQueryClient as unknown as Parameters<typeof syncPendingActions>[0])
 
     expect(mockQueryClient.invalidateQueries).toHaveBeenCalledTimes(3)
-  })
-
-  it('re-asserts the selected association before invalidating queries', async () => {
-    const action = createTestAction()
-    mockActions.push(action)
-
-    const mockQueryClient = {
-      invalidateQueries: vi.fn().mockResolvedValue(undefined),
-    }
-
-    await syncPendingActions(mockQueryClient as unknown as Parameters<typeof syncPendingActions>[0])
-
-    expect(mockApiClient.switchRoleAndAttribute).toHaveBeenCalledWith('occupation-1')
-    expect(mockApiClient.switchRoleAndAttribute.mock.invocationCallOrder[0]!).toBeLessThan(
-      mockQueryClient.invalidateQueries.mock.invocationCallOrder[0]!
-    )
-  })
-
-  it('does not re-assert the association when no action succeeded', async () => {
-    const action = createTestAction()
-    mockActions.push(action)
-    mockApiClient.updateCompensation.mockRejectedValueOnce(new Error('fail'))
-
-    const mockQueryClient = {
-      invalidateQueries: vi.fn().mockResolvedValue(undefined),
-    }
-
-    await syncPendingActions(mockQueryClient as unknown as Parameters<typeof syncPendingActions>[0])
-
-    expect(mockApiClient.switchRoleAndAttribute).not.toHaveBeenCalled()
   })
 
   it('does not invalidate queries when all actions fail', async () => {

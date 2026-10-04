@@ -25,8 +25,6 @@ import {
 
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { useAuthStore } from '@/common/stores/auth'
-import { reassertActiveAssociation } from '@/common/utils/active-association'
 import { createLogger } from '@/common/utils/logger'
 
 import {
@@ -205,11 +203,6 @@ export async function syncPendingActions(queryClient?: QueryClient): Promise<Syn
 
   // Invalidate relevant queries if we had any successful syncs
   if (succeeded > 0 && queryClient) {
-    // Synced writes can reset the server's active association (see
-    // reassertActiveAssociation); re-align it before the lists refetch.
-    const { dataSource, activeOccupationId } = useAuthStore.getState()
-    await reassertActiveAssociation(getApiClient('api'), dataSource, activeOccupationId)
-
     log.debug('Invalidating queries after successful sync')
     // Invalidate all lists since we don't know which specific ones were affected
     await Promise.all([

@@ -903,6 +903,29 @@ async function getAssignments(): Promise<AssignmentsResponse> {
 }
 ```
 
+### Association Scoping (Server Session)
+
+VolleyManager scopes list and detail endpoints to the attribute (referee occupation, i.e. association) that is active in the **server session**, not to anything the client sends. Some write endpoints reset that attribute. `src/api/association-guard.ts` wraps the real client so this cannot leak into the UI:
+
+- Every `read` method first makes sure the server session is confirmed to be on `activeOccupationId`, switching it when it is not.
+- Every `write` method does the same and then marks the server association unknown, so the next read re-confirms it.
+- `switchRoleAndAttribute` confirms the id it switched to; `clearSession()` forgets it; the session check seeds it from the dashboard's `activeAttributeValue`.
+
+Rules that keep the guarantee intact:
+
+```typescript
+// Always go through the guarded client
+import { api, getApiClient } from '@/api/client' // never from '@/api/real-api'
+
+// Adding a method to real-api.ts? Classify it, or the build fails:
+export const API_METHOD_SCOPES: Record<keyof RawApi, MethodScope> = {
+  // ...
+  myNewEndpoint: 'read', // or 'write' when it changes server state
+}
+```
+
+Never re-assert the association from a hook or a mutation; the guard already does it for every call.
+
 ## API Mocking Patterns (MSW)
 
 We use MSW (Mock Service Worker) for API mocking. It intercepts requests at the network level, providing realistic testing.

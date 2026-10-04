@@ -8,7 +8,9 @@
 /* eslint-disable import-x/order -- Imports are split to manage circular dependencies */
 import { mockApi } from './mock-api'
 import { calendarApi } from '@/common/services/calendar/calendar-client'
-import { api } from './real-api'
+import { useAuthStore } from '@/common/stores/auth'
+import { withAssociationGuard } from './association-guard'
+import { api as rawApi } from './real-api'
 
 // Re-export all schema types from dedicated types module
 export type {
@@ -54,8 +56,12 @@ export {
   CAPTURE_SESSION_TOKEN_HEADER,
 } from './session'
 
-// Re-export the real API client
-export { api } from './real-api'
+/**
+ * The real API client, guarded so the server session is always on the
+ * selected association before a scoped request runs (see association-guard.ts).
+ * Consumers must use this or getApiClient(); never import ./real-api directly.
+ */
+export const api = withAssociationGuard(rawApi, () => useAuthStore.getState().activeOccupationId)
 
 // ApiClient type: use the concrete implementation type for web-app consumers.
 // The shared ApiClient interface (from @volleykit/shared/api) defines the

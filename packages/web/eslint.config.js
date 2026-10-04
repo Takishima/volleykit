@@ -167,6 +167,35 @@ export default tseslint.config(
       'sonarjs/cognitive-complexity': ['error', 25],
     },
   },
+  // The raw real API client bypasses the association guard (src/api/association-guard.ts).
+  // Everything must go through the guarded `api` / `getApiClient()` from @/api/client,
+  // otherwise a request can run while the server session is on another association.
+  // Type-only imports are allowed since they are erased at compile time.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: [
+      'src/api/client.ts',
+      'src/api/association-guard.ts',
+      'src/api/association-guard.test.ts',
+      'src/api/real-api.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '^(@/api/real-api|\\.{1,2}/(api/)?real-api)$',
+              message:
+                'Import the guarded client from @/api/client (api or getApiClient) instead of the raw real-api module. ' +
+                'The guard keeps the server session on the selected association (see docs/CODE_PATTERNS.md).',
+              allowTypeImports: true,
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Prevent deep cross-feature imports from shared/ code.
   // Shared hooks/utils/components should not import from feature internals.
   // They should import from feature barrel files (index.ts) if needed at all.

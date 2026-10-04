@@ -12,6 +12,7 @@
  * Demo and calendar modes have their own flows in the store itself.
  */
 
+import { noteServerAssociation } from '@/api/association-guard'
 import {
   api,
   captureSessionToken,
@@ -139,20 +140,12 @@ function deriveUserWithOccupations(
 }
 
 /**
- * Pushes the locally selected association to the server session when the two
- * disagree.
- *
- * Every list endpoint is scoped to the session's active attribute, and some
- * writes (the compensation PUT) reset it. Without this check a reload keeps the
- * persisted selection in the UI while the server keeps serving another
- * association's data. Pass `null` as the server id to force the switch, as the
- * login flows do.
+ * Switches the fresh server session to the persisted association after login.
+ * A failure is logged only: the association guard re-asserts the selection
+ * before the first scoped request anyway.
  */
-async function syncServerAssociation(
-  activeOccupationId: string | null,
-  serverActiveOccupationId: string | null
-): Promise<void> {
-  if (!activeOccupationId || activeOccupationId === serverActiveOccupationId) {
+async function switchServerAssociationAfterLogin(activeOccupationId: string | null): Promise<void> {
+  if (!activeOccupationId) {
     return
   }
 
@@ -186,7 +179,7 @@ async function handleSuccessfulLoginResult(
     return rejectNonRefereeUser(set)
   }
 
-  await syncServerAssociation(activeOccupationId, null)
+  await switchServerAssociationAfterLogin(activeOccupationId)
 
   set({
     status: 'authenticated',
@@ -350,7 +343,7 @@ export async function performApiLogin(
       return rejectNonRefereeUser(set)
     }
 
-    await syncServerAssociation(activeOccupationId, null)
+    await switchServerAssociationAfterLogin(activeOccupationId)
 
     set({
       status: 'authenticated',
@@ -477,8 +470,10 @@ export async function performApiSessionCheck(
           setCsrfToken(csrfToken)
         }
 
-        // Repair server-side drift before the UI issues its first queries
-        await syncServerAssociation(activeOccupationId, serverActiveOccupationId)
+        // Tell the association guard what the server session really has
+        // active. If it differs from the persisted selection, the guard
+        // switches the server back before the first scoped request.
+        noteServerAssociation(serverActiveOccupationId)
 
         set({
           status: 'authenticated',

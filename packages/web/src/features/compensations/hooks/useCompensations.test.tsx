@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { CompensationRecord } from '@/api/client'
 
@@ -12,7 +12,6 @@ import {
   useUnpaidCompensations,
   useUpdateCompensation,
   useUpdateAssignmentCompensation,
-  useBatchUpdateCompensations,
   COMPENSATION_ERROR_KEYS,
 } from './useCompensations'
 
@@ -24,21 +23,15 @@ vi.mock('@/api/client', () => ({
   getApiClient: vi.fn(() => ({
     searchCompensations: vi.fn(),
     updateCompensation: vi.fn(),
-    switchRoleAndAttribute: vi.fn(),
   })),
   api: {
     searchCompensations: vi.fn(),
     updateCompensation: vi.fn(),
-    switchRoleAndAttribute: vi.fn(),
   },
 }))
 
-const API_AUTH_STATE = { dataSource: 'api', activeOccupationId: 'occupation-1' }
-
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ dataSource: 'api', activeOccupationId: 'occupation-1' })
-  ),
+  useAuthStore: vi.fn((selector: AnyFunction) => selector({ dataSource: 'api' })),
 }))
 
 vi.mock('@/common/stores/demo', () => ({
@@ -600,119 +593,6 @@ describe('useUpdateCompensation', () => {
     await waitFor(() => {
       expect(onError).toHaveBeenCalledWith(mockError)
     })
-  })
-})
-
-describe('association re-assert after compensation updates', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  afterEach(async () => {
-    const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) => selector(API_AUTH_STATE))
-  })
-
-  async function mockApiClient() {
-    const client = {
-      searchCompensations: vi.fn(),
-      updateCompensation: vi.fn().mockResolvedValue(undefined),
-      switchRoleAndAttribute: vi.fn().mockResolvedValue(undefined),
-    }
-    const { getApiClient } = await import('@/api/client')
-    vi.mocked(getApiClient).mockReturnValue(client as unknown as ReturnType<typeof getApiClient>)
-    return client
-  }
-
-  it('re-asserts the selected association on the server before refetching lists', async () => {
-    const client = await mockApiClient()
-    const queryClient = createQueryClient()
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
-    const { result } = renderHook(() => useUpdateCompensation(), {
-      wrapper: createWrapper(queryClient),
-    })
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        compensationId: 'comp-1',
-        data: { distanceInMetres: 5000 },
-      })
-    })
-
-    expect(client.switchRoleAndAttribute).toHaveBeenCalledWith('occupation-1')
-    const updateOrder = client.updateCompensation.mock.invocationCallOrder[0]!
-    const switchOrder = client.switchRoleAndAttribute.mock.invocationCallOrder[0]!
-    const invalidateOrder = invalidateSpy.mock.invocationCallOrder[0]!
-    expect(updateOrder).toBeLessThan(switchOrder)
-    expect(switchOrder).toBeLessThan(invalidateOrder)
-  })
-
-  it('re-asserts once after a batch update', async () => {
-    const client = await mockApiClient()
-    const queryClient = createQueryClient()
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
-    const { result } = renderHook(() => useBatchUpdateCompensations(), {
-      wrapper: createWrapper(queryClient),
-    })
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        compensationIds: ['comp-1', 'comp-2'],
-        data: { distanceInMetres: 5000 },
-      })
-    })
-
-    expect(client.updateCompensation).toHaveBeenCalledTimes(2)
-    expect(client.switchRoleAndAttribute).toHaveBeenCalledTimes(1)
-    expect(client.switchRoleAndAttribute).toHaveBeenCalledWith('occupation-1')
-    expect(client.switchRoleAndAttribute.mock.invocationCallOrder[0]!).toBeLessThan(
-      invalidateSpy.mock.invocationCallOrder[0]!
-    )
-  })
-
-  it('still refetches when the re-assert request fails', async () => {
-    const client = await mockApiClient()
-    client.switchRoleAndAttribute.mockRejectedValue(new Error('500'))
-    const queryClient = createQueryClient()
-    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
-
-    const { result } = renderHook(() => useUpdateCompensation(), {
-      wrapper: createWrapper(queryClient),
-    })
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        compensationId: 'comp-1',
-        data: { distanceInMetres: 5000 },
-      })
-    })
-
-    expect(result.current.isSuccess).toBe(true)
-    expect(invalidateSpy).toHaveBeenCalled()
-  })
-
-  it('does not touch the association in demo mode', async () => {
-    const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', activeOccupationId: 'demo-referee-sv' })
-    )
-    const client = await mockApiClient()
-
-    const { result } = renderHook(() => useUpdateCompensation(), {
-      wrapper: createWrapper(),
-    })
-
-    await act(async () => {
-      await result.current.mutateAsync({
-        compensationId: 'comp-1',
-        data: { distanceInMetres: 5000 },
-      })
-    })
-
-    expect(client.updateCompensation).toHaveBeenCalled()
-    expect(client.switchRoleAndAttribute).not.toHaveBeenCalled()
   })
 })
 
