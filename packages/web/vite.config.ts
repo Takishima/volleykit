@@ -538,6 +538,10 @@ export default defineConfig(({ mode }) => {
     base: basePath,
     test: {
       globals: true,
+      // Restore vi.stubEnv() after every test. process.env is shared by every
+      // file a worker runs, so a leaked VITE_API_PROXY_URL turns later files'
+      // API calls cross-origin and their CORS preflights escape msw.
+      unstubEnvs: true,
       // Default to happy-dom, but pure unit tests use faster node environment
       environment: 'happy-dom',
       environmentOptions: {
