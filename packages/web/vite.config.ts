@@ -540,6 +540,21 @@ export default defineConfig(({ mode }) => {
       globals: true,
       // Default to happy-dom, but pure unit tests use faster node environment
       environment: 'happy-dom',
+      environmentOptions: {
+        happyDOM: {
+          settings: {
+            // Never follow links or open windows for real: a click on an
+            // external <a target="_blank"> would otherwise make happy-dom
+            // fetch the page over the network, which msw passes through and
+            // which crashes Node's TLS layer under vmThreads.
+            navigation: {
+              disableMainFrameNavigation: true,
+              disableChildFrameNavigation: true,
+              disableChildPageNavigation: true,
+            },
+          },
+        },
+      },
       environmentMatchGlobs: [
         // Pure unit tests don't need DOM - run in faster node environment
         // Note: src/api tests use MSW which requires happy-dom for BroadcastChannel
