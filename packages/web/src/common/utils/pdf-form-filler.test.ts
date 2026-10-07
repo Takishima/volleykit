@@ -27,7 +27,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  server.listen({ onUnhandledRequest: 'bypass' })
+  server.listen({ onUnhandledFrame: 'bypass' })
 })
 
 describe('pdf-form-filler', () => {

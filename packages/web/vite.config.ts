@@ -538,8 +538,27 @@ export default defineConfig(({ mode }) => {
     base: basePath,
     test: {
       globals: true,
+      // Restore vi.stubEnv() after every test. process.env is shared by every
+      // file a worker runs, so a leaked VITE_API_PROXY_URL turns later files'
+      // API calls cross-origin and their CORS preflights escape msw.
+      unstubEnvs: true,
       // Default to happy-dom, but pure unit tests use faster node environment
       environment: 'happy-dom',
+      environmentOptions: {
+        happyDOM: {
+          settings: {
+            // Never follow links or open windows for real: a click on an
+            // external <a target="_blank"> would otherwise make happy-dom
+            // fetch the page over the network, which msw passes through and
+            // which crashes Node's TLS layer under vmThreads.
+            navigation: {
+              disableMainFrameNavigation: true,
+              disableChildFrameNavigation: true,
+              disableChildPageNavigation: true,
+            },
+          },
+        },
+      },
       environmentMatchGlobs: [
         // Pure unit tests don't need DOM - run in faster node environment
         // Note: src/api tests use MSW which requires happy-dom for BroadcastChannel

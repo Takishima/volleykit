@@ -13,7 +13,7 @@ configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS })
 
 // Start MSW server before all tests
 beforeAll(() => {
-  server.listen({ onUnhandledRequest: 'bypass' })
+  server.listen({ onUnhandledFrame: 'bypass' })
 })
 
 // Reset handlers after each test to ensure test isolation

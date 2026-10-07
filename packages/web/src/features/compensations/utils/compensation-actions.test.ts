@@ -28,7 +28,7 @@ beforeAll(() => {
 })
 
 afterAll(() => {
-  server.listen({ onUnhandledRequest: 'bypass' })
+  server.listen({ onUnhandledFrame: 'bypass' })
 })
 
 const mockCompensation: CompensationRecord = {
