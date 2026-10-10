@@ -22,6 +22,11 @@ import type { ExchangeStatus } from './useExchanges'
 export interface ExchangeWithDistance {
   exchange: GameExchange
   carDistanceKm: number | null
+  /**
+   * False when the association refuses to hand the entry to the signed-in
+   * referee. Own entries read as takeable: they must stay removable.
+   */
+  takeable: boolean
 }
 
 interface UseExchangeFiltersParams {
@@ -30,6 +35,7 @@ interface UseExchangeFiltersParams {
   isDemoMode: boolean
   currentUserIdentity: string | undefined
   hideOwnExchanges: boolean
+  hideNotTakeableExchanges: boolean
   showDummyData: boolean
   dummyExchanges: ExchangeWithDistance[] | null
 }
@@ -40,6 +46,7 @@ export function useExchangeFilters({
   isDemoMode,
   currentUserIdentity,
   hideOwnExchanges,
+  hideNotTakeableExchanges,
   showDummyData,
   dummyExchanges,
 }: UseExchangeFiltersParams) {
@@ -82,30 +89,32 @@ export function useExchangeFilters({
     )
   }, [exchangesWithTravelTime])
 
-  // Calculate car distance for each exchange from user's home location
-  const exchangesWithDistance = useMemo(() => {
+  // Calculate car distance for each exchange from user's home location, and
+  // record the server's take-over verdict so the list can mark blocked entries
+  // when they are shown rather than hidden.
+  const exchangesWithDistance = useMemo((): ExchangeWithDistance[] | null => {
     if (!data) return null
-    if (!homeLocation) return data.map((e) => ({ exchange: e, carDistanceKm: null }))
 
     return data.map((exchange) => {
+      const takeable = isTakeableOrOwn(exchange, currentUserIdentity)
       const geoLocation =
         exchange.refereeGame?.game?.hall?.primaryPostalAddress?.geographicalLocation
-      const hallCoords = extractCoordinates(geoLocation)
+      const hallCoords = homeLocation ? extractCoordinates(geoLocation) : null
 
-      if (!hallCoords) {
-        return { exchange, carDistanceKm: null }
+      if (!homeLocation || !hallCoords) {
+        return { exchange, carDistanceKm: null, takeable }
       }
 
       const homeCoords = { latitude: homeLocation.latitude, longitude: homeLocation.longitude }
       const carDistanceKm = calculateCarDistanceKm(homeCoords, hallCoords)
 
-      return { exchange, carDistanceKm }
+      return { exchange, carDistanceKm, takeable }
     })
-  }, [data, homeLocation])
+  }, [data, homeLocation, currentUserIdentity])
 
   // Filter exchanges by user's referee level, distance, travel time, game gap, and ownership.
-  // Also reports how many entries the server refuses to hand over, so the page can
-  // say so instead of claiming the marketplace is empty.
+  // Also reports how many entries were hidden because the server refuses to hand
+  // them over, so the page can say so instead of claiming the marketplace is empty.
   const { filteredData, notTakeableCount } = useMemo(() => {
     let notTakeableCount = 0
 
@@ -118,19 +127,18 @@ export function useExchangeFilters({
 
     let result = exchangesWithDistance
 
-    // Hide entries the server refuses to hand over on the "open" tab. Own
-    // entries are kept: they carry the same flag but must stay removable.
+    // Hide entries the server refuses to hand over on the "open" tab, unless the
+    // referee asked to see them (they then render as blocked). Own entries are
+    // kept either way: they carry the same flag but must stay removable.
     // Runs first so the count describes the marketplace rather than whatever
     // the level, distance, travel time and gap filters happened to leave.
     //
-    // Mobile gets the same number from the shared `useExchanges`, which counts
-    // over the raw entries; web has its own fetch hook and a wrapper type, so it
-    // repeats the arithmetic here. Both count the full fetched list, and the
-    // predicate itself is shared - keep it that way if either side moves.
-    if (statusFilter === 'open') {
-      const takeable = result.filter(({ exchange }) =>
-        isTakeableOrOwn(exchange, currentUserIdentity)
-      )
+    // Mobile gets its number from the shared `useExchanges`, which always hides
+    // and counts over the raw entries; web has its own fetch hook and a wrapper
+    // type, so it repeats the arithmetic here. Both count the full fetched list,
+    // and the predicate itself is shared - keep it that way if either side moves.
+    if (hideNotTakeableExchanges && statusFilter === 'open') {
+      const takeable = result.filter((entry) => entry.takeable)
       notTakeableCount = result.length - takeable.length
       result = takeable
     }
@@ -228,6 +236,7 @@ export function useExchangeFilters({
     isTravelTimeAvailable,
     travelTimeMap,
     hideOwnExchanges,
+    hideNotTakeableExchanges,
     currentUserIdentity,
     gameGapFilter.enabled,
     gameGapFilter.minGapMinutes,

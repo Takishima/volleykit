@@ -40,6 +40,7 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     minGapMinutes: 120,
   },
   hideOwnExchangesByAssociation: {},
+  hideNotTakeableExchangesByAssociation: {},
 }
 
 /** Helper to reset store to clean state */
@@ -785,6 +786,30 @@ describe('useSettingsStore', () => {
       // Existing settings survive the migration
       expect(state.settingsByMode.api.travelTimeFilter.sbbDestinationType).toBe('station')
       expect(state.settingsByMode.api.travelTimeFilter.maxTravelTimeMinutes).toBe(90)
+    })
+
+    it('should migrate v12 settings without hide not takeable exchanges', () => {
+      const v12Data = {
+        state: {
+          isSafeModeEnabled: true,
+          settingsByMode: {
+            api: {
+              ...DEFAULT_MODE_SETTINGS,
+              hideNotTakeableExchangesByAssociation: undefined,
+              hideOwnExchangesByAssociation: { SV: false },
+            },
+          },
+        },
+        version: 12,
+      }
+      localStorage.setItem('volleykit-settings', JSON.stringify(v12Data))
+
+      useSettingsStore.persist.rehydrate()
+
+      const state = useSettingsStore.getState()
+      expect(state.settingsByMode.api.hideNotTakeableExchangesByAssociation).toEqual({})
+      // Existing settings survive the migration
+      expect(state.settingsByMode.api.hideOwnExchangesByAssociation).toEqual({ SV: false })
     })
   })
 

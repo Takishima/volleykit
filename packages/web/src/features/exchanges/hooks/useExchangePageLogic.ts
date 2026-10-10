@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useOptimistic } from 'react'
 
+import { canTakeOverExchange } from '@volleykit/shared/utils'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
@@ -52,15 +53,18 @@ export function useExchangePageLogic() {
     }))
   )
 
-  const { hideOwnExchangesByAssociation } = useSettingsStore(
+  const {
+    hideOwnExchangesByAssociation,
+    hideNotTakeableExchangesByAssociation,
+    setHideOwnExchangesForAssociation,
+    setHideNotTakeableExchangesForAssociation,
+  } = useSettingsStore(
     useShallow((state) => ({
       hideOwnExchangesByAssociation: state.hideOwnExchangesByAssociation,
+      hideNotTakeableExchangesByAssociation: state.hideNotTakeableExchangesByAssociation,
+      setHideOwnExchangesForAssociation: state.setHideOwnExchangesForAssociation,
+      setHideNotTakeableExchangesForAssociation: state.setHideNotTakeableExchangesForAssociation,
     }))
-  )
-
-  // Get hide own exchanges setting per-association
-  const setHideOwnExchangesForAssociation = useSettingsStore(
-    (state) => state.setHideOwnExchangesForAssociation
   )
 
   // Derive hideOwnExchanges from the map - defaults to true if not set
@@ -76,6 +80,21 @@ export function useExchangePageLogic() {
       setHideOwnExchangesForAssociation(associationCode, !hideOwnExchanges)
     }
   }, [associationCode, hideOwnExchanges, setHideOwnExchangesForAssociation])
+
+  // Derive hideNotTakeableExchanges from the map - defaults to true if not set,
+  // so entries the association withholds stay out of the way until asked for
+  const hideNotTakeableExchanges = useMemo(() => {
+    if (associationCode && hideNotTakeableExchangesByAssociation[associationCode] !== undefined) {
+      return hideNotTakeableExchangesByAssociation[associationCode]
+    }
+    return true
+  }, [associationCode, hideNotTakeableExchangesByAssociation])
+
+  const handleHideNotTakeableToggle = useCallback(() => {
+    if (associationCode) {
+      setHideNotTakeableExchangesForAssociation(associationCode, !hideNotTakeableExchanges)
+    }
+  }, [associationCode, hideNotTakeableExchanges, setHideNotTakeableExchangesForAssociation])
 
   const {
     data: queryData,
@@ -98,7 +117,7 @@ export function useExchangePageLogic() {
   const dummyExchanges = useMemo((): ExchangeWithDistance[] | null => {
     if (!showDummyData) return null
     const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange
-    return [{ exchange: tourExchange, carDistanceKm: null }]
+    return [{ exchange: tourExchange, carDistanceKm: null, takeable: true }]
   }, [showDummyData])
 
   // Delegate all filtering to the extracted hook
@@ -119,6 +138,7 @@ export function useExchangePageLogic() {
     isDemoMode,
     currentUserIdentity,
     hideOwnExchanges,
+    hideNotTakeableExchanges,
     showDummyData,
     dummyExchanges,
   })
@@ -184,8 +204,11 @@ export function useExchangePageLogic() {
         return { right: [actions.removeFromExchange] }
       }
 
-      // "open" tab: only open exchanges (not applied/closed) are actionable
-      if (exchange.status === 'open') {
+      // "open" tab: only open exchanges (not applied/closed) that the server
+      // lets this referee apply for are actionable. Blocked entries only reach
+      // the list when the referee chose to see them; a swipe must not offer a
+      // take-over the backend would reject.
+      if (exchange.status === 'open' && canTakeOverExchange(exchange)) {
         // Swipe left reveals: [Take Over] <- card
         return { left: [actions.takeOver] }
       }
@@ -258,6 +281,8 @@ export function useExchangePageLogic() {
     // Filter state
     hideOwnExchanges,
     handleHideOwnToggle,
+    hideNotTakeableExchanges,
+    handleHideNotTakeableToggle,
     isLevelFilterAvailable,
     isDistanceFilterAvailable,
     isTravelTimeFilterAvailable,

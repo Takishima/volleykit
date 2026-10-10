@@ -546,6 +546,23 @@ describe('Settings Integration', () => {
     })
   })
 
+  describe('hide not takeable exchanges setting', () => {
+    it('stores the per-association setting without touching other associations', () => {
+      useSettingsStore.getState().setHideNotTakeableExchangesForAssociation('SV', false)
+
+      expect(useSettingsStore.getState().hideNotTakeableExchangesByAssociation).toEqual({
+        SV: false,
+      })
+
+      useSettingsStore.getState().setHideNotTakeableExchangesForAssociation('SVRBA', true)
+
+      expect(useSettingsStore.getState().hideNotTakeableExchangesByAssociation).toEqual({
+        SV: false,
+        SVRBA: true,
+      })
+    })
+  })
+
   describe('game gap filter', () => {
     it('game gap filter settings work correctly', () => {
       // Default state

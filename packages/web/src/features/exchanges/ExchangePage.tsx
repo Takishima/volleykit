@@ -46,6 +46,8 @@ export function ExchangePage() {
     removeFromExchangeModal,
     hideOwnExchanges,
     handleHideOwnToggle,
+    hideNotTakeableExchanges,
+    handleHideNotTakeableToggle,
     isLevelFilterAvailable,
     isDistanceFilterAvailable,
     isTravelTimeFilterAvailable,
@@ -69,6 +71,8 @@ export function ExchangePage() {
         <ExchangeFilterMenu
           hideOwnExchanges={hideOwnExchanges}
           onHideOwnToggle={handleHideOwnToggle}
+          hideNotTakeableExchanges={hideNotTakeableExchanges}
+          onHideNotTakeableToggle={handleHideNotTakeableToggle}
           isLevelFilterAvailable={isLevelFilterAvailable}
           isDistanceFilterAvailable={isDistanceFilterAvailable}
           isTravelTimeFilterAvailable={isTravelTimeFilterAvailable}
@@ -78,6 +82,7 @@ export function ExchangePage() {
         />
         <ActiveFilterIcons
           hideOwnActive={hideOwnExchanges}
+          hideNotTakeableActive={hideNotTakeableExchanges}
           distanceActive={isDistanceFilterAvailable && distanceFilter.enabled}
           travelTimeActive={isTravelTimeFilterAvailable && travelTimeFilter.enabled}
           gameGapActive={isGameGapFilterAvailable && gameGapFilter.enabled}
@@ -103,9 +108,10 @@ export function ExchangePage() {
 
     const { filtered, notTakeableCount } = openTabNotice
 
-    // Entries the server refuses to hand over are dropped without a toggle to
-    // restore them, so name them either way - above a shortened list, or as the
-    // empty state. A filter the user can act on still leads.
+    // Entries the server refuses to hand over are hidden by default, so name
+    // them either way - above a shortened list, or as the empty state. The
+    // count is zero once the referee chooses to see them. A filter the user
+    // can act on still leads.
     const notTakeableNote =
       notTakeableCount === 1
         ? t('exchange.exchangesNotTakeableOne')
@@ -152,7 +158,7 @@ export function ExchangePage() {
               <Fragment key={group.week.key}>
                 {/* Only show separator if there's more than one week */}
                 {groupedData.length > 1 && <WeekSeparator week={group.week} />}
-                {group.items.map(({ exchange, carDistanceKm }, itemIndex) => {
+                {group.items.map(({ exchange, carDistanceKm, takeable }, itemIndex) => {
                   const travelTimeData = travelTimeMap.get(exchange.__identity)
                   return (
                     <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
@@ -164,6 +170,7 @@ export function ExchangePage() {
                             itemsBeforeThisGroup + itemIndex === 0 ? 'exchange-card' : undefined
                           }
                           carDistanceKm={homeLocation ? carDistanceKm : null}
+                          isNotTakeable={!takeable}
                           travelTimeMinutes={travelTimeData?.minutes}
                           travelTimeMode={travelTimeData?.travelMode}
                           travelTimeLoading={travelTimeData?.isLoading}

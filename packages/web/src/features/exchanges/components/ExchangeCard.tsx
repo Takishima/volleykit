@@ -13,6 +13,7 @@ import {
   TrainFront,
   Loader2,
   User,
+  Lock,
 } from '@/common/components/icons'
 import { TravelTimeBadge } from '@/common/components/TravelTimeBadge'
 import { features } from '@/common/config/features'
@@ -56,6 +57,8 @@ interface ExchangeCardProps {
   dataTour?: string
   /** Estimated car distance from user's home location in kilometres (if available) */
   carDistanceKm?: number | null
+  /** True when the association does not let the referee take this entry over */
+  isNotTakeable?: boolean
   /** Travel time in minutes (if available) */
   travelTimeMinutes?: number | null
   /** Travel mode the displayed travel time was calculated with */
@@ -69,6 +72,7 @@ function ExchangeCardComponent({
   disableExpansion,
   dataTour,
   carDistanceKm,
+  isNotTakeable = false,
   travelTimeMinutes,
   travelTimeMode,
   travelTimeLoading,
@@ -143,6 +147,9 @@ function ExchangeCardComponent({
       data={exchange}
       disableExpansion={disableExpansion}
       dataTour={dataTour}
+      // Blocked entries stay readable but visibly set apart: dimmed, dashed
+      // border, and a badge in the compact row so the reason is never a guess
+      className={isNotTakeable ? 'border-dashed opacity-70' : undefined}
       renderCompact={(_, { expandArrow }) => (
         <>
           {/* Day/Date/Time */}
@@ -183,9 +190,19 @@ function ExchangeCardComponent({
             </div>
           </div>
 
-          {/* Distance and travel time badges */}
-          {(carDistanceKm != null || travelTimeMinutes !== undefined || travelTimeLoading) && (
+          {/* Not takeable, distance and travel time badges */}
+          {(isNotTakeable ||
+            carDistanceKm != null ||
+            travelTimeMinutes !== undefined ||
+            travelTimeLoading) && (
             <div className="flex flex-col items-end gap-0.5 shrink-0">
+              {/* Not takeable badge */}
+              {isNotTakeable && (
+                <span className="text-xs font-medium text-text-muted dark:text-text-muted-dark bg-surface-muted dark:bg-surface-muted-dark px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Lock className="w-3 h-3" aria-hidden="true" />
+                  {t('exchange.notTakeable')}
+                </span>
+              )}
               {/* Car distance badge */}
               {carDistanceKm != null && (
                 <span className="text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -283,6 +300,14 @@ function ExchangeCardComponent({
                   {positionLabel}
                 </span>
               </div>
+            </div>
+          )}
+
+          {/* Why the take-over is refused */}
+          {isNotTakeable && (
+            <div className="flex items-center gap-2 text-sm text-text-muted dark:text-text-muted-dark">
+              <Lock className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+              <span>{t('exchange.notTakeableReason')}</span>
             </div>
           )}
 

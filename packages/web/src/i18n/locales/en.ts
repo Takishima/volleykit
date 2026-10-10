@@ -378,6 +378,9 @@ const en: Translations = {
     unavailableInCalendarModeDescription:
       'Exchange features are not available in calendar mode. Use full login to browse and apply for exchanges.',
     hideOwn: 'Hide own',
+    hideNotTakeable: 'Hide not takeable',
+    notTakeable: 'Not takeable',
+    notTakeableReason: 'The association does not let you take over this game.',
     settings: {
       title: 'Filter Settings',
       maxDistance: 'Maximum distance',

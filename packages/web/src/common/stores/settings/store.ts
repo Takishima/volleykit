@@ -62,6 +62,7 @@ function syncFromMode(
     notificationSettings: modeSettings.notificationSettings,
     gameGapFilter: modeSettings.gameGapFilter,
     hideOwnExchangesByAssociation: modeSettings.hideOwnExchangesByAssociation,
+    hideNotTakeableExchangesByAssociation: modeSettings.hideNotTakeableExchangesByAssociation,
   }
 }
 
@@ -95,6 +96,8 @@ export const useSettingsStore = create<SettingsState>()(
         notificationSettings: DEFAULT_MODE_SETTINGS.notificationSettings,
         gameGapFilter: DEFAULT_MODE_SETTINGS.gameGapFilter,
         hideOwnExchangesByAssociation: DEFAULT_MODE_SETTINGS.hideOwnExchangesByAssociation,
+        hideNotTakeableExchangesByAssociation:
+          DEFAULT_MODE_SETTINGS.hideNotTakeableExchangesByAssociation,
 
         _setCurrentMode: (mode: DataSource) => {
           const state = get()
@@ -382,13 +385,24 @@ export const useSettingsStore = create<SettingsState>()(
           return true
         },
 
+        setHideNotTakeableExchangesForAssociation: (associationCode: string, enabled: boolean) => {
+          set((state) =>
+            updateModeAndTopLevel(state, (current) => ({
+              hideNotTakeableExchangesByAssociation: {
+                ...current.hideNotTakeableExchangesByAssociation,
+                [associationCode]: enabled,
+              },
+            }))
+          )
+        },
+
         resetLocationSettings: () => {
           set((state) => updateModeAndTopLevel(state, () => ({ ...DEFAULT_MODE_SETTINGS })))
         },
       }),
       {
         name: 'volleykit-settings',
-        version: 12,
+        version: 13,
         partialize: (state) => ({
           // Global settings
           isSafeModeEnabled: state.isSafeModeEnabled,
@@ -473,6 +487,9 @@ export const useSettingsStore = create<SettingsState>()(
                   hideOwnExchangesByAssociation:
                     persistedModeSettings.hideOwnExchangesByAssociation ??
                     DEFAULT_MODE_SETTINGS.hideOwnExchangesByAssociation,
+                  hideNotTakeableExchangesByAssociation:
+                    persistedModeSettings.hideNotTakeableExchangesByAssociation ??
+                    DEFAULT_MODE_SETTINGS.hideNotTakeableExchangesByAssociation,
                 }
               }
             }

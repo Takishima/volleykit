@@ -48,6 +48,9 @@ export const REMOVE_NON_CONFORMANT_GATE_VERSION = 11
 /** Version that added the travel mode (e-bike + train) settings */
 export const TRAVEL_MODE_VERSION = 12
 
+/** Version that added hide not takeable exchanges per-association */
+export const HIDE_NOT_TAKEABLE_EXCHANGES_VERSION = 13
+
 // ============================================================================
 // Migration Type Shapes
 // ============================================================================
@@ -95,6 +98,7 @@ export function migrateV1ToV2(v1State: V1State): Record<string, unknown> {
     notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
     gameGapFilter: { ...DEFAULT_MODE_SETTINGS.gameGapFilter },
     hideOwnExchangesByAssociation: {},
+    hideNotTakeableExchangesByAssociation: {},
   }
 
   return {
@@ -205,6 +209,20 @@ export function addTravelModeSettings(state: StateWithModes): void {
 }
 
 /**
+ * Add hide not takeable exchanges per-association for v12→v13 migration.
+ */
+export function addHideNotTakeableExchangesByAssociation(state: StateWithModes): void {
+  if (!state.settingsByMode) return
+
+  for (const mode of ALL_MODES) {
+    const settings = state.settingsByMode[mode]
+    if (settings && !settings.hideNotTakeableExchangesByAssociation) {
+      settings.hideNotTakeableExchangesByAssociation = {}
+    }
+  }
+}
+
+/**
  * Run all migrations from the given version to latest.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -264,6 +282,11 @@ export function runMigrations(persisted: any, version: number): unknown {
   // v11 → v12: Add travel mode (e-bike + train) settings
   if (version < TRAVEL_MODE_VERSION) {
     addTravelModeSettings(state as StateWithModes)
+  }
+
+  // v12 → v13: Add hide not takeable exchanges per-association
+  if (version < HIDE_NOT_TAKEABLE_EXCHANGES_VERSION) {
+    addHideNotTakeableExchangesByAssociation(state as StateWithModes)
   }
 
   return state
