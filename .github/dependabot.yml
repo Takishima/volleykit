@@ -46,6 +46,16 @@ updates:
       # @react-navigation packages are pinned by Expo SDK — upgrade via `expo install`.
       - dependency-name: "@react-navigation/*"
         update-types: ["version-update:semver-major"]
+      # expo-* modules are versioned per SDK: a major bump drags in the next SDK's
+      # modules (58.x) while expo itself stays on 57. Upgrade the whole SDK via
+      # `expo install` instead.
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major"]
+      # Expo SDK 57 and the react-native babel preset require @babel/core 7.
+      - dependency-name: "@babel/core"
+        update-types: ["version-update:semver-major"]
     groups:
       # Group all minor/patch updates into a single PR
       all-minor-patch:
