@@ -119,9 +119,6 @@ jobs:
           # Space-separated GHSA ids to suppress. Keep this empty unless an
           # advisory genuinely has no fix: a stale entry lets a regression on
           # that advisory ship green.
-          # - GHSA-3ppc-4f35-3m26 (minimatch ReDoS) was waiting on eslint 10, now on 10.9.1.
-          # - GHSA-jmr7-xgp7-cmfj (fast-xml-parser DoS) is fixed by the ^5.11.1 override,
-          #   since ojp-sdk-next pins the vulnerable 5.0.8 exactly.
           # - GHSA-86w9-cpqp-85rv (node-forge, via expo > @expo/cli) and
           #   GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
           #   have no patched release: the advisories list every published version
@@ -130,8 +127,18 @@ jobs:
           IGNORED_ADVISORIES="GHSA-86w9-cpqp-85rv GHSA-vfj7-8cjw-p6xm"
           # pnpm audit emits the npm v6 report shape: advisories keyed by id, each
           # carrying github_advisory_id, module_name and the dependency paths.
+          # pnpm audit exits non-zero whenever it finds something, so the exit code
+          # is not an error signal; the report shape is. A registry error, timeout
+          # or empty body must fail the gate rather than read as "no advisories".
           AUDIT_JSON=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
-          FOUND=$(echo "$AUDIT_JSON" | jq -r '.advisories[]? | "\(.github_advisory_id)|\(.severity)|\(.module_name)"' 2>/dev/null || true)
+          if ! echo "$AUDIT_JSON" | jq -e '.metadata.vulnerabilities and (.advisories | type == "object")' >/dev/null 2>&1; then
+            echo "::error::pnpm audit returned no usable report"
+            echo "$AUDIT_JSON" | head -c 2000
+            exit 1
+          fi
+          # Filter severity here too so the gate does not depend on --audit-level
+          # also pruning the JSON report.
+          FOUND=$(echo "$AUDIT_JSON" | jq -r '.advisories[] | select(.severity == "high" or .severity == "critical") | "\(.github_advisory_id)|\(.severity)|\(.module_name)"')
 
           UNIGNORED=""
           for entry in $FOUND; do
