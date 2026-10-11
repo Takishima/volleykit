@@ -2,7 +2,7 @@ import { createElement } from 'react'
 
 import type { GameExchange } from '@/api/client'
 import { Check, X } from '@/common/components/icons'
-import { type SwipeAction, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
+import { type SwipeAction, type SwipeConfig, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
 // Pre-created icon elements to avoid recreating on each function call
 const ICON_CHECK = createElement(Check, { size: SWIPE_ACTION_ICON_SIZE })
@@ -110,4 +110,49 @@ export function createExchangeActions(
       onAction: () => handlers.onRemoveFromExchange(exchange),
     },
   }
+}
+
+export interface SwipeConfigContext {
+  /** Whether the list is on the "mine" tab (the referee's own offers) */
+  isMineTab: boolean
+  /** Whether the signed-in referee submitted this entry */
+  isOwn: boolean
+  /**
+   * Whether the entry may be taken over. Comes from the one verdict
+   * `useExchangeFilters` already computed per entry, so the badge and the
+   * swipe action can never disagree.
+   */
+  takeable: boolean
+}
+
+/**
+ * Decides which swipe actions an exchange card offers.
+ *
+ * Action array ordering: first item = furthest from card = full swipe default.
+ *
+ * @param exchange - The exchange the card shows
+ * @param actions - The action handlers built by `createExchangeActions`
+ * @param context - Tab, ownership and take-over verdict for this entry
+ * @returns The swipe configuration for the card
+ */
+export function resolveSwipeConfig(
+  exchange: GameExchange,
+  actions: ExchangeActionConfig,
+  context: SwipeConfigContext
+): SwipeConfig {
+  // Own entries (the whole "mine" tab, or the referee's own entry on the open
+  // tab) can only be pulled back off the marketplace: swipe right -> [Remove]
+  if (context.isMineTab || context.isOwn) {
+    return { right: [actions.removeFromExchange] }
+  }
+
+  // Only open entries the server lets this referee apply for are actionable.
+  // Blocked entries reach the list when the referee chose to see them; a
+  // swipe must not offer a take-over the backend would reject.
+  if (exchange.status === 'open' && context.takeable) {
+    return { left: [actions.takeOver] }
+  }
+
+  // No swipe actions for applied/closed or blocked entries
+  return {}
 }

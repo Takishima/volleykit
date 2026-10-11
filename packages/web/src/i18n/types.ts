@@ -264,6 +264,9 @@ export interface Translations {
     unavailableInCalendarModeTitle: string
     unavailableInCalendarModeDescription: string
     hideOwn: string
+    hideNotTakeable: string
+    notTakeable: string
+    notTakeableReason: string
     settings: {
       title: string
       maxDistance: string

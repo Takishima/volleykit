@@ -10,6 +10,7 @@ import {
   User,
   CalendarX2,
   Award,
+  Lock,
 } from '@/common/components/icons'
 import { ResponsiveSheet } from '@/common/components/ResponsiveSheet'
 import { features } from '@/common/config/features'
@@ -138,6 +139,10 @@ export interface ExchangeFilterMenuProps {
   hideOwnExchanges: boolean
   /** Callback when "hide own" is toggled */
   onHideOwnToggle: () => void
+  /** Whether the "hide not takeable" filter is enabled */
+  hideNotTakeableExchanges: boolean
+  /** Callback when "hide not takeable" is toggled */
+  onHideNotTakeableToggle: () => void
   /** Whether the level filter is available (demo mode only) */
   isLevelFilterAvailable: boolean
   /** Whether the distance filter is available (requires home location) */
@@ -155,6 +160,8 @@ export interface ExchangeFilterMenuProps {
 function ExchangeFilterMenuComponent({
   hideOwnExchanges,
   onHideOwnToggle,
+  hideNotTakeableExchanges,
+  onHideNotTakeableToggle,
   isLevelFilterAvailable,
   isDistanceFilterAvailable,
   isTravelTimeFilterAvailable,
@@ -243,6 +250,7 @@ function ExchangeFilterMenuComponent({
   const activeFilterCount = useMemo(() => {
     let count = 0
     if (hideOwnExchanges) count++
+    if (hideNotTakeableExchanges) count++
     if (isDistanceFilterAvailable && distanceFilter.enabled) count++
     if (isTravelTimeFilterAvailable && travelTimeFilter.enabled) count++
     if (isLevelFilterAvailable && levelFilterEnabled) count++
@@ -250,6 +258,7 @@ function ExchangeFilterMenuComponent({
     return count
   }, [
     hideOwnExchanges,
+    hideNotTakeableExchanges,
     isDistanceFilterAvailable,
     distanceFilter.enabled,
     isTravelTimeFilterAvailable,
@@ -322,6 +331,14 @@ function ExchangeFilterMenuComponent({
             label={t('exchange.hideOwn')}
             enabled={hideOwnExchanges}
             onToggle={onHideOwnToggle}
+          />
+
+          {/* Hide not takeable exchanges toggle */}
+          <FilterToggleRow
+            icon={<Lock className="w-full h-full" />}
+            label={t('exchange.hideNotTakeable')}
+            enabled={hideNotTakeableExchanges}
+            onToggle={onHideNotTakeableToggle}
           />
 
           {/* Distance filter */}

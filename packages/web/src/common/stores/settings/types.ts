@@ -162,6 +162,11 @@ export interface ModeSettings {
   gameGapFilter: GameGapFilter
   /** Per-association "hide own exchanges" setting (association code -> enabled) */
   hideOwnExchangesByAssociation: Record<string, boolean>
+  /**
+   * Per-association "hide not takeable exchanges" setting (association code -> enabled).
+   * Hides the entries the association does not let the referee take over.
+   */
+  hideNotTakeableExchangesByAssociation: Record<string, boolean>
 }
 
 /** Default mode-specific settings */
@@ -192,6 +197,7 @@ export const DEFAULT_MODE_SETTINGS: ModeSettings = {
     minGapMinutes: DEFAULT_MIN_GAME_GAP_MINUTES,
   },
   hideOwnExchangesByAssociation: {},
+  hideNotTakeableExchangesByAssociation: {},
 }
 
 /**
@@ -252,6 +258,7 @@ export interface SettingsState {
   notificationSettings: NotificationSettings
   gameGapFilter: GameGapFilter
   hideOwnExchangesByAssociation: Record<string, boolean>
+  hideNotTakeableExchangesByAssociation: Record<string, boolean>
 
   // Setters that update current mode's settings
   setHomeLocation: (location: UserLocation | null) => void
@@ -290,6 +297,9 @@ export interface SettingsState {
   // Hide own exchanges per-association
   setHideOwnExchangesForAssociation: (associationCode: string, enabled: boolean) => void
   isHideOwnExchangesForAssociation: (associationCode: string | undefined) => boolean
+
+  // Hide not takeable exchanges per-association
+  setHideNotTakeableExchangesForAssociation: (associationCode: string, enabled: boolean) => void
 
   // Reset current mode's settings to defaults (keeps safe mode and other modes)
   resetLocationSettings: () => void

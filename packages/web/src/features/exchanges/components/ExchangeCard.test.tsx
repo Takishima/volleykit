@@ -45,6 +45,8 @@ vi.mock('@/common/hooks/useTranslation', () => ({
         'assignments.openSbbConnection': 'Open SBB connection',
         'assignments.openAddressInMaps': 'Open address in maps',
         'exchange.levelRequired': 'Level required: {level}',
+        'exchange.notTakeable': 'Not takeable',
+        'exchange.notTakeableReason': 'The association does not let you take over this game.',
       }
       return translations[key] || key
     },
@@ -388,6 +390,32 @@ describe('ExchangeCard', () => {
 
       // Button should still show as not expanded after click
       expect(button).toHaveAttribute('aria-expanded', 'false')
+    })
+  })
+
+  describe('not takeable entries', () => {
+    it('renders no badge by default', () => {
+      render(<ExchangeCard exchange={createMockExchange()} />)
+
+      expect(screen.queryByText('Not takeable')).not.toBeInTheDocument()
+    })
+
+    it('marks a blocked entry with a badge and sets the card apart', () => {
+      render(<ExchangeCard exchange={createMockExchange()} isNotTakeable />)
+
+      expect(screen.getByText('Not takeable')).toBeInTheDocument()
+      expect(document.querySelector('.border-dashed')).toBeInTheDocument()
+    })
+
+    it('explains the refusal in the expanded view', async () => {
+      const user = userEvent.setup()
+      render(<ExchangeCard exchange={createMockExchange()} isNotTakeable />)
+
+      await user.click(screen.getByRole('button', { expanded: false }))
+
+      expect(
+        screen.getByText('The association does not let you take over this game.')
+      ).toBeInTheDocument()
     })
   })
 

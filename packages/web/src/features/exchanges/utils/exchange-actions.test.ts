@@ -6,6 +6,7 @@ import type { GameExchange } from '@/api/client'
 
 import {
   createExchangeActions,
+  resolveSwipeConfig,
   isExchangeOwner,
   canRemoveExchange,
   getConvocationIdFromExchange,
@@ -207,5 +208,64 @@ describe('getConvocationIdFromExchange', () => {
       refereeGame: {},
     } as GameExchange
     expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
+  })
+})
+
+describe('resolveSwipeConfig', () => {
+  const actions = createExchangeActions(mockExchange, {
+    onTakeOver: vi.fn(),
+    onRemoveFromExchange: vi.fn(),
+  })
+
+  it('offers take over for an open entry the referee may apply for', () => {
+    const config = resolveSwipeConfig(mockExchange, actions, {
+      isMineTab: false,
+      isOwn: false,
+      takeable: true,
+    })
+
+    expect(config).toEqual({ left: [actions.takeOver] })
+  })
+
+  it('offers nothing for a blocked entry the referee chose to see', () => {
+    // The association refuses the take-over; the backend would reject a swipe
+    const config = resolveSwipeConfig(mockExchange, actions, {
+      isMineTab: false,
+      isOwn: false,
+      takeable: false,
+    })
+
+    expect(config).toEqual({})
+  })
+
+  it('still lets the referee remove their own blocked entry', () => {
+    const config = resolveSwipeConfig(mockExchange, actions, {
+      isMineTab: false,
+      isOwn: true,
+      takeable: false,
+    })
+
+    expect(config).toEqual({ right: [actions.removeFromExchange] })
+  })
+
+  it('only offers removal on the mine tab', () => {
+    const config = resolveSwipeConfig(mockExchange, actions, {
+      isMineTab: true,
+      isOwn: true,
+      takeable: true,
+    })
+
+    expect(config).toEqual({ right: [actions.removeFromExchange] })
+  })
+
+  it('offers nothing for an entry that is no longer open', () => {
+    const applied = { ...mockExchange, status: 'applied' } as GameExchange
+    const config = resolveSwipeConfig(applied, actions, {
+      isMineTab: false,
+      isOwn: false,
+      takeable: true,
+    })
+
+    expect(config).toEqual({})
   })
 })

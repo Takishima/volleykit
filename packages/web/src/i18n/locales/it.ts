@@ -384,6 +384,9 @@ const it: Translations = {
     unavailableInCalendarModeDescription:
       "Le funzionalità di scambio non sono disponibili in modalità calendario. Usa l'accesso completo per sfogliare e candidarti agli scambi.",
     hideOwn: 'Nascondi i miei',
+    hideNotTakeable: 'Nascondi i non rilevabili',
+    notTakeable: 'Non rilevabile',
+    notTakeableReason: 'L’associazione non ti permette di rilevare questa partita.',
     settings: {
       title: 'Impostazioni filtri',
       maxDistance: 'Distanza massima',

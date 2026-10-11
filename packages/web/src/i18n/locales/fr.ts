@@ -388,6 +388,9 @@ const fr: Translations = {
     unavailableInCalendarModeDescription:
       "Les fonctionnalités d'échange ne sont pas disponibles en mode calendrier. Utilisez la connexion complète pour parcourir et postuler aux échanges.",
     hideOwn: 'Masquer les miens',
+    hideNotTakeable: 'Masquer les non reprenables',
+    notTakeable: 'Non reprenable',
+    notTakeableReason: 'L’association ne vous autorise pas à reprendre ce match.',
     settings: {
       title: 'Paramètres des filtres',
       maxDistance: 'Distance maximale',

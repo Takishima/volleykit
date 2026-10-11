@@ -388,6 +388,9 @@ const de: Translations = {
     unavailableInCalendarModeDescription:
       'Tauschbörsen-Funktionen sind im Kalender-Modus nicht verfügbar. Verwenden Sie die vollständige Anmeldung, um Tauschangebote zu durchsuchen und zu bewerben.',
     hideOwn: 'Eigene ausblenden',
+    hideNotTakeable: 'Nicht übernehmbare ausblenden',
+    notTakeable: 'Nicht übernehmbar',
+    notTakeableReason: 'Der Verband lässt Sie dieses Spiel nicht übernehmen.',
     settings: {
       title: 'Filtereinstellungen',
       maxDistance: 'Maximale Entfernung',

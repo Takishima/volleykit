@@ -175,6 +175,8 @@ describe('ExchangePage', () => {
       setGameGapFilterEnabled: vi.fn(),
       hideOwnExchangesByAssociation: {},
       setHideOwnExchangesForAssociation: vi.fn(),
+      hideNotTakeableExchangesByAssociation: {},
+      setHideNotTakeableExchangesForAssociation: vi.fn(),
     }
     vi.mocked(settingsStore.useSettingsStore).mockImplementation(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -310,6 +312,8 @@ describe('ExchangePage', () => {
         setGameGapFilterEnabled: vi.fn(),
         hideOwnExchangesByAssociation: { TEST: false },
         setHideOwnExchangesForAssociation: vi.fn(),
+        hideNotTakeableExchangesByAssociation: {},
+        setHideNotTakeableExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -347,6 +351,8 @@ describe('ExchangePage', () => {
         setGameGapFilterEnabled: vi.fn(),
         hideOwnExchangesByAssociation: {},
         setHideOwnExchangesForAssociation: vi.fn(),
+        hideNotTakeableExchangesByAssociation: {},
+        setHideNotTakeableExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -386,6 +392,8 @@ describe('ExchangePage', () => {
         setGameGapFilterEnabled: vi.fn(),
         hideOwnExchangesByAssociation: {},
         setHideOwnExchangesForAssociation: vi.fn(),
+        hideNotTakeableExchangesByAssociation: {},
+        setHideNotTakeableExchangesForAssociation: vi.fn(),
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -405,8 +413,9 @@ describe('ExchangePage', () => {
     // referee for one of the two teams playing that game.
     const blockedPermissions = { properties: { appliedBy: { update: false } } }
     const allowedPermissions = { properties: { appliedBy: { update: true } } }
+    const mockSetHideNotTakeable = vi.fn()
 
-    function mockSettings(hideOwnForTestAssociation: boolean) {
+    function mockSettings(hideOwnForTestAssociation: boolean, hideNotTakeable = true) {
       const state = {
         homeLocation: null,
         distanceFilter: { enabled: false, maxDistanceKm: 50 },
@@ -429,6 +438,8 @@ describe('ExchangePage', () => {
         setGameGapFilterEnabled: vi.fn(),
         hideOwnExchangesByAssociation: { TEST: hideOwnForTestAssociation },
         setHideOwnExchangesForAssociation: vi.fn(),
+        hideNotTakeableExchangesByAssociation: { TEST: hideNotTakeable },
+        setHideNotTakeableExchangesForAssociation: mockSetHideNotTakeable,
       }
       vi.mocked(settingsStore.useSettingsStore).mockImplementation(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -565,6 +576,74 @@ describe('ExchangePage', () => {
       renderWithQueryClient(<ExchangePage />)
 
       expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+    })
+
+    it('should show blocked entries marked as not takeable when the filter is off', () => {
+      const takeable = createMockExchange({
+        __identity: 'exchange-takeable',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: allowedPermissions,
+      })
+      const blocked = createMockExchange({
+        __identity: 'exchange-blocked',
+        submittedByPerson: { __identity: 'other-person' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false, false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(
+        createMockQueryResult([takeable, blocked])
+      )
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(2)
+      // Exactly the blocked card carries the badge
+      expect(screen.getAllByText(/^not takeable$/i)).toHaveLength(1)
+      // Nothing was withheld, so nothing to report and no filter to blame
+      expect(screen.queryByText(/exchange is hidden/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/match your filters/i)).not.toBeInTheDocument()
+    })
+
+    it('should not mark the referee own blocked exchange as not takeable', () => {
+      vi.mocked(authStore.useAuthStore).mockImplementation((selector) =>
+        selector({
+          dataSource: 'api',
+          isAssociationSwitching: false,
+          isCalendarMode: () => false,
+          user: { id: 'user-123' },
+        } as unknown as ReturnType<typeof authStore.useAuthStore.getState>)
+      )
+
+      const own = createMockExchange({
+        __identity: 'exchange-own',
+        submittedByPerson: { __identity: 'user-123' },
+        _permissions: blockedPermissions,
+      })
+
+      mockSettings(false, false)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([own]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      expect(screen.getAllByText(/Team A vs Team B/i)).toHaveLength(1)
+      expect(screen.queryByText(/^not takeable$/i)).not.toBeInTheDocument()
+    })
+
+    it('should toggle the hide not takeable filter from the filter menu', () => {
+      mockSetHideNotTakeable.mockClear()
+      mockSettings(false, true)
+      vi.mocked(exchangeHooks.useGameExchanges).mockReturnValue(createMockQueryResult([]))
+
+      renderWithQueryClient(<ExchangePage />)
+
+      fireEvent.click(screen.getByRole('button', { name: /filters/i }))
+      const toggle = screen.getByRole('switch', { name: /hide not takeable/i })
+      expect(toggle).toHaveAttribute('aria-checked', 'true')
+
+      fireEvent.click(toggle)
+
+      expect(mockSetHideNotTakeable).toHaveBeenCalledWith('TEST', false)
     })
   })
 

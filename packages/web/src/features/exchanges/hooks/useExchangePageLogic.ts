@@ -15,7 +15,8 @@ import { TOUR_DUMMY_EXCHANGE } from '../exchange'
 import { useExchangeActions } from './useExchangeActions'
 import { useExchangeFilters, type ExchangeWithDistance } from './useExchangeFilters'
 import { useGameExchanges, type ExchangeStatus } from './useExchanges'
-import { createExchangeActions } from '../utils/exchange-actions'
+import { usePerAssociationFlag } from './usePerAssociationFlag'
+import { createExchangeActions, resolveSwipeConfig } from '../utils/exchange-actions'
 
 export function useExchangePageLogic() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>('open')
@@ -52,30 +53,34 @@ export function useExchangePageLogic() {
     }))
   )
 
-  const { hideOwnExchangesByAssociation } = useSettingsStore(
+  const {
+    hideOwnExchangesByAssociation,
+    hideNotTakeableExchangesByAssociation,
+    setHideOwnExchangesForAssociation,
+    setHideNotTakeableExchangesForAssociation,
+  } = useSettingsStore(
     useShallow((state) => ({
       hideOwnExchangesByAssociation: state.hideOwnExchangesByAssociation,
+      hideNotTakeableExchangesByAssociation: state.hideNotTakeableExchangesByAssociation,
+      setHideOwnExchangesForAssociation: state.setHideOwnExchangesForAssociation,
+      setHideNotTakeableExchangesForAssociation: state.setHideNotTakeableExchangesForAssociation,
     }))
   )
 
-  // Get hide own exchanges setting per-association
-  const setHideOwnExchangesForAssociation = useSettingsStore(
-    (state) => state.setHideOwnExchangesForAssociation
+  // Both default to true: own entries and entries the association withholds
+  // stay out of the way until the referee asks for them
+  const [hideOwnExchanges, handleHideOwnToggle] = usePerAssociationFlag(
+    hideOwnExchangesByAssociation,
+    setHideOwnExchangesForAssociation,
+    associationCode,
+    true
   )
-
-  // Derive hideOwnExchanges from the map - defaults to true if not set
-  const hideOwnExchanges = useMemo(() => {
-    if (associationCode && hideOwnExchangesByAssociation[associationCode] !== undefined) {
-      return hideOwnExchangesByAssociation[associationCode]
-    }
-    return true // Default to hiding own exchanges
-  }, [associationCode, hideOwnExchangesByAssociation])
-
-  const handleHideOwnToggle = useCallback(() => {
-    if (associationCode) {
-      setHideOwnExchangesForAssociation(associationCode, !hideOwnExchanges)
-    }
-  }, [associationCode, hideOwnExchanges, setHideOwnExchangesForAssociation])
+  const [hideNotTakeableExchanges, handleHideNotTakeableToggle] = usePerAssociationFlag(
+    hideNotTakeableExchangesByAssociation,
+    setHideNotTakeableExchangesForAssociation,
+    associationCode,
+    true
+  )
 
   const {
     data: queryData,
@@ -98,7 +103,7 @@ export function useExchangePageLogic() {
   const dummyExchanges = useMemo((): ExchangeWithDistance[] | null => {
     if (!showDummyData) return null
     const tourExchange = TOUR_DUMMY_EXCHANGE as unknown as GameExchange
-    return [{ exchange: tourExchange, carDistanceKm: null }]
+    return [{ exchange: tourExchange, carDistanceKm: null, takeable: true }]
   }, [showDummyData])
 
   // Delegate all filtering to the extracted hook
@@ -119,6 +124,7 @@ export function useExchangePageLogic() {
     isDemoMode,
     currentUserIdentity,
     hideOwnExchanges,
+    hideNotTakeableExchanges,
     showDummyData,
     dummyExchanges,
   })
@@ -162,36 +168,19 @@ export function useExchangePageLogic() {
   const { takeOverModal, removeFromExchangeModal, handleTakeOver, handleRemoveFromExchange } =
     useExchangeActions()
 
+  // `takeable` is the per-entry verdict `useExchangeFilters` computed, handed
+  // back by the page so the swipe action and the card badge share one source
   const getSwipeConfig = useCallback(
-    (exchange: GameExchange): SwipeConfig => {
+    (exchange: GameExchange, takeable: boolean): SwipeConfig => {
       const actions = createExchangeActions(exchange, {
         onTakeOver: takeOverModal.open,
         onRemoveFromExchange: removeFromExchangeModal.open,
       })
-
-      // Action array ordering: first item = furthest from card = full swipe default
-
-      // "mine" tab: user's own submitted exchanges - allow removing them
-      if (statusFilter === 'mine') {
-        // Swipe right reveals: card -> [Remove]
-        return { right: [actions.removeFromExchange] }
-      }
-
-      // "open" tab: check if it's user's own exchange first
-      if (isOwnExchange(exchange)) {
-        // User's own exchange in open tab - show remove action
-        // Swipe right reveals: card -> [Remove]
-        return { right: [actions.removeFromExchange] }
-      }
-
-      // "open" tab: only open exchanges (not applied/closed) are actionable
-      if (exchange.status === 'open') {
-        // Swipe left reveals: [Take Over] <- card
-        return { left: [actions.takeOver] }
-      }
-
-      // No swipe actions for applied/closed statuses
-      return {}
+      return resolveSwipeConfig(exchange, actions, {
+        isMineTab: statusFilter === 'mine',
+        isOwn: isOwnExchange(exchange),
+        takeable,
+      })
     },
     [takeOverModal.open, removeFromExchangeModal.open, statusFilter, isOwnExchange]
   )
@@ -258,6 +247,8 @@ export function useExchangePageLogic() {
     // Filter state
     hideOwnExchanges,
     handleHideOwnToggle,
+    hideNotTakeableExchanges,
+    handleHideNotTakeableToggle,
     isLevelFilterAvailable,
     isDistanceFilterAvailable,
     isTravelTimeFilterAvailable,
