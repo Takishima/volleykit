@@ -4,8 +4,6 @@ import type { GameExchange } from '@/api/client'
 import { Check, X } from '@/common/components/icons'
 import { type SwipeAction, type SwipeConfig, SWIPE_ACTION_ICON_SIZE } from '@/types/swipe'
 
-import type { ExchangeStatus } from '../hooks/useExchanges'
-
 // Pre-created icon elements to avoid recreating on each function call
 const ICON_CHECK = createElement(Check, { size: SWIPE_ACTION_ICON_SIZE })
 const ICON_X = createElement(X, { size: SWIPE_ACTION_ICON_SIZE })
@@ -115,8 +113,8 @@ export function createExchangeActions(
 }
 
 export interface SwipeConfigContext {
-  /** Which tab the list is on */
-  statusFilter: ExchangeStatus
+  /** Whether the list is on the "mine" tab (the referee's own offers) */
+  isMineTab: boolean
   /** Whether the signed-in referee submitted this entry */
   isOwn: boolean
   /**
@@ -144,7 +142,7 @@ export function resolveSwipeConfig(
 ): SwipeConfig {
   // Own entries (the whole "mine" tab, or the referee's own entry on the open
   // tab) can only be pulled back off the marketplace: swipe right -> [Remove]
-  if (context.statusFilter === 'mine' || context.isOwn) {
+  if (context.isMineTab || context.isOwn) {
     return { right: [actions.removeFromExchange] }
   }
 

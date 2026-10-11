@@ -177,7 +177,7 @@ export function useExchangePageLogic() {
         onRemoveFromExchange: removeFromExchangeModal.open,
       })
       return resolveSwipeConfig(exchange, actions, {
-        statusFilter,
+        isMineTab: statusFilter === 'mine',
         isOwn: isOwnExchange(exchange),
         takeable,
       })

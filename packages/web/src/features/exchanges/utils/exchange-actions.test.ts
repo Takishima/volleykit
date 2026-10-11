@@ -219,7 +219,7 @@ describe('resolveSwipeConfig', () => {
 
   it('offers take over for an open entry the referee may apply for', () => {
     const config = resolveSwipeConfig(mockExchange, actions, {
-      statusFilter: 'open',
+      isMineTab: false,
       isOwn: false,
       takeable: true,
     })
@@ -230,7 +230,7 @@ describe('resolveSwipeConfig', () => {
   it('offers nothing for a blocked entry the referee chose to see', () => {
     // The association refuses the take-over; the backend would reject a swipe
     const config = resolveSwipeConfig(mockExchange, actions, {
-      statusFilter: 'open',
+      isMineTab: false,
       isOwn: false,
       takeable: false,
     })
@@ -240,7 +240,7 @@ describe('resolveSwipeConfig', () => {
 
   it('still lets the referee remove their own blocked entry', () => {
     const config = resolveSwipeConfig(mockExchange, actions, {
-      statusFilter: 'open',
+      isMineTab: false,
       isOwn: true,
       takeable: false,
     })
@@ -250,7 +250,7 @@ describe('resolveSwipeConfig', () => {
 
   it('only offers removal on the mine tab', () => {
     const config = resolveSwipeConfig(mockExchange, actions, {
-      statusFilter: 'mine',
+      isMineTab: true,
       isOwn: true,
       takeable: true,
     })
@@ -261,7 +261,7 @@ describe('resolveSwipeConfig', () => {
   it('offers nothing for an entry that is no longer open', () => {
     const applied = { ...mockExchange, status: 'applied' } as GameExchange
     const config = resolveSwipeConfig(applied, actions, {
-      statusFilter: 'open',
+      isMineTab: false,
       isOwn: false,
       takeable: true,
     })
