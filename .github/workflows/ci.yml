@@ -119,43 +119,39 @@ jobs:
           # Space-separated GHSA ids to suppress. Keep this empty unless an
           # advisory genuinely has no fix: a stale entry lets a regression on
           # that advisory ship green.
-          # - GHSA-3ppc-4f35-3m26 (minimatch ReDoS) was waiting on eslint 10, now on 10.9.1.
-          # - GHSA-jmr7-xgp7-cmfj (fast-xml-parser DoS) is fixed by the ^5.11.1 override,
-          #   since ojp-sdk-next pins the vulnerable 5.0.8 exactly.
-          IGNORED_ADVISORIES=""
+          # - GHSA-86w9-cpqp-85rv (node-forge, via expo > @expo/cli) and
+          #   GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
+          #   have no patched release: the advisories list every published version
+          #   as vulnerable (latest node-forge 1.4.0, braces 3.0.3). Drop each entry
+          #   once a fixed version ships and expo picks it up.
+          IGNORED_ADVISORIES="GHSA-86w9-cpqp-85rv GHSA-vfj7-8cjw-p6xm"
+          # pnpm audit emits the npm v6 report shape: advisories keyed by id, each
+          # carrying github_advisory_id, module_name and the dependency paths.
+          # pnpm audit exits non-zero whenever it finds something, so the exit code
+          # is not an error signal; the report shape is. A registry error, timeout
+          # or empty body must fail the gate rather than read as "no advisories".
           AUDIT_JSON=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
-          FOUND=$(echo "$AUDIT_JSON" | jq -r '.vulnerabilities | keys[]' 2>/dev/null || true)
+          if ! echo "$AUDIT_JSON" | jq -e '.metadata.vulnerabilities and (.advisories | type == "object")' >/dev/null 2>&1; then
+            echo "::error::pnpm audit returned no usable report"
+            echo "$AUDIT_JSON" | head -c 2000
+            exit 1
+          fi
+          # Filter severity here too so the gate does not depend on --audit-level
+          # also pruning the JSON report.
+          FOUND=$(echo "$AUDIT_JSON" | jq -r '.advisories[] | select(.severity == "high" or .severity == "critical") | "\(.github_advisory_id)|\(.severity)|\(.module_name)"')
 
-          # First pass: collect packages with directly ignored advisories
-          IGNORED_PKGS=""
-          for vuln in $FOUND; do
-            ADVISORIES=$(echo "$AUDIT_JSON" | jq -r ".vulnerabilities[\"$vuln\"].via[] | if type == \"object\" then .url else empty end" 2>/dev/null || true)
-            if [ -n "$ADVISORIES" ]; then
-              ALL_MATCHED=true
-              for adv in $ADVISORIES; do
-                MATCHED=false
-                for ignored in $IGNORED_ADVISORIES; do
-                  if echo "$adv" | grep -q "$ignored"; then MATCHED=true; fi
-                done
-                if [ "$MATCHED" = "false" ]; then ALL_MATCHED=false; fi
-              done
-              if [ "$ALL_MATCHED" = "true" ]; then IGNORED_PKGS="$IGNORED_PKGS $vuln"; fi
-            fi
-          done
-
-          # Second pass: also ignore packages that are only vulnerable transitively via ignored packages
           UNIGNORED=""
-          for vuln in $FOUND; do
-            if echo "$IGNORED_PKGS" | grep -qw "$vuln"; then continue; fi
-            VIA_PKGS=$(echo "$AUDIT_JSON" | jq -r ".vulnerabilities[\"$vuln\"].via[] | if type == \"string\" then . else empty end" 2>/dev/null || true)
-            if [ -n "$VIA_PKGS" ]; then
-              ALL_VIA_IGNORED=true
-              for via_pkg in $VIA_PKGS; do
-                echo "$IGNORED_PKGS" | grep -qw "$via_pkg" || ALL_VIA_IGNORED=false
-              done
-              if [ "$ALL_VIA_IGNORED" = "true" ]; then continue; fi
+          for entry in $FOUND; do
+            GHSA="${entry%%|*}"
+            MATCHED=false
+            for ignored in $IGNORED_ADVISORIES; do
+              if [ "$GHSA" = "$ignored" ]; then MATCHED=true; fi
+            done
+            if [ "$MATCHED" = "true" ]; then
+              echo "Ignoring $entry"
+            else
+              UNIGNORED="$UNIGNORED $entry"
             fi
-            UNIGNORED="$UNIGNORED $vuln"
           done
 
           if [ -n "$(echo "$UNIGNORED" | xargs)" ]; then
@@ -344,7 +340,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
     timeout-minutes: 15
     strategy:
       fail-fast: false
