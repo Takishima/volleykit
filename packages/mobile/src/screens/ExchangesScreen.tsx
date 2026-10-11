@@ -140,7 +140,7 @@ export function ExchangesScreen(_props: Props) {
           <Text className="text-gray-500 text-xs text-center mt-2">
             {t('exchange.onlyTakeableListed')}
           </Text>
-        ) : null
+        ) : undefined
       }
       renderItem={({ item }) => {
         const display = getExchangeDisplay(item, language, t('common.tbd'))

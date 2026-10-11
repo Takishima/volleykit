@@ -4,7 +4,7 @@ React Native mobile app for iOS and Android.
 
 ## Tech Stack
 
-- React Native 0.81 + Expo 54
+- React Native 0.88 + Expo 58
 - NativeWind (Tailwind for React Native)
 - React Navigation 7
 - TanStack Query 5 (with persistence)
