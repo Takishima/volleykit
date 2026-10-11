@@ -147,9 +147,14 @@ function ExchangeCardComponent({
       data={exchange}
       disableExpansion={disableExpansion}
       dataTour={dataTour}
-      // Blocked entries stay readable but visibly set apart: dimmed, dashed
-      // border, and a badge in the compact row so the reason is never a guess
-      className={isNotTakeable ? 'border-dashed opacity-70' : undefined}
+      // Blocked entries stay readable (no opacity: muted text would fall
+      // under AA contrast) but visibly set apart: dashed border and a warning
+      // badge in the compact row so the reason is never a guess
+      className={
+        isNotTakeable
+          ? 'border-dashed border-border-strong dark:border-border-strong-dark'
+          : undefined
+      }
       renderCompact={(_, { expandArrow }) => (
         <>
           {/* Day/Date/Time */}
@@ -198,7 +203,7 @@ function ExchangeCardComponent({
             <div className="flex flex-col items-end gap-0.5 shrink-0">
               {/* Not takeable badge */}
               {isNotTakeable && (
-                <span className="text-xs font-medium text-text-muted dark:text-text-muted-dark bg-surface-muted dark:bg-surface-muted-dark px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="text-xs font-medium text-warning-700 dark:text-warning-400 bg-warning-50 dark:bg-warning-900 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <Lock className="w-3 h-3" aria-hidden="true" />
                   {t('exchange.notTakeable')}
                 </span>

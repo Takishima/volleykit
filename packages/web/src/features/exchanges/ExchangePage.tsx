@@ -161,7 +161,10 @@ export function ExchangePage() {
                 {group.items.map(({ exchange, carDistanceKm, takeable }, itemIndex) => {
                   const travelTimeData = travelTimeMap.get(exchange.__identity)
                   return (
-                    <SwipeableCard key={exchange.__identity} swipeConfig={getSwipeConfig(exchange)}>
+                    <SwipeableCard
+                      key={exchange.__identity}
+                      swipeConfig={getSwipeConfig(exchange, takeable)}
+                    >
                       {({ isDrawerOpen }) => (
                         <ExchangeCard
                           exchange={exchange}
