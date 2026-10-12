@@ -36,7 +36,7 @@ updates:
       # bump fails `expo install --check` — those two are ignored outright.
       - dependency-name: "react-native-reanimated"
       - dependency-name: "react-native-worklets"
-      # gesture-handler is pinned as ~2.32.0, so patches are in range and welcome.
+      # gesture-handler is pinned as ~3.2.1, so patches are in range and welcome.
       - dependency-name: "react-native-gesture-handler"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       # TypeScript major bumps require manual tsconfig migration (baseUrl deprecation,
@@ -56,6 +56,22 @@ updates:
       # Expo SDK 58 and the react-native babel preset require @babel/core 7.
       - dependency-name: "@babel/core"
         update-types: ["version-update:semver-major"]
+      # @expo/metro-runtime, @expo/dom-webview and @react-native/metro-config are
+      # `*` peers of expo / react-native that pnpm would otherwise auto-install
+      # from npm's `latest` tag, which can trail the SDK line in use. They are
+      # listed as direct deps in packages/mobile only to pin them to the SDK:
+      # the two @expo ones come from bundledNativeModules.json and follow
+      # `expo install --fix`; @react-native/metro-config must match the exact
+      # react-native version by hand. Do not drop them as "unused". A major
+      # bump of the @expo ones is the next SDK; a minor bump of @react-native/*
+      # is the next react-native line (0.88 -> 0.89), so both are ignored like
+      # expo-* and react-native above.
+      - dependency-name: "@expo/metro-runtime"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@expo/dom-webview"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-native/*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
     groups:
       # Group all minor/patch updates into a single PR
       all-minor-patch:
