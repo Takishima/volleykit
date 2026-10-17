@@ -50,15 +50,7 @@
       "sharp",
       "unrs-resolver",
       "workerd"
-    ],
-    "packageExtensions": {
-      "react-native-worklets": {
-        "dependencies": {
-          "@babel/generator": "^7.29.0",
-          "@babel/traverse": "^7.29.0"
-        }
-      }
-    }
+    ]
   },
   "engines": {
     "node": ">=22.0.0"
