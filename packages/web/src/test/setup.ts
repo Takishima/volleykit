@@ -1,7 +1,7 @@
 // Polyfills must be imported first (via setupFiles order in vite.config.ts)
 import '@testing-library/jest-dom'
 import { configure } from '@testing-library/react'
-import { afterAll, afterEach, beforeAll } from 'vitest'
+import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 
 import { preloadDateLocales } from '@/common/hooks/useDateFormat'
 import { preloadTranslations } from '@/i18n'
@@ -19,6 +19,14 @@ beforeAll(() => {
 // Reset handlers after each test to ensure test isolation
 afterEach(() => {
   server.resetHandlers()
+  // Restore vi.stubEnv() here rather than relying on `unstubEnvs` in
+  // vite.config.ts: under the vmThreads pool that config hook runs on a
+  // different `vitest` instance than the test file's and finds nothing to
+  // restore. process.env is shared by every file a worker runs next, so a
+  // leaked stub (e.g. VITE_API_PROXY_URL) turns later files' API calls
+  // cross-origin and their CORS preflights escape msw. Setup files load on
+  // the test file's own instance, like the resetHandlers() above.
+  vi.unstubAllEnvs()
 })
 
 // Clean up after all tests

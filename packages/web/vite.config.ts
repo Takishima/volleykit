@@ -541,6 +541,9 @@ export default defineConfig(({ mode }) => {
       // Restore vi.stubEnv() after every test. process.env is shared by every
       // file a worker runs, so a leaked VITE_API_PROXY_URL turns later files'
       // API calls cross-origin and their CORS preflights escape msw.
+      // Under vmThreads this hook alone does not reach a test file's stubs;
+      // src/test/setup.ts calls vi.unstubAllEnvs() in its afterEach, which
+      // does. Kept so the intent holds for any pool.
       unstubEnvs: true,
       // Default to happy-dom, but pure unit tests use faster node environment
       environment: 'happy-dom',
