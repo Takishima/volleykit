@@ -163,7 +163,9 @@ jobs:
                 continue
               fi
               PREFIX="${ignored#*@}"
+              # No recorded versions means nothing to scope on: fail closed.
               ALL_MATCH=true
+              if [ -z "$VERSIONS" ]; then ALL_MATCH=false; fi
               for version in ${VERSIONS//,/ }; do
                 case "$version" in
                   "$PREFIX"*) ;;
