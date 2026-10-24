@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  react: ^19.3.0
+  react: ^19.3.1
   '@types/react': ^19.3.0
   serialize-javascript@<7.0.5: ^7.0.5
   esbuild@>=0.27.3 <0.28.1: ^0.28.1
@@ -1941,7 +1941,7 @@ packages:
     resolution: {integrity: sha512-WBj/K+vv8JPSmY70ennL04YYOHkpEsGGkfuVY9lfv4XO7Qhbt5qz4q6W7maME194I5oGcimRMigUFfWNkBe90w==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
     peerDependenciesMeta:
       expo:
@@ -1955,7 +1955,7 @@ packages:
     resolution: {integrity: sha512-bLkREoP7qL3rEuzxP60xG+TjdPoGjbnZfxkvYo5imJxGWfKMOf7x962W06Pu+WWAr4gcDRk16iA+Clg8D0zjCg==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   '@expo/env@2.5.3':
@@ -1986,7 +1986,7 @@ packages:
     peerDependencies:
       '@expo/dom-webview': ^58.0.2
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
     peerDependenciesMeta:
       expo:
@@ -2008,7 +2008,7 @@ packages:
     peerDependencies:
       '@expo/log-box': ^58.0.13
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '*'
       react-native: '*'
     peerDependenciesMeta:
@@ -2073,7 +2073,7 @@ packages:
       expo-font: ^58.0.10
       expo-router: '*'
       expo-server: ^58.0.6
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '*'
       react-server-dom-webpack: ~19.0.1 || ~19.1.2 || ~19.2.1 || ~19.3.0
     peerDependenciesMeta:
@@ -2103,7 +2103,7 @@ packages:
     resolution: {integrity: sha512-Iu2VkcoI5vygbtYngm7jb4ifxElNVXQYdDrYkT7UCEIiKLeWnQY0wf2ZhHZ+Wro6Sc5TaumpKUOqDRpLi5rkvw==}
     peerDependencies:
       expo-font: '>=14.0.4'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   '@expo/ws-tunnel@2.0.1':
@@ -2964,7 +2964,7 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
       '@types/react-dom': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
@@ -2976,7 +2976,7 @@ packages:
     resolution: {integrity: sha512-+48PbAAbq3didjJxa+OaWY2ZwgAKsNiRGyeHKszblZMQ+kcpd9pAaT11cMkGEie0vsOi3QdeTE6d5Fe3Gn61kA==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -2985,7 +2985,7 @@ packages:
     resolution: {integrity: sha512-v5AYEocMISkbJ+1fTXzZpiFv7NRr3D2WiYbLIKf+FkmJ8VkP6d503eV2n34MFussHXY1pcoq3yfJiQH77dc4Mg==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -2994,7 +2994,7 @@ packages:
     resolution: {integrity: sha512-FtRA52a/r+LKStFT+neLUm+8vSe7wbzkbQGGeU8ixFiwC8NU14Evoq9ATECqL3eGbcUzJR4fyfA4KkK/q6dfqg==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3003,7 +3003,7 @@ packages:
     resolution: {integrity: sha512-TMQp2llA+RYn7JcjnrMnz7wN4pcVttPZnRZo52PLQsoLVKzNlVwUeHmfePgTgRluXFvlD3GD5g5MOVVTJCO0qA==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3013,7 +3013,7 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
       '@types/react-dom': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
@@ -3026,7 +3026,7 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
       '@types/react-dom': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
@@ -3039,7 +3039,7 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
       '@types/react-dom': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
@@ -3051,7 +3051,7 @@ packages:
     resolution: {integrity: sha512-tyYd9ddPXAysAbdbD9eYxgwpCSv6f3PncqVSNKQFSR5lcJVLz3cb/pANDoYrLiHBpXv7skortyUgGUWsYuPPFQ==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3061,7 +3061,7 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
       '@types/react-dom': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
     peerDependenciesMeta:
       '@types/react':
@@ -3073,7 +3073,7 @@ packages:
     resolution: {integrity: sha512-Y5GBf4NKeADoXI1geiMlMuMoURT3k9MizzzKhGb/m55H94aGigZ01PIpkvsO6lML13BA6XYAXSJ6gza7vTn5nw==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3082,7 +3082,7 @@ packages:
     resolution: {integrity: sha512-TAcBI7bw2ljYCbv4+zuTSd6zICu8pRt6SDN2vJ/Z06K2MXh6I9WYFe/A9ovlFDtR5HVHGm5iDxDoABm/++dbKg==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3091,7 +3091,7 @@ packages:
     resolution: {integrity: sha512-7cshFL8HGS/7HEiHH+9kL9HBwp2sa9yX18Knwek6KYWmXwM7pegMgta2AXMQKI+rq3JnfSj9x8wYqFMTdG1Jgg==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3100,7 +3100,7 @@ packages:
     resolution: {integrity: sha512-umO/aJ+82CpOnhDZUTbILCQf7kU/g0iv+oGs/Q8jw7IkhWBzaEP4sA268PhFAJTFetbwp3ICc6ktpI4TqtxcIw==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3109,7 +3109,7 @@ packages:
     resolution: {integrity: sha512-K20DkRkUwDnxEYMBPcg3Y6voLkEy5p5QQmszZgLngKKiC7dzBR/aEuK3w1qlx2JWDUNH6FluahYdgR3BP+QbYw==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3122,13 +3122,13 @@ packages:
   '@react-native-community/netinfo@12.0.1':
     resolution: {integrity: sha512-P/3caXIvfYSJG8AWJVefukg+ZGRPs+M4Lp3pNJtgcTYoJxCjWrKQGNnCkj/Cz//zWa/avGed0i/wzm0T8vV2IQ==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '>=0.59'
 
   '@react-native-masked-view/masked-view@0.3.2':
     resolution: {integrity: sha512-XwuQoW7/GEgWRMovOQtX3A4PrXhyaZm0lVUiY8qJDvdngjLms9Cpdck6SmGAUNqQwcj2EadHC1HwL0bEyoa/SQ==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '>=0.57'
 
   '@react-native/asset-utils@0.88.0':
@@ -3201,7 +3201,7 @@ packages:
     engines: {node: ^22.13.0 || ^24.3.0 || >= 26.0.0}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: 0.88.0
     peerDependenciesMeta:
       '@types/react':
@@ -3211,7 +3211,7 @@ packages:
     resolution: {integrity: sha512-G3P88TPiHw9rxGhstwdeVgaBj3YQl8emiF8zLgyfXOF2AIk31myIrtDQeu2Mg5Ad7YWMs4W8zkXuD78xChlTHQ==}
     peerDependencies:
       '@react-navigation/native': ^7.5.1
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
       react-native-safe-area-context: '>= 4.0.0'
       react-native-screens: '>= 4.0.0'
@@ -3219,14 +3219,14 @@ packages:
   '@react-navigation/core@7.24.0':
     resolution: {integrity: sha512-PPMHGSgLB65eqWOBHeD/nGyzGJV3rcZ5sZbsCXlaC37HnLmwTEjB4CaOQn8CBVVv/Sc0Kl/W5dpPLls9Stk2WA==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
 
   '@react-navigation/elements@2.9.45':
     resolution: {integrity: sha512-r64qCgjA6asQo4Zlv2lAl68ARkfPbV+BNRm3n9JlMoFr4Ma2A+92Z+sWT1coJRoSXkAwVNb70+LjpM6fo6/D4A==}
     peerDependencies:
       '@react-native-masked-view/masked-view': '>= 0.2.0'
       '@react-navigation/native': ^7.5.1
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
       react-native-safe-area-context: '>= 4.0.0'
     peerDependenciesMeta:
@@ -3237,7 +3237,7 @@ packages:
     resolution: {integrity: sha512-bYrNW87nDtbMXAJsosYwu59xwTqeuaurfCDA+62MQ6hY4+2Iv71+Sik3ulW92fOqg8s2SZinOJosHEWoi9Ayqw==}
     peerDependencies:
       '@react-navigation/native': ^7.5.1
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
       react-native-safe-area-context: '>= 4.0.0'
       react-native-screens: '>= 4.0.0'
@@ -3245,7 +3245,7 @@ packages:
   '@react-navigation/native@7.5.1':
     resolution: {integrity: sha512-p9xOvhG8q8rq0FPAoh0JC22ALbyRZt7U2uH8XrHRDjvqOEFrumME7szM6LaWW2WctolAVeZAfOTV+pUKULI/kQ==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   '@react-navigation/routers@7.6.5':
@@ -3736,7 +3736,7 @@ packages:
     peerDependencies:
       '@tanstack/react-query': ^5.104.5
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3745,7 +3745,7 @@ packages:
     resolution: {integrity: sha512-RORgFe052U+93weaNuqg7qHq7vNVNzXN/VrXqD4bbAuQCWUqOl2lV5Ui9flWk5CVvMyL/Bh27QWhzwH0aaOx9g==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -3771,7 +3771,7 @@ packages:
       '@testing-library/dom': ^10.0.0
       '@types/react': ^19.3.0
       '@types/react-dom': ^18.0.0 || ^19.0.0
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@types/react':
@@ -5256,7 +5256,7 @@ packages:
     resolution: {integrity: sha512-Cc49mpDd81hIIKw1DVDkL52a/S6MJlHLA+LirUHNR7qJJfopoHrSypg9rRuqvCUVW7/JKvXKqbFX43NynpVzmg==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   expo-calendar@58.0.6:
@@ -5281,27 +5281,27 @@ packages:
     resolution: {integrity: sha512-13orvRCiXg3EuirjMznWTKwFzhKHvtHRkUdgbvolbkyA1+EAbYDpp7LJMnvDnbTFU/m8Kb5awvOiaGzPYQ/ojg==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   expo-glass-effect@58.0.5:
     resolution: {integrity: sha512-PkL1X/r0cTs6NG47Xp3TxRvtqSeRmPYhPOHp3GDmZB2oOxpjXge6qLi/bSSv0asFWqf+MLOlXZ+hq2Imuh0Z1g==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   expo-keep-awake@58.0.3:
     resolution: {integrity: sha512-wLRF+XeVsD/Rt/ZyX+A0mk1brdf8vefWizNAPzqV5eOCgkj23LCRZdN8gUi5X8UwyR8UJ7Y7Dzdz4YDGB/4c9Q==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
 
   expo-linking@58.0.14:
     resolution: {integrity: sha512-cYzi8CTdllCTnEk+jmlaFXUZQudGlYv0KHw/DBvJIvsh4FYKMv/De2FlMObaXPU7XnGpRkBwuBKfIyAYjSDORw==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   expo-local-authentication@58.0.2:
@@ -5314,7 +5314,7 @@ packages:
     peerDependencies:
       expo: '*'
       expo-task-manager: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
     peerDependenciesMeta:
       expo-task-manager:
@@ -5332,7 +5332,7 @@ packages:
   expo-modules-core@58.0.26:
     resolution: {integrity: sha512-HOuHt0nCBVv3E8+yMGeR6N6xa4WH+81CLqU/pWjDykt2NUBYGfXVMaWPsjwuBfeYOB/DcJTJR40yq+y9Ku/YcQ==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
       react-native-worklets: '>=0.13.0'
     peerDependenciesMeta:
@@ -5351,7 +5351,7 @@ packages:
     resolution: {integrity: sha512-O3Y4u1GyiReD+akm/hlHkLB/2FoW6bOflTUoONhwRsgmXr+jZQBZckdjmhk6TE/gQ2FRdsTfSCX4sUHdWA+LsQ==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   expo-router@58.0.26:
@@ -5365,7 +5365,7 @@ packages:
       expo-constants: ^58.0.13
       expo-linking: ^58.0.14
       expo-symbols: ^58.0.4
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '*'
       react-native: '*'
       react-native-gesture-handler: '*'
@@ -5408,7 +5408,7 @@ packages:
     resolution: {integrity: sha512-e6JJHziSSNb1v1VSzmDrAPf6GFoPRdVOIDrTCcK3bHfbJEAZGZ3YZXfqlorZtUFDT0z6NcjaZf0mPWifJZcqew==}
     peerDependencies:
       expo: '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   expo-task-manager@58.0.12:
@@ -5424,7 +5424,7 @@ packages:
     peerDependencies:
       '@expo/dom-webview': '*'
       '@expo/metro-runtime': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '*'
       react-native: '*'
       react-native-web: '*'
@@ -6632,7 +6632,7 @@ packages:
     resolution: {integrity: sha512-v2SQPPPNjnr+BlhL9Spuzmo5yR+hLkftfuE4E3jaxdNPgSH0hJKPcLJBP7yAta87jQNPsSERS59PJjCJ/CorBA==}
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -7330,12 +7330,12 @@ packages:
   react-dom@19.3.1:
     resolution: {integrity: sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
 
   react-easy-crop@6.2.4:
     resolution: {integrity: sha512-OWdnFYctzUNlekjob+bQfloG9wyhIBkkmeISnM5XVE4Byqn0jmVxDF7oz85ovUF+EIPQyj0yAHbBEFtnxwGv4g==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '>=16.4.0'
 
   react-fast-compare@3.2.2:
@@ -7345,7 +7345,7 @@ packages:
     resolution: {integrity: sha512-r4F0Sec0BLxWicc7HEyo2x3/2icUTrRmDjaaRyzzn+7aDyFZliszMDOgLVwSnQnYENOlL1o569Ze2HZefk8clA==}
     engines: {node: '>=10'}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -7363,7 +7363,7 @@ packages:
     resolution: {integrity: sha512-0qss26LTxGPoj0ebJdZXgbXucTG4nGD4tnTqEXKVUD/s+c2XV3EnRvysNjQ1yrouKGpVGd81w/bnIxDWM3VwDA==}
     peerDependencies:
       expo: '>=54.0.0'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
     peerDependenciesMeta:
       expo:
@@ -7373,7 +7373,7 @@ packages:
     resolution: {integrity: sha512-8ztp+gkiUE6tJGLFsnLGGAG1cxxkMDxwtoDx2oe18GMl6QRC1lmZ0b2QcE+Ha0fAdG3VmTJggjDitj8FLeIKTA==}
     engines: {node: '>=18'}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
       react-native-reanimated: '>=3.6.2'
       react-native-safe-area-context: '*'
@@ -7388,7 +7388,7 @@ packages:
   react-native-drawer-layout@4.2.12:
     resolution: {integrity: sha512-qYmntEctkMSodN7pnC2llV21nswImLFPHJeT3PJXSJqZdU4jzDATR8iVi66sXkrtoOLJ2+EvXxgd7sMMpV4ViA==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
       react-native-gesture-handler: '>= 2.0.0'
       react-native-reanimated: '>= 2.0.0'
@@ -7396,38 +7396,38 @@ packages:
   react-native-gesture-handler@3.3.0:
     resolution: {integrity: sha512-ZCTlJ09nE3GPbm7J74lvwpxmx1TQ/7MDlHZNLARVYTN82k21mJUJ7BmI9eWjEi8eevHiAudI5O1Cpnt0rJfoJA==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   react-native-is-edge-to-edge@1.3.1:
     resolution: {integrity: sha512-NIXU/iT5+ORyCc7p0z2nnlkouYKX425vuU1OEm6bMMtWWR9yvb+Xg5AZmImTKoF9abxCPqrKC3rOZsKzUYgYZA==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   react-native-reanimated@4.7.1:
     resolution: {integrity: sha512-HviDFSZ6V4KTRsrLS6hRbBJ4j63l/L8a5az0EoWdJwaMLYnBNyYISTDxwXpEYkMbAbLzCMCviIdiOxXHYQWcNA==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: 0.86 - 0.88
       react-native-worklets: 0.13.x
 
   react-native-safe-area-context@5.10.1:
     resolution: {integrity: sha512-ax0T3cAHQIhuAjDQpJ9C1Le96aRiM9PF+Kmgg7Y8+mD7QJMEIx04cG0eG3EGUTdvymgOkCrkakgZFwuOIuNQGw==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   react-native-screens@4.30.0:
     resolution: {integrity: sha512-FrZG/Q5gqoDu0SgP4d2Ly0qdio5DR1KdGPEYImhkz7tmrhpML4C39m6RYLGd5TVLHZwcCh8NPvW9rylevjD0uQ==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   react-native-widgetkit@1.0.9:
     resolution: {integrity: sha512-WBwdUbcOzyL0LiqhRyd7gS9A1D0X5A/m2h0fAKTbxUAbp3r2D2pdjyPnVW/6q0otpq7RIyZFo6Ln1EDJ9gfhEg==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: '*'
 
   react-native-worklets@0.13.0:
@@ -7435,7 +7435,7 @@ packages:
     peerDependencies:
       '@babel/core': '*'
       '@react-native/metro-config': '*'
-      react: ^19.3.0
+      react: ^19.3.1
       react-native: 0.86 - 0.88
 
   react-native@0.88.0:
@@ -7444,7 +7444,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@types/react': ^19.3.0
-      react: ^19.3.0
+      react: ^19.3.1
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -7457,14 +7457,14 @@ packages:
     resolution: {integrity: sha512-yrfmJHIpDG7taCpqKjT1G5B6q3O2K+RN8/fgNf0lTjCwiPbQ0ei6vXX9ZjQR+7ld8Tr7Z5xmyMnZ8YJrphWQUw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '>=18'
 
   react-router@7.18.4:
     resolution: {integrity: sha512-PUPQcMhMGRAslLcvtlPz/kmzBEWPhLdgLFrL7pLNepBL6dX0lWj4WD2cUYVgYCuT3jxvghYFg81cDTj44DhetQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
       react-dom: '>=18'
     peerDependenciesMeta:
       react-dom:
@@ -7841,7 +7841,7 @@ packages:
   standard-navigation@0.0.8:
     resolution: {integrity: sha512-TyVbo7INUDWtsUWDFn8RR7kwR87U0S4xHfLfbbnyeC581TmmyqQ+eM+nPw8rQTSD8QitRVcYfPaSHr/QJiUy1g==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
 
   statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
@@ -8374,12 +8374,12 @@ packages:
   use-latest-callback@0.2.6:
     resolution: {integrity: sha512-FvRG9i1HSo0wagmX63Vrm8SnlUU3LMM3WyZkQ76RnslpBrX694AdG4A0zQBx2B3ZifFA0yv/BaEHGBnEax5rZg==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
 
   use-sync-external-store@1.7.0:
     resolution: {integrity: sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A==}
     peerDependencies:
-      react: ^19.3.0
+      react: ^19.3.1
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
@@ -8809,7 +8809,7 @@ packages:
     peerDependencies:
       '@types/react': ^19.3.0
       immer: '>=9.0.6'
-      react: ^19.3.0
+      react: ^19.3.1
       use-sync-external-store: '>=1.2.0'
     peerDependenciesMeta:
       '@types/react':
