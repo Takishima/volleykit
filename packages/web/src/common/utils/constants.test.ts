@@ -12,6 +12,9 @@ describe('getHelpSiteUrl', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    // Explicit: the `unstubEnvs` config hook does not reach this file's stubs
+    // under vmThreads (see src/api/proxy-resilience.test.ts).
+    vi.unstubAllEnvs()
   })
 
   it('returns help URL with correct base path for production', () => {

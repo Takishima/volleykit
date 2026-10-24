@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const PRIMARY = 'https://primary.example.com'
 const FALLBACK = 'https://fallback.example.com'
@@ -8,6 +8,15 @@ beforeEach(() => {
   localStorage.clear()
   vi.stubEnv('VITE_API_PROXY_URL', PRIMARY)
   vi.stubEnv('VITE_FALLBACK_PROXY_URLS', FALLBACK)
+})
+
+// Restore here, not only via `unstubEnvs` in vite.config.ts: under the
+// vmThreads pool that config hook runs on a different `vitest` instance than
+// the one this file stubbed with, so it finds nothing to restore and the stubs
+// outlive the file. `process.env` is shared by every file the worker runs
+// next, whose API calls then go cross-origin to PRIMARY and escape msw.
+afterEach(() => {
+  vi.unstubAllEnvs()
 })
 
 // Dynamic import to pick up env changes
