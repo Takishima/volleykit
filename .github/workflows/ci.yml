@@ -118,7 +118,10 @@ jobs:
         run: |
           # Space-separated GHSA ids to suppress. Keep this empty unless an
           # advisory genuinely has no fix: a stale entry lets a regression on
-          # that advisory ship green.
+          # that advisory ship green. An entry may carry a version prefix
+          # (GHSA-xxxx@3.): it then applies only while every finding of that
+          # advisory resolves to a version starting with the prefix, so a
+          # regression on another line still fails the gate.
           # - GHSA-86w9-cpqp-85rv (node-forge, via expo > @expo/cli) and
           #   GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
           #   have no patched release: the advisories list every published version
@@ -127,8 +130,9 @@ jobs:
           # - GHSA-mrhx-c7xc-m3w5 (zod array-parse OOM, via expo > @expo/cli > zod 3.25.76)
           #   is fixed only on the 4.x line (4.6.6), which every workspace already
           #   uses; no patched 3.x release exists. @expo/cli only parses local
-          #   config at build time. Drop once @expo/cli moves to zod 4.
-          IGNORED_ADVISORIES="GHSA-86w9-cpqp-85rv GHSA-vfj7-8cjw-p6xm GHSA-mrhx-c7xc-m3w5"
+          #   config at build time. Scoped to 3.x so a direct zod 4 below 4.6.6
+          #   still fails. Drop once @expo/cli moves to zod 4.
+          IGNORED_ADVISORIES="GHSA-86w9-cpqp-85rv GHSA-vfj7-8cjw-p6xm GHSA-mrhx-c7xc-m3w5@3."
           # pnpm audit emits the npm v6 report shape: advisories keyed by id, each
           # carrying github_advisory_id, module_name and the dependency paths.
           # pnpm audit exits non-zero whenever it finds something, so the exit code
@@ -142,14 +146,31 @@ jobs:
           fi
           # Filter severity here too so the gate does not depend on --audit-level
           # also pruning the JSON report.
-          FOUND=$(echo "$AUDIT_JSON" | jq -r '.advisories[] | select(.severity == "high" or .severity == "critical") | "\(.github_advisory_id)|\(.severity)|\(.module_name)"')
+          # The last field lists every resolved version the advisory was found
+          # on, comma-separated, so a version-scoped ignore can check them all.
+          FOUND=$(echo "$AUDIT_JSON" | jq -r '.advisories[] | select(.severity == "high" or .severity == "critical") | "\(.github_advisory_id)|\(.severity)|\(.module_name)|\([.findings[].version] | unique | join(","))"')
 
           UNIGNORED=""
           for entry in $FOUND; do
             GHSA="${entry%%|*}"
+            VERSIONS="${entry##*|}"
             MATCHED=false
             for ignored in $IGNORED_ADVISORIES; do
-              if [ "$GHSA" = "$ignored" ]; then MATCHED=true; fi
+              IGNORED_ID="${ignored%%@*}"
+              if [ "$GHSA" != "$IGNORED_ID" ]; then continue; fi
+              if [ "$ignored" = "$IGNORED_ID" ]; then
+                MATCHED=true
+                continue
+              fi
+              PREFIX="${ignored#*@}"
+              ALL_MATCH=true
+              for version in ${VERSIONS//,/ }; do
+                case "$version" in
+                  "$PREFIX"*) ;;
+                  *) ALL_MATCH=false ;;
+                esac
+              done
+              if [ "$ALL_MATCH" = "true" ]; then MATCHED=true; fi
             done
             if [ "$MATCHED" = "true" ]; then
               echo "Ignoring $entry"
