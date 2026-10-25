@@ -54,7 +54,7 @@ beforeEach(() => {
 
   // Default to landscape mode
   mockMatchMedia.mockImplementation((query: string) => ({
-    matches: query === '(orientation: portrait)' ? false : true,
+    matches: query !== '(orientation: portrait)',
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   }))
@@ -116,7 +116,7 @@ describe('SignatureCanvas', () => {
 
   it('shows portrait orientation hint when in portrait mode', () => {
     mockMatchMedia.mockImplementation((query: string) => ({
-      matches: query === '(orientation: portrait)' ? true : false,
+      matches: query === '(orientation: portrait)',
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
     }))

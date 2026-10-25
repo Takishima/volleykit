@@ -84,17 +84,18 @@ function useCalendarDisplayItems(
   calendarData: CalendarAssignment[] | undefined,
   filterByAssociation: (items: CalendarAssignment[]) => CalendarAssignment[]
 ) {
+  // Read the current date once, on mount, so renders stay pure.
+  const [now] = useState(() => new Date())
+
   const calendarUpcoming = useMemo(() => {
     if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
     return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) >= now))
-  }, [isCalendarMode, calendarData, filterByAssociation])
+  }, [isCalendarMode, calendarData, filterByAssociation, now])
 
   const calendarPast = useMemo(() => {
     if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
     return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) < now))
-  }, [isCalendarMode, calendarData, filterByAssociation])
+  }, [isCalendarMode, calendarData, filterByAssociation, now])
 
   return { calendarUpcoming, calendarPast }
 }
@@ -103,9 +104,9 @@ interface DerivedLoadingErrorOptions {
   isAssociationSwitching: boolean
   isCalendarMode: boolean
   activeTab: TabType
-  calendar: { loading: boolean; error: Error | null; refetch: () => void }
-  upcoming: { loading: boolean; error: Error | null; refetch: () => void }
-  validationClosed: { loading: boolean; error: Error | null; refetch: () => void }
+  calendar: { loading: boolean; error: Error | null; refetch: () => Promise<unknown> }
+  upcoming: { loading: boolean; error: Error | null; refetch: () => Promise<unknown> }
+  validationClosed: { loading: boolean; error: Error | null; refetch: () => Promise<unknown> }
 }
 
 /** Derives isLoading, error, and a unified refetch from the three query results. */
@@ -348,7 +349,8 @@ export function useAssignmentsPageLogic() {
 
   // Tab counts
   const upcomingCount = useMemo(() => {
-    const regularCount = (isCalendarMode ? calendarUpcoming : upcomingData)?.length ?? 0
+    const regularItems = isCalendarMode ? calendarUpcoming : upcomingData
+    const regularCount = regularItems?.length ?? 0
     const onCallCount = isCalendarMode ? 0 : onCallAssignments.length
     return regularCount + onCallCount
   }, [isCalendarMode, calendarUpcoming, upcomingData, onCallAssignments.length])

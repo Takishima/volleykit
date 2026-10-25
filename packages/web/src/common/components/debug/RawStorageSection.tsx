@@ -1,21 +1,26 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Debug panel uses inline styles with pixel values */
+import { logger } from '@/common/utils/logger'
+
 import { copyToClipboard, STORAGE_KEY, type PersistedState } from './debug-utils'
 
 export function RawStorageSection({ persistedState }: { persistedState: PersistedState | null }) {
-  const handleCopy = async () => {
+  const handleCopy = () => {
     const data = localStorage.getItem(STORAGE_KEY)
     if (!data) {
       alert('No data in localStorage')
       return
     }
 
-    const success = await copyToClipboard(data)
-    if (success) {
-      alert('Copied to clipboard!')
-    } else {
-      // Show data in alert as fallback
-      alert('Copy failed. Data (truncated):\n' + data.substring(0, 500) + '...')
-    }
+    copyToClipboard(data)
+      .then((success) => {
+        if (success) {
+          alert('Copied to clipboard!')
+        } else {
+          // Show data in alert as fallback
+          alert('Copy failed. Data (truncated):\n' + data.substring(0, 500) + '...')
+        }
+      })
+      .catch((error: unknown) => logger.error('Failed to copy raw storage:', error))
   }
 
   const handleClear = () => {

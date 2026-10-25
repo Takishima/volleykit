@@ -134,8 +134,10 @@ function startSwitch(switcher: Switcher, occupationId: string): Promise<void> {
  * switch is its own caller's problem; this one still runs.
  */
 async function queueSwitch(switcher: Switcher, occupationId: string): Promise<void> {
-  while (pendingSwitch) {
-    await pendingSwitch.catch(() => undefined)
+  let inFlight = pendingSwitch
+  while (inFlight) {
+    await inFlight.catch(() => undefined)
+    inFlight = pendingSwitch
   }
   await startSwitch(switcher, occupationId)
 }
@@ -143,7 +145,7 @@ async function queueSwitch(switcher: Switcher, occupationId: string): Promise<vo
 /** Resolves once every read that is currently in flight has settled. */
 async function settleInFlightReads(): Promise<void> {
   while (inFlightReads.size > 0) {
-    await Promise.allSettled([...inFlightReads])
+    await Promise.allSettled(inFlightReads)
   }
 }
 
@@ -167,7 +169,7 @@ async function issueWhenConfirmed<T>(
 ): Promise<T> {
   for (;;) {
     if (inFlightWrites.size > 0) {
-      await Promise.allSettled([...inFlightWrites])
+      await Promise.allSettled(inFlightWrites)
       continue
     }
 
@@ -187,8 +189,11 @@ async function issueWhenConfirmed<T>(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic method forwarding
-type AnyAsyncMethod = (...args: any[]) => Promise<any>
+/**
+ * Common shape of every raw client method. `never[]` parameters accept any
+ * concrete signature; the forwarded arguments are cast at the single call site.
+ */
+type AsyncMethod = (...args: never[]) => Promise<unknown>
 
 /**
  * Wraps the raw API client so every call honours the association invariant.
@@ -202,13 +207,14 @@ export function withAssociationGuard(
 ): RawApi {
   const switcher: Switcher = (occupationId) => client.switchRoleAndAttribute(occupationId)
 
-  const guarded: Partial<Record<MethodName, AnyAsyncMethod>> = {}
+  const guarded: Partial<Record<MethodName, AsyncMethod>> = {}
 
   for (const name of Object.keys(API_METHOD_SCOPES) as MethodName[]) {
-    const method = client[name] as AnyAsyncMethod
+    const method = (client[name] as AsyncMethod).bind(client)
     const scope = API_METHOD_SCOPES[name]
 
     guarded[name] = async (...args: unknown[]) => {
+      const invoke = () => method(...(args as never[]))
       switch (scope) {
         case 'switch': {
           const [occupationId] = args as [string]
@@ -216,12 +222,7 @@ export function withAssociationGuard(
           return
         }
         case 'read': {
-          return issueWhenConfirmed(
-            switcher,
-            getExpectedOccupationId,
-            () => method.apply(client, args),
-            inFlightReads
-          )
+          return issueWhenConfirmed(switcher, getExpectedOccupationId, invoke, inFlightReads)
         }
         case 'write': {
           try {
@@ -232,7 +233,7 @@ export function withAssociationGuard(
                 // Registered as a write from here on, so no new read starts
                 // until this one settles; reads already in flight finish first.
                 await settleInFlightReads()
-                return method.apply(client, args)
+                return invoke()
               },
               inFlightWrites
             )

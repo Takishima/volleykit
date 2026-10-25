@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import { assertDefined } from '@/test/assert-defined'
+
 import { calculateMockTravelTime } from './mock-transport'
 import type { Coordinates, TravelTimeOptions } from './types'
 
@@ -155,6 +157,8 @@ describe('mock-transport', () => {
       const promise = calculateMockTravelTime(zurich, bern)
       await vi.advanceTimersByTimeAsync(150)
       const result = await promise
+      assertDefined(result.originStation)
+      assertDefined(result.destinationStation)
 
       // Swiss Didok IDs start with 85 and are 7 digits
       expect(result.originStation.id).toMatch(/^85\d{5}$/)
@@ -169,6 +173,10 @@ describe('mock-transport', () => {
       const promise2 = calculateMockTravelTime(zurich, bern)
       await vi.advanceTimersByTimeAsync(150)
       const result2 = await promise2
+      assertDefined(result1.originStation)
+      assertDefined(result1.destinationStation)
+      assertDefined(result2.originStation)
+      assertDefined(result2.destinationStation)
 
       expect(result1.originStation.id).toBe(result2.originStation.id)
       expect(result1.destinationStation.id).toBe(result2.destinationStation.id)
@@ -182,6 +190,7 @@ describe('mock-transport', () => {
       const promise = calculateMockTravelTime(zurich, bern, options)
       await vi.advanceTimersByTimeAsync(150)
       const result = await promise
+      assertDefined(result.originStation)
 
       expect(result.originStation.name).toBe('Zurich HB')
     })
@@ -194,6 +203,7 @@ describe('mock-transport', () => {
       const promise = calculateMockTravelTime(zurich, bern, options)
       await vi.advanceTimersByTimeAsync(150)
       const result = await promise
+      assertDefined(result.destinationStation)
 
       expect(result.destinationStation.name).toBe('Bern Bahnhof')
     })
@@ -202,6 +212,8 @@ describe('mock-transport', () => {
       const promise = calculateMockTravelTime(zurich, bern)
       await vi.advanceTimersByTimeAsync(150)
       const result = await promise
+      assertDefined(result.originStation)
+      assertDefined(result.destinationStation)
 
       // Should contain "Station" and coordinate-like values (e.g. "Station 47.4N 8.5E")
       expect(result.originStation.name).toContain('Station')
@@ -298,7 +310,7 @@ describe('mock-transport', () => {
 
       // Should not resolve immediately
       let resolved = false
-      promise.then(() => {
+      const settled = promise.then(() => {
         resolved = true
       })
 
@@ -307,7 +319,7 @@ describe('mock-transport', () => {
 
       // Advance past the mock delay (100ms)
       await vi.advanceTimersByTimeAsync(150)
-      await promise
+      await settled
 
       // Now should be resolved
       expect(resolved).toBe(true)

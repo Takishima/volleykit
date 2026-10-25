@@ -461,7 +461,7 @@ describe('Environment Validation', () => {
 
   it('validates TARGET_HOST must be a valid URL', () => {
     expect(() => new URL('https://example.com')).not.toThrow()
-    expect(() => new URL('not-a-url')).toThrow()
+    expect(() => new URL('not-a-url')).toThrow(TypeError)
   })
 })
 
@@ -553,12 +553,11 @@ describe('Rate Limiting', () => {
   })
 
   it('allows requests under rate limit', async () => {
-    const mockRateLimiter: RateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: true }),
-    }
+    const limit = vi.fn().mockResolvedValue({ success: true })
+    const mockRateLimiter: RateLimiter = { limit }
     const result = await checkRateLimit(mockRateLimiter, '192.168.1.1')
     expect(result).toBe(true)
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '192.168.1.1' })
+    expect(limit).toHaveBeenCalledWith({ key: '192.168.1.1' })
   })
 
   it('blocks requests over rate limit', async () => {
@@ -570,11 +569,10 @@ describe('Rate Limiting', () => {
   })
 
   it('uses client IP as rate limit key', async () => {
-    const mockRateLimiter: RateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: true }),
-    }
+    const limit = vi.fn().mockResolvedValue({ success: true })
+    const mockRateLimiter: RateLimiter = { limit }
     await checkRateLimit(mockRateLimiter, '10.0.0.1')
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '10.0.0.1' })
+    expect(limit).toHaveBeenCalledWith({ key: '10.0.0.1' })
   })
 })
 
@@ -1163,7 +1161,7 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = (await response.json()) as JsonBody
+        const body = await response.json<JsonBody>()
 
         expect(response.status).toBe(200)
         expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
@@ -1191,7 +1189,7 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = (await response.json()) as JsonBody
+        const body = await response.json<JsonBody>()
 
         expect(response.status).toBe(503)
         expect(body.status).toBe('degraded')
@@ -1217,7 +1215,7 @@ describe('Integration: Origin Validation Error Responses', () => {
       })
 
       const response = await worker.fetch(request, mockEnv)
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
 
       expect(response.status).toBe(503)
       expect(body.status).toBe('degraded')
@@ -1241,7 +1239,7 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = (await response.json()) as JsonBody
+        const body = await response.json<JsonBody>()
 
         expect(response.status).toBe(503)
         expect(body.status).toBe('degraded')
@@ -1273,7 +1271,7 @@ describe('Integration: Origin Validation Error Responses', () => {
         })
 
         const response = await worker.fetch(request, mockEnv)
-        const body = (await response.json()) as JsonBody
+        const body = await response.json<JsonBody>()
 
         expect(response.status).toBe(503)
         expect(body.status).toBe('degraded')
@@ -1558,12 +1556,14 @@ describe('Auth Lockout', () => {
     const store = new Map<string, string>()
     return {
       store,
-      get: vi.fn(async (key: string) => store.get(key) ?? null),
-      put: vi.fn(async (key: string, value: string) => {
+      get: vi.fn((key: string) => Promise.resolve(store.get(key) ?? null)),
+      put: vi.fn((key: string, value: string) => {
         store.set(key, value)
+        return Promise.resolve()
       }),
-      delete: vi.fn(async (key: string) => {
+      delete: vi.fn((key: string) => {
         store.delete(key)
+        return Promise.resolve()
       }),
     }
   }
@@ -2119,7 +2119,7 @@ describe('Integration: /version endpoint', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
     expect(response.headers.get('Cache-Control')).toBe('public, max-age=300')
 
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body).toHaveProperty('workerGitHash')
     expect(body).toHaveProperty('timestamp')
     // Default value when not defined
@@ -2155,12 +2155,14 @@ describe('Integration: Auth Lockout in Worker', () => {
         limit: vi.fn().mockResolvedValue({ success: true }),
       },
       AUTH_LOCKOUT: {
-        get: vi.fn(async (key: string) => kvStore.get(key) ?? null),
-        put: vi.fn(async (key: string, value: string) => {
+        get: vi.fn((key: string) => Promise.resolve(kvStore.get(key) ?? null)),
+        put: vi.fn((key: string, value: string) => {
           kvStore.set(key, value)
+          return Promise.resolve()
         }),
-        delete: vi.fn(async (key: string) => {
+        delete: vi.fn((key: string) => {
           kvStore.delete(key)
+          return Promise.resolve()
         }),
       },
       _kvStore: kvStore, // Expose for test assertions
@@ -2196,7 +2198,7 @@ describe('Integration: Auth Lockout in Worker', () => {
     expect(response.headers.get('Content-Type')).toBe('application/json')
     expect(response.headers.get('Retry-After')).toBeDefined()
 
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body).toHaveProperty('error', 'Too many failed login attempts')
     expect(body).toHaveProperty('lockedUntil')
   })
@@ -2231,7 +2233,7 @@ describe('Integration: Auth Lockout in Worker', () => {
     // This allows iOS Safari PWA to properly process Set-Cookie headers
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body).toHaveProperty('success', true)
     expect(body).toHaveProperty('redirectUrl')
 
@@ -2268,7 +2270,7 @@ describe('Integration: Auth Lockout in Worker', () => {
     // and the client can determine success/failure from the JSON
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body).toHaveProperty('success', false)
     expect(body).toHaveProperty('redirectUrl')
 
@@ -2419,7 +2421,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OCR service not configured')
@@ -2441,7 +2443,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(400)
     expect(body.error).toBe("Missing 'image' field in form data")
@@ -2463,7 +2465,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(400)
     expect(body.error).toContain('Unsupported file type')
@@ -2487,7 +2489,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(400)
     expect(body.error).toContain('File too large')
@@ -2516,7 +2518,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('Too many requests')
@@ -2542,7 +2544,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OCR service authentication failed')
@@ -2569,7 +2571,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('OCR service rate limit exceeded')
@@ -2596,7 +2598,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(502)
     expect(body.error).toBe('OCR processing failed')
@@ -2629,7 +2631,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(200)
     expect(body).toEqual(mockOcrResult)
@@ -2775,7 +2777,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OJP service not configured')
@@ -2798,7 +2800,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(413)
     expect(body.error).toBe('Request body too large')
@@ -2824,7 +2826,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('Too many requests')
@@ -2865,15 +2867,13 @@ describe('Integration: OJP Endpoint', () => {
 
     // Verify the upstream request included the API key
     const fetchMock = vi.mocked(globalThis.fetch)
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.opentransportdata.swiss/ojp20',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: 'Bearer test-ojp-key',
-        }),
-      })
-    )
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0] ?? []
+    expect(upstreamUrl).toBe('https://api.opentransportdata.swiss/ojp20')
+    expect(upstreamInit).toMatchObject({
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-ojp-key' },
+    })
 
     vi.unstubAllGlobals()
   })
@@ -2894,7 +2894,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OJP service authentication failed')
@@ -2918,7 +2918,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('OJP service rate limit exceeded')
@@ -2942,7 +2942,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(502)
     expect(body.error).toBe('OJP request failed')
@@ -2966,7 +2966,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(500)
     expect(body.error).toBe('Internal server error during OJP request')
@@ -3549,7 +3549,7 @@ describe('iOS Safari Authentication Workaround', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body.success).toBe(true)
     expect(body.redirectUrl).toBeDefined()
     expect(body.sessionCaptured).toBe(true)
@@ -3639,7 +3639,7 @@ describe('X-Capture-Session-Token Header', () => {
 
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toBe('application/json')
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body.sessionCaptured).toBe(true)
     expect(body.redirectUrl).toBeDefined()
 

@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest'
 
 import { mockApi } from '@/api/mock-api'
 import { setLocale } from '@/i18n'
@@ -28,9 +28,10 @@ const originalUpdateCompensation = mockApi.updateCompensation.bind(mockApi)
 
 describe('Compensations Integration', () => {
   let queryClient: QueryClient
+  let searchCompensationsSpy: MockInstance<typeof mockApi.searchCompensations>
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -44,7 +45,7 @@ describe('Compensations Integration', () => {
     mockApi.getCompensationDetails = originalGetCompensationDetails
     mockApi.updateCompensation = originalUpdateCompensation
 
-    vi.spyOn(mockApi, 'searchCompensations')
+    searchCompensationsSpy = vi.spyOn(mockApi, 'searchCompensations')
     vi.spyOn(mockApi, 'getCompensationDetails')
     vi.spyOn(mockApi, 'updateCompensation')
 
@@ -223,7 +224,7 @@ describe('Compensations Integration', () => {
         expect(mockApi.searchCompensations).toHaveBeenCalled()
       })
 
-      const initialCallCount = vi.mocked(mockApi.searchCompensations).mock.calls.length
+      const initialCallCount = searchCompensationsSpy.mock.calls.length
 
       // Get a compensation to update
       const compensations = useDemoStore.getState().compensations
@@ -235,11 +236,11 @@ describe('Compensations Integration', () => {
       })
 
       // Manually invalidate queries as the mutation would
-      queryClient.invalidateQueries({ queryKey: ['compensations'] })
+      await queryClient.invalidateQueries({ queryKey: ['compensations'] })
 
       // After invalidation, query should refetch
       await waitFor(() => {
-        const newCallCount = vi.mocked(mockApi.searchCompensations).mock.calls.length
+        const newCallCount = searchCompensationsSpy.mock.calls.length
         expect(newCallCount).toBeGreaterThan(initialCallCount)
       })
     })

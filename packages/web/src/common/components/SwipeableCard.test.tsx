@@ -4,6 +4,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { SwipeableCard } from './SwipeableCard'
 import { type SwipeConfig } from '../../types/swipe'
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('SwipeableCard', () => {
   beforeEach(() => {
     Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
@@ -24,12 +27,12 @@ describe('SwipeableCard', () => {
 
     it('applies custom className', () => {
       const { container } = render(
-        <SwipeableCard className="custom-class">
+        <SwipeableCard className={CUSTOM_CLASS}>
           <div>Content</div>
         </SwipeableCard>
       )
 
-      expect(container.firstChild).toHaveClass('custom-class')
+      expect(container.firstChild).toHaveClass(CUSTOM_CLASS)
     })
 
     it('is focusable when has actions', () => {
@@ -228,16 +231,14 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        // Start touch
-        fireEvent.touchStart(content, createTouchEvent(0, 0))
+      // Start touch
+      fireEvent.touchStart(content, createTouchEvent(0, 0))
 
-        // Move past threshold (270px * 2 for resistance = 540px movement needed)
-        fireEvent.touchMove(content, createTouchEvent(600, 0))
+      // Move past threshold (270px * 2 for resistance = 540px movement needed)
+      fireEvent.touchMove(content, createTouchEvent(600, 0))
 
-        // End touch
-        fireEvent.touchEnd(content)
-      })
+      // End touch
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).toHaveBeenCalledTimes(1)
     })
@@ -252,11 +253,9 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, createTouchEvent(600, 0))
-        fireEvent.touchMove(content, createTouchEvent(0, 0))
-        fireEvent.touchEnd(content)
-      })
+      fireEvent.touchStart(content, createTouchEvent(600, 0))
+      fireEvent.touchMove(content, createTouchEvent(0, 0))
+      fireEvent.touchEnd(content)
 
       expect(onSwipeLeft).toHaveBeenCalledTimes(1)
     })
@@ -271,11 +270,9 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, createTouchEvent(0, 0))
-        fireEvent.touchMove(content, createTouchEvent(50, 0)) // Less than threshold
-        fireEvent.touchEnd(content)
-      })
+      fireEvent.touchStart(content, createTouchEvent(0, 0))
+      fireEvent.touchMove(content, createTouchEvent(50, 0)) // Less than threshold
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).not.toHaveBeenCalled()
     })
@@ -310,14 +307,12 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, createTouchEvent(0, 0))
-        // First move is horizontal
-        fireEvent.touchMove(content, createTouchEvent(20, 5))
-        // Continue horizontal past threshold
-        fireEvent.touchMove(content, createTouchEvent(600, 10))
-        fireEvent.touchEnd(content)
-      })
+      fireEvent.touchStart(content, createTouchEvent(0, 0))
+      // First move is horizontal
+      fireEvent.touchMove(content, createTouchEvent(20, 5))
+      // Continue horizontal past threshold
+      fireEvent.touchMove(content, createTouchEvent(600, 10))
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).toHaveBeenCalled()
     })
@@ -334,16 +329,14 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        // Start mouse drag
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      // Start mouse drag
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
 
-        // Move past threshold (270px * 2 for resistance = 540px movement needed)
-        fireEvent.mouseMove(content, { clientX: 600, clientY: 0 })
+      // Move past threshold (270px * 2 for resistance = 540px movement needed)
+      fireEvent.mouseMove(content, { clientX: 600, clientY: 0 })
 
-        // Release mouse
-        fireEvent.mouseUp(content)
-      })
+      // Release mouse
+      fireEvent.mouseUp(content)
 
       expect(onSwipeRight).toHaveBeenCalledTimes(1)
     })
@@ -358,11 +351,9 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 600, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 600, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       expect(onSwipeLeft).toHaveBeenCalledTimes(1)
     })
@@ -377,11 +368,9 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       expect(onSwipeRight).not.toHaveBeenCalled()
     })
@@ -396,11 +385,9 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 600, clientY: 0 })
-        fireEvent.mouseLeave(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 600, clientY: 0 })
+      fireEvent.mouseLeave(content)
 
       expect(onSwipeRight).toHaveBeenCalledTimes(1)
     })
@@ -433,12 +420,10 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 20, clientY: 5 })
-        fireEvent.mouseMove(content, { clientX: 600, clientY: 10 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 20, clientY: 5 })
+      fireEvent.mouseMove(content, { clientX: 600, clientY: 10 })
+      fireEvent.mouseUp(content)
 
       expect(onSwipeRight).toHaveBeenCalled()
     })
@@ -495,17 +480,15 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 600, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 600, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onAction).toHaveBeenCalledTimes(1)
     })
@@ -567,17 +550,15 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 600, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 600, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onEdit).toHaveBeenCalledTimes(1)
       expect(onArchive).not.toHaveBeenCalled()
@@ -602,17 +583,15 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 200, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 200, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onRight).not.toHaveBeenCalled()
     })
@@ -647,17 +626,15 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 600, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 600, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onSwipeLeft).toHaveBeenCalledTimes(1)
     })
@@ -683,11 +660,9 @@ describe('SwipeableCard', () => {
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
       // Perform a drag that doesn't trigger action (below threshold)
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       // Verify pointer-events is set to 'none'
       expect(content).toHaveStyle({ pointerEvents: 'none' })
@@ -703,11 +678,9 @@ describe('SwipeableCard', () => {
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       // Blocked immediately
       expect(content).toHaveStyle({ pointerEvents: 'none' })
@@ -732,10 +705,8 @@ describe('SwipeableCard', () => {
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
       // Click without dragging (no move event)
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       // Should not be blocked
       expect(content).toHaveStyle({ pointerEvents: 'auto' })
@@ -752,11 +723,9 @@ describe('SwipeableCard', () => {
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
       // Vertical swipe (should be ignored)
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 5, clientY: 50 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 5, clientY: 50 })
+      fireEvent.mouseUp(content)
 
       // Should not be blocked because no horizontal drag occurred
       expect(content).toHaveStyle({ pointerEvents: 'auto' })
@@ -773,11 +742,9 @@ describe('SwipeableCard', () => {
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
       // First drag
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       expect(content).toHaveStyle({ pointerEvents: 'none' })
 
@@ -790,11 +757,9 @@ describe('SwipeableCard', () => {
       expect(content).toHaveStyle({ pointerEvents: 'none' })
 
       // Second drag before first timeout completes
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 50, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       // Still blocked
       expect(content).toHaveStyle({ pointerEvents: 'none' })
@@ -819,17 +784,15 @@ describe('SwipeableCard', () => {
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
       // Perform a touch drag below threshold
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 50, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 50, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       // Should be blocked
       expect(content).toHaveStyle({ pointerEvents: 'none' })
@@ -858,11 +821,9 @@ describe('SwipeableCard', () => {
       const content = screen.getByTestId('child-button').parentElement as HTMLElement
 
       // Open the drawer by swiping past drawer threshold but not full swipe
-      await act(async () => {
-        fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
-        fireEvent.mouseMove(content, { clientX: 150, clientY: 0 })
-        fireEvent.mouseUp(content)
-      })
+      fireEvent.mouseDown(content, { clientX: 0, clientY: 0 })
+      fireEvent.mouseMove(content, { clientX: 150, clientY: 0 })
+      fireEvent.mouseUp(content)
 
       // Wait for click block to clear
       await act(async () => {
@@ -887,27 +848,23 @@ describe('SwipeableCard', () => {
         value: 300,
       })
 
-      await act(async () => {
-        render(
-          <SwipeableCard onSwipeRight={onSwipeRight}>
-            <div data-testid="content">Content</div>
-          </SwipeableCard>
-        )
-      })
+      render(
+        <SwipeableCard onSwipeRight={onSwipeRight}>
+          <div data-testid="content">Content</div>
+        </SwipeableCard>
+      )
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 450, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 450, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).toHaveBeenCalledTimes(1)
     })
@@ -920,27 +877,23 @@ describe('SwipeableCard', () => {
         value: 200,
       })
 
-      await act(async () => {
-        render(
-          <SwipeableCard onSwipeRight={onSwipeRight}>
-            <div data-testid="content">Content</div>
-          </SwipeableCard>
-        )
-      })
+      render(
+        <SwipeableCard onSwipeRight={onSwipeRight}>
+          <div data-testid="content">Content</div>
+        </SwipeableCard>
+      )
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 300, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 300, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).toHaveBeenCalledTimes(1)
     })
@@ -953,27 +906,23 @@ describe('SwipeableCard', () => {
         value: 600,
       })
 
-      await act(async () => {
-        render(
-          <SwipeableCard onSwipeRight={onSwipeRight}>
-            <div data-testid="content">Content</div>
-          </SwipeableCard>
-        )
-      })
+      render(
+        <SwipeableCard onSwipeRight={onSwipeRight}>
+          <div data-testid="content">Content</div>
+        </SwipeableCard>
+      )
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 900, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 900, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).toHaveBeenCalledTimes(1)
     })
@@ -986,27 +935,23 @@ describe('SwipeableCard', () => {
         value: 0,
       })
 
-      await act(async () => {
-        render(
-          <SwipeableCard onSwipeRight={onSwipeRight}>
-            <div data-testid="content">Content</div>
-          </SwipeableCard>
-        )
-      })
+      render(
+        <SwipeableCard onSwipeRight={onSwipeRight}>
+          <div data-testid="content">Content</div>
+        </SwipeableCard>
+      )
 
       const content = screen.getByTestId('content').parentElement as HTMLElement
 
-      await act(async () => {
-        fireEvent.touchStart(content, {
-          touches: [{ clientX: 0, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchMove(content, {
-          touches: [{ clientX: 600, clientY: 0 }],
-          preventDefault: vi.fn(),
-        })
-        fireEvent.touchEnd(content)
+      fireEvent.touchStart(content, {
+        touches: [{ clientX: 0, clientY: 0 }],
+        preventDefault: vi.fn(),
       })
+      fireEvent.touchMove(content, {
+        touches: [{ clientX: 600, clientY: 0 }],
+        preventDefault: vi.fn(),
+      })
+      fireEvent.touchEnd(content)
 
       expect(onSwipeRight).not.toHaveBeenCalled()
     })

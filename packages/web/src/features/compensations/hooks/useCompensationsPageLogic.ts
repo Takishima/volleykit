@@ -64,10 +64,10 @@ export function useCompensationsPageLogic() {
   // Calculate season date range for filtering
   const seasonRange = useMemo(() => getSeasonDateRange(), [])
 
-  // Memoize current date to avoid recreating on every render.
+  // Read the current date once, on mount, so renders stay pure.
   // Note: This value is fixed for the component's lifetime. If a user keeps the page open
   // past midnight, past/future classification won't update until they refresh or navigate away.
-  const now = useMemo(() => new Date(), [])
+  const [now] = useState(() => new Date())
 
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
   const data = useMemo(() => {
@@ -131,7 +131,9 @@ export function useCompensationsPageLogic() {
     (compensation: CompensationRecord): SwipeConfig => {
       const actions = createCompensationActions(compensation, {
         onEditCompensation: editCompensationModal.open,
-        onGeneratePDF: handleGeneratePDF,
+        onGeneratePDF: (target) => {
+          void handleGeneratePDF(target)
+        },
         onTwintPayment: twintModal.open,
       })
 

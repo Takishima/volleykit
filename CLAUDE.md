@@ -77,13 +77,17 @@ Subpath exports: `/api`, `/stores`, `/hooks`, `/utils`, `/i18n`, `/types`, `/ada
 
 ## Code Standards
 
-**Naming** (ESLint enforced): Components `PascalCase`, Hooks `useCamelCase`, Constants `SCREAMING_SNAKE_CASE`
+**Naming** (ESLint `naming-convention`): Components `PascalCase`, Hooks `useCamelCase`, Constants `SCREAMING_SNAKE_CASE`
 
 **React**: Zustand for client state, TanStack Query for server state. Query keys in `packages/shared/src/api/queryKeys.ts`. Use `useTranslation()` hook in .tsx.
 
 **Styling**: Tailwind CSS 4 (web-app + help-site), NativeWind/Tailwind 3 (mobile).
 
 **Avoid**: Magic numbers, array index as key, uncleared intervals, `isMountedRef` pattern, functions > 30 lines, > 4 parameters.
+
+Size and magic-number rules are ESLint errors for new code; pre-existing hits are
+grandfathered in each package's `eslint-suppressions.json` (shrink it, never grow it;
+`pnpm run lint:fix` prunes entries that no longer apply).
 
 ## Changesets
 

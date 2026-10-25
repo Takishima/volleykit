@@ -8,7 +8,7 @@ import type { AuthServiceConfig } from './types'
 
 // Mock fetch globally
 const mockFetch = vi.fn()
-global.fetch = mockFetch
+vi.stubGlobal('fetch', mockFetch)
 
 describe('createAuthService', () => {
   const mockConfig: AuthServiceConfig = {
@@ -74,11 +74,8 @@ describe('createAuthService', () => {
 
       const result = await resultPromise
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.csrfToken).toBe('csrf-12345')
-        expect(result.dashboardHtml).toContain('Dashboard')
-      }
+      expect(result).toMatchObject({ success: true, csrfToken: 'csrf-12345' })
+      expect('dashboardHtml' in result ? result.dashboardHtml : undefined).toContain('Dashboard')
     })
 
     it('should return error for invalid credentials', async () => {
@@ -107,10 +104,10 @@ describe('createAuthService', () => {
       const authService = createAuthService(mockConfig)
       const result = await authService.login('baduser', 'badpass')
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toBe('Invalid username or password')
-      }
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Invalid username or password',
+      })
     })
 
     it('should handle lockout response', async () => {
@@ -140,11 +137,8 @@ describe('createAuthService', () => {
       const authService = createAuthService(mockConfig)
       const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toBe('Account locked for 5 minutes')
-        expect(result.lockedUntil).toBeDefined()
-      }
+      expect(result).toMatchObject({ success: false, error: 'Account locked for 5 minutes' })
+      expect('lockedUntil' in result ? result.lockedUntil : undefined).toBeDefined()
     })
 
     it('should handle TFA page response', async () => {
@@ -173,10 +167,10 @@ describe('createAuthService', () => {
       const authService = createAuthService(mockConfig)
       const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toContain('Two-factor authentication is not supported')
-      }
+      expect(result).toMatchObject({ success: false })
+      expect('error' in result ? result.error : undefined).toContain(
+        'Two-factor authentication is not supported'
+      )
     })
 
     it('should handle failed login page fetch', async () => {
@@ -189,10 +183,10 @@ describe('createAuthService', () => {
       const authService = createAuthService(mockConfig)
       const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toBe('Failed to load login page')
-      }
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Failed to load login page',
+      })
     })
 
     it('should handle missing form fields', async () => {
@@ -207,10 +201,10 @@ describe('createAuthService', () => {
       const authService = createAuthService(mockConfig)
       const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toBe('Could not extract form fields from login page')
-      }
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Could not extract form fields from login page',
+      })
     })
 
     it('should detect already logged in state', async () => {
@@ -237,10 +231,10 @@ describe('createAuthService', () => {
 
       const result = await resultPromise
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.csrfToken).toBe('dashboard-token')
-      }
+      expect(result).toMatchObject({
+        success: true,
+        csrfToken: 'dashboard-token',
+      })
     })
 
     it('should handle opaqueredirect response', async () => {
@@ -276,10 +270,10 @@ describe('createAuthService', () => {
 
       const result = await resultPromise
 
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.csrfToken).toBe('csrf-opaque')
-      }
+      expect(result).toMatchObject({
+        success: true,
+        csrfToken: 'csrf-opaque',
+      })
     })
 
     it('should handle JSON response from proxy', async () => {
@@ -330,10 +324,10 @@ describe('createAuthService', () => {
       const authService = createAuthService(mockConfig)
       const result = await authService.login('user', 'pass')
 
-      expect(result.success).toBe(false)
-      if (!result.success) {
-        expect(result.error).toBe('Network error')
-      }
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Network error',
+      })
     })
   })
 
@@ -466,7 +460,7 @@ describe('createAuthService', () => {
 
       expect(result.user.id).toBe('party-123')
       expect(result.user.occupations).toHaveLength(1)
-      expect(result.user.occupations[0].associationCode).toBe('RVNO')
+      expect(result.user.occupations[0]?.associationCode).toBe('RVNO')
       expect(result.activeOccupationId).toBe('occ-1')
     })
 
@@ -543,7 +537,7 @@ describe('createAuthService', () => {
       const result = authService.deriveUserFromActiveParty(activeParty, null, null)
 
       expect(result.user.occupations).toHaveLength(1)
-      expect(result.user.occupations[0].id).toBe('occ-fallback')
+      expect(result.user.occupations[0]?.id).toBe('occ-fallback')
     })
   })
 })

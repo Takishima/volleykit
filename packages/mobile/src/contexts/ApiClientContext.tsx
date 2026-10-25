@@ -61,7 +61,9 @@ export function ApiClientProvider({
     return dataSource === 'api' ? realApiClient : mobileApiClient
   }, [customApiClient, dataSource])
 
-  return <ApiClientContext.Provider value={{ apiClient }}>{children}</ApiClientContext.Provider>
+  const value = useMemo<ApiClientContextValue>(() => ({ apiClient }), [apiClient])
+
+  return <ApiClientContext.Provider value={value}>{children}</ApiClientContext.Provider>
 }
 
 /**

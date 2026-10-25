@@ -26,6 +26,7 @@
  */
 
 import { useToastStore } from '@/common/stores/toast'
+import { logger } from '@/common/utils/logger'
 
 import { notificationService } from './notification-service'
 import {
@@ -220,7 +221,9 @@ function schedule(
         tag: options.tag,
         requireInteraction: options.requireInteraction,
         data: options.data,
-      })
+      }).catch((error: unknown) =>
+        logger.error('Failed to show scheduled native notification:', error)
+      )
     }
 
     if (channels.inApp) {

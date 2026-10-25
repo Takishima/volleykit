@@ -11,8 +11,7 @@ on:
       - '.github/workflows/deploy-pr-preview.yml'
       - '.github/actions/**'
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 concurrency:
   group: 'pages'
   cancel-in-progress: false
@@ -25,7 +24,9 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -33,7 +34,7 @@ jobs:
       # Cache generated API types (shared across branches)
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             packages/web/src/api/schema.ts
@@ -54,7 +55,7 @@ jobs:
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
       - name: Upload packages/web artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: web-app-dist
           path: packages/web/dist
@@ -66,7 +67,9 @@ jobs:
         working-directory: help-site
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -74,7 +77,7 @@ jobs:
           node-version: '22'
       # Cache Astro build artifacts per branch
       - name: Cache Astro build
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: help-site/node_modules/.astro
           key: astro-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('help-site/src/**/*', 'help-site/astro.config.mjs') }}
@@ -86,7 +89,7 @@ jobs:
         env:
           ASTRO_BASE_PATH: /pr-${{ github.event.pull_request.number }}/help
       - name: Upload help-site artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: help-site-dist
           path: help-site/dist
@@ -98,14 +101,16 @@ jobs:
         working-directory: ocr-poc
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: ocr-poc
       # Cache Vite build artifacts per branch
       - name: Cache Vite build
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ocr-poc/node_modules/.vite
           key: ocr-poc-vite-${{ runner.os }}-${{ github.head_ref }}-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx', 'ocr-poc/vite.config.ts') }}
@@ -118,7 +123,7 @@ jobs:
           VITE_BASE_PATH: /pr-${{ github.event.pull_request.number }}/ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       - name: Upload ocr-poc artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ocr-poc-dist
           path: ocr-poc/dist
@@ -126,26 +131,29 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [build-web-app, build-help-site, build-ocr-poc]
+    permissions:
+      contents: write # actions-gh-pages pushes the gh-pages branch
+      pull-requests: write # preview-link comment on the PR
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] actions-gh-pages pushes the gh-pages branch from this checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download packages/web artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-app-dist
           path: web-app-dist
       - name: Download help-site artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: help-site-dist
           path: help-site-dist
       - name: Download ocr-poc artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ocr-poc-dist
           path: ocr-poc-dist
       - name: Delete artifacts
-        uses: geekyeggo/delete-artifact@v6
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         continue-on-error: true
         with:
           name: |
@@ -179,7 +187,7 @@ jobs:
           mkdir -p deploy/pr-${{ github.event.pull_request.number }}/help
           cp -r help-site-dist/* deploy/pr-${{ github.event.pull_request.number }}/help/
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: deploy
@@ -187,7 +195,7 @@ jobs:
           enable_jekyll: false
           cname: volleykit.ch
       - name: Comment PR with preview link
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const previewUrl = `https://volleykit.ch/pr-${{ github.event.pull_request.number }}/`;

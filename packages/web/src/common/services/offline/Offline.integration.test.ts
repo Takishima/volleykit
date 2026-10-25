@@ -13,6 +13,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useAuthStore } from '@/common/stores/auth'
 import { useActionQueueStore } from '@/common/stores/action-queue'
 import { useDemoStore } from '@/common/stores/demo'
+import { assertDefined } from '@/test/assert-defined'
 
 import type { OfflineAction, ActionStatus } from './action-types'
 
@@ -280,8 +281,9 @@ describe('Offline Action Queue', () => {
       })
 
       expect(action?.type).toBe('batchUpdateCompensations')
-      expect(action?.payload.compensationIds).toHaveLength(3)
-      expect(action?.payload.data).toEqual({ distanceInMetres: 5000 })
+      if (action?.type !== 'batchUpdateCompensations') throw new Error('Unexpected action type')
+      expect(action.payload.compensationIds).toHaveLength(3)
+      expect(action.payload.data).toEqual({ distanceInMetres: 5000 })
     })
 
     it('stores batch update action with correct payload', async () => {
@@ -289,19 +291,21 @@ describe('Offline Action Queue', () => {
       const comp1 = compensations[0]?.convocationCompensation?.__identity
       const comp2 = compensations[1]?.convocationCompensation?.__identity
 
-      expect(comp1).toBeDefined()
-      expect(comp2).toBeDefined()
+      assertDefined(comp1)
+      assertDefined(comp2)
 
       await createAction('batchUpdateCompensations', {
-        compensationIds: [comp1!, comp2!],
+        compensationIds: [comp1, comp2],
         data: { distanceInMetres: 10000, correctionReason: 'Batch update' },
       })
 
       const pending = await getPendingActions()
       expect(pending.length).toBe(1)
-      expect(pending[0]?.type).toBe('batchUpdateCompensations')
-      expect(pending[0]?.payload.compensationIds).toHaveLength(2)
-      expect(pending[0]?.payload.data).toEqual({
+      const stored = pending[0]
+      expect(stored?.type).toBe('batchUpdateCompensations')
+      if (stored?.type !== 'batchUpdateCompensations') throw new Error('Unexpected action type')
+      expect(stored.payload.compensationIds).toHaveLength(2)
+      expect(stored.payload.data).toEqual({
         distanceInMetres: 10000,
         correctionReason: 'Batch update',
       })

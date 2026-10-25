@@ -230,7 +230,7 @@ export function SwipeableCard({
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
     }
-  }, [isDrawerOpen, containerRef, resetPosition])
+  }, [isDrawerOpen, containerRef, resetPosition, currentTranslateRef])
 
   useEffect(() => {
     return () => {
@@ -254,7 +254,7 @@ export function SwipeableCard({
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [showActions, resetPosition])
+  }, [showActions, resetPosition, currentTranslateRef])
 
   // Listen for tour auto-swipe events to update state and render action buttons.
   // TourAutoSwipe dispatches 'tour-swipe-start' during guided tour demonstrations
@@ -273,7 +273,7 @@ export function SwipeableCard({
 
     container.addEventListener('tour-swipe-start', handleTourSwipe)
     return () => container.removeEventListener('tour-swipe-start', handleTourSwipe)
-  }, [containerRef, hasAnyAction, setTranslateX])
+  }, [containerRef, hasAnyAction, setTranslateX, currentTranslateRef])
 
   // Capture phase click handler prevents card expansion when drawer is open
   const handleClickCapture = useCallback(
@@ -320,16 +320,35 @@ export function SwipeableCard({
   const showProgressiveActions =
     thresholds && swipeAmount > thresholds.minVisibility && currentActions
 
+  // Keyboard access and gesture handling only exist when there is an action to reveal
+  const containerInteraction = hasAnyAction
+    ? {
+        onKeyDown: handleKeyDown,
+        tabIndex: 0,
+        role: 'group',
+        'aria-label': 'Swipeable card with actions. Press Enter to show actions.',
+      }
+    : undefined
+  const gestureInteraction = hasAnyAction
+    ? {
+        onTouchStart: handlers.onTouchStart,
+        onTouchMove: handlers.onTouchMove,
+        onTouchEnd: handlers.onTouchEnd,
+        onMouseDown: handlers.onMouseDown,
+        onMouseMove: handlers.onMouseMove,
+        onMouseUp: handlers.onMouseUp,
+        onMouseLeave: handlers.onMouseLeave,
+        onClickCapture: handleClickCapture,
+        role: 'button',
+        tabIndex: -1,
+      }
+    : undefined
+
   return (
     <div
       ref={containerRef}
       className={`relative overflow-hidden rounded-xl ${className}`}
-      onKeyDown={hasAnyAction ? handleKeyDown : undefined}
-      tabIndex={hasAnyAction ? 0 : undefined}
-      role={hasAnyAction ? 'group' : undefined}
-      aria-label={
-        hasAnyAction ? 'Swipeable card with actions. Press Enter to show actions.' : undefined
-      }
+      {...containerInteraction}
     >
       {/* iOS-style progressive action reveal */}
       {showProgressiveActions && thresholds && (
@@ -345,16 +364,7 @@ export function SwipeableCard({
       )}
 
       <div
-        onTouchStart={hasAnyAction ? handlers.onTouchStart : undefined}
-        onTouchMove={hasAnyAction ? handlers.onTouchMove : undefined}
-        onTouchEnd={hasAnyAction ? handlers.onTouchEnd : undefined}
-        onMouseDown={hasAnyAction ? handlers.onMouseDown : undefined}
-        onMouseMove={hasAnyAction ? handlers.onMouseMove : undefined}
-        onMouseUp={hasAnyAction ? handlers.onMouseUp : undefined}
-        onMouseLeave={hasAnyAction ? handlers.onMouseLeave : undefined}
-        onClickCapture={hasAnyAction ? handleClickCapture : undefined}
-        role={hasAnyAction ? 'button' : undefined}
-        tabIndex={hasAnyAction ? -1 : undefined}
+        {...gestureInteraction}
         style={{
           transform: `translateX(${translateX}px)`,
           transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)',

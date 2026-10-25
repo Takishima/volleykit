@@ -166,7 +166,7 @@ export function useTransportSettings() {
 
   const handleClearCache = useCallback(() => {
     clearTravelTimeCache()
-    queryClient.invalidateQueries({ queryKey: queryKeys.travelTime.all })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.travelTime.all })
     setCacheVersion((v) => v + 1)
     setShowClearConfirm(false)
   }, [queryClient])
@@ -276,8 +276,8 @@ export function useTransportSettings() {
     showClearConfirm,
     hasHomeLocation,
     canEnableTransport,
-    sbbDestinationType: sbbDestinationType as SbbDestinationType,
-    travelMode: travelMode as TravelMode,
+    sbbDestinationType: sbbDestinationType,
+    travelMode: travelMode,
     localMaxBikeDistance,
 
     // Constants

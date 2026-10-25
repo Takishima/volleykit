@@ -11,12 +11,13 @@ import * as LocalAuthentication from 'expo-local-authentication'
 
 import type { BiometricAdapter } from '@volleykit/shared/types'
 
+/** Biometric hardware type reported by the platform, or null when unavailable. */
+export type BiometricType = 'faceId' | 'touchId' | 'fingerprint' | null
+
 /**
  * Map LocalAuthentication authentication type to our BiometricType
  */
-function mapAuthenticationType(
-  types: LocalAuthentication.AuthenticationType[]
-): 'faceId' | 'touchId' | 'fingerprint' | null {
+function mapAuthenticationType(types: LocalAuthentication.AuthenticationType[]): BiometricType {
   if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
     return 'faceId'
   }
@@ -72,7 +73,7 @@ export const biometrics: BiometricAdapter = {
    * Get the type of biometric authentication available
    * Returns the primary biometric type available on the device
    */
-  async getBiometricType(): Promise<'faceId' | 'touchId' | 'fingerprint' | null> {
+  async getBiometricType(): Promise<BiometricType> {
     const types = await LocalAuthentication.supportedAuthenticationTypesAsync()
     return mapAuthenticationType(types)
   },
@@ -82,7 +83,7 @@ export const biometrics: BiometricAdapter = {
  * Get user-friendly name for biometric type
  * Used for displaying in UI
  */
-export function getBiometricTypeName(type: 'faceId' | 'touchId' | 'fingerprint' | null): string {
+export function getBiometricTypeName(type: BiometricType): string {
   switch (type) {
     case 'faceId':
       return 'Face ID'
@@ -90,7 +91,7 @@ export function getBiometricTypeName(type: 'faceId' | 'touchId' | 'fingerprint' 
       return 'Touch ID'
     case 'fingerprint':
       return 'Fingerprint'
-    default:
+    case null:
       return 'Biometric'
   }
 }

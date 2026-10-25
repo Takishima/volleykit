@@ -5,6 +5,8 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { addDays } from 'date-fns'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { anyOfType, arrayContaining, objectContaining } from '@/test/matchers'
+
 import { getApiClient } from '@/api/client'
 import * as authStore from '@/common/stores/auth'
 import * as demoStore from '@/common/stores/demo'
@@ -153,10 +155,10 @@ describe('useConvocations - API Client Routing', () => {
         expect.objectContaining({
           offset: 0,
           limit: 100,
-          propertyFilters: expect.arrayContaining([
-            expect.objectContaining({
+          propertyFilters: arrayContaining([
+            objectContaining({
               propertyName: 'refereeGame.game.startingDateTime',
-              dateRange: expect.any(Object),
+              dateRange: anyOfType<object>(Object),
             }),
           ]),
         })
@@ -289,8 +291,8 @@ describe('useConvocations - API Client Routing', () => {
 
       expect(mockApi.searchExchanges).toHaveBeenCalledWith(
         expect.objectContaining({
-          propertyFilters: expect.arrayContaining([
-            expect.objectContaining({
+          propertyFilters: arrayContaining([
+            objectContaining({
               propertyName: 'status',
               enumValues: ['open'],
             }),
@@ -321,15 +323,15 @@ describe('useConvocations - API Client Routing', () => {
 
       expect(mockApi.searchExchanges).toHaveBeenCalledWith(
         expect.objectContaining({
-          propertyFilters: expect.arrayContaining([
-            expect.objectContaining({
+          propertyFilters: arrayContaining([
+            objectContaining({
               propertyName: 'refereeGame.game.startingDateTime',
-              dateRange: expect.objectContaining({
-                from: expect.any(String),
-                to: expect.any(String),
+              dateRange: objectContaining({
+                from: anyOfType<string>(String),
+                to: anyOfType<string>(String),
               }),
             }),
-            expect.objectContaining({
+            objectContaining({
               propertyName: 'status',
               enumValues: ['open'],
             }),
@@ -459,8 +461,8 @@ describe('useConvocations - Data Handling', () => {
       // Verify descending sort for past assignments
       expect(mockApi.searchAssignments).toHaveBeenCalledWith(
         expect.objectContaining({
-          propertyOrderings: expect.arrayContaining([
-            expect.objectContaining({
+          propertyOrderings: arrayContaining([
+            objectContaining({
               propertyName: 'refereeGame.game.startingDateTime',
               descending: true,
             }),

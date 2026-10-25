@@ -1,6 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import { anyOfType } from '@/test/matchers'
+
+import type { AuthState } from '@/common/stores/auth'
+import type { DemoState } from '@/common/stores/demo'
+import { partialMock } from '@/test/partial-mock'
 
 import type { CompensationRecord, Assignment } from '@/api/client'
 import { getApiClient } from '@/api/client'
@@ -8,8 +14,14 @@ import * as compensationHooks from '../hooks/useCompensations'
 import { COMPENSATION_LOOKUP_LIMIT } from '@/common/hooks/usePaginatedQuery'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
+import { createOfflineMutationResult } from '@/test/mutation-mock'
 
 import { EditCompensationModal } from './EditCompensationModal'
+
+type UpdateCompensationResult = ReturnType<typeof compensationHooks.useUpdateCompensation>
+type UpdateAssignmentCompensationResult = ReturnType<
+  typeof compensationHooks.useUpdateAssignmentCompensation
+>
 
 vi.mock('@/api/client', () => ({
   getApiClient: vi.fn(),
@@ -98,10 +110,10 @@ async function waitForFormToLoad() {
 describe('EditCompensationModal', () => {
   const mockOnClose = vi.fn()
   // Mock mutate to call onSuccess callback immediately (simulates successful mutation)
-  const mockMutate = vi.fn((_, options) => {
+  const mockMutate = vi.fn<UpdateCompensationResult['mutate']>((_, options) => {
     options?.onSuccess?.()
   })
-  const mockAssignmentMutate = vi.fn((_, options) => {
+  const mockAssignmentMutate = vi.fn<UpdateAssignmentCompensationResult['mutate']>((_, options) => {
     options?.onSuccess?.()
   })
   const mockGetCompensationDetails = vi.fn()
@@ -118,58 +130,30 @@ describe('EditCompensationModal', () => {
         mutations: { retry: false },
       },
     })
-    ;(useAuthStore as unknown as Mock).mockImplementation((selector) =>
-      selector({ dataSource: 'api' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'api' }))
     )
 
     // Mock useDemoStore to return getAssignmentCompensation
-    ;(useDemoStore as unknown as Mock).mockImplementation((selector) =>
-      selector({ getAssignmentCompensation: mockGetAssignmentCompensation })
+    vi.mocked(useDemoStore).mockImplementation((selector) =>
+      selector(partialMock<DemoState>({ getAssignmentCompensation: mockGetAssignmentCompensation }))
     )
 
     mockGetAssignmentCompensation.mockReturnValue(null)
 
-    vi.mocked(compensationHooks.useUpdateCompensation).mockReturnValue({
-      mutate: mockMutate,
-      mutateAsync: vi.fn(),
-      isPending: false,
-      isSuccess: false,
-      isError: false,
-      isIdle: true,
-      isPaused: false,
-      error: null,
-      data: undefined,
-      variables: undefined,
-      reset: vi.fn(),
-      context: undefined,
-      failureCount: 0,
-      failureReason: null,
-      status: 'idle',
-      submittedAt: 0,
-    })
+    vi.mocked(compensationHooks.useUpdateCompensation).mockReturnValue(
+      createOfflineMutationResult({ mutate: mockMutate })
+    )
 
-    vi.mocked(compensationHooks.useUpdateAssignmentCompensation).mockReturnValue({
-      mutate: mockAssignmentMutate,
-      mutateAsync: vi.fn(),
-      isPending: false,
-      isSuccess: false,
-      isError: false,
-      isIdle: true,
-      isPaused: false,
-      error: null,
-      data: undefined,
-      variables: undefined,
-      reset: vi.fn(),
-      context: undefined,
-      failureCount: 0,
-      failureReason: null,
-      status: 'idle',
-      submittedAt: 0,
-    })
-    ;(getApiClient as Mock).mockReturnValue({
-      getCompensationDetails: mockGetCompensationDetails,
-      searchCompensations: mockSearchCompensations,
-    })
+    vi.mocked(compensationHooks.useUpdateAssignmentCompensation).mockReturnValue(
+      createOfflineMutationResult({ mutate: mockAssignmentMutate })
+    )
+    vi.mocked(getApiClient).mockReturnValue(
+      partialMock<ReturnType<typeof getApiClient>>({
+        getCompensationDetails: mockGetCompensationDetails,
+        searchCompensations: mockSearchCompensations,
+      })
+    )
 
     mockGetCompensationDetails.mockResolvedValue({
       convocationCompensation: {
@@ -675,13 +659,16 @@ describe('EditCompensationModal', () => {
       )
 
       await waitForFormToLoad()
+
+      // The typed value is gone; the form shows the fetched compensation again
+      expect(screen.getByLabelText('Kilometers')).not.toHaveValue('50')
     })
   })
 
   describe('demo mode', () => {
     beforeEach(() => {
-      ;(useAuthStore as unknown as Mock).mockImplementation((selector) =>
-        selector({ dataSource: 'demo' })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(partialMock<AuthState>({ dataSource: 'demo' }))
       )
 
       // In demo mode, also mock getAssignmentCompensation with demo values
@@ -714,7 +701,7 @@ describe('EditCompensationModal', () => {
             compensationId: 'conv-comp-1',
             data: { distanceInMetres: 42000 },
           },
-          expect.objectContaining({ onSuccess: expect.any(Function) })
+          expect.objectContaining({ onSuccess: anyOfType<() => void>(Function) })
         )
       })
     })
@@ -751,7 +738,7 @@ describe('EditCompensationModal', () => {
               correctionReason: 'Road work detour',
             },
           },
-          expect.objectContaining({ onSuccess: expect.any(Function) })
+          expect.objectContaining({ onSuccess: anyOfType<() => void>(Function) })
         )
       })
     })
@@ -787,7 +774,7 @@ describe('EditCompensationModal', () => {
               correctionReason: 'Construction detour',
             },
           },
-          expect.objectContaining({ onSuccess: expect.any(Function) })
+          expect.objectContaining({ onSuccess: anyOfType<() => void>(Function) })
         )
         // Compensation mutation should NOT be called
         expect(mockMutate).not.toHaveBeenCalled()

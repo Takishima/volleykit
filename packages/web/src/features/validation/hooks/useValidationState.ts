@@ -23,6 +23,17 @@ import { hasRosterModifications } from '../api/api-helpers'
 export type { UseValidationStateResult } from './types'
 
 /**
+ * Reads the scorer's birthday when present. The API schema does not declare it,
+ * but demo-mode game details include it so the scorer panel can display it.
+ */
+function getWriterPersonBirthday(writerPerson: object | undefined): string | undefined {
+  if (writerPerson && 'birthday' in writerPerson && typeof writerPerson.birthday === 'string') {
+    return writerPerson.birthday
+  }
+  return undefined
+}
+
+/**
  * Hook to manage validation state across all panels in the ValidateGameModal.
  *
  * Tracks:
@@ -90,27 +101,23 @@ export function useValidationState(gameId?: string): UseValidationStateResult {
     if (!isValidated) return null
     const scoresheet = gameDetailsQuery.data?.scoresheet
     if (!scoresheet?.closedAt) return null
-    // Cast to include birthday which is available in demo mode
-    const writerPerson = scoresheet.writerPerson as
-      { displayName?: string; birthday?: string } | undefined
+    const writerPerson = scoresheet.writerPerson
     return {
       validatedAt: scoresheet.closedAt,
       scorerName: writerPerson?.displayName ?? 'Unknown',
-      scorerBirthday: writerPerson?.birthday,
+      scorerBirthday: getWriterPersonBirthday(writerPerson),
       hasScoresheet: !!scoresheet.hasFile,
     }
   }, [gameDetailsQuery.data, isValidated])
 
   const pendingScorer = useMemo<PendingScorerData | null>(() => {
     if (isValidated) return null
-    // Cast to include birthday which is available in demo mode
-    const writerPerson = gameDetailsQuery.data?.scoresheet?.writerPerson as
-      { __identity?: string; displayName?: string; birthday?: string } | undefined
+    const writerPerson = gameDetailsQuery.data?.scoresheet?.writerPerson
     if (!writerPerson?.__identity) return null
     return {
       __identity: writerPerson.__identity,
       displayName: writerPerson.displayName ?? 'Unknown',
-      birthday: writerPerson.birthday,
+      birthday: getWriterPersonBirthday(writerPerson),
     }
   }, [gameDetailsQuery.data, isValidated])
 

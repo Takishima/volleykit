@@ -1,8 +1,14 @@
 import type { ReactNode } from 'react'
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, type UseQueryResult } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import { arrayContaining, objectContaining } from '@/test/matchers'
+
+import type { AuthState } from '@/common/stores/auth'
+import type { DemoState } from '@/common/stores/demo'
+import { partialMock } from '@/test/partial-mock'
 
 import type { Assignment } from '@/api/client'
 
@@ -15,9 +21,6 @@ import {
   useCalendarAssignments,
   getDateRangeForPeriod,
 } from './useAssignments'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFunction = (...args: any[]) => any
 
 // Mock dependencies
 vi.mock('@/api/client', () => ({
@@ -32,15 +35,19 @@ vi.mock('@/api/client', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector: AnyFunction) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 vi.mock('@/common/stores/demo', () => ({
-  useDemoStore: vi.fn((selector: AnyFunction) =>
-    selector({
-      activeAssociationCode: 'TEST',
-      assignments: [],
-    })
+  useDemoStore: vi.fn((selector: (state: DemoState) => unknown) =>
+    selector(
+      partialMock<DemoState>({
+        activeAssociationCode: 'SV',
+        assignments: [],
+      })
+    )
   ),
 }))
 
@@ -65,7 +72,7 @@ vi.mock('./usePaginatedQuery', async () => {
   return {
     ...actual,
     fetchAllAssignmentPages: vi.fn(),
-    createDemoQueryResult: vi.fn((baseQuery, data) => ({
+    createDemoQueryResult: vi.fn((baseQuery: UseQueryResult<unknown, Error>, data: unknown) => ({
       ...baseQuery,
       data,
       isLoading: false,
@@ -231,8 +238,8 @@ describe('useAssignments', () => {
       expect.objectContaining({
         offset: 0,
         limit: 100,
-        propertyFilters: expect.arrayContaining([
-          expect.objectContaining({
+        propertyFilters: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
           }),
         ]),
@@ -262,8 +269,8 @@ describe('useAssignments', () => {
 
     expect(mockSearchAssignments).toHaveBeenCalledWith(
       expect.objectContaining({
-        propertyOrderings: expect.arrayContaining([
-          expect.objectContaining({
+        propertyOrderings: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
             descending: true,
           }),
@@ -301,29 +308,31 @@ describe('useAssignments', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useDemoStore } = await import('@/common/stores/demo')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo' }))
     )
 
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + 1)
 
-    vi.mocked(useDemoStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        activeAssociationCode: 'SV',
-        assignments: [
-          createMockAssignment({
-            __identity: 'demo-assignment-1',
-            refereeGame: {
-              game: {
-                __identity: 'game-1',
-                startingDateTime: futureDate.toISOString(),
+    vi.mocked(useDemoStore).mockImplementation((selector) =>
+      selector(
+        partialMock<DemoState>({
+          activeAssociationCode: 'SV',
+          assignments: [
+            createMockAssignment({
+              __identity: 'demo-assignment-1',
+              refereeGame: {
+                game: {
+                  __identity: 'game-1',
+                  startingDateTime: futureDate.toISOString(),
+                },
               },
-            },
-          }),
-        ],
-        validatedGames: {},
-      })
+            }),
+          ],
+          validatedGames: {},
+        })
+      )
     )
 
     const { result } = renderHook(() => useAssignments(), {
@@ -345,8 +354,8 @@ describe('useUpcomingAssignments', () => {
     vi.clearAllMocks()
     // Reset to non-demo mode for API tests
     const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'api' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'api' }))
     )
   })
 
@@ -372,8 +381,8 @@ describe('useUpcomingAssignments', () => {
 
     expect(mockSearchAssignments).toHaveBeenCalledWith(
       expect.objectContaining({
-        propertyOrderings: expect.arrayContaining([
-          expect.objectContaining({
+        propertyOrderings: arrayContaining([
+          objectContaining({
             descending: false,
           }),
         ]),
@@ -387,8 +396,8 @@ describe('usePastAssignments', () => {
     vi.clearAllMocks()
     // Reset to non-demo mode for API tests
     const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'api' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'api' }))
     )
   })
 
@@ -414,8 +423,8 @@ describe('usePastAssignments', () => {
 
     expect(mockSearchAssignments).toHaveBeenCalledWith(
       expect.objectContaining({
-        propertyOrderings: expect.arrayContaining([
-          expect.objectContaining({
+        propertyOrderings: arrayContaining([
+          objectContaining({
             descending: true,
           }),
         ]),
@@ -527,11 +536,13 @@ describe('useCalendarAssignments', () => {
 
   it('is disabled when not in calendar mode', async () => {
     const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        dataSource: 'api',
-        calendarCode: null,
-      })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(
+        partialMock<AuthState>({
+          dataSource: 'api',
+          calendarCode: null,
+        })
+      )
     )
 
     const { result } = renderHook(() => useCalendarAssignments(), {
@@ -547,11 +558,13 @@ describe('useCalendarAssignments', () => {
 
   it('is disabled when calendar code is missing', async () => {
     const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        dataSource: 'calendar',
-        calendarCode: null,
-      })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(
+        partialMock<AuthState>({
+          dataSource: 'calendar',
+          calendarCode: null,
+        })
+      )
     )
 
     const { result } = renderHook(() => useCalendarAssignments(), {

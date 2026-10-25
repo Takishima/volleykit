@@ -1,41 +1,63 @@
 import { type ReactNode, type KeyboardEvent } from 'react'
 
-interface CardProps {
+interface BaseCardProps {
   children: ReactNode
   className?: string
-  onClick?: () => void
-  onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void
-  role?: string
-  tabIndex?: number
   'aria-label'?: string
   'aria-expanded'?: boolean
   'data-tour'?: string
 }
 
-export function Card({
-  children,
-  className = '',
-  onClick,
-  onKeyDown,
-  role,
-  tabIndex,
-  'aria-label': ariaLabel,
-  'aria-expanded': ariaExpanded,
-  'data-tour': dataTour,
-}: CardProps) {
-  const baseClasses =
-    'bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-sm border border-border-subtle dark:border-border-subtle-dark/50'
-  const interactiveClasses = onClick
-    ? 'cursor-pointer hover:shadow-md hover:border-border-strong dark:hover:border-border-strong-dark transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-surface-page-dark'
-    : ''
+/** A plain container card */
+interface StaticCardProps extends BaseCardProps {
+  onClick?: undefined
+  onKeyDown?: undefined
+  tabIndex?: undefined
+}
+
+/** A clickable card, exposed as a button to assistive technology */
+interface InteractiveCardProps extends BaseCardProps {
+  onClick: () => void
+  onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void
+  tabIndex?: number
+}
+
+type CardProps = StaticCardProps | InteractiveCardProps
+
+const BASE_CLASSES =
+  'bg-surface-card dark:bg-surface-card-dark rounded-xl shadow-sm border border-border-subtle dark:border-border-subtle-dark/50'
+const INTERACTIVE_CLASSES =
+  'cursor-pointer hover:shadow-md hover:border-border-strong dark:hover:border-border-strong-dark transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-surface-page-dark'
+
+export function Card(props: CardProps) {
+  const {
+    children,
+    className = '',
+    'aria-label': ariaLabel,
+    'aria-expanded': ariaExpanded,
+    'data-tour': dataTour,
+  } = props
+
+  if (!props.onClick) {
+    return (
+      <div
+        className={`${BASE_CLASSES} ${className}`}
+        aria-label={ariaLabel}
+        aria-expanded={ariaExpanded}
+        data-tour={dataTour}
+      >
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div
-      className={`${baseClasses} ${interactiveClasses} ${className}`}
-      onClick={onClick}
-      onKeyDown={onKeyDown}
-      role={role ?? (onClick ? 'button' : undefined)}
-      tabIndex={tabIndex ?? (onClick ? 0 : undefined)}
+      className={`${BASE_CLASSES} ${INTERACTIVE_CLASSES} ${className}`}
+      onClick={props.onClick}
+      onKeyDown={props.onKeyDown}
+      role="button"
+      tabIndex={props.tabIndex ?? 0}
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       data-tour={dataTour}

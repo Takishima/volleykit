@@ -1,0 +1,61 @@
+name: CI - Help Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'help-site/**'
+      - 'packages/shared/styles/**'
+      - '.github/workflows/ci-help-site.yml'
+      - '.github/actions/**'
+  pull_request:
+    paths:
+      - 'help-site/**'
+      - 'packages/shared/styles/**'
+      - '.github/workflows/ci-help-site.yml'
+      - '.github/actions/**'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck, dead code
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: help-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: help-site
+      - name: Lint
+        run: pnpm run lint
+      - name: Astro check
+        if: ${{ !cancelled() }}
+        run: pnpm run typecheck
+      - name: Check for dead code
+        if: ${{ !cancelled() }}
+        run: pnpm run knip
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: help-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js with dependencies
+        uses: ./.github/actions/setup-node-deps
+        with:
+          working-directory: help-site
+      - name: Build
+        run: pnpm run build

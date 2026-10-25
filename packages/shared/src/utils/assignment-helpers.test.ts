@@ -51,7 +51,7 @@ function createAssignment(overrides: Partial<Assignment> = {}): Assignment {
       },
     },
     ...overrides,
-  } as Assignment
+  }
 }
 
 // Helper to create a minimal compensation record for testing
@@ -70,7 +70,7 @@ function createCompensation(): CompensationRecord {
       },
     },
     convocationCompensation: {},
-  } as CompensationRecord
+  }
 }
 
 describe('Constants', () => {
@@ -230,14 +230,8 @@ describe('getTeamNamesFromCompensation', () => {
     })
   })
 
-  it('should return TBD for missing refereeGame', () => {
-    const compensation = {
-      __identity: 'test-compensation-id',
-      refereeConvocationStatus: 'active',
-      refereePosition: 'head-one',
-      refereeGame: undefined,
-      convocationCompensation: {},
-    } as CompensationRecord
+  it('should return TBD when refereeGame has no game', () => {
+    const compensation: CompensationRecord = { ...createCompensation(), refereeGame: {} }
     expect(getTeamNamesFromCompensation(compensation)).toEqual({
       homeTeam: 'TBD',
       awayTeam: 'TBD',
@@ -365,7 +359,7 @@ describe('isValidationEligible', () => {
   })
 
   it('should return false for linesman position', () => {
-    const assignment = createAssignment({ refereePosition: 'line-one' })
+    const assignment = createAssignment({ refereePosition: 'linesman-one' })
     expect(isValidationEligible(assignment)).toBe(false)
   })
 })

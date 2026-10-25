@@ -45,7 +45,7 @@ function getBiometricIcon(
       return 'face-recognition'
     case 'touchId':
     case 'fingerprint':
-    default:
+    case null:
       return 'fingerprint'
   }
 }

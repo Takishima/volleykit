@@ -356,11 +356,12 @@ export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpT
     return actualArrivalTime <= targetTime
   })
 
-  if (onTimeTrips.length === 0) {
+  const [firstOnTime, ...otherOnTime] = onTimeTrips
+  if (!firstOnTime) {
     return trips[0]!
   }
 
-  return onTimeTrips.reduce((best, trip) => {
+  return otherOnTime.reduce((best, trip) => {
     if (trip.transfers < best.transfers) {
       return trip
     }
@@ -370,5 +371,5 @@ export function selectBestTrip(trips: OjpTrip[], targetArrivalTime?: Date): OjpT
     const bestArrival = new Date(calculateActualArrivalTime(best)).getTime()
     const tripArrival = new Date(calculateActualArrivalTime(trip)).getTime()
     return tripArrival > bestArrival ? trip : best
-  })
+  }, firstOnTime)
 }

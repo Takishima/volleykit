@@ -248,8 +248,8 @@ describe('ExchangeConfirmationModal', () => {
       // Check for loading state using button's text content
       await waitFor(() => {
         expect(confirmButton).toHaveTextContent(/loading/i)
-        expect(confirmButton).toBeDisabled()
       })
+      expect(confirmButton).toBeDisabled()
     })
 
     it('does not close modal on error', async () => {

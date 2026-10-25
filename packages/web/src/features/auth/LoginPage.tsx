@@ -178,7 +178,9 @@ export function LoginPage() {
                   fullWidth
                   loading={isLoading}
                   disabled={isLockedOut || needRefresh}
-                  onClick={performLogin}
+                  onClick={() => {
+                    void performLogin()
+                  }}
                   data-testid="login-button"
                 >
                   {isLoading ? t('auth.loggingIn') : t('auth.loginButton')}
@@ -265,7 +267,9 @@ export function LoginPage() {
                   fullWidth
                   loading={isLoading}
                   disabled={needRefresh}
-                  onClick={performCalendarLogin}
+                  onClick={() => {
+                    void performCalendarLogin()
+                  }}
                   data-testid="calendar-login-button"
                 >
                   {isLoading ? t('auth.enteringCalendarMode') : t('auth.enterCalendarMode')}

@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 
 import { useQuery } from '@tanstack/react-query'
-import { startOfDay, endOfDay, addWeeks, format } from 'date-fns'
+import { startOfDay, endOfDay, addWeeks, parseISO } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type RefereeBackupEntry } from '@/api/client'
 import { refereeBackupListOptions } from '@/api/queryOptions'
 import { DEFAULT_PAGE_SIZE } from '@/common/hooks/usePaginatedQuery'
+import { formatDateKey, useTodayKey } from '@/common/hooks/useTodayKey'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 
@@ -13,7 +14,6 @@ import { useDemoStore } from '@/common/stores/demo'
 const DEFAULT_WEEKS_AHEAD = 2
 
 // Format date as YYYY-MM-DD for stable comparison (no time component)
-const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd')
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_BACKUPS: RefereeBackupEntry[] = []
@@ -38,8 +38,8 @@ export function useRefereeBackups(weeksAhead: number = DEFAULT_WEEKS_AHEAD) {
   const associationKey = isDemoMode ? demoAssociationCode : activeOccupationId
 
   // Compute date keys (YYYY-MM-DD) for stable memoization.
-  const todayKey = formatDateKey(new Date())
-  const endDateKey = formatDateKey(addWeeks(new Date(), weeksAhead))
+  const todayKey = useTodayKey()
+  const endDateKey = formatDateKey(addWeeks(parseISO(todayKey), weeksAhead))
 
   // Memoize date range to ensure stable query key across tab switches.
   // Computed from string date keys so deps are stable (no new Date() in deps array).

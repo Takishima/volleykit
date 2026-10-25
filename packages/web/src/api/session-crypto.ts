@@ -18,6 +18,11 @@ const KEY_ID = 'session-encryption-key'
 /** AES-GCM uses 12-byte (96-bit) IV for optimal security */
 const AES_GCM_IV_LENGTH = 12
 
+/** The request's DOMException, or a plain Error when the request carries none. */
+function toRequestError(request: IDBRequest): Error {
+  return request.error ?? new Error('IndexedDB request failed')
+}
+
 /**
  * Open the IndexedDB database for key storage.
  */
@@ -25,15 +30,15 @@ function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
 
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve(request.result)
+    request.addEventListener('error', () => reject(toRequestError(request)))
+    request.addEventListener('success', () => resolve(request.result))
 
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result
+    request.addEventListener('upgradeneeded', () => {
+      const db = request.result
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: 'id' })
       }
-    }
+    })
   })
 }
 
@@ -50,11 +55,11 @@ async function getOrCreateKey(): Promise<CryptoKey> {
     const store = transaction.objectStore(STORE_NAME)
     const request = store.get(KEY_ID)
 
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => {
+    request.addEventListener('error', () => reject(toRequestError(request)))
+    request.addEventListener('success', () => {
       const result = request.result as { id: string; key: CryptoKey } | undefined
       resolve(result?.key ?? null)
-    }
+    })
   })
 
   if (existingKey) {
@@ -75,8 +80,8 @@ async function getOrCreateKey(): Promise<CryptoKey> {
     const store = transaction.objectStore(STORE_NAME)
     const request = store.put({ id: KEY_ID, key: newKey })
 
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve()
+    request.addEventListener('error', () => reject(toRequestError(request)))
+    request.addEventListener('success', () => resolve())
   })
 
   db.close()
@@ -158,8 +163,8 @@ export async function clearEncryptionKey(): Promise<void> {
       const store = transaction.objectStore(STORE_NAME)
       const request = store.delete(KEY_ID)
 
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve()
+      request.addEventListener('error', () => reject(toRequestError(request)))
+      request.addEventListener('success', () => resolve())
     })
     db.close()
   } catch {

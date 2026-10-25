@@ -1,20 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest'
+
+import { partialMock } from '@/test/partial-mock'
 
 import { launchConfetti } from './confetti'
 
 describe('launchConfetti', () => {
-  let originalMatchMedia: typeof window.matchMedia
-  let appendChildSpy: ReturnType<typeof vi.spyOn>
-  let addEventListenerSpy: ReturnType<typeof vi.spyOn>
+  let appendChildSpy: MockInstance<HTMLElement['appendChild']>
+  let addEventListenerSpy: MockInstance<Window['addEventListener']>
+
+  /** Only `matches` is read by launchConfetti */
+  function mockPrefersReducedMotion(matches: boolean) {
+    vi.spyOn(window, 'matchMedia').mockReturnValue(
+      partialMock<MediaQueryList>({ matches, media: '(prefers-reduced-motion: reduce)' })
+    )
+  }
 
   beforeEach(() => {
-    originalMatchMedia = window.matchMedia
     appendChildSpy = vi.spyOn(document.body, 'appendChild')
     addEventListenerSpy = vi.spyOn(window, 'addEventListener')
   })
 
   afterEach(() => {
-    window.matchMedia = originalMatchMedia
     vi.restoreAllMocks()
     // Clean up any canvases that might have been added
     document.querySelectorAll('canvas').forEach((c) => c.remove())
@@ -22,10 +28,7 @@ describe('launchConfetti', () => {
 
   describe('prefers-reduced-motion', () => {
     it('should not create canvas when user prefers reduced motion', () => {
-      window.matchMedia = vi.fn().mockReturnValue({
-        matches: true,
-        media: '(prefers-reduced-motion: reduce)',
-      })
+      mockPrefersReducedMotion(true)
 
       launchConfetti()
 
@@ -33,10 +36,7 @@ describe('launchConfetti', () => {
     })
 
     it('should create canvas when user does not prefer reduced motion', () => {
-      window.matchMedia = vi.fn().mockReturnValue({
-        matches: false,
-        media: '(prefers-reduced-motion: reduce)',
-      })
+      mockPrefersReducedMotion(false)
 
       launchConfetti()
 
@@ -48,10 +48,7 @@ describe('launchConfetti', () => {
 
   describe('canvas setup', () => {
     beforeEach(() => {
-      window.matchMedia = vi.fn().mockReturnValue({
-        matches: false,
-        media: '(prefers-reduced-motion: reduce)',
-      })
+      mockPrefersReducedMotion(false)
     })
 
     it('should create a fixed position canvas', () => {
@@ -83,21 +80,15 @@ describe('launchConfetti', () => {
 
   describe('cleanup', () => {
     beforeEach(() => {
-      window.matchMedia = vi.fn().mockReturnValue({
-        matches: false,
-        media: '(prefers-reduced-motion: reduce)',
-      })
+      mockPrefersReducedMotion(false)
     })
 
     it('should handle missing context gracefully', () => {
-      // Mock getContext to return null
-      const originalGetContext = HTMLCanvasElement.prototype.getContext
-      HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(null)
+      // Mock getContext to return null (restored by vi.restoreAllMocks in afterEach)
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
 
       // Should not throw
       expect(() => launchConfetti(100)).not.toThrow()
-
-      HTMLCanvasElement.prototype.getContext = originalGetContext
     })
   })
 })

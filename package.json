@@ -10,6 +10,7 @@
     "generate:tokens": "node scripts/sync-style-tokens.js",
     "generate:tokens:check": "node scripts/sync-style-tokens.js --check",
     "lint": "pnpm -r run lint",
+    "lint:oxlint": "oxlint -c .oxlintrc.json packages",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,json,css,md,astro}\"",
     "test": "pnpm -r run test",
@@ -20,18 +21,17 @@
     "shared:build": "pnpm --filter @volleykit/shared run build",
     "shared:test": "pnpm --filter @volleykit/shared run test"
   },
-  "dependencies": {
-    "@tanstack/react-query": "^5.104.5",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "zustand": "^5.0.16"
-  },
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
+    "@tanstack/react-query": "^5.104.5",
     "@types/react": "^19.3.0",
+    "oxlint": "^1.89.0",
     "prettier": "^3.9.10",
-    "typescript": "~6.0.3"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "~6.0.3",
+    "zustand": "^5.0.16"
   },
   "pnpm": {
     "overrides": {

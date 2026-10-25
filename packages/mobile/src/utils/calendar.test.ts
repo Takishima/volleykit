@@ -185,6 +185,6 @@ describe('getDefaultReminders', () => {
 
   it('returns reminders in descending order', () => {
     const reminders = getDefaultReminders()
-    expect(reminders[0]).toBeGreaterThan(reminders[1])
+    expect(reminders[0]).toBeGreaterThan(reminders[1] ?? Number.NEGATIVE_INFINITY)
   })
 })

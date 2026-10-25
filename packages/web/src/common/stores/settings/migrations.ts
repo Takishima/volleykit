@@ -91,7 +91,7 @@ export function migrateV1ToV2(v1State: V1State): Record<string, unknown> {
     transportEnabledByAssociation: v1State.transportEnabledByAssociation ?? {},
     travelTimeFilter: {
       ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
-      ...(v1State.travelTimeFilter ?? {}),
+      ...v1State.travelTimeFilter,
       maxTravelTimeByAssociation: {},
     },
     levelFilterEnabled: v1State.levelFilterEnabled ?? false,
@@ -225,9 +225,8 @@ export function addHideNotTakeableExchangesByAssociation(state: StateWithModes):
 /**
  * Run all migrations from the given version to latest.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function runMigrations(persisted: any, version: number): unknown {
-  let state = persisted
+export function runMigrations(persisted: unknown, version: number): unknown {
+  let state: unknown = persisted
 
   // v1 → v2: Migrate flat settings to per-mode settings
   if (version === 1) {

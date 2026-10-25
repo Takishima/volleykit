@@ -19,6 +19,31 @@ import type { MainTabParamList } from './types'
 
 const Tab = createBottomTabNavigator<MainTabParamList>()
 
+interface TabIconProps {
+  name: keyof typeof Feather.glyphMap
+  color: string
+}
+
+function TabIcon({ name, color }: TabIconProps) {
+  return <Feather name={name} size={TAB_ICON_SIZE} color={color} />
+}
+
+function AssignmentsTabIcon({ color }: { color: string }) {
+  return <TabIcon name="calendar" color={color} />
+}
+
+function CompensationsTabIcon({ color }: { color: string }) {
+  return <TabIcon name="dollar-sign" color={color} />
+}
+
+function ExchangesTabIcon({ color }: { color: string }) {
+  return <TabIcon name="repeat" color={color} />
+}
+
+function SettingsTabIcon({ color }: { color: string }) {
+  return <TabIcon name="settings" color={color} />
+}
+
 /**
  * Header right component showing offline status and pending actions.
  */
@@ -31,6 +56,10 @@ function HeaderRight() {
   )
 }
 
+function renderHeaderRight() {
+  return <HeaderRight />
+}
+
 export function TabNavigator() {
   return (
     <Tab.Navigator
@@ -38,7 +67,7 @@ export function TabNavigator() {
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray500,
         headerShown: true,
-        headerRight: () => <HeaderRight />,
+        headerRight: renderHeaderRight,
       }}
     >
       <Tab.Screen
@@ -46,7 +75,7 @@ export function TabNavigator() {
         component={AssignmentsScreen}
         options={{
           title: 'Assignments',
-          tabBarIcon: ({ color }) => <Feather name="calendar" size={TAB_ICON_SIZE} color={color} />,
+          tabBarIcon: AssignmentsTabIcon,
         }}
       />
       <Tab.Screen
@@ -54,9 +83,7 @@ export function TabNavigator() {
         component={CompensationsScreen}
         options={{
           title: 'Compensations',
-          tabBarIcon: ({ color }) => (
-            <Feather name="dollar-sign" size={TAB_ICON_SIZE} color={color} />
-          ),
+          tabBarIcon: CompensationsTabIcon,
         }}
       />
       <Tab.Screen
@@ -64,7 +91,7 @@ export function TabNavigator() {
         component={ExchangesScreen}
         options={{
           title: 'Exchanges',
-          tabBarIcon: ({ color }) => <Feather name="repeat" size={TAB_ICON_SIZE} color={color} />,
+          tabBarIcon: ExchangesTabIcon,
         }}
       />
       <Tab.Screen
@@ -72,7 +99,7 @@ export function TabNavigator() {
         component={SettingsScreen}
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <Feather name="settings" size={TAB_ICON_SIZE} color={color} />,
+          tabBarIcon: SettingsTabIcon,
         }}
       />
     </Tab.Navigator>

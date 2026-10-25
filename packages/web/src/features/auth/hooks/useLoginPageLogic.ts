@@ -3,7 +3,7 @@
  * from LoginPage.tsx into a single hook following the use*PageLogic pattern.
  */
 
-import { useState, useRef, useEffect, useCallback, type FormEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, type SyntheticEvent } from 'react'
 
 import { useNavigate } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
@@ -72,7 +72,7 @@ export function useLoginPageLogic() {
   const handleDemoLogin = useCallback(() => {
     initializeDemoData('SV')
     setDemoAuthenticated()
-    navigate('/')
+    void navigate('/')
   }, [initializeDemoData, setDemoAuthenticated, navigate])
 
   // Cleanup: abort any pending calendar validation on unmount
@@ -160,10 +160,10 @@ export function useLoginPageLogic() {
     }
   }
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     e.stopPropagation()
-    await performLogin()
+    void performLogin()
   }
 
   async function performLogin() {
@@ -182,7 +182,7 @@ export function useLoginPageLogic() {
         if (passwordRef.current) {
           passwordRef.current.value = ''
         }
-        navigate('/')
+        void navigate('/')
       } else if (!needRefresh) {
         setCheckedForUpdateAfterError(true)
         await checkForUpdate()
@@ -192,10 +192,10 @@ export function useLoginPageLogic() {
     }
   }
 
-  async function handleCalendarSubmit(e: FormEvent) {
+  function handleCalendarSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     e.stopPropagation()
-    await performCalendarLoginFlow()
+    void performCalendarLoginFlow()
   }
 
   async function performCalendarLoginFlow() {
@@ -234,9 +234,9 @@ export function useLoginPageLogic() {
       }
 
       await loginWithCalendar(code)
-      navigate('/')
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      void navigate('/')
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
         return
       }
       setCalendarError('auth.calendarValidationFailed')
@@ -256,14 +256,14 @@ export function useLoginPageLogic() {
   function handlePasswordKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && !isLoading) {
       e.preventDefault()
-      performLogin()
+      void performLogin()
     }
   }
 
   function handleCalendarInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && !isLoading) {
       e.preventDefault()
-      performCalendarLoginFlow()
+      void performCalendarLoginFlow()
     }
   }
 

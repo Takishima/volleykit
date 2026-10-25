@@ -101,8 +101,8 @@ export async function updateActionStatus(
     await db.put(STORES.ACTION_QUEUE, updated)
     log.debug('Updated action status:', { id, status })
     return true
-  } catch (error) {
-    log.error('Failed to update action status:', error)
+  } catch (err) {
+    log.error('Failed to update action status:', err)
     return false
   }
 }

@@ -58,8 +58,7 @@ export const compensationRecordSchema = z
   .passthrough()
 
 // Game exchange schema
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Explicit any needed to avoid TS7056 (type serialization limit)
-export const gameExchangeSchema: z.ZodType<any> = z
+export const gameExchangeSchema = z
   .object({
     __identity: uuidSchema,
     refereeGame: refereeGameForExchangeSchema,
@@ -67,6 +66,11 @@ export const gameExchangeSchema: z.ZodType<any> = z
     // be rendered or filtered and the exchange is better dropped than shown wrong.
     status: exchangeStatusSchema,
     createdAt: dateTimeSchema,
+    // Both are in every captured payload (docs/api/captures/exchanges_request.txt)
+    // and required by the OpenAPI `GameExchange` the web app casts this to.
+    // Kept lenient so an odd value never drops the whole entry.
+    submittedAt: z.string().optional().nullable(),
+    submittingType: z.string().optional().nullable(),
     submittedByPerson: personSummarySchema.optional(),
     exchangeReason: z.string().optional().nullable(),
     notes: z.string().optional().nullable(),

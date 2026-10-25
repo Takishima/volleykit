@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import * as i18n from '@/i18n'
 import * as useDateFormat from '@/common/hooks/useDateFormat'
+import type { Logger } from '@/common/utils/logger'
 
 import { usePreloadLocales } from './usePreloadLocales'
 
@@ -22,7 +23,7 @@ vi.mock('@/common/hooks/useDateFormat', () => ({
   preloadDateLocales: vi.fn(),
 }))
 
-const mockLogError = vi.fn()
+const mockLogError = vi.fn<Logger['error']>()
 
 vi.mock('@/common/utils/logger', () => {
   return {
@@ -34,6 +35,20 @@ vi.mock('@/common/utils/logger', () => {
     }),
   }
 })
+
+/**
+ * Removes `window.requestIdleCallback` so the hook takes its setTimeout
+ * fallback; the returned function puts the original back.
+ */
+function withoutRequestIdleCallback(): () => void {
+  const descriptor = Object.getOwnPropertyDescriptor(window, 'requestIdleCallback')
+  Reflect.deleteProperty(window, 'requestIdleCallback')
+  return () => {
+    if (descriptor) {
+      Object.defineProperty(window, 'requestIdleCallback', descriptor)
+    }
+  }
+}
 
 describe('usePreloadLocales', () => {
   beforeEach(() => {
@@ -94,10 +109,7 @@ describe('usePreloadLocales', () => {
       mockPreloadTranslations.mockResolvedValue()
       mockPreloadDateLocales.mockResolvedValue()
 
-      // Remove requestIdleCallback
-      const originalRequestIdleCallback = window.requestIdleCallback
-      // @ts-expect-error - Intentionally deleting for test
-      delete window.requestIdleCallback
+      const restoreRequestIdleCallback = withoutRequestIdleCallback()
 
       renderHook(() => usePreloadLocales())
 
@@ -109,8 +121,7 @@ describe('usePreloadLocales', () => {
       expect(mockPreloadTranslations).toHaveBeenCalledTimes(1)
       expect(mockPreloadDateLocales).toHaveBeenCalledTimes(1)
 
-      // Restore
-      window.requestIdleCallback = originalRequestIdleCallback
+      restoreRequestIdleCallback()
     })
 
     it('cleans up timeout on unmount when using fallback', () => {
@@ -120,10 +131,7 @@ describe('usePreloadLocales', () => {
       mockPreloadTranslations.mockResolvedValue()
       mockPreloadDateLocales.mockResolvedValue()
 
-      // Remove requestIdleCallback
-      const originalRequestIdleCallback = window.requestIdleCallback
-      // @ts-expect-error - Intentionally deleting for test
-      delete window.requestIdleCallback
+      const restoreRequestIdleCallback = withoutRequestIdleCallback()
 
       const { unmount } = renderHook(() => usePreloadLocales())
 
@@ -135,8 +143,7 @@ describe('usePreloadLocales', () => {
       expect(mockPreloadTranslations).not.toHaveBeenCalled()
       expect(mockPreloadDateLocales).not.toHaveBeenCalled()
 
-      // Restore
-      window.requestIdleCallback = originalRequestIdleCallback
+      restoreRequestIdleCallback()
     })
   })
 
@@ -225,10 +232,7 @@ describe('usePreloadLocales', () => {
       mockPreloadTranslations.mockResolvedValue()
       mockPreloadDateLocales.mockResolvedValue()
 
-      // Remove requestIdleCallback
-      const originalRequestIdleCallback = window.requestIdleCallback
-      // @ts-expect-error - Intentionally deleting for test
-      delete window.requestIdleCallback
+      const restoreRequestIdleCallback = withoutRequestIdleCallback()
 
       renderHook(() => usePreloadLocales())
 
@@ -241,8 +245,7 @@ describe('usePreloadLocales', () => {
       expect(mockPreloadTranslations).toHaveBeenCalledTimes(1)
       expect(mockPreloadDateLocales).toHaveBeenCalledTimes(1)
 
-      // Restore
-      window.requestIdleCallback = originalRequestIdleCallback
+      restoreRequestIdleCallback()
     })
   })
 })

@@ -18,16 +18,13 @@ import type { GameExchange } from '../api'
  * docs/api/exchanges_api.md for the captured evidence).
  *
  * Entries without the flag are treated as takeable so a missing property never
- * empties the list. The optional chaining is the only real guard: `GameExchange`
- * resolves to `any` (its schema is declared `z.ZodType<any>` to stay under the TS
- * serialization limit), so `exchangePermissionsSchema` documents the payload
- * rather than enforcing it here.
+ * empties the list.
  *
  * @param exchange - The exchange entry to check
  * @returns true when the entry can be taken over (or the server said nothing)
  */
 export function canTakeOverExchange(exchange: GameExchange): boolean {
-  const canApply = exchange?._permissions?.properties?.appliedBy?.update
+  const canApply = exchange._permissions?.properties?.appliedBy?.update
   return typeof canApply === 'boolean' ? canApply : true
 }
 
@@ -40,7 +37,7 @@ export function canTakeOverExchange(exchange: GameExchange): boolean {
  */
 export function isOwnExchange(exchange: GameExchange, personId: string | undefined): boolean {
   if (!personId) return false
-  return exchange?.submittedByPerson?.__identity === personId
+  return exchange.submittedByPerson?.__identity === personId
 }
 
 /**

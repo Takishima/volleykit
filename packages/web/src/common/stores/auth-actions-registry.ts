@@ -7,29 +7,37 @@
  * the full store module dependency tree.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any -- Loose typing to avoid circular deps with auth store */
+import type { AttributeValue } from '@/common/types/active-party'
+
+import type { AuthState, Occupation } from './auth'
+
+/** Reads the current auth store state */
+type GetAuthState = () => AuthState
+
+/** Applies a partial update to the auth store state */
+type SetAuthState = (state: Partial<AuthState>) => void
 
 /**
  * Auth actions interface — defines the contract for platform-specific
- * authentication operations. Uses loose typing to avoid circular dependency
- * with the auth store module.
+ * authentication operations. Only types are imported from the auth store,
+ * so there is no runtime circular dependency.
  */
 export interface AuthActions {
   performLogin: (
     username: string,
     password: string,
-    get: () => any,
-    set: (state: any) => void
+    get: GetAuthState,
+    set: SetAuthState
   ) => Promise<boolean>
   performLogout: () => Promise<void>
   performSessionCheck: (
-    get: () => any,
-    set: (state: any) => void,
+    get: GetAuthState,
+    set: SetAuthState,
     signal?: AbortSignal
   ) => Promise<boolean>
-  performCalendarLogin: (code: string, set: (state: any) => void) => Promise<void>
-  filterRefereeOccupations: (occupations: any[]) => any[]
-  hasMultipleAssociations: (attributeValues: any[] | null | undefined) => boolean
+  performCalendarLogin: (code: string, set: SetAuthState) => Promise<void>
+  filterRefereeOccupations: (occupations: Occupation[]) => Occupation[]
+  hasMultipleAssociations: (attributeValues: AttributeValue[] | null | undefined) => boolean
   sessionCheckGracePeriodMs: number
 }
 

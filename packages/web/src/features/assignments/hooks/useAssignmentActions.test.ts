@@ -92,7 +92,7 @@ function createMockAssignment(leagueName = 'NLA'): Assignment {
         },
       },
     },
-  } as Assignment
+  }
 }
 
 const mockAssignment = createMockAssignment()
@@ -205,17 +205,23 @@ describe('useAssignmentActions', () => {
       result.current.editCompensationModal.open(mockAssignment)
     })
 
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
     act(() => {
       result.current.editCompensationModal.close()
     })
+    const cleanupCall = setTimeoutSpy.mock.calls.findIndex(
+      ([, delay]) => delay === MODAL_CLEANUP_DELAY
+    )
+    const cleanupTimer: unknown = setTimeoutSpy.mock.results[cleanupCall]?.value
+    expect(cleanupTimer).toBeDefined()
 
-    // Unmount before timeout completes
+    // Unmounting before the timeout completes clears the pending cleanup timer
     unmount()
 
-    // Should not throw or cause memory leak
-    act(() => {
-      vi.advanceTimersByTime(MODAL_CLEANUP_DELAY)
-    })
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(cleanupTimer)
+    setTimeoutSpy.mockRestore()
+    clearTimeoutSpy.mockRestore()
   })
 
   it('should clear previous timeout when closing multiple times', () => {
@@ -306,7 +312,7 @@ describe('useAssignmentActions', () => {
           },
         },
       },
-    } as Assignment
+    }
 
     act(() => {
       result.current.handleGenerateReport(assignmentWithoutLeague)
@@ -322,7 +328,7 @@ describe('useAssignmentActions', () => {
     const secondRefereeAssignment: Assignment = {
       ...createMockAssignment('NLA'),
       refereePosition: 'head-two',
-    } as Assignment
+    }
 
     act(() => {
       result.current.handleGenerateReport(secondRefereeAssignment)
@@ -338,7 +344,7 @@ describe('useAssignmentActions', () => {
     const linesmanAssignment: Assignment = {
       ...createMockAssignment('NLA'),
       refereePosition: 'linesman-one',
-    } as Assignment
+    }
 
     act(() => {
       result.current.handleGenerateReport(linesmanAssignment)
@@ -466,7 +472,7 @@ describe('useAssignmentActions', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       const { result } = renderHook(() => useAssignmentActions(), { wrapper: createWrapper() })
 

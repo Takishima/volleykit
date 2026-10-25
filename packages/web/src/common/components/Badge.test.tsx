@@ -3,6 +3,9 @@ import { describe, it, expect } from 'vitest'
 
 import { Badge } from './Badge'
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('Badge', () => {
   describe('rendering', () => {
     it('renders children correctly', () => {
@@ -21,8 +24,8 @@ describe('Badge', () => {
     })
 
     it('applies custom className', () => {
-      render(<Badge className="custom-class">Test</Badge>)
-      expect(screen.getByText('Test')).toHaveClass('custom-class')
+      render(<Badge className={CUSTOM_CLASS}>Test</Badge>)
+      expect(screen.getByText('Test')).toHaveClass(CUSTOM_CLASS)
     })
   })
 

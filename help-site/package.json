@@ -8,7 +8,10 @@
     "build": "astro build && npx pagefind --site dist --output-subdir _pagefind",
     "preview": "astro preview",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md,astro}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md,astro}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md,astro}\"",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "astro check",
+    "knip": "knip"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
@@ -17,7 +20,15 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@astrojs/check": "^0.9.6",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "eslint-plugin-astro": "^1.5.0",
+    "eslint-plugin-better-tailwindcss": "^4.10.0",
+    "knip": "^6.43.0",
     "pagefind": "^1.5.2",
-    "prettier-plugin-astro": "^1.1.2"
+    "prettier-plugin-astro": "^1.1.2",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.0"
   }
 }

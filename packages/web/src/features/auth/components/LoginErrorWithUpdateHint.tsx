@@ -29,7 +29,7 @@ export function LoginErrorWithUpdateHint({
 
   const handleUpdateClick = () => {
     if (isUpdating) return
-    onUpdate()
+    void onUpdate()
   }
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { getApiBaseUrl } from '@/api/constants'
@@ -26,6 +26,15 @@ const WORKER_VERSION_KEY = 'volleykit-worker-version'
  * We don't want to block updates if the worker is unreachable.
  */
 const WORKER_VERSION_FETCH_TIMEOUT_MS = 5000
+
+/** Polls the service worker for a new version; a failed check is only logged. */
+function startUpdateChecks(registration: ServiceWorkerRegistration) {
+  return setInterval(() => {
+    registration
+      .update()
+      .catch((error: unknown) => logger.warn('Service worker update check failed:', error))
+  }, UPDATE_CHECK_INTERVAL_MS)
+}
 
 interface PWAProviderInternalProps {
   children: ReactNode
@@ -90,7 +99,7 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
     // 3. Make the cleanup intent explicit for maintainability
     let cancelled = false
 
-    async function registerSW() {
+    async function registerServiceWorker() {
       try {
         const { registerSW } = await import('virtual:pwa-register')
 
@@ -102,9 +111,7 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
             registrationRef.current = registration
 
             // Check for updates periodically
-            intervalRef.current = setInterval(() => {
-              registration.update()
-            }, UPDATE_CHECK_INTERVAL_MS)
+            intervalRef.current = startUpdateChecks(registration)
           },
           onOfflineReady() {
             if (!cancelled) {
@@ -140,7 +147,9 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
       }
     }
 
-    registerSW()
+    registerServiceWorker().catch((error: unknown) =>
+      logger.error('Unexpected service worker registration failure:', error)
+    )
 
     return () => {
       cancelled = true
@@ -151,7 +160,7 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
     }
   }, [])
 
-  const checkForUpdate = async () => {
+  const checkForUpdate = useCallback(async () => {
     // Use ref-based guard to prevent race conditions with concurrent calls
     if (!registrationRef.current || isCheckingRef.current) return
 
@@ -169,9 +178,9 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
       isCheckingRef.current = false
       setIsChecking(false)
     }
-  }
+  }, [])
 
-  const updateApp = async () => {
+  const updateApp = useCallback(async () => {
     // Check if worker version changed to determine if session should be cleared.
     // Only clear session if the CORS proxy worker was updated (auth logic may have changed).
     // This allows web-app-only updates without forcing users to re-login.
@@ -261,24 +270,37 @@ export default function PWAProviderInternal({ children }: PWAProviderInternalPro
         window.location.reload()
       }
     }
-  }
+  }, [])
 
-  const dismissPrompt = () => {
+  const dismissPrompt = useCallback(() => {
     setOfflineReady(false)
     setNeedRefresh(false)
-  }
+  }, [])
 
-  const value: PWAContextType = {
-    offlineReady,
-    needRefresh,
-    isChecking,
-    lastChecked,
-    checkError,
-    registrationError,
-    checkForUpdate,
-    updateApp,
-    dismissPrompt,
-  }
+  const value = useMemo<PWAContextType>(
+    () => ({
+      offlineReady,
+      needRefresh,
+      isChecking,
+      lastChecked,
+      checkError,
+      registrationError,
+      checkForUpdate,
+      updateApp,
+      dismissPrompt,
+    }),
+    [
+      offlineReady,
+      needRefresh,
+      isChecking,
+      lastChecked,
+      checkError,
+      registrationError,
+      checkForUpdate,
+      updateApp,
+      dismissPrompt,
+    ]
+  )
 
   return <PWAContext.Provider value={value}>{children}</PWAContext.Provider>
 }

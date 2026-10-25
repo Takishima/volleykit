@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
+import { ensureError } from '@volleykit/shared/utils'
 import { useShallow } from 'zustand/react/shallow'
 
 import { queryKeys } from '@/api/queryKeys'
@@ -11,6 +12,16 @@ import { useCalendarErrorHandler } from '../hooks/useCalendarErrorHandler'
 
 interface CalendarErrorHandlerProps {
   children: ReactNode
+}
+
+/**
+ * The parts of a cached query this handler inspects. TanStack Query types the
+ * queries it emits in cache events as `Query<any, any, any, any>`; narrowing to
+ * this structural shape keeps the key and error strictly typed.
+ */
+interface ObservedQuery {
+  readonly queryKey: readonly unknown[]
+  readonly state: { readonly error: unknown }
 }
 
 /**
@@ -50,11 +61,14 @@ export function CalendarErrorHandler({ children }: CalendarErrorHandlerProps) {
     if (!isCalendarMode || !calendarCode) return
 
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type !== 'updated') return
+      const query: ObservedQuery = event.query
+
       // Only handle updated events with errors
-      if (event.type !== 'updated' || !event.query.state.error) return
+      if (!query.state.error) return
 
       // Only handle calendar assignment queries
-      const queryKey = event.query.queryKey
+      const queryKey = query.queryKey
       const calendarAssignmentsKey = queryKeys.calendar.assignmentsByCode(calendarCode)
 
       // Check if this is a calendar assignments query
@@ -64,14 +78,8 @@ export function CalendarErrorHandler({ children }: CalendarErrorHandlerProps) {
       if (hasHandledErrorRef.current) return
       hasHandledErrorRef.current = true
 
-      // Validate that the error is actually an Error instance
-      const error = event.query.state.error
-      if (error instanceof Error) {
-        handleError(error)
-      } else {
-        // Wrap non-Error values in an Error for consistent handling
-        handleError(new Error(String(error)))
-      }
+      // Wrap non-Error values in an Error for consistent handling
+      handleError(ensureError(query.state.error))
     })
 
     return () => {
@@ -94,7 +102,9 @@ export function CalendarErrorHandler({ children }: CalendarErrorHandlerProps) {
         <CalendarErrorModal
           isOpen={errorState.isOpen}
           errorType={errorState.errorType}
-          onAcknowledge={acknowledgeError}
+          onAcknowledge={() => {
+            void acknowledgeError()
+          }}
         />
       )}
     </>

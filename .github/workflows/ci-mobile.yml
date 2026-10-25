@@ -26,6 +26,9 @@ on:
 #              └──> test
 #
 # =============================================================================
+permissions:
+  contents: read
+
 jobs:
   setup:
     name: Setup
@@ -34,7 +37,9 @@ jobs:
       api-cache-key: ${{ steps.api-cache-key.outputs.key }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -44,7 +49,7 @@ jobs:
         run: echo "key=api-types-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ steps.api-cache-key.outputs.key }}
@@ -60,13 +65,15 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
       - name: Restore API types cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
@@ -81,13 +88,15 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
       - name: Restore API types cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}
@@ -108,13 +117,15 @@ jobs:
         working-directory: packages/mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/mobile
       - name: Restore API types cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/shared/src/api/schema.ts
           key: ${{ needs.setup.outputs.api-cache-key }}

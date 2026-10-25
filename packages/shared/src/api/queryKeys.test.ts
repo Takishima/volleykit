@@ -167,7 +167,7 @@ describe('queryKeys', () => {
         searchTerm: 'John',
         firstName: 'John',
         lastName: 'Doe',
-        associationId: 123,
+        associationId: '123',
       }
 
       expect(queryKeys.scorerSearch.search(filters)).toEqual(['scorerSearch', filters])

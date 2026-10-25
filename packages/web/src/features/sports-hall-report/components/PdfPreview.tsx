@@ -68,11 +68,18 @@ export function PdfPreview({ pdfBytes, isLoading }: PdfPreviewProps) {
         </button>
       </div>
       <div className="rounded-lg border border-border-default dark:border-border-default-dark overflow-hidden">
-        <iframe
-          src={blobUrl}
-          title={t('pdf.wizard.nonConformant.previewTitle')}
+        {/* An <object> hands the PDF to the browser's viewer; a sandboxed iframe cannot show one in Chromium */}
+        <object
+          data={blobUrl}
+          type="application/pdf"
+          aria-label={t('pdf.wizard.nonConformant.previewTitle')}
           className="w-full h-[50vh] min-h-[300px]"
-        />
+        >
+          {/* Shown only when the browser cannot display the PDF inline */}
+          <p className="p-4 text-sm text-text-muted dark:text-text-muted-dark">
+            {t('pdf.wizard.nonConformant.downloadToView')}
+          </p>
+        </object>
       </div>
       <button
         type="button"

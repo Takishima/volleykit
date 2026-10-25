@@ -101,7 +101,9 @@ export function ExchangePage() {
       return (
         <ErrorState
           message={error instanceof Error ? error.message : t('exchange.errorLoading')}
-          onRetry={() => refetch()}
+          onRetry={() => {
+            void refetch()
+          }}
         />
       )
     }

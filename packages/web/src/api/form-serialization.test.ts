@@ -447,12 +447,12 @@ describe('form-serialization', () => {
     it('converts numbers to strings', () => {
       const result = buildFormData({
         integer: 42,
-        float: 3.14159,
+        float: Math.PI,
         negative: -100,
         zero: 0,
       })
       expect(result.get('integer')).toBe('42')
-      expect(result.get('float')).toBe('3.14159')
+      expect(result.get('float')).toBe(String(Math.PI))
       expect(result.get('negative')).toBe('-100')
       expect(result.get('zero')).toBe('0')
     })

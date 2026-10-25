@@ -9,7 +9,7 @@ import { useCrossAssociationGamesStore } from '@/common/stores/cross-association
 
 interface CrossAssociationGameNoticesProps {
   /** Switches the active occupation (reuses the AppShell switch handler) */
-  onSwitch: (occupationId: string) => void | Promise<void>
+  onSwitch: (occupationId: string) => void
 }
 
 function NoticePill({
@@ -37,7 +37,7 @@ function NoticePill({
         aria-hidden="true"
       />
       <button
-        onClick={() => void onSwitch(notice.occupationId)}
+        onClick={() => onSwitch(notice.occupationId)}
         disabled={isAssociationSwitching}
         className="px-1 text-xs font-medium text-text-secondary dark:text-text-secondary-dark hover:text-primary-600 dark:hover:text-primary-400 disabled:cursor-wait"
         title={tInterpolate('common.crossAssociationSwitchTo', {

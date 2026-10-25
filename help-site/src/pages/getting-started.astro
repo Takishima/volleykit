@@ -1,6 +1,5 @@
 ---
 import DocLayout from '../layouts/DocLayout.astro'
-import Screenshot from '../components/Screenshot.astro'
 import DeviceScreenshot from '../components/DeviceScreenshot.astro'
 import InfoBox from '../components/InfoBox.astro'
 import StepList from '../components/StepList.astro'
@@ -41,9 +40,7 @@ import { t } from '../i18n'
   </ul>
 
   <InfoBox type="info">
-    <p data-i18n="gettingStarted.whatIs.infoBox">
-      {t('gettingStarted.whatIs.infoBox')}
-    </p>
+    <p data-i18n="gettingStarted.whatIs.infoBox">{t('gettingStarted.whatIs.infoBox')}</p>
   </InfoBox>
 
   <h2 data-i18n="gettingStarted.howToLogin.title">{t('gettingStarted.howToLogin.title')}</h2>
@@ -86,7 +83,9 @@ import { t } from '../i18n'
   <InfoBox type="info">
     <p data-i18n="gettingStarted.howToLogin.calendarMode.infoBox">
       {t('gettingStarted.howToLogin.calendarMode.infoBox')}
-      <a href={`${BASE_PATH}/calendar-mode/`} data-i18n-skip="true">{t('nav.calendarMode')}</a>
+      <a href={`${BASE_PATH}/calendar-mode/`} data-i18n-skip="true">
+        {t('nav.calendarMode')}
+      </a>
     </p>
   </InfoBox>
 
@@ -182,21 +181,22 @@ import { t } from '../i18n'
 
   <ul>
     <li>
-      <a href={`${BASE_PATH}/assignments/`} data-i18n="gettingStarted.nextSteps.links.assignments"
-        >{t('gettingStarted.nextSteps.links.assignments')}</a
-      >
+      <a href={`${BASE_PATH}/assignments/`} data-i18n="gettingStarted.nextSteps.links.assignments">
+        {t('gettingStarted.nextSteps.links.assignments')}
+      </a>
     </li>
     <li>
-      <a href={`${BASE_PATH}/exchanges/`} data-i18n="gettingStarted.nextSteps.links.exchanges"
-        >{t('gettingStarted.nextSteps.links.exchanges')}</a
-      >
+      <a href={`${BASE_PATH}/exchanges/`} data-i18n="gettingStarted.nextSteps.links.exchanges">
+        {t('gettingStarted.nextSteps.links.exchanges')}
+      </a>
     </li>
     <li>
       <a
         href={`${BASE_PATH}/compensations/`}
         data-i18n="gettingStarted.nextSteps.links.compensations"
-        >{t('gettingStarted.nextSteps.links.compensations')}</a
       >
+        {t('gettingStarted.nextSteps.links.compensations')}
+      </a>
     </li>
   </ul>
 </DocLayout>

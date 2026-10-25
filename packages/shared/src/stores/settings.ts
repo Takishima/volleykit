@@ -69,6 +69,9 @@ export const DEFAULT_MAX_TRAVEL_TIME_MINUTES = 120
 /** Default arrival buffer (minutes before game start) */
 export const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30
 
+/** Default departure reminder buffer (minutes before departure) */
+export const DEFAULT_DEPARTURE_REMINDER_BUFFER_MINUTES: DepartureReminderBuffer = 15
+
 /** Default notification settings */
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   enabled: false,
@@ -151,7 +154,7 @@ const initialState = {
   calendarSyncEnabled: false,
   selectedCalendarId: null as string | null,
   departureReminderEnabled: false,
-  departureReminderBufferMinutes: 15 as DepartureReminderBuffer,
+  departureReminderBufferMinutes: DEFAULT_DEPARTURE_REMINDER_BUFFER_MINUTES,
 }
 
 /**

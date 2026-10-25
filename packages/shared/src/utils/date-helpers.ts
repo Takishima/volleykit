@@ -75,6 +75,9 @@ export const formatDate = (dateString: string, formatString = 'dd.MM.yyyy'): str
   return format(date, formatString)
 }
 
+/** Number of trailing year digits in a two-digit year (YY) */
+const SHORT_YEAR_DIGITS = 2
+
 /**
  * Formats a birthday string as DD.MM.YY (Swiss format).
  * Returns empty string if the input is undefined, null, or invalid.
@@ -88,7 +91,7 @@ export function formatDOB(birthday: string | null | undefined): string {
   if (isNaN(date.getTime())) return ''
   const day = String(date.getDate()).padStart(2, '0')
   const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = String(date.getFullYear()).slice(-2)
+  const year = String(date.getFullYear()).slice(-SHORT_YEAR_DIGITS)
   return `${day}.${month}.${year}`
 }
 

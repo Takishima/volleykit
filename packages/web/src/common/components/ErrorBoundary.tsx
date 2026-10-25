@@ -51,7 +51,10 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null, errorType: 'application' })
   }
 
-  override render() {
+  /**
+   * @returns the custom fallback or the default error UI while in an error state, otherwise the children
+   */
+  override render(): ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback

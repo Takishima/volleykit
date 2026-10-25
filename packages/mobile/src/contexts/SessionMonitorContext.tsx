@@ -6,7 +6,15 @@
  * biometric re-authentication when enabled.
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from 'react'
 
 import { AppState, type AppStateStatus } from 'react-native'
 
@@ -51,31 +59,35 @@ export function SessionMonitorProvider({ children }: SessionMonitorProviderProps
     biometricEnabled: false,
   })
 
-  const checkBiometricStatus = useCallback(async () => {
+  const readBiometricEnabled = useCallback(async (): Promise<boolean> => {
     try {
       const available = await biometrics.isAvailable()
       if (!available) {
-        setState((prev) => ({ ...prev, biometricEnabled: false }))
-        return
+        return false
       }
 
       const storedEnabled = await storage.getItem(BIOMETRIC_ENABLED_KEY)
       const hasCredentials = await secureStorage.hasCredentials()
 
-      setState((prev) => ({
-        ...prev,
-        biometricEnabled: storedEnabled === 'true' && hasCredentials,
-      }))
+      return storedEnabled === 'true' && hasCredentials
     } catch {
-      setState((prev) => ({ ...prev, biometricEnabled: false }))
+      return false
     }
   }, [storage, secureStorage])
+
+  const checkBiometricStatus = useCallback(
+    () =>
+      readBiometricEnabled().then((biometricEnabled) => {
+        setState((prev) => ({ ...prev, biometricEnabled }))
+      }),
+    [readBiometricEnabled]
+  )
 
   // Check biometric status when app becomes active
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
-        checkBiometricStatus()
+        void checkBiometricStatus()
         onAppForeground().catch(() => {
           // Ignore cleanup errors on foreground
         })
@@ -83,7 +95,7 @@ export function SessionMonitorProvider({ children }: SessionMonitorProviderProps
     })
 
     // Initial check
-    checkBiometricStatus()
+    void checkBiometricStatus()
 
     return () => {
       subscription.remove()
@@ -113,13 +125,22 @@ export function SessionMonitorProvider({ children }: SessionMonitorProviderProps
     }))
   }, [])
 
-  const value: SessionMonitorContextValue = {
-    ...state,
-    handleSessionExpired,
-    handleBiometricSuccess,
-    dismissBiometricPrompt,
-    checkBiometricStatus,
-  }
+  const value = useMemo<SessionMonitorContextValue>(
+    () => ({
+      ...state,
+      handleSessionExpired,
+      handleBiometricSuccess,
+      dismissBiometricPrompt,
+      checkBiometricStatus,
+    }),
+    [
+      state,
+      handleSessionExpired,
+      handleBiometricSuccess,
+      dismissBiometricPrompt,
+      checkBiometricStatus,
+    ]
+  )
 
   return <SessionMonitorContext.Provider value={value}>{children}</SessionMonitorContext.Provider>
 }

@@ -20,12 +20,15 @@ import {
 } from '@/features/auth/utils/api-auth-flow'
 import { filterRefereeOccupations } from '@/features/auth/utils/parseOccupations'
 
-registerAuthActions({
-  performLogin: performApiLogin,
-  performLogout: performApiLogout,
-  performSessionCheck: performApiSessionCheck,
-  performCalendarLogin,
-  filterRefereeOccupations,
-  hasMultipleAssociations,
-  sessionCheckGracePeriodMs: SESSION_CHECK_GRACE_PERIOD_MS,
-})
+/** Registers the real auth implementations with the auth store. */
+export function registerAppAuthActions(): void {
+  registerAuthActions({
+    performLogin: performApiLogin,
+    performLogout: performApiLogout,
+    performSessionCheck: performApiSessionCheck,
+    performCalendarLogin,
+    filterRefereeOccupations,
+    hasMultipleAssociations,
+    sessionCheckGracePeriodMs: SESSION_CHECK_GRACE_PERIOD_MS,
+  })
+}

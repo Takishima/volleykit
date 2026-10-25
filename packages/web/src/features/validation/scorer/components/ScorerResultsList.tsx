@@ -61,7 +61,7 @@ export function ScorerResultsList({
   }
 
   return (
-    <ul
+    <div
       id={listboxId}
       role="listbox"
       aria-label={t('validation.scorerSearch.searchResults')}
@@ -70,7 +70,7 @@ export function ScorerResultsList({
       {results.map((scorer, index) => {
         const isHighlighted = index === highlightedIndex
         return (
-          <li
+          <div
             key={scorer.__identity}
             id={getScorerOptionId(scorer.__identity)}
             role="option"
@@ -114,9 +114,9 @@ export function ScorerResultsList({
                 aria-hidden="true"
               />
             </button>
-          </li>
+          </div>
         )
       })}
-    </ul>
+    </div>
   )
 }

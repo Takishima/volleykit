@@ -25,7 +25,7 @@ const mockAssignment: Assignment = {
       },
     },
   },
-} as Assignment
+}
 
 describe('createAssignmentActions', () => {
   it('should create all four action handlers', () => {
@@ -100,7 +100,7 @@ describe('createAssignmentActions', () => {
           },
         },
       },
-    } as Assignment
+    }
 
     const handlers = {
       onEditCompensation: vi.fn(),

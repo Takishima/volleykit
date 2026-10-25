@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
@@ -70,7 +70,7 @@ function enrichWithValidationData(
             },
           },
         },
-      } as Assignment
+      }
     }
     return assignment
   })
@@ -225,10 +225,12 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   } = useAssociationSettings()
   const { data: season, isSuccess: seasonSuccess, isError: seasonError } = useActiveSeason()
 
+  // Read the current date once, on mount, so renders stay pure.
+  const [now] = useState(() => new Date())
+
   // Memoize date calculations to prevent query key changes on every render.
   // Only recalculate when season data actually changes.
   const { fromDate, toDate } = useMemo(() => {
-    const now = new Date()
     const seasonStart = parseDateOrFallback(
       season?.seasonStartDate,
       subDays(now, DEFAULT_DATE_RANGE_DAYS)
@@ -239,7 +241,7 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
       fromDate: startOfDay(seasonStart).toISOString(),
       toDate: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
     }
-  }, [season?.seasonStartDate, season?.seasonEndDate])
+  }, [season?.seasonStartDate, season?.seasonEndDate, now])
 
   const deadlineHours =
     settings?.hoursAfterGameStartForRefereeToEditGameList ?? DEFAULT_VALIDATION_DEADLINE_HOURS
@@ -268,14 +270,12 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   // Use isSuccess for reliable state detection (avoids race conditions where
   // isLoading is false but data hasn't arrived yet).
   // If either query fails, proceed with defaults rather than blocking indefinitely.
-  // Extra checks: verify we have actual data when queries succeed to prevent
-  // race conditions where isSuccess is true but derived values use stale data.
+  // Extra check: a successful season query must carry the season start date so
+  // derived date ranges never use stale data (isSuccess already guarantees data).
   const settingsResolved = settingsSuccess || settingsError
   const seasonResolved = seasonSuccess || seasonError
-  const hasSettingsData = settingsSuccess ? settings !== undefined : true
-  const hasSeasonDates = seasonSuccess ? season?.seasonStartDate !== undefined : true
-  const isReady =
-    !isDemoMode && settingsResolved && seasonResolved && hasSettingsData && hasSeasonDates
+  const hasSeasonDates = seasonSuccess ? season.seasonStartDate !== undefined : true
+  const isReady = !isDemoMode && settingsResolved && seasonResolved && hasSeasonDates
 
   const query = useQuery({
     queryKey: queryKeys.assignments.validationClosed(

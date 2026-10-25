@@ -53,9 +53,10 @@ export function OfflineActionBlocker({
         accessibilityRole="button"
         accessibilityLabel="Close modal"
       >
-        <Pressable
+        <View
           className="bg-white rounded-xl p-6 w-full max-w-sm"
-          onPress={(e) => e.stopPropagation()}
+          // Claim the touch responder so taps inside the card do not reach the backdrop
+          onStartShouldSetResponder={() => true}
         >
           <View className="items-center mb-4">
             <View className="w-16 h-16 rounded-full bg-warning-100 items-center justify-center mb-3">
@@ -80,7 +81,7 @@ export function OfflineActionBlocker({
           >
             <Text className="text-white text-center font-semibold">{t('common.close')}</Text>
           </TouchableOpacity>
-        </Pressable>
+        </View>
       </Pressable>
     </Modal>
   )

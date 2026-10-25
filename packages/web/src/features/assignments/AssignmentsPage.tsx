@@ -134,7 +134,9 @@ export function AssignmentsPage() {
           {error && (
             <ErrorState
               message={error instanceof Error ? error.message : t('assignments.failedToLoadData')}
-              onRetry={() => refetch()}
+              onRetry={() => {
+                void refetch()
+              }}
             />
           )}
 

@@ -83,7 +83,8 @@ function fetchCorrectionReasonOnly(
     }
   }
 
-  fetchData()
+  // fetchData handles its own errors, so the promise can be safely discarded
+  void fetchData()
   return () => {
     cancelled = true
   }
@@ -169,7 +170,8 @@ function fetchCompensationByGameNumber(
     }
   }
 
-  fetchData()
+  // fetchData handles its own errors, so the promise can be safely discarded
+  void fetchData()
   return () => {
     cancelled = true
   }
@@ -185,9 +187,7 @@ function loadDemoCompensationData(
   setters: Pick<FormStateSetters, 'setKilometers' | 'setReason' | 'setIsDistanceEditable'>
 ): () => void {
   const storedData = getAssignmentCompensation(assignment.__identity)
-  const hasFlexibleTravelExpenses = (
-    assignment.convocationCompensation as { hasFlexibleTravelExpenses?: boolean } | undefined
-  )?.hasFlexibleTravelExpenses
+  const hasFlexibleTravelExpenses = assignment.convocationCompensation?.hasFlexibleTravelExpenses
 
   // Defer state updates to avoid cascading renders (satisfies react-hooks/set-state-in-effect)
   queueMicrotask(() => {
@@ -258,7 +258,8 @@ function fetchCompensationDetailsById(
     }
   }
 
-  fetchData()
+  // fetchData handles its own errors, so the promise can be safely discarded
+  void fetchData()
   return () => {
     cancelled = true
   }

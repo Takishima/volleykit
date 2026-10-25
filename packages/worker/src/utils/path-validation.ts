@@ -7,10 +7,10 @@
 // =============================================================================
 
 /** Exact match paths (no subpaths allowed) - NOT prefixed with /api/ */
-export const ALLOWED_EXACT_PATHS = ['/', '/login', '/logout']
+const ALLOWED_EXACT_PATHS = new Set(['/', '/login', '/logout'])
 
 /** Prefix match paths that are NOT prefixed with /api/ (auth and dashboard) */
-export const ALLOWED_PREFIX_PATHS_NO_API = [
+const ALLOWED_PREFIX_PATHS_NO_API = [
   '/sportmanager.security/',
   '/sportmanager.volleyball/',
   // Static resources (profile pictures, uploaded files) served by Neos Flow
@@ -18,7 +18,7 @@ export const ALLOWED_PREFIX_PATHS_NO_API = [
 ]
 
 /** Prefix match paths that ARE prefixed with /api/ (API endpoints) */
-export const ALLOWED_PREFIX_PATHS_WITH_API = [
+const ALLOWED_PREFIX_PATHS_WITH_API = [
   '/indoorvolleyball.refadmin/',
   '/sportmanager.indoorvolleyball/',
   '/sportmanager.core/',
@@ -30,13 +30,13 @@ export const ALLOWED_PREFIX_PATHS_WITH_API = [
  * Specific paths within NO_API prefixes that DO need the /api/ prefix.
  * These are API endpoints under packages that normally serve dashboard/auth pages.
  */
-export const EXCEPTIONS_NEED_API = ['/sportmanager.security/api', '/sportmanager.volleyball/api']
+const EXCEPTIONS_NEED_API = ['/sportmanager.security/api', '/sportmanager.volleyball/api']
 
 /**
  * Specific paths within WITH_API prefixes that do NOT need the /api/ prefix.
  * These are file download endpoints that serve binary content (PDFs, etc.)
  */
-export const EXCEPTIONS_NO_API = [
+const EXCEPTIONS_NO_API = [
   '/indoorvolleyball.refadmin/refereestatementofexpenses/downloadrefereestatementofexpenses',
 ]
 
@@ -48,7 +48,7 @@ export const EXCEPTIONS_NO_API = [
  * Check if the given pathname is in the allowed paths list.
  */
 export function isAllowedPath(pathname: string): boolean {
-  if (ALLOWED_EXACT_PATHS.includes(pathname)) {
+  if (ALLOWED_EXACT_PATHS.has(pathname)) {
     return true
   }
   return (

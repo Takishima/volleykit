@@ -11,7 +11,7 @@ import { calculateGuideCropArea, cropCanvasToArea } from '../../utils/image-crop
 const MAX_FILE_SIZE_MB = 10
 const BYTES_PER_KB = 1024
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * BYTES_PER_KB * BYTES_PER_KB
-const ACCEPTED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const ACCEPTED_IMAGE_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 /** File extensions for accept attribute - prevents camera app from appearing in file picker */
 const ACCEPTED_IMAGE_EXTENSIONS = '.jpg,.jpeg,.png,.webp'
 
@@ -184,7 +184,7 @@ export function OCRCaptureModal({
       setError(null)
 
       // Validate file type
-      if (!ACCEPTED_IMAGE_MIME_TYPES.includes(file.type)) {
+      if (!ACCEPTED_IMAGE_MIME_TYPES.has(file.type)) {
         setError(t('validation.scoresheetUpload.invalidFileType'))
         return
       }
@@ -263,7 +263,7 @@ export function OCRCaptureModal({
         </div>
 
         {/* Camera controls */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 bg-surface-page-dark safe-area-bottom">
+        <div className="flex-shrink-0 flex items-center justify-between px-6 pt-4 pb-[env(safe-area-inset-bottom,0px)] bg-surface-page-dark">
           <button
             type="button"
             onClick={handleCameraCancel}
@@ -275,7 +275,9 @@ export function OCRCaptureModal({
           {/* Capture button */}
           <button
             type="button"
-            onClick={capturePhoto}
+            onClick={() => {
+              void capturePhoto()
+            }}
             className="w-16 h-16 rounded-full bg-surface-card hover:bg-surface-subtle flex items-center justify-center transition-colors"
             aria-label={t('validation.ocr.takePhoto')}
           >
@@ -372,7 +374,6 @@ export function OCRCaptureModal({
             accept={ACCEPTED_IMAGE_EXTENSIONS}
             onChange={handleFileChange}
             className="hidden"
-            aria-hidden="true"
           />
         </div>
       </div>

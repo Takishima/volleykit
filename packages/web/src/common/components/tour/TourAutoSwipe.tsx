@@ -43,7 +43,7 @@ export function TourAutoSwipe({
     // 2. Check if target itself is the swipeable content
     // 3. Look upward - target might be inside the swipeable content (e.g., data-tour on inner Card)
     const swipeableSelector = '.z-10.bg-surface-card'
-    let swipeableContent = container.querySelector(swipeableSelector) as HTMLElement | null
+    let swipeableContent = container.querySelector<HTMLElement>(swipeableSelector)
 
     if (!swipeableContent) {
       // Check if target matches the selector
@@ -51,7 +51,7 @@ export function TourAutoSwipe({
         swipeableContent = container as HTMLElement
       } else {
         // Look upward - target might be inside the swipeable content
-        swipeableContent = container.closest(swipeableSelector) as HTMLElement | null
+        swipeableContent = container.closest<HTMLElement>(swipeableSelector)
       }
     }
     if (!swipeableContent) return

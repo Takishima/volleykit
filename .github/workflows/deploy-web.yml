@@ -13,7 +13,7 @@ on:
       - '.github/actions/**'
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: 'pages'
   cancel-in-progress: false
@@ -27,7 +27,9 @@ jobs:
         working-directory: packages/worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -45,14 +47,16 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             packages/web/src/api/schema.ts
@@ -63,7 +67,7 @@ jobs:
         run: pnpm run generate:api
       # Cache ESLint results
       - name: Cache ESLint
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/web/.eslintcache
           key: eslint-${{ runner.os }}-main-${{ hashFiles('packages/web/src/**/*.ts', 'packages/web/src/**/*.tsx') }}
@@ -74,7 +78,7 @@ jobs:
         run: pnpm run lint --cache --cache-location .eslintcache
       # Cache Vite/Vitest artifacts (Vitest stores cache in .vite/vitest)
       - name: Cache Vite
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/web/node_modules/.vite
           key: vite-${{ runner.os }}-main-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
@@ -93,7 +97,7 @@ jobs:
       - name: Add .nojekyll for GitHub Pages
         run: touch dist/.nojekyll
       - name: Upload packages/web artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: web-app-dist
           path: packages/web/dist
@@ -105,7 +109,9 @@ jobs:
         working-directory: help-site
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -113,7 +119,7 @@ jobs:
           node-version: '22'
       # Cache Astro build artifacts
       - name: Cache Astro build
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: help-site/node_modules/.astro
           key: astro-${{ runner.os }}-main-${{ hashFiles('help-site/src/**/*', 'help-site/astro.config.mjs') }}
@@ -125,7 +131,7 @@ jobs:
         env:
           ASTRO_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}help
       - name: Upload help-site artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: help-site-dist
           path: help-site/dist
@@ -137,14 +143,16 @@ jobs:
         working-directory: ocr-poc
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: ocr-poc
       # Cache ESLint results
       - name: Cache ESLint
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ocr-poc/.eslintcache
           key: ocr-poc-eslint-${{ runner.os }}-main-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx') }}
@@ -155,7 +163,7 @@ jobs:
         run: pnpm run lint --cache --cache-location .eslintcache
       # Cache Vite build artifacts
       - name: Cache Vite build
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ocr-poc/node_modules/.vite
           key: ocr-poc-vite-${{ runner.os }}-main-${{ hashFiles('ocr-poc/src/**/*.ts', 'ocr-poc/src/**/*.tsx', 'ocr-poc/vite.config.ts') }}
@@ -168,7 +176,7 @@ jobs:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}ocr-poc/
           VITE_OCR_ENDPOINT: ${{ vars.VITE_OCR_ENDPOINT }}
       - name: Upload ocr-poc artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ocr-poc-dist
           path: ocr-poc/dist
@@ -178,26 +186,28 @@ jobs:
     needs: [deploy-worker, build-web-app, build-help-site, build-ocr-poc]
     # Run if all builds succeeded; worker can be skipped (Cloudflare not configured)
     if: ${{ !failure() && !cancelled() }}
+    permissions:
+      contents: write # actions-gh-pages pushes the gh-pages branch
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] actions-gh-pages pushes the gh-pages branch from this checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download packages/web artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-app-dist
           path: deploy
       - name: Download help-site artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: help-site-dist
           path: deploy/help
       - name: Download ocr-poc artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ocr-poc-dist
           path: deploy/ocr-poc
       - name: Delete artifacts
-        uses: geekyeggo/delete-artifact@v6
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         continue-on-error: true
         with:
           name: |
@@ -223,7 +233,7 @@ jobs:
             done
           fi
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: deploy

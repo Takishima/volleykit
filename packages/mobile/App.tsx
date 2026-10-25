@@ -15,7 +15,8 @@ export default function App() {
     <SafeAreaProvider>
       <AppProviders>
         <RootNavigator />
-        <StatusBar style="auto" />
+        {/* expo-status-bar defaults `style` to 'auto' (follows the color scheme) */}
+        <StatusBar />
       </AppProviders>
     </SafeAreaProvider>
   )

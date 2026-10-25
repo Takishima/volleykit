@@ -84,7 +84,7 @@ export function NonConformantOverlay({
       {...touchGuard}
     >
       {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-4 pb-2 safe-area-inset-top">
+      <div className="flex-shrink-0 px-4 pt-[env(safe-area-inset-top,0px)] pb-2">
         <ModalHeader
           title={t('pdf.wizard.nonConformant.title')}
           titleId={MODAL_TITLE_ID}
@@ -150,7 +150,7 @@ export function NonConformantOverlay({
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 px-4 pb-4 pt-2 border-t border-border-default dark:border-border-default-dark safe-area-inset-bottom">
+      <div className="flex-shrink-0 px-4 pb-[env(safe-area-inset-bottom,0px)] pt-2 border-t border-border-default dark:border-border-default-dark">
         <div className="flex gap-3">
           <Button
             variant="secondary"
@@ -164,7 +164,9 @@ export function NonConformantOverlay({
             <Button
               variant="success"
               className="flex-1"
-              onClick={nc.handleNcDownload}
+              onClick={() => {
+                void nc.handleNcDownload()
+              }}
               disabled={!nc.canProceed || nc.isGenerating}
             >
               {nc.isGenerating ? (
@@ -183,7 +185,9 @@ export function NonConformantOverlay({
             <Button
               variant="success"
               className="flex-1"
-              onClick={nc.handleNcNext}
+              onClick={() => {
+                void nc.handleNcNext()
+              }}
               disabled={!nc.canProceed || nc.isGenerating}
             >
               {nc.ncStep === 'preview'

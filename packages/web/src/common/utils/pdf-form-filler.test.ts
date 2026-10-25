@@ -20,6 +20,7 @@ import {
   type Language,
   type NonConformantSelections,
 } from './pdf-form-filler'
+import { getPdfChecklistSections } from './pdf-field-mappings'
 
 // Close MSW server for this file since we use manual fetch mocking in downloadPdf tests
 beforeAll(() => {
@@ -437,7 +438,9 @@ describe('pdf-form-filler', () => {
       )
       vi.stubGlobal('fetch', mockFetch)
 
-      await expect(fillSportsHallReportForm(mockReportData, 'NLA', 'de')).rejects.toThrow()
+      await expect(fillSportsHallReportForm(mockReportData, 'NLA', 'de')).rejects.toThrow(
+        'Failed to fetch PDF template: Not Found'
+      )
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('sports-hall-report-nla-de.pdf')
@@ -453,7 +456,9 @@ describe('pdf-form-filler', () => {
       )
       vi.stubGlobal('fetch', mockFetch)
 
-      await expect(fillSportsHallReportForm(mockReportData, 'NLB', 'fr')).rejects.toThrow()
+      await expect(fillSportsHallReportForm(mockReportData, 'NLB', 'fr')).rejects.toThrow(
+        'Failed to fetch PDF template: Not Found'
+      )
 
       // NLB uses path without "nla-" prefix
       expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('sports-hall-report-fr.pdf'))
@@ -803,7 +808,8 @@ describe('pdf-form-filler', () => {
           })
 
           it('sets all radio buttons to non-conformant and fills all comment fields', async () => {
-            const sections = getChecklistSections(leagueCategory)
+            // The PDF mapping (with radio/comment field names), not the UI-only sections
+            const sections = getPdfChecklistSections(leagueCategory)
             const { nonConformantSubItems, sectionComments } = buildAllNonConformant(leagueCategory)
 
             // Load the PDF template and fill it WITHOUT flattening to verify field values

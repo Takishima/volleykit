@@ -67,11 +67,13 @@ export function useDateLocale(): DateFnsLocale {
   useEffect(() => {
     const requestId = ++requestIdRef.current
 
-    loadDateLocale(currentLocale).then((loadedLocale) => {
-      if (requestId === requestIdRef.current) {
-        setLocale(loadedLocale)
-      }
-    })
+    loadDateLocale(currentLocale)
+      .then((loadedLocale) => {
+        if (requestId === requestIdRef.current) {
+          setLocale(loadedLocale)
+        }
+      })
+      .catch((error: unknown) => log.error('Failed to apply date locale:', error))
   }, [currentLocale])
 
   return locale
@@ -123,11 +125,13 @@ export function useDateFormat(
   useEffect(() => {
     const requestId = ++requestIdRef.current
 
-    loadDateLocale(currentLocale).then((loadedLocale) => {
-      if (requestId === requestIdRef.current) {
-        setLocale(loadedLocale)
-      }
-    })
+    loadDateLocale(currentLocale)
+      .then((loadedLocale) => {
+        if (requestId === requestIdRef.current) {
+          setLocale(loadedLocale)
+        }
+      })
+      .catch((error: unknown) => log.error('Failed to apply date locale:', error))
   }, [currentLocale])
 
   return useMemo(() => {

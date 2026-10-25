@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { toast } from '@/common/stores/toast'
+import type { Logger } from '@/common/utils/logger'
 
 import { checkSafeMode } from './safe-mode-guard'
 
-const mockLogDebug = vi.fn()
+const mockLogDebug = vi.fn<Logger['debug']>()
 
 vi.mock('@/common/utils/logger', () => ({
   createLogger: () => ({

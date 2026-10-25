@@ -102,7 +102,7 @@ export function getApiClient(dataSource: DataSource | boolean): typeof api {
       return api
     default: {
       const _exhaustive: never = dataSource
-      throw new Error(`Unknown data source: ${_exhaustive}`)
+      throw new Error(`Unknown data source: ${String(_exhaustive)}`)
     }
   }
 }

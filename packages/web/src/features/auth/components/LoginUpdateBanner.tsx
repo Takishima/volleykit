@@ -50,7 +50,9 @@ export function LoginUpdateBanner({ onUpdate }: LoginUpdateBannerProps) {
       <div className="mt-3 flex justify-end">
         <button
           type="button"
-          onClick={handleUpdate}
+          onClick={() => {
+            void handleUpdate()
+          }}
           disabled={isUpdating}
           aria-busy={isUpdating}
           className="inline-flex items-center gap-2 rounded-md bg-warning-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-warning-700 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-warning-500 dark:hover:bg-warning-600"

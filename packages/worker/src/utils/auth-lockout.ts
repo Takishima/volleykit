@@ -2,6 +2,8 @@
  * Auth lockout KV logic for the VolleyKit CORS Proxy Worker.
  */
 
+import { MS_PER_SECOND } from './constants'
+
 // =============================================================================
 // Auth Lockout Configuration
 // =============================================================================
@@ -19,7 +21,7 @@ export const AUTH_LOCKOUT_MAX_DURATION_SECONDS = 300
 export const AUTH_LOCKOUT_ATTEMPT_WINDOW_SECONDS = 900
 
 /** TTL for lockout KV entries in seconds (1 hour) - cleanup old entries */
-export const AUTH_LOCKOUT_KV_TTL_SECONDS = 3600
+const AUTH_LOCKOUT_KV_TTL_SECONDS = 3600
 
 // =============================================================================
 // Auth Lockout Types
@@ -136,14 +138,14 @@ export function checkLockoutStatus(
     const remainingMs = state.lockedUntil - now
     return {
       isLocked: true,
-      remainingSeconds: Math.ceil(remainingMs / 1000),
+      remainingSeconds: Math.ceil(remainingMs / MS_PER_SECOND),
       failedAttempts: state.failedAttempts,
       attemptsRemaining: 0,
     }
   }
 
   // Check if attempt window has expired (reset counter)
-  const windowExpiry = state.firstAttemptAt + AUTH_LOCKOUT_ATTEMPT_WINDOW_SECONDS * 1000
+  const windowExpiry = state.firstAttemptAt + AUTH_LOCKOUT_ATTEMPT_WINDOW_SECONDS * MS_PER_SECOND
   if (now > windowExpiry) {
     return {
       isLocked: false,
@@ -195,7 +197,7 @@ export async function recordFailedAttempt(
     }
   } else {
     // Check if attempt window has expired
-    const windowExpiry = state.firstAttemptAt + AUTH_LOCKOUT_ATTEMPT_WINDOW_SECONDS * 1000
+    const windowExpiry = state.firstAttemptAt + AUTH_LOCKOUT_ATTEMPT_WINDOW_SECONDS * MS_PER_SECOND
     if (now > windowExpiry) {
       // Reset counter, start new window
       newState = {
@@ -220,7 +222,7 @@ export async function recordFailedAttempt(
   // Check if we should lock out
   if (newState.failedAttempts >= AUTH_LOCKOUT_MAX_ATTEMPTS) {
     const lockoutDuration = calculateLockoutDuration(newState.lockoutCount)
-    newState.lockedUntil = now + lockoutDuration * 1000
+    newState.lockedUntil = now + lockoutDuration * MS_PER_SECOND
     newState.lockoutCount += 1
   }
 

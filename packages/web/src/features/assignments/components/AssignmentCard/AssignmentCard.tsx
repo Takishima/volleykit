@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, type ReactNode, useMemo } from 'react'
 
 import type { Assignment } from '@/api/client'
 import { ExpandableCard } from '@/common/components/ExpandableCard'
@@ -29,6 +29,20 @@ import { Referees } from './Referees'
 import { SingleBallNotice } from './SingleBallNotice'
 import { Status } from './Status'
 import { Teams } from './Teams'
+
+interface CardContextProviderProps {
+  value: Omit<AssignmentCardContextValue, 'expandArrow'>
+  expandArrow: AssignmentCardContextValue['expandArrow']
+  children: ReactNode
+}
+
+/** Provides the card context with the given expand arrow, memoized so consumers only re-render on real changes. */
+function CardContextProvider({ value, expandArrow, children }: CardContextProviderProps) {
+  const contextValue = useMemo(() => ({ ...value, expandArrow }), [value, expandArrow])
+  return (
+    <AssignmentCardContext.Provider value={contextValue}>{children}</AssignmentCardContext.Provider>
+  )
+}
 
 interface AssignmentCardProps {
   assignment: Assignment
@@ -211,14 +225,14 @@ function AssignmentCardComponent({
       dataTour={dataTour}
       className={isGamePast ? 'opacity-75' : ''}
       renderCompact={(_, { expandArrow }) => (
-        <AssignmentCardContext.Provider value={{ ...contextValue, expandArrow }}>
+        <CardContextProvider value={contextValue} expandArrow={expandArrow}>
           <Header />
-        </AssignmentCardContext.Provider>
+        </CardContextProvider>
       )}
       renderDetails={() => (
-        <AssignmentCardContext.Provider value={{ ...contextValue, expandArrow: null }}>
+        <CardContextProvider value={contextValue} expandArrow={null}>
           <Details />
-        </AssignmentCardContext.Provider>
+        </CardContextProvider>
       )}
     />
   )

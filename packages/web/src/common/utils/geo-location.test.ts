@@ -100,7 +100,7 @@ describe('extractCoordinates', () => {
     it('returns null when only identity is present', () => {
       const result = extractCoordinates({
         // No lat, lon, or plusCode
-      } as { latitude?: number; longitude?: number; plusCode?: string })
+      })
 
       expect(result).toBeNull()
     })

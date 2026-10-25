@@ -115,30 +115,24 @@ interface EmptyStateProps {
   }
 }
 
+/** Icon for a known identifier; unknown names fall back to the inbox icon */
+function renderNamedIcon(name: string) {
+  const IconComponent = EMPTY_STATE_ICONS[name] ?? Inbox
+  return (
+    <IconComponent
+      className="w-12 h-12 text-text-muted dark:text-text-muted-dark"
+      aria-hidden="true"
+    />
+  )
+}
+
 export function EmptyState({ icon = 'inbox', title, description, action }: EmptyStateProps) {
-  const renderIcon = () => {
-    if (typeof icon === 'string') {
-      const IconComponent = EMPTY_STATE_ICONS[icon]
-      if (IconComponent) {
-        return (
-          <IconComponent
-            className="w-12 h-12 text-text-muted dark:text-text-muted-dark"
-            aria-hidden="true"
-          />
-        )
-      }
-      // Fallback for unknown string icons
-      return (
-        <Inbox className="w-12 h-12 text-text-muted dark:text-text-muted-dark" aria-hidden="true" />
-      )
-    }
-    // Custom ReactNode passed directly
-    return icon
-  }
+  // A string selects a named icon; any other ReactNode is rendered directly
+  const iconNode = typeof icon === 'string' ? renderNamedIcon(icon) : icon
 
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-      {renderIcon()}
+      {iconNode}
       <h3 className="text-lg font-medium text-text-primary dark:text-text-primary-dark">{title}</h3>
       {description && (
         <p className="text-text-muted dark:text-text-muted-dark text-sm max-w-md">{description}</p>

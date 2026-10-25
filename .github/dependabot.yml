@@ -8,6 +8,10 @@ updates:
       day: "monday"
       time: "07:00"
       timezone: "UTC"
+    # Wait a week after a release before proposing it, so a yanked or
+    # quickly-patched version never reaches a PR (zizmor's recommended floor).
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     reviewers:
       - "Takishima"
@@ -90,6 +94,8 @@ updates:
       day: "monday"
       time: "07:00"
       timezone: "UTC"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
       prefix-development: "chore"

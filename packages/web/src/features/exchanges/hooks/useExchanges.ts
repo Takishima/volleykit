@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
 
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { startOfDay, endOfDay, format } from 'date-fns'
+import { ensureError } from '@volleykit/shared/utils'
+import { startOfDay, endOfDay } from 'date-fns'
 
 import {
   getApiClient,
@@ -13,6 +14,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { exchangeListOptions } from '@/api/queryOptions'
 import { useNetworkStatus } from '@/common/hooks/useNetworkStatus'
 import { DEFAULT_PAGE_SIZE } from '@/common/hooks/usePaginatedQuery'
+import { formatDateKey, useTodayKey } from '@/common/hooks/useTodayKey'
 import { createAction } from '@/common/services/offline/action-store'
 import { useActionQueueStore } from '@/common/stores/action-queue'
 import { useAuthStore } from '@/common/stores/auth'
@@ -24,7 +26,6 @@ import { createLogger } from '@/common/utils/logger'
 const log = createLogger('useExchanges')
 
 // Format date as YYYY-MM-DD for stable comparison (no time component)
-const formatDateKey = (date: Date): string => format(date, 'yyyy-MM-dd')
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 const EMPTY_EXCHANGES: GameExchange[] = []
@@ -54,7 +55,7 @@ export function useGameExchanges(status: ExchangeStatus = 'all') {
 
   // Compute date keys (YYYY-MM-DD) for stable memoization.
   // Using just the date portion ensures the key is stable within the same day.
-  const todayKey = formatDateKey(new Date())
+  const todayKey = useTodayKey()
   // Use the active-or-upcoming season so the upper bound is never in the past
   // during the summer off-season (which would invert the date window and hide
   // all upcoming exchanges).
@@ -188,11 +189,11 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
           return null // No response when queued
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to apply for exchange:', error)
+        const failure = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to apply for exchange:', failure)
         setIsError(true)
-        setError(error)
-        throw error
+        setError(failure)
+        throw failure
       } finally {
         setIsPending(false)
       }
@@ -206,8 +207,8 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
         .then((result) => {
           options?.onSuccess?.(result)
         })
-        .catch((err) => {
-          options?.onError?.(err)
+        .catch((err: unknown) => {
+          options?.onError?.(ensureError(err))
         })
     },
     [mutateAsync]
@@ -284,11 +285,11 @@ export function useRemoveOwnExchange(): OfflineMutationResult<void, string> {
           setWasQueued(true)
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to remove own exchange:', error)
+        const failure = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to remove own exchange:', failure)
         setIsError(true)
-        setError(error)
-        throw error
+        setError(failure)
+        throw failure
       } finally {
         setIsPending(false)
       }
@@ -302,8 +303,8 @@ export function useRemoveOwnExchange(): OfflineMutationResult<void, string> {
         .then(() => {
           options?.onSuccess?.()
         })
-        .catch((err) => {
-          options?.onError?.(err)
+        .catch((err: unknown) => {
+          options?.onError?.(ensureError(err))
         })
     },
     [mutateAsync]
@@ -380,11 +381,11 @@ export function useAddToExchange(): OfflineMutationResult<void, string> {
           setWasQueued(true)
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to add to exchange:', error)
+        const failure = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to add to exchange:', failure)
         setIsError(true)
-        setError(error)
-        throw error
+        setError(failure)
+        throw failure
       } finally {
         setIsPending(false)
       }
@@ -398,8 +399,8 @@ export function useAddToExchange(): OfflineMutationResult<void, string> {
         .then(() => {
           options?.onSuccess?.()
         })
-        .catch((err) => {
-          options?.onError?.(err)
+        .catch((err: unknown) => {
+          options?.onError?.(ensureError(err))
         })
     },
     [mutateAsync]

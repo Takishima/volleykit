@@ -136,9 +136,10 @@ describe('useExpandable', () => {
   describe('combined options', () => {
     it('should handle transitioning from onClick to internal toggle', () => {
       const onClick = vi.fn()
+      const initialProps: { onClick?: () => void } = { onClick }
       const { result, rerender } = renderHook(
-        ({ onClick }: { onClick?: () => void }) => useExpandable({ onClick }),
-        { initialProps: { onClick } as { onClick?: () => void } }
+        (props: { onClick?: () => void }) => useExpandable({ onClick: props.onClick }),
+        { initialProps }
       )
 
       act(() => {

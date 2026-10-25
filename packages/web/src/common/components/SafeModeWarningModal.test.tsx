@@ -3,6 +3,13 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { SafeModeWarningModal } from './SafeModeWarningModal'
 
+/** The decorative overlay behind the dialog; clicking it dismisses the modal */
+function getBackdrop(container: HTMLElement): HTMLElement {
+  const backdrop = container.querySelector<HTMLElement>('.fixed.inset-0 > [aria-hidden="true"]')
+  if (!backdrop) throw new Error('Modal backdrop not rendered')
+  return backdrop
+}
+
 describe('SafeModeWarningModal', () => {
   it('should not render when closed', () => {
     const onClose = vi.fn()
@@ -70,11 +77,8 @@ describe('SafeModeWarningModal', () => {
       <SafeModeWarningModal isOpen={true} onClose={onClose} onConfirm={onConfirm} />
     )
 
-    const backdrop = container.querySelector('.fixed.inset-0.bg-black') as HTMLElement
-    if (backdrop) {
-      fireEvent.click(backdrop)
-      expect(onClose).toHaveBeenCalledOnce()
-    }
+    fireEvent.click(getBackdrop(container))
+    expect(onClose).toHaveBeenCalledOnce()
   })
 
   it('should clean up event listener when modal closes', () => {

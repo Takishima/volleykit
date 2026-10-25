@@ -4,7 +4,7 @@
  * Provides network connectivity context throughout the app.
  */
 
-import { createContext, useContext, type ReactNode, type JSX } from 'react'
+import { createContext, useContext, useMemo, type ReactNode, type JSX } from 'react'
 
 import { useNetworkStatus, type NetworkStatus } from '../hooks/useNetworkStatus'
 
@@ -40,12 +40,15 @@ export interface NetworkProviderProps {
 export function NetworkProvider({ children }: NetworkProviderProps): JSX.Element {
   const status = useNetworkStatus()
 
-  const value: NetworkContextValue = {
-    status,
-    isOnline: status.isConnected,
-    isWifi: status.isWifi,
-    isKnown: status.isKnown,
-  }
+  const value = useMemo<NetworkContextValue>(
+    () => ({
+      status,
+      isOnline: status.isConnected,
+      isWifi: status.isWifi,
+      isKnown: status.isKnown,
+    }),
+    [status]
+  )
 
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>
 }

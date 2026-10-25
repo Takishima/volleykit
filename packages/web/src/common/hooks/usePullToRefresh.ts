@@ -1,5 +1,9 @@
 import { useState, useRef, useCallback } from 'react'
 
+import { createLogger } from '@/common/utils/logger'
+
+const log = createLogger('usePullToRefresh')
+
 /** Raw pixels to pull before triggering refresh (before resistance applied) */
 const RAW_PULL_THRESHOLD = 80
 
@@ -14,6 +18,21 @@ const PULL_THRESHOLD = RAW_PULL_THRESHOLD * RESISTANCE_FACTOR
 
 /** Minimum time to show the refresh animation (ms) */
 const MIN_REFRESH_DURATION_MS = 500
+
+/**
+ * Runs the refresh, keeping the spinner visible for at least the minimum
+ * duration, and calls `onSettled` once it is over whether it succeeded or not.
+ */
+async function runRefresh(onRefresh: () => Promise<void>, onSettled: () => void): Promise<void> {
+  try {
+    const minDurationPromise = new Promise((resolve) =>
+      setTimeout(resolve, MIN_REFRESH_DURATION_MS)
+    )
+    await Promise.all([onRefresh(), minDurationPromise])
+  } finally {
+    onSettled()
+  }
+}
 
 export interface UsePullToRefreshOptions {
   /** Callback to execute when refresh is triggered */
@@ -128,7 +147,7 @@ export function usePullToRefresh({
     [enabled, isRefreshing]
   )
 
-  const handleTouchEnd = useCallback(async () => {
+  const finishPull = useCallback(async () => {
     if (!enabled) {
       isPulling.current = false
       startY.current = 0
@@ -143,16 +162,10 @@ export function usePullToRefresh({
       // Keep showing indicator during refresh
       setPullDistance(PULL_THRESHOLD)
 
-      try {
-        // Ensure minimum animation duration so user sees the spinner
-        const minDurationPromise = new Promise((resolve) =>
-          setTimeout(resolve, MIN_REFRESH_DURATION_MS)
-        )
-        await Promise.all([onRefresh(), minDurationPromise])
-      } finally {
+      await runRefresh(onRefresh, () => {
         setIsRefreshing(false)
         setPullDistance(0)
-      }
+      })
     } else {
       // Snap back if threshold not reached
       setPullDistance(0)
@@ -160,6 +173,11 @@ export function usePullToRefresh({
 
     startY.current = 0
   }, [enabled, pullDistance, isRefreshing, onRefresh])
+
+  // Touch handlers return void; a failed refresh is logged rather than left unhandled.
+  const handleTouchEnd = useCallback(() => {
+    finishPull().catch((error: unknown) => log.error('Pull-to-refresh failed:', error))
+  }, [finishPull])
 
   return {
     // Hide stale pull/refresh state when disabled. Touch handlers also clear

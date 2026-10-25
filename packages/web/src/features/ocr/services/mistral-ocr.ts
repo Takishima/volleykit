@@ -178,7 +178,7 @@ export class MistralOCR implements OCREngine {
       return table
     }
 
-    if (typeof table === 'object' && table !== null && typeof table.content === 'string') {
+    if (table && typeof table.content === 'string') {
       return table.content
     }
 
@@ -313,11 +313,12 @@ export class MistralOCR implements OCREngine {
   /**
    * Terminate the OCR service and cancel any pending requests
    */
-  async terminate(): Promise<void> {
+  terminate(): Promise<void> {
     if (this.#abortController) {
       this.#abortController.abort()
       this.#abortController = null
     }
     this.#initialized = false
+    return Promise.resolve()
   }
 }

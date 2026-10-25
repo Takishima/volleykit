@@ -292,13 +292,14 @@ export function selectBestEbikeTrainTrip(
   // No adaptation arrives on time: let the caller fall back to the regular
   // public transport selection, which may still find an on-time connection
   // (e.g. a feeder bus faster than the replaced cycling leg).
-  if (onTime.length === 0) return undefined
+  const [firstOnTime, ...otherOnTime] = onTime
+  if (!firstOnTime) return undefined
 
-  return onTime.reduce((best, adaptation) => {
+  return otherOnTime.reduce((best, adaptation) => {
     if (adaptation.transfers < best.transfers) return adaptation
     if (adaptation.transfers > best.transfers) return best
     return new Date(adaptation.arrivalTime).getTime() > new Date(best.arrivalTime).getTime()
       ? adaptation
       : best
-  })
+  }, firstOnTime)
 }

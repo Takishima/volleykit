@@ -1,0 +1,10 @@
+# zizmor configuration (https://docs.zizmor.sh/configuration/).
+# Applies to the local run (`zizmor .github`) and to the zizmor-action step in
+# ci-shell.yml. Per-finding exceptions are inline `# zizmor: ignore[...]`
+# comments next to the finding; only rule-wide exceptions go here.
+rules:
+  # Suggests `uses: $/.github/...` for same-repository actions and reusable
+  # workflows. actionlint (1.7.12) rejects that syntax as an invalid action
+  # reference, so the `./` form stays until actionlint accepts `$/`.
+  self-repository:
+    disable: true

@@ -1,5 +1,6 @@
 import type { Env } from '../types'
 import { corsHeaders, securityHeaders, validateOriginAndPreflight } from '../middleware'
+import { HttpStatus } from '../utils'
 
 /**
  * Handle /health - no authentication needed, no rate limiting.
@@ -35,7 +36,7 @@ export async function handleHealth(request: Request, env: Env, _url: URL): Promi
       } else {
         mistralStatus = 'error'
         mistralError =
-          mistralResponse.status === 401
+          mistralResponse.status === HttpStatus.UNAUTHORIZED
             ? 'Invalid API key'
             : `API returned ${mistralResponse.status}`
       }
@@ -64,7 +65,7 @@ export async function handleHealth(request: Request, env: Env, _url: URL): Promi
       },
     }),
     {
-      status: overallStatus === 'ok' ? 200 : 503,
+      status: overallStatus === 'ok' ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders(check.origin),

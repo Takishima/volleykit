@@ -48,7 +48,7 @@ export function UnsavedChangesDialog({
       style={{ zIndex: Z_INDEX_CONFIRMATION_DIALOG }}
       onTouchStart={stopOverlayTouchStart}
     >
-      <div className="absolute inset-0 bg-black bg-opacity-50" aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
       <div
         ref={dialogRef}
         className="relative bg-surface-card dark:bg-surface-card-dark rounded-lg shadow-xl max-w-sm w-full p-6"

@@ -241,7 +241,9 @@ export function SportsHallReportWizardModal({
             awayTeam,
           }}
           onGenerate={handleGenerate}
-          onDownloadPreFilled={handleDownloadPreFilled}
+          onDownloadPreFilled={() => {
+            void handleDownloadPreFilled()
+          }}
           onReportIssue={handleEnterNonConformant}
         />
       </Modal>
@@ -264,7 +266,12 @@ export function SportsHallReportWizardModal({
       )}
 
       {showSignature && (
-        <SignatureCanvas onComplete={handleSignatureComplete} onCancel={handleSignatureCancel} />
+        <SignatureCanvas
+          onComplete={(signatureDataUrl) => {
+            void handleSignatureComplete(signatureDataUrl)
+          }}
+          onCancel={handleSignatureCancel}
+        />
       )}
     </>
   )

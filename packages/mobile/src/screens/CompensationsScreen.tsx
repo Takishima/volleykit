@@ -72,7 +72,7 @@ export function CompensationsScreen(_props: Props) {
   })
 
   const onRefresh = useCallback(() => {
-    refetch()
+    void refetch()
   }, [refetch])
 
   // Loading state

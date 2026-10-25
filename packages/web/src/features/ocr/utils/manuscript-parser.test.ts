@@ -524,15 +524,11 @@ LIBEROS («L»)\tLIBEROS («L»)
 
     // Check Team A libero
     const teamALibero = result.teamA.players.find((p) => p.shirtNumber === 5)
-    if (teamALibero) {
-      expect(teamALibero.rawName).toContain('Angeli')
-    }
+    expect(teamALibero?.rawName).toContain('Angeli')
 
     // Check Team B libero
     const teamBLibero = result.teamB.players.find((p) => p.shirtNumber === 7)
-    if (teamBLibero) {
-      expect(teamBLibero.rawName).toContain('Candido')
-    }
+    expect(teamBLibero?.rawName).toContain('Candido')
   })
 
   it('parses officials line with captains for both teams', () => {

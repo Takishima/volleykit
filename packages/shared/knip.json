@@ -1,13 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "project": ["src/**/*.{ts,tsx}"],
-  "ignore": ["src/**/*.test.{ts,tsx}", "src/**/*.d.ts"],
   "ignoreExportsUsedInFile": true,
   "rules": {
-    "exports": "off",
-    "types": "off",
-    "duplicates": "off",
-    "nsExports": "off",
-    "nsTypes": "off"
+    "duplicates": "off"
   }
 }

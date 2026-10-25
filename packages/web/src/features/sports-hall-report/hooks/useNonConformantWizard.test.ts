@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { Assignment } from '@/api/client'
+import type { JerseyAdvertisingOptions } from '@/common/utils/pdf-form-filler'
 
 import { useNonConformantWizard } from './useNonConformantWizard'
 
@@ -46,6 +47,7 @@ vi.mock('@/common/utils/pdf-field-mappings', () => ({
 }))
 
 const mockAssignment = { __identity: 'test-assignment' } as Assignment
+const NO_JERSEY_ADVERTISING: JerseyAdvertisingOptions = { homeTeam: false, awayTeam: false }
 
 describe('useNonConformantWizard', () => {
   const onClose = vi.fn()
@@ -55,17 +57,23 @@ describe('useNonConformantWizard', () => {
   })
 
   it('starts on the sections step', () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     expect(result.current.ncStep).toBe('sections')
   })
 
   it('canProceed is false when no sections are flagged', () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     expect(result.current.canProceed).toBe(false)
   })
 
   it('canProceed becomes true after flagging a section', () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     act(() => {
       result.current.handleToggleSection('A')
     })
@@ -74,7 +82,9 @@ describe('useNonConformantWizard', () => {
   })
 
   it('un-flags a section when toggled twice', () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     act(() => {
       result.current.handleToggleSection('A')
     })
@@ -85,13 +95,17 @@ describe('useNonConformantWizard', () => {
   })
 
   it('handleNcBack returns "exit" from the first step', () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     const outcome = result.current.handleNcBack()
     expect(outcome).toBe('exit')
   })
 
   it('reset restores initial state', () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     act(() => {
       result.current.handleToggleSection('A')
       result.current.setHomeCoachName('Coach A')
@@ -105,7 +119,9 @@ describe('useNonConformantWizard', () => {
   })
 
   it('skips subItems step when all flagged sections are single-sub-item', async () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     // Load sections first
     await act(async () => {
       await result.current.loadSections()
@@ -122,7 +138,9 @@ describe('useNonConformantWizard', () => {
   })
 
   it('shows subItems step when a flagged section has multiple sub-items', async () => {
-    const { result } = renderHook(() => useNonConformantWizard(mockAssignment, 'de', {}, onClose))
+    const { result } = renderHook(() =>
+      useNonConformantWizard(mockAssignment, 'de', NO_JERSEY_ADVERTISING, onClose)
+    )
     await act(async () => {
       await result.current.loadSections()
     })

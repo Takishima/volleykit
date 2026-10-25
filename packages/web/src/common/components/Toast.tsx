@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react'
 
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { useToastStore, DEFAULT_DURATION_MS, type Toast as ToastType } from '@/common/stores/toast'
+import {
+  useToastStore,
+  DEFAULT_TOAST_DURATION_MS,
+  type Toast as ToastType,
+} from '@/common/stores/toast'
 
 const TOAST_CONTAINER_Z_INDEX = 'z-[100]'
 
@@ -53,7 +57,7 @@ function ToastItem({ toast }: ToastItemProps) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const duration = toast.duration ?? DEFAULT_DURATION_MS
+    const duration = toast.duration ?? DEFAULT_TOAST_DURATION_MS
     timerRef.current = setTimeout(() => {
       removeToast(toast.id)
     }, duration)
@@ -72,7 +76,7 @@ function ToastItem({ toast }: ToastItemProps) {
     <div
       role="alert"
       aria-live="polite"
-      className={`flex items-start gap-3 p-4 rounded-lg border shadow-lg ${styles.bg} ${styles.border} animate-in slide-in-from-top-2 fade-in duration-200`}
+      className={`flex items-start gap-3 p-4 rounded-lg border shadow-lg ${styles.bg} ${styles.border} duration-200`}
     >
       <svg
         className={`w-5 h-5 flex-shrink-0 mt-0.5 ${styles.icon}`}

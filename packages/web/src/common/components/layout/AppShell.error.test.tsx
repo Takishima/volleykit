@@ -26,8 +26,8 @@ const originalSwitchRoleAndAttribute = mockApi.switchRoleAndAttribute.bind(mockA
 describe('AppShell Error Handling', () => {
   let queryClient: QueryClient
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {

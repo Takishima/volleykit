@@ -42,7 +42,7 @@ function getStatusColor(status: CacheStatus): string {
       return COLORS.warning500
     case 'expired':
       return COLORS.danger500
-    default:
+    case 'missing':
       return COLORS.gray400
   }
 }
@@ -58,7 +58,7 @@ function getStatusIcon(status: CacheStatus): string {
       return 'clock'
     case 'expired':
       return 'alert-circle'
-    default:
+    case 'missing':
       return 'help-circle'
   }
 }

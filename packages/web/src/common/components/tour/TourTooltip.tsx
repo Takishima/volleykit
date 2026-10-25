@@ -24,6 +24,7 @@ export function TourTooltip({
   isFirstStep,
 }: TourTooltipProps) {
   const { t, tInterpolate } = useTranslation()
+  const stepNumbers = Array.from({ length: totalSteps }, (_, i) => i + 1)
 
   return (
     <div className="p-4">
@@ -64,19 +65,19 @@ export function TourTooltip({
       <div className="flex items-center justify-between pt-3 border-t border-border-subtle dark:border-border-subtle-dark">
         {/* Step indicator */}
         <div className="flex items-center gap-1.5">
-          {Array.from({ length: totalSteps }).map((_, index) => (
+          {stepNumbers.map((step) => (
             <div
-              key={`step-${index}`}
+              key={`step-${step}`}
               className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentStep
+                step === currentStep + 1
                   ? 'bg-primary-500'
-                  : index < currentStep
+                  : step <= currentStep
                     ? 'bg-primary-300 dark:bg-primary-700'
                     : 'bg-surface-muted dark:bg-surface-subtle-dark'
               }`}
               aria-label={
-                index === currentStep
-                  ? tInterpolate('tour.stepCurrent', { step: index + 1, total: totalSteps })
+                step === currentStep + 1
+                  ? tInterpolate('tour.stepCurrent', { step, total: totalSteps })
                   : undefined
               }
             />

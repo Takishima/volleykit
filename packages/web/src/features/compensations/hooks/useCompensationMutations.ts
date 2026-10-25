@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
+import { ensureError } from '@volleykit/shared/utils'
 
 import { getApiClient } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -91,11 +92,11 @@ export function useUpdateCompensation(): OfflineMutationResult<
           setWasQueued(true)
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to update compensation:', error)
+        const failure = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to update compensation:', failure)
         setIsError(true)
-        setError(error)
-        throw error
+        setError(failure)
+        throw failure
       } finally {
         setIsPending(false)
       }
@@ -112,8 +113,8 @@ export function useUpdateCompensation(): OfflineMutationResult<
         .then(() => {
           options?.onSuccess?.()
         })
-        .catch((err) => {
-          options?.onError?.(err)
+        .catch((err: unknown) => {
+          options?.onError?.(ensureError(err))
         })
     },
     [mutateAsync]
@@ -228,11 +229,11 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
           }
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to batch update compensations:', error)
+        const failure = err instanceof Error ? err : new Error(String(err))
+        log.error('Failed to batch update compensations:', failure)
         setIsError(true)
-        setError(error)
-        throw error
+        setError(failure)
+        throw failure
       } finally {
         setIsPending(false)
       }
@@ -249,8 +250,8 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
         .then((result) => {
           options?.onSuccess?.(result)
         })
-        .catch((err) => {
-          options?.onError?.(err)
+        .catch((err: unknown) => {
+          options?.onError?.(ensureError(err))
         })
     },
     [mutateAsync]

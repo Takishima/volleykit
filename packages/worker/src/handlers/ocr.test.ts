@@ -137,7 +137,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OCR service not configured')
@@ -159,7 +159,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(400)
     expect(body.error).toBe("Missing 'image' field in form data")
@@ -181,7 +181,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(400)
     expect(body.error).toContain('Unsupported file type')
@@ -205,7 +205,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(400)
     expect(body.error).toContain('File too large')
@@ -234,7 +234,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('Too many requests')
@@ -260,7 +260,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OCR service authentication failed')
@@ -287,7 +287,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('OCR service rate limit exceeded')
@@ -314,7 +314,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(502)
     expect(body.error).toBe('OCR processing failed')
@@ -347,7 +347,7 @@ describe('Integration: OCR Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(200)
     expect(body).toEqual(mockOcrResult)

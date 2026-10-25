@@ -5,9 +5,16 @@ import {
   validateOriginAndPreflight,
   checkRateLimit,
 } from '../middleware'
+import { BYTES_PER_KB, HttpStatus } from '../utils'
+
+/** Maximum request body size for OJP requests in kilobytes */
+const OJP_MAX_BODY_SIZE_KB = 64
 
 /** Maximum request body size for OJP requests (64 KB) */
-const OJP_MAX_BODY_SIZE_BYTES = 64 * 1024
+const OJP_MAX_BODY_SIZE_BYTES = OJP_MAX_BODY_SIZE_KB * BYTES_PER_KB
+
+/** Retry-After duration (seconds) when the OJP endpoint is rate limited */
+const OJP_RATE_LIMIT_RETRY_SECONDS = 60
 
 /**
  * Handle /ojp - proxy requests to Swiss public transport OJP 2.0 API.
@@ -19,7 +26,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
   const origin = check.origin
 
   // Rate limiting for OJP endpoint
-  const rateLimitResponse = await checkRateLimit(env, request, origin, 60)
+  const rateLimitResponse = await checkRateLimit(env, request, origin, OJP_RATE_LIMIT_RETRY_SECONDS)
   if (rateLimitResponse) return rateLimitResponse
 
   // Only allow POST for OJP
@@ -76,7 +83,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
       const errorText = await ojpResponse.text()
       console.error('OJP API error:', ojpResponse.status, errorText)
 
-      if (ojpResponse.status === 401) {
+      if (ojpResponse.status === HttpStatus.UNAUTHORIZED) {
         return new Response(JSON.stringify({ error: 'OJP service authentication failed' }), {
           status: 503,
           headers: {
@@ -87,12 +94,12 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
         })
       }
 
-      if (ojpResponse.status === 429) {
+      if (ojpResponse.status === HttpStatus.TOO_MANY_REQUESTS) {
         return new Response(JSON.stringify({ error: 'OJP service rate limit exceeded' }), {
           status: 429,
           headers: {
             'Content-Type': 'application/json',
-            'Retry-After': '60',
+            'Retry-After': String(OJP_RATE_LIMIT_RETRY_SECONDS),
             ...corsHeaders(origin),
             ...securityHeaders(),
           },

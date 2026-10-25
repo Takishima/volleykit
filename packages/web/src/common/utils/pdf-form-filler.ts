@@ -33,6 +33,8 @@ import {
   type SportsHallReportData,
 } from './pdf-report-data'
 
+import type { PDFDocument, PDFForm } from 'pdf-lib'
+
 // ---------------------------------------------------------------------------
 // Re-exports for backward compatibility
 // ---------------------------------------------------------------------------
@@ -75,10 +77,9 @@ export interface NonConformantSignatures {
 
 /**
  * Safely sets a text field in a PDF form, logging a warning on failure.
- * Uses `any` for form parameter because pdf-lib types are lazily imported.
+ * pdf-lib is imported lazily at runtime; only its types are referenced here.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function trySetTextField(form: any, fieldName: string, value: string | undefined): void {
+function trySetTextField(form: PDFForm, fieldName: string, value: string | undefined): void {
   if (!value) return
   try {
     form.getTextField(fieldName).setText(value)
@@ -93,8 +94,7 @@ function trySetTextField(form: any, fieldName: string, value: string | undefined
  * field's text to fit its bounding box — the same behaviour browsers use for
  * un-flattened form fields.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function autoSizeHeaderFields(form: any, mapping: FieldMapping): void {
+function autoSizeHeaderFields(form: PDFForm, mapping: FieldMapping): void {
   const headerFields = [
     mapping.gameNumber,
     mapping.homeTeam,
@@ -118,8 +118,7 @@ function autoSizeHeaderFields(form: any, mapping: FieldMapping): void {
  * Fills the basic game info fields (teams, date, hall, referees, gender) in a PDF form.
  */
 function fillBaseGameInfo(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any,
+  form: PDFForm,
   data: SportsHallReportData,
   mapping: ReturnType<typeof getFieldMapping>
 ): void {
@@ -142,7 +141,7 @@ function fillBaseGameInfo(
     } catch {
       const options = radioGroup.getOptions()
       const matchingOption = options.find(
-        (opt: string) => opt.toUpperCase().startsWith(genderOption) || opt.includes(genderOption)
+        (opt) => opt.toUpperCase().startsWith(genderOption) || opt.includes(genderOption)
       )
       if (matchingOption) {
         radioGroup.select(matchingOption)
@@ -167,8 +166,7 @@ function getPdfPath(leagueCategory: LeagueCategory, language: Language): string 
 async function loadPdfForm(
   leagueCategory: LeagueCategory,
   language: Language
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<{ pdfDoc: any; form: any }> {
+): Promise<{ pdfDoc: PDFDocument; form: PDFForm }> {
   const { PDFDocument } = await import('pdf-lib')
 
   const pdfPath = getPdfPath(leagueCategory, language)
@@ -205,8 +203,10 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
 async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
   const img = new Image()
   await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve()
-    img.onerror = () => reject(new Error('Failed to load signature image'))
+    img.addEventListener('load', () => resolve(), { once: true })
+    img.addEventListener('error', () => reject(new Error('Failed to load signature image')), {
+      once: true,
+    })
     img.src = dataUrl
   })
 
@@ -255,8 +255,7 @@ async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
 }
 
 async function embedSignatureAtPosition(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  pdfDoc: any,
+  pdfDoc: PDFDocument,
   signatureDataUrl: string,
   pos: SignaturePosition
 ): Promise<void> {
@@ -289,8 +288,7 @@ async function embedSignatureAtPosition(
 }
 
 async function embedSignature(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  pdfDoc: any,
+  pdfDoc: PDFDocument,
   signatureDataUrl: string,
   leagueCategory: LeagueCategory
 ): Promise<void> {
@@ -298,8 +296,7 @@ async function embedSignature(
 }
 
 async function embedAllSignatures(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  pdfDoc: any,
+  pdfDoc: PDFDocument,
   positions: AllSignaturePositions,
   signatures: NonConformantSignatures
 ): Promise<void> {
@@ -325,8 +322,7 @@ async function embedAllSignatures(
 // ---------------------------------------------------------------------------
 
 function fillChecklistRadios(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any,
+  form: PDFForm,
   sections: readonly PdfChecklistSection[],
   nonConformantSubItems: NonConformantSelections
 ): void {
@@ -345,8 +341,7 @@ function fillChecklistRadios(
 }
 
 function fillNonConformantComments(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any,
+  form: PDFForm,
   sections: readonly PdfChecklistSection[],
   nonConformantSubItems: NonConformantSelections,
   sectionComments: Record<string, string>
@@ -372,8 +367,7 @@ function fillNonConformantComments(
 // ---------------------------------------------------------------------------
 
 function fillAdvertisingRadios(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: any,
+  form: PDFForm,
   wizardMapping: ReturnType<typeof getWizardFieldMapping>,
   jerseyAdvertising: JerseyAdvertisingOptions
 ): void {

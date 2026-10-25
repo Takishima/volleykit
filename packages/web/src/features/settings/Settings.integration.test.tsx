@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { setLocale } from '@/i18n'
+import { DEFAULT_MAX_BIKE_DISTANCE_KM, DEFAULT_TRAVEL_MODE } from '@/common/services/transport'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import {
@@ -12,6 +13,7 @@ import {
   DEMO_HOME_LOCATION,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
+  type ModeSettings,
 } from '@/common/stores/settings'
 import { useToastStore } from '@/common/stores/toast'
 
@@ -32,8 +34,8 @@ import { SettingsPage } from './SettingsPage'
 describe('Settings Integration', () => {
   let queryClient: QueryClient
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -83,6 +85,8 @@ describe('Settings Integration', () => {
         arrivalBufferByAssociation: {},
         cacheInvalidatedAt: null,
         sbbDestinationType: 'address',
+        travelMode: DEFAULT_TRAVEL_MODE,
+        maxBikeDistanceKm: DEFAULT_MAX_BIKE_DISTANCE_KM,
       },
       levelFilterEnabled: false,
       settingsGroupExpanded: {},
@@ -144,13 +148,13 @@ describe('Settings Integration', () => {
         status: 'authenticated',
         dataSource: 'api',
         user: {
+          id: 'user-1',
           firstName: 'Test',
           lastName: 'User',
           occupations: [
             {
               id: 'occ-1',
               type: 'referee',
-              attributeValueName: 'Referee',
               associationCode: 'SV',
             },
           ],
@@ -185,13 +189,13 @@ describe('Settings Integration', () => {
         status: 'authenticated',
         dataSource: 'api',
         user: {
+          id: 'user-1',
           firstName: 'Test',
           lastName: 'User',
           occupations: [
             {
               id: 'occ-1',
               type: 'referee',
-              attributeValueName: 'Referee',
               associationCode: 'SV',
             },
           ],
@@ -360,7 +364,7 @@ describe('Settings Integration', () => {
   describe('mode switching and settings isolation', () => {
     it('settings are isolated between API and demo modes', () => {
       // Ensure we have fresh default state for settingsByMode
-      const defaultModeSettings = {
+      const defaultModeSettings: ModeSettings = {
         homeLocation: null,
         distanceFilter: { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM },
         distanceFilterByAssociation: {},
@@ -373,16 +377,19 @@ describe('Settings Integration', () => {
           arrivalBufferMinutes: 30,
           arrivalBufferByAssociation: {},
           cacheInvalidatedAt: null,
-          sbbDestinationType: 'address' as const,
+          sbbDestinationType: 'address',
+          travelMode: DEFAULT_TRAVEL_MODE,
+          maxBikeDistanceKm: DEFAULT_MAX_BIKE_DISTANCE_KM,
         },
         levelFilterEnabled: false,
         notificationSettings: {
           enabled: false,
-          reminderTimes: ['1h' as const],
-          deliveryPreference: 'native' as const,
+          reminderTimes: ['1h'],
+          deliveryPreference: 'native',
         },
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         hideOwnExchangesByAssociation: {},
+        hideNotTakeableExchangesByAssociation: {},
       }
 
       // Reset settingsByMode to ensure clean state
@@ -590,8 +597,8 @@ describe('Settings Integration', () => {
       expect(useSettingsStore.getState().notificationSettings.enabled).toBe(true)
 
       // Set reminder times
-      useSettingsStore.getState().setNotificationReminderTimes(['1h', '24h'])
-      expect(useSettingsStore.getState().notificationSettings.reminderTimes).toEqual(['1h', '24h'])
+      useSettingsStore.getState().setNotificationReminderTimes(['1h', '1d'])
+      expect(useSettingsStore.getState().notificationSettings.reminderTimes).toEqual(['1h', '1d'])
 
       // Set delivery preference
       useSettingsStore.getState().setNotificationDeliveryPreference('in-app')

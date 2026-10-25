@@ -145,7 +145,9 @@ export function verifyNoLocationHistory(): boolean {
 export function schedulePeriodicCleanup(
   intervalMs: number = 60 * 60 * 1000
 ): ReturnType<typeof setInterval> {
-  return setInterval(async () => {
-    await cleanupPastReminders()
+  return setInterval(() => {
+    cleanupPastReminders().catch((error: unknown) => {
+      console.error('[departure-reminder] Periodic reminder cleanup failed:', error)
+    })
   }, intervalMs)
 }

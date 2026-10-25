@@ -15,8 +15,8 @@ function createMockNotification(permission: NotificationPermission = 'default') 
       this.options = options ?? {}
     }
 
-    static permission: NotificationPermission = permission
-    static requestPermission = vi.fn().mockResolvedValue(permission)
+    static readonly permission: NotificationPermission = permission
+    static readonly requestPermission = vi.fn().mockResolvedValue(permission)
   }
 
   // Create a spy wrapper around the class to track calls

@@ -257,10 +257,8 @@ describe('isError', () => {
 
   it('should work as type guard', () => {
     const value: unknown = new Error('test')
-    if (isError(value)) {
-      // TypeScript should narrow type to Error
-      expect(value.message).toBe('test')
-    }
+    // TypeScript narrows `value` to Error in the true branch
+    expect(isError(value) ? value.message : undefined).toBe('test')
   })
 })
 

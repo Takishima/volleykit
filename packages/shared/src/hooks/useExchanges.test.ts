@@ -169,7 +169,7 @@ describe('useExchanges', () => {
 
     // Should filter out the exchange from user-123
     expect(result.current.data?.items).toHaveLength(1)
-    expect(result.current.data?.items[0].__identity).toBe('exc-2')
+    expect(result.current.data?.items[0]?.__identity).toBe('exc-2')
   })
 
   it('should not filter when hideOwn is false', async () => {
@@ -270,7 +270,7 @@ describe('useExchanges', () => {
     })
 
     expect(result.current.data?.items).toHaveLength(1)
-    expect(result.current.data?.items[0].__identity).toBe('exc-takeable')
+    expect(result.current.data?.items[0]?.__identity).toBe('exc-takeable')
     expect(result.current.data?.notTakeableCount).toBe(1)
   })
 
@@ -361,26 +361,26 @@ describe('useExchanges', () => {
 
     const wrapper = createWrapper()
 
-    const hidingOwn = renderHook(
+    const { result: hidingOwn } = renderHook(
       () => useExchanges({ apiClient: mockApiClient, currentUserId: 'user-123', hideOwn: true }),
       { wrapper }
     )
 
     await waitFor(() => {
-      expect(hidingOwn.result.current.isSuccess).toBe(true)
+      expect(hidingOwn.current.isSuccess).toBe(true)
     })
-    expect(hidingOwn.result.current.data?.items.map((e) => e.__identity)).toEqual(['exc-takeable'])
+    expect(hidingOwn.current.data?.items.map((e) => e.__identity)).toEqual(['exc-takeable'])
 
     // Second observer shares the cache entry and must still see its own entry
-    const keepingOwn = renderHook(
+    const { result: keepingOwn } = renderHook(
       () => useExchanges({ apiClient: mockApiClient, currentUserId: 'user-123', hideOwn: false }),
       { wrapper }
     )
 
     await waitFor(() => {
-      expect(keepingOwn.result.current.isSuccess).toBe(true)
+      expect(keepingOwn.current.isSuccess).toBe(true)
     })
-    expect(keepingOwn.result.current.data?.items.map((e) => e.__identity)).toEqual([
+    expect(keepingOwn.current.data?.items.map((e) => e.__identity)).toEqual([
       'exc-own',
       'exc-takeable',
     ])
@@ -396,7 +396,9 @@ describe('useExchanges', () => {
       { wrapper: createWrapper() }
     )
 
-    await new Promise((r) => setTimeout(r, TEST_TICK_MS))
+    await new Promise((r) => {
+      setTimeout(r, TEST_TICK_MS)
+    })
 
     expect(mockApiClient.searchExchanges).not.toHaveBeenCalled()
   })
@@ -421,8 +423,8 @@ describe('useExchanges', () => {
 
   it('should return empty array when items is undefined', async () => {
     vi.mocked(mockApiClient.searchExchanges).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns undefined instead of array
-      items: undefined as any,
+      // Testing edge case: API returns undefined instead of array
+      items: undefined as unknown as GameExchange[],
       totalItemsCount: 0,
     })
 

@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest'
 
 import { mockApi } from '@/api/mock-api'
 import { setLocale } from '@/i18n'
@@ -27,9 +27,10 @@ const originalApplyForExchange = mockApi.applyForExchange.bind(mockApi)
 
 describe('Exchanges Integration', () => {
   let queryClient: QueryClient
+  let searchExchangesSpy: MockInstance<typeof mockApi.searchExchanges>
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -42,7 +43,7 @@ describe('Exchanges Integration', () => {
     mockApi.searchExchanges = originalSearchExchanges
     mockApi.applyForExchange = originalApplyForExchange
 
-    vi.spyOn(mockApi, 'searchExchanges')
+    searchExchangesSpy = vi.spyOn(mockApi, 'searchExchanges')
     vi.spyOn(mockApi, 'applyForExchange')
 
     // Reset stores to initial state
@@ -322,7 +323,7 @@ describe('Exchanges Integration', () => {
         expect(mockApi.searchExchanges).toHaveBeenCalled()
       })
 
-      const initialCallCount = vi.mocked(mockApi.searchExchanges).mock.calls.length
+      const initialCallCount = searchExchangesSpy.mock.calls.length
 
       // Find an exchange to apply for
       const exchanges = useDemoStore.getState().exchanges
@@ -338,11 +339,11 @@ describe('Exchanges Integration', () => {
       await mockApi.applyForExchange(exchangeToApply.__identity)
 
       // Manually invalidate queries as the mutation would
-      queryClient.invalidateQueries({ queryKey: ['exchanges'] })
+      await queryClient.invalidateQueries({ queryKey: ['exchanges'] })
 
       // After invalidation, query should refetch
       await waitFor(() => {
-        const newCallCount = vi.mocked(mockApi.searchExchanges).mock.calls.length
+        const newCallCount = searchExchangesSpy.mock.calls.length
         expect(newCallCount).toBeGreaterThan(initialCallCount)
       })
     })

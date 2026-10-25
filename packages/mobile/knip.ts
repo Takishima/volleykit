@@ -2,7 +2,6 @@
 const config = {
   entry: ['App.tsx', 'src/**/*.{ts,tsx}'],
   project: ['src/**/*.{ts,tsx}', '*.{ts,tsx,js,cjs}'],
-  ignore: ['src/types/**/*.d.ts', 'nativewind-env.d.ts'],
 
   // Enable tool plugins to detect their dependencies
   babel: {

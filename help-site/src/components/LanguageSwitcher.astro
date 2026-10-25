@@ -52,7 +52,11 @@ const { compact = false } = Astro.props
       aria-hidden="true"
       data-chevron
     >
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M19 9l-7 7-7-7"
       ></path>
     </svg>
   </button>
@@ -62,23 +66,22 @@ const { compact = false } = Astro.props
     role="listbox"
     data-language-menu
   >
-    {
-      Object.entries(languages).map(([code, name]) => (
-        <li>
-          <button
-            type="button"
-            class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-primary transition-colors hover:bg-surface-subtle dark:text-text-primary-dark dark:hover:bg-surface-subtle-dark"
-            role="option"
-            data-language-option={code}
-          >
-            <span class="invisible" data-check aria-hidden="true">
-              ✓
-            </span>
-            <span>{name}</span>
-          </button>
-        </li>
-      ))
-    }
+    {Object.entries(languages).map(([code, name]) => (
+      <li>
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-primary transition-colors hover:bg-surface-subtle dark:text-text-primary-dark dark:hover:bg-surface-subtle-dark"
+          role="option"
+          aria-selected="false"
+          data-language-option={code}
+        >
+          <span class="invisible" data-check aria-hidden="true">
+            ✓
+          </span>
+          <span>{name}</span>
+        </button>
+      </li>
+    ))}
   </ul>
 </div>
 
@@ -104,29 +107,28 @@ const { compact = false } = Astro.props
 
       function updateChecks(lang: Language) {
         options.forEach((option) => {
+          const selected = option.getAttribute('data-language-option') === lang
+          option.setAttribute('aria-selected', String(selected))
           const check = option.querySelector('[data-check]')
           if (check) {
-            check.classList.toggle(
-              'invisible',
-              option.getAttribute('data-language-option') !== lang
-            )
+            check.classList.toggle('invisible', !selected)
           }
         })
       }
 
-      function openMenu() {
+      const openMenu = () => {
         menu.classList.remove('hidden')
         trigger.setAttribute('aria-expanded', 'true')
         chevron?.classList.add('rotate-180')
       }
 
-      function closeMenu() {
+      const closeMenu = () => {
         menu.classList.add('hidden')
         trigger.setAttribute('aria-expanded', 'false')
         chevron?.classList.remove('rotate-180')
       }
 
-      function toggleMenu() {
+      const toggleMenu = () => {
         if (menu.classList.contains('hidden')) {
           openMenu()
         } else {
@@ -177,12 +179,11 @@ const { compact = false } = Astro.props
           currentLabel.textContent = languages[e.detail.language]
         }
         options.forEach((option) => {
+          const selected = option.getAttribute('data-language-option') === e.detail.language
+          option.setAttribute('aria-selected', String(selected))
           const check = option.querySelector('[data-check]')
           if (check) {
-            check.classList.toggle(
-              'invisible',
-              option.getAttribute('data-language-option') !== e.detail.language
-            )
+            check.classList.toggle('invisible', !selected)
           }
         })
       })

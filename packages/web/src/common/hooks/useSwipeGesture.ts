@@ -1,5 +1,9 @@
 import { useState, useRef, useCallback, useLayoutEffect } from 'react'
 
+import { createLogger } from '@/common/utils/logger'
+
+const log = createLogger('useSwipeGesture')
+
 /**
  * Minimum movement in pixels before determining swipe direction.
  * Prevents micro-movements from being interpreted as swipes.
@@ -252,7 +256,7 @@ export function useSwipeGesture(options: UseSwipeGestureOptions = {}): UseSwipeG
   const handleTouchEnd = useCallback(() => {
     if (!touchActiveRef.current) return
     touchActiveRef.current = false
-    handleDragEnd()
+    handleDragEnd().catch((error: unknown) => log.error('Swipe end handler failed:', error))
   }, [handleDragEnd])
 
   // Mouse event handlers
@@ -275,7 +279,7 @@ export function useSwipeGesture(options: UseSwipeGestureOptions = {}): UseSwipeG
   const handleMouseUp = useCallback(() => {
     if (!mouseActiveRef.current) return
     mouseActiveRef.current = false
-    handleDragEnd()
+    handleDragEnd().catch((error: unknown) => log.error('Swipe end handler failed:', error))
   }, [handleDragEnd])
 
   return {

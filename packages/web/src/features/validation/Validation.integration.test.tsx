@@ -10,6 +10,7 @@ import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
 import { useToastStore } from '@/common/stores/toast'
+import { assertDefined } from '@/test/assert-defined'
 
 import { ValidateGameModal } from './components/ValidateGameModal'
 
@@ -37,25 +38,20 @@ function createMockAssignment(overrides?: Partial<Assignment>): Assignment {
       __identity: 'test-referee-game-1',
       game: {
         __identity: 'test-game-1',
-        gameDate: new Date().toISOString(),
-        gameStartTime: '14:00',
-        homeTeam: {
-          __identity: 'home-team-1',
-          name: 'VBC Home',
-        },
-        awayTeam: {
-          __identity: 'away-team-1',
-          name: 'VBC Away',
+        startingDateTime: new Date().toISOString(),
+        encounter: {
+          teamHome: { __identity: 'home-team-1', name: 'VBC Home' },
+          teamAway: { __identity: 'away-team-1', name: 'VBC Away' },
         },
         group: {
           __identity: 'group-1',
           isTournamentGroup: false,
           hasNoScoresheet: false,
         },
-        sportsHall: {
+        hall: {
           __identity: 'hall-1',
           name: 'Test Sports Hall',
-          address: {
+          primaryPostalAddress: {
             postalCode: '3000',
             city: 'Bern',
           },
@@ -69,8 +65,8 @@ function createMockAssignment(overrides?: Partial<Assignment>): Assignment {
 describe('Validation Integration', () => {
   let queryClient: QueryClient
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -124,14 +120,14 @@ describe('Validation Integration', () => {
 
   function renderValidateGameModal(assignment: Assignment, isOpen: boolean = true) {
     const onClose = vi.fn()
-    const result = render(
+    const view = render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
           <ValidateGameModal assignment={assignment} isOpen={isOpen} onClose={onClose} />
         </MemoryRouter>
       </QueryClientProvider>
     )
-    return { ...result, onClose }
+    return { ...view, onClose }
   }
 
   describe('demo mode API calls', () => {
@@ -154,8 +150,8 @@ describe('Validation Integration', () => {
 
       // Verify assignment structure is correct for validation
       expect(assignment.__identity).toBe('test-assignment-1')
-      expect(assignment.refereeGame?.game?.homeTeam?.name).toBe('VBC Home')
-      expect(assignment.refereeGame?.game?.awayTeam?.name).toBe('VBC Away')
+      expect(assignment.refereeGame?.game?.encounter?.teamHome?.name).toBe('VBC Home')
+      expect(assignment.refereeGame?.game?.encounter?.teamAway?.name).toBe('VBC Away')
       expect(assignment.refereeGame?.game?.group?.hasNoScoresheet).toBe(false)
     })
   })
@@ -270,8 +266,8 @@ describe('Validation Integration', () => {
             home: {
               __identity: 'nom-home-1',
               indoorPlayerNominations: [
-                { __identity: playerId1, person: { displayName: 'Player 1' }, shirtNumber: 1 },
-                { __identity: playerId2, person: { displayName: 'Player 2' }, shirtNumber: 2 },
+                { __identity: playerId1, indoorPlayer: { person: { displayName: 'Player 1' } } },
+                { __identity: playerId2, indoorPlayer: { person: { displayName: 'Player 2' } } },
               ],
             },
             away: {
@@ -374,6 +370,8 @@ describe('Validation Integration', () => {
       const filteredScorers = await mockApi.searchPersons({ lastName: 'Mueller' })
 
       // Filtered should have fewer or equal results
+      assertDefined(allScorers.totalItemsCount)
+      assertDefined(filteredScorers.totalItemsCount)
       expect(filteredScorers.totalItemsCount).toBeLessThanOrEqual(allScorers.totalItemsCount)
     })
   })

@@ -77,7 +77,7 @@ export function AssignmentsScreen({ navigation }: Props) {
   })
 
   const onRefresh = useCallback(() => {
-    refetch()
+    void refetch()
   }, [refetch])
 
   // Loading state

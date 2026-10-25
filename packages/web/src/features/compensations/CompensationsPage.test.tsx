@@ -84,7 +84,7 @@ function createMockCompensation(overrides: Partial<CompensationRecord> = {}): Co
       costFormatted: 'CHF 150.00',
     },
     ...overrides,
-  } as CompensationRecord
+  }
 }
 
 function createMockQueryResult(

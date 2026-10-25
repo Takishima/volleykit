@@ -16,5 +16,5 @@ export function isValidICalCode(code: string): boolean {
  */
 export function extractICalCode(pathname: string): string | null {
   const match = pathname.match(/^\/iCal\/referee\/([^/]+)$/)
-  return match ? match[1] : null
+  return match?.[1] ?? null
 }

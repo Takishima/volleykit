@@ -55,8 +55,19 @@ export function getRetryDelay(retryCount: number): number {
  * Sleep for a specified duration.
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
 }
+
+/** Radix for the random suffix (base36 keeps IDs short and URL-safe) */
+const RANDOM_SUFFIX_RADIX = 36
+
+/** Number of base36 characters in the random suffix */
+const RANDOM_SUFFIX_LENGTH = 8
+
+/** Offset skipping the leading "0." of Math.random().toString() */
+const RANDOM_SUFFIX_START = 2
 
 /**
  * Generate a unique action ID for the offline queue.
@@ -64,7 +75,9 @@ export function sleep(ms: number): Promise<void> {
  */
 export function generateActionId(): string {
   const timestamp = Date.now()
-  const random = Math.random().toString(36).slice(2, 10)
+  const random = Math.random()
+    .toString(RANDOM_SUFFIX_RADIX)
+    .slice(RANDOM_SUFFIX_START, RANDOM_SUFFIX_START + RANDOM_SUFFIX_LENGTH)
   return `action_${timestamp}_${random}`
 }
 

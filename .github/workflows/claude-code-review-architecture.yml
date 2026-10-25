@@ -14,6 +14,9 @@ on:
 concurrency:
   group: architecture-review-${{ github.event.pull_request.number || inputs.pr_number }}
   cancel-in-progress: true
+permissions:
+  contents: read
+
 jobs:
   architecture-review:
     runs-on: ubuntu-latest
@@ -24,20 +27,25 @@ jobs:
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0 # Need full history to check changed files
       - name: Check if guidelines or workflow files were modified
         id: check-skip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
+          # Empty for workflow_dispatch; resolved from the PR below
+          BASE_REF: ${{ github.base_ref }}
         run: |
           # For workflow_dispatch, we need to fetch the PR info
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PR_NUMBER="${{ inputs.pr_number }}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            PR_NUMBER="$PR_NUMBER_INPUT"
             # Fetch the PR branch
             gh pr checkout "$PR_NUMBER" --detach 2>/dev/null || true
             BASE_REF=$(gh pr view "$PR_NUMBER" --json baseRefName -q '.baseRefName')
-          else
-            BASE_REF="${{ github.base_ref }}"
           fi
 
           # Get the list of changed files in this PR
@@ -46,24 +54,22 @@ jobs:
           # Check for guidelines files
           if echo "$CHANGED_FILES" | grep -qE "^(CLAUDE\.md|docs/REVIEW_CHECKLIST_ARCHITECTURE\.md|docs/CODE_PATTERNS\.md)$"; then
             echo "Guidelines files modified - retries disabled"
-            echo "guidelines_changed=true" >> $GITHUB_OUTPUT
+            echo "guidelines_changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           # Check for workflow files (GitHub security restriction prevents retrying)
           if echo "$CHANGED_FILES" | grep -qE "^\.github/workflows/.*\.ya?ml$"; then
             echo "Workflow files modified - retries disabled (GitHub security restriction)"
-            echo "guidelines_changed=true" >> $GITHUB_OUTPUT
+            echo "guidelines_changed=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "No special files modified - retries enabled"
-          echo "guidelines_changed=false" >> $GITHUB_OUTPUT
-        env:
-          GH_TOKEN: ${{ github.token }}
+          echo "guidelines_changed=false" >> "$GITHUB_OUTPUT"
       - name: Run Architecture Review
         id: architecture-review
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@925afb53776cf1a2b738c6bdbed37b4d4000ef13 # v1.0.262
         with:
           # Allow PRs opened by the Claude GitHub app to trigger this workflow
           allowed_bots: 'claude'

@@ -6,7 +6,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-import NetInfo, { NetInfoState } from '@react-native-community/netinfo'
+import {
+  addEventListener as addNetInfoListener,
+  fetch as fetchNetInfoState,
+  NetInfoStateType,
+  type NetInfoState,
+} from '@react-native-community/netinfo'
 
 /**
  * Network status information.
@@ -41,8 +46,8 @@ const DEFAULT_STATUS: NetworkStatus = {
 function convertNetInfoState(state: NetInfoState): NetworkStatus {
   return {
     isConnected: state.isConnected ?? true,
-    isWifi: state.type === 'wifi',
-    isCellular: state.type === 'cellular',
+    isWifi: state.type === NetInfoStateType.wifi,
+    isCellular: state.type === NetInfoStateType.cellular,
     isKnown: state.isConnected !== null,
     type: state.type,
   }
@@ -58,12 +63,16 @@ export function useNetworkStatus(): NetworkStatus {
 
   useEffect(() => {
     // Get initial state
-    NetInfo.fetch().then((state) => {
-      setStatus(convertNetInfoState(state))
-    })
+    fetchNetInfoState()
+      .then((state) => {
+        setStatus(convertNetInfoState(state))
+      })
+      .catch((error: unknown) => {
+        console.warn('[useNetworkStatus] Failed to fetch initial network state:', error)
+      })
 
     // Subscribe to changes
-    const unsubscribe = NetInfo.addEventListener((state) => {
+    const unsubscribe = addNetInfoListener((state) => {
       setStatus(convertNetInfoState(state))
     })
 
@@ -95,7 +104,7 @@ export function useNetworkStatusWithRefresh(): {
   const status = useNetworkStatus()
 
   const refresh = useCallback(async (): Promise<NetworkStatus> => {
-    const state = await NetInfo.fetch()
+    const state = await fetchNetInfoState()
     return convertNetInfoState(state)
   }, [])
 
@@ -106,7 +115,7 @@ export function useNetworkStatusWithRefresh(): {
  * Check network status imperatively (without hook).
  */
 export async function checkNetworkStatus(): Promise<NetworkStatus> {
-  const state = await NetInfo.fetch()
+  const state = await fetchNetInfoState()
   return convertNetInfoState(state)
 }
 

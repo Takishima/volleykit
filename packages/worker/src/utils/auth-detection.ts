@@ -2,6 +2,12 @@
  * Login/auth detection functions for the VolleyKit CORS Proxy Worker.
  */
 
+import {
+  HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE,
+  HTTP_REDIRECT_STATUS_MIN,
+  HttpStatus,
+} from './constants'
+
 // =============================================================================
 // Auth Detection Constants
 // =============================================================================
@@ -10,7 +16,7 @@
 export const AUTH_ENDPOINT = '/sportmanager.security/authentication/authenticate'
 
 /** Form field name that indicates authentication credentials are present */
-export const AUTH_USERNAME_FIELD =
+const AUTH_USERNAME_FIELD =
   '__authentication[Neos][Flow][Security][Authentication][Token][UsernamePassword][username]'
 
 // =============================================================================
@@ -77,7 +83,10 @@ export function isFailedLoginResponse(
   responseBody?: string
 ): boolean {
   // Check for redirect back to login page
-  if (response.status >= 300 && response.status < 400) {
+  if (
+    response.status >= HTTP_REDIRECT_STATUS_MIN &&
+    response.status < HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE
+  ) {
     const location = response.headers.get('Location')
     if (location) {
       const normalizedLocation = location.toLowerCase()
@@ -93,7 +102,7 @@ export function isFailedLoginResponse(
   }
 
   // Check for 401/403 responses
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
     return true
   }
 
@@ -135,7 +144,10 @@ export function isSuccessfulLoginResponse(response: {
   const hasSessionCookie = setCookie && setCookie.toLowerCase().includes('neos_session')
 
   // Successful login results in a redirect to dashboard
-  if (response.status >= 300 && response.status < 400) {
+  if (
+    response.status >= HTTP_REDIRECT_STATUS_MIN &&
+    response.status < HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE
+  ) {
     const location = response.headers.get('Location')
 
     // If session cookie is set, login succeeded even if redirecting to root
@@ -166,7 +178,7 @@ export function isSuccessfulLoginResponse(response: {
   }
 
   // 200 OK with session cookies also indicates success
-  if (response.status === 200 && hasSessionCookie) {
+  if (response.status === HttpStatus.OK && hasSessionCookie) {
     return true
   }
 

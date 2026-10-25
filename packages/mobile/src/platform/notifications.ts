@@ -51,7 +51,7 @@ async function requestPermissions(): Promise<boolean> {
   try {
     const { status: existingStatus } = await Notifications.getPermissionsAsync()
 
-    if (existingStatus === 'granted') {
+    if (existingStatus === Notifications.PermissionStatus.GRANTED) {
       return true
     }
 
@@ -63,7 +63,7 @@ async function requestPermissions(): Promise<boolean> {
       },
     })
 
-    return status === 'granted'
+    return status === Notifications.PermissionStatus.GRANTED
   } catch {
     return false
   }
@@ -75,7 +75,7 @@ async function requestPermissions(): Promise<boolean> {
 async function hasPermissions(): Promise<boolean> {
   try {
     const { status } = await Notifications.getPermissionsAsync()
-    return status === 'granted'
+    return status === Notifications.PermissionStatus.GRANTED
   } catch {
     return false
   }
@@ -141,13 +141,14 @@ async function getScheduledNotifications(): Promise<{ id: string; date: Date | n
  */
 function configureHandler(): void {
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+    handleNotification: () =>
+      Promise.resolve({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
   })
 }
 

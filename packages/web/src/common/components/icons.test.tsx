@@ -49,6 +49,9 @@ const icons = [
   { name: 'Volleyball', Component: Volleyball },
 ]
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('Lucide icon re-exports', () => {
   describe.each(icons)('$name', ({ Component }) => {
     it('renders an SVG element', () => {
@@ -57,8 +60,8 @@ describe('Lucide icon re-exports', () => {
     })
 
     it('applies custom className', () => {
-      const { container } = render(<Component className="custom-class" />)
-      expect(container.querySelector('svg')).toHaveClass('custom-class')
+      const { container } = render(<Component className={CUSTOM_CLASS} />)
+      expect(container.querySelector('svg')).toHaveClass(CUSTOM_CLASS)
     })
 
     it('supports custom size via className', () => {

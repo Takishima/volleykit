@@ -1,0 +1,42 @@
+{
+  "src/api/form-serialization.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/auth/parsers.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/auth/service.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/hooks/useAssignments.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/hooks/useExchanges.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/stores/auth.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/stores/settings.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/utils/date-helpers.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  }
+}

@@ -219,7 +219,7 @@ function getMockExchanges(): GameExchange[] {
 function formatPaymentDate(daysFromNow: number): string {
   const date = new Date()
   date.setDate(date.getDate() + daysFromNow)
-  return date.toISOString().split('T')[0]
+  return date.toISOString().slice(0, 10)
 }
 
 /**

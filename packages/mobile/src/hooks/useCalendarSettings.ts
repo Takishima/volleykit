@@ -25,8 +25,20 @@ import { calendar } from '../platform/calendar'
 
 import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/calendar'
 
+/** Fallback API base URL when EXPO_PUBLIC_API_BASE_URL is not configured */
+const DEFAULT_ICAL_BASE_URL = 'https://volleymanager.volleyball.ch'
+
+/**
+ * Resolve the API base URL for iCal subscriptions.
+ * Expo's process.env is untyped, so the value is narrowed before use.
+ */
+function resolveIcalBaseUrl(): string {
+  const configured: unknown = process.env.EXPO_PUBLIC_API_BASE_URL
+  return typeof configured === 'string' ? configured : DEFAULT_ICAL_BASE_URL
+}
+
 /** API base URL for iCal subscriptions */
-const ICAL_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://volleymanager.volleyball.ch'
+const ICAL_BASE_URL = resolveIcalBaseUrl()
 
 /**
  * Construct the iCal URL for a given calendar code.
@@ -78,7 +90,7 @@ export function useCalendarSettings() {
       }
     }
 
-    loadData()
+    void loadData()
   }, [storage])
 
   // Save settings when they change

@@ -322,7 +322,7 @@ async function scheduleTimeBasedReminders(): Promise<void> {
 /**
  * Handle clustered assignments for consolidated notifications.
  */
-export async function processClusteredAssignments(
+export function processClusteredAssignments(
   assignments: UpcomingAssignment[],
   _userLocation: Coordinates
 ): Promise<VenueCluster[]> {
@@ -333,5 +333,5 @@ export async function processClusteredAssignments(
     gameTime: a.gameTime,
   }))
 
-  return clusterNearbyVenues(assignmentsWithVenue)
+  return Promise.resolve(clusterNearbyVenues(assignmentsWithVenue))
 }

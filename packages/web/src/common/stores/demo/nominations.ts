@@ -3,6 +3,8 @@
  * Handles nomination lists, possible players, and scorers data.
  */
 
+import type { IndoorPlayerNomination } from '@/api/client'
+
 import type { DemoState, DemoNominationsState } from './types'
 import type { StateCreator } from 'zustand'
 
@@ -62,20 +64,21 @@ export const createNominationsSlice: StateCreator<DemoState, [], [], Nominations
       const existingNominations = nominationList.indoorPlayerNominations ?? []
       const existingById = new Map(existingNominations.map((n) => [n.__identity, n]))
 
+      // Keep the API nomination shape (`indoorPlayer.person`): the roster
+      // readers build the display name from it and drop entries without one.
       const possiblePlayersById = new Map(
-        state.possiblePlayers.map((p) => [
+        state.possiblePlayers.map((p): [string | undefined, IndoorPlayerNomination] => [
           p.indoorPlayer?.__identity,
           {
             __identity: p.indoorPlayer?.__identity ?? '',
-            person: p.indoorPlayer?.person,
-            shirtNumber: 0,
+            indoorPlayer: p.indoorPlayer,
           },
         ])
       )
 
       const newNominations = playerNominationIds
         .map((id) => existingById.get(id) ?? possiblePlayersById.get(id))
-        .filter((n): n is NonNullable<typeof n> => n !== undefined && n !== null)
+        .filter((n) => n !== undefined)
 
       return {
         nominationLists: {

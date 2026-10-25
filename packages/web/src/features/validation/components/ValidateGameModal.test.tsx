@@ -1,11 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import type { AuthState } from '@/common/stores/auth'
+import type { SettingsState } from '@/common/stores/settings/types'
 
 import type { Assignment } from '@/api/client'
 import * as useNominationListModule from '@/features/validation/roster/hooks/useNominationList'
+import type { UseValidationStateResult } from '@/features/validation/hooks/types'
 import * as useValidationStateModule from '@/features/validation/hooks/useValidationState'
 import { useSettingsStore } from '@/common/stores/settings'
+import { partialMock } from '@/test/partial-mock'
 
 import { ValidateGameModal } from './ValidateGameModal'
 
@@ -26,18 +31,20 @@ vi.mock('@/features/validation/scorer/hooks/useScorerSearch', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 vi.mock('@/common/stores/settings', () => ({
-  useSettingsStore: vi.fn((selector) => {
-    const state = {
+  useSettingsStore: vi.fn((selector?: (state: SettingsState) => unknown) => {
+    const state = partialMock<SettingsState>({
       isSafeModeEnabled: false,
       isOCREnabled: false,
       validationReferenceMode: 'quick-compare',
-    }
+    })
     // Handle both selector function and direct access patterns
-    return typeof selector === 'function' ? selector(state) : state
+    return selector ? selector(state) : state
   }),
 }))
 
@@ -63,6 +70,60 @@ function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
     },
     ...overrides,
   } as Assignment
+}
+
+function createValidationStateResult(
+  overrides: Partial<UseValidationStateResult> = {}
+): UseValidationStateResult {
+  return {
+    state: {
+      homeRoster: {
+        reviewed: false,
+        playerModifications: { added: [], removed: [] },
+        coachModifications: { added: new Map(), removed: new Set() },
+      },
+      awayRoster: {
+        reviewed: false,
+        playerModifications: { added: [], removed: [] },
+        coachModifications: { added: new Map(), removed: new Set() },
+      },
+      scorer: { selected: null, notFound: false },
+      scoresheet: { file: null, uploaded: false },
+      referenceImageUrl: null,
+    },
+    isDirty: false,
+    completionStatus: {
+      homeRoster: false,
+      awayRoster: false,
+      scorer: false,
+      scoresheet: true,
+    },
+    isAllRequiredComplete: false,
+    isValidated: false,
+    isScoresheetClosed: false,
+    validatedInfo: null,
+    pendingScorer: null,
+    scoresheetNotRequired: false,
+    setHomeRosterModifications: vi.fn(),
+    setAwayRosterModifications: vi.fn(),
+    setScorer: vi.fn(),
+    setScorerNotFound: vi.fn(),
+    setScoresheet: vi.fn(),
+    setReferenceImageUrl: vi.fn(),
+    referenceImageUrl: null,
+    reset: vi.fn(),
+    saveProgress: vi.fn().mockResolvedValue(undefined),
+    finalizeValidation: vi.fn().mockResolvedValue(undefined),
+    isSaving: false,
+    isFinalizing: false,
+    isLoadingGameDetails: false,
+    gameDetailsError: null,
+    homeNominationList: null,
+    awayNominationList: null,
+    existingScoresheetUrl: null,
+    existingFileResourceId: null,
+    ...overrides,
+  }
 }
 
 // Shared QueryClient to avoid memory issues from creating many instances
@@ -94,54 +155,13 @@ describe('ValidateGameModal', () => {
       error: null,
       refetch: vi.fn(),
     })
-    vi.mocked(useValidationStateModule.useValidationState).mockReturnValue({
-      state: {
-        homeRoster: {
-          reviewed: false,
-          playerModifications: { added: [], removed: [] },
-          coachModifications: { added: new Map(), removed: new Set() },
-        },
-        awayRoster: {
-          reviewed: false,
-          playerModifications: { added: [], removed: [] },
-          coachModifications: { added: new Map(), removed: new Set() },
-        },
-        scorer: { selected: null },
-        scoresheet: { file: null, uploaded: false },
-        referenceImageUrl: null,
-      },
-      isDirty: false,
-      completionStatus: {
-        homeRoster: false,
-        awayRoster: false,
-        scorer: false,
-        scoresheet: true,
-      },
-      isAllRequiredComplete: false,
-      isValidated: false,
-      validatedInfo: null,
-      pendingScorer: null,
-      scoresheetNotRequired: false,
-      setHomeRosterModifications: vi.fn(),
-      setAwayRosterModifications: vi.fn(),
-      setScorer: vi.fn(),
-      setScoresheet: vi.fn(),
-      referenceImageUrl: null,
-      reset: vi.fn(),
-      saveProgress: vi.fn().mockResolvedValue(undefined),
-      finalizeValidation: vi.fn().mockResolvedValue(undefined),
-      isSaving: false,
-      isFinalizing: false,
-      isLoadingGameDetails: false,
-      gameDetailsError: null,
-      homeNominationList: null,
-      awayNominationList: null,
-    })
+    vi.mocked(useValidationStateModule.useValidationState).mockReturnValue(
+      createValidationStateResult()
+    )
   })
 
   afterEach(() => {
-    // Clean up renders and clear QueryClient cache
-    cleanup()
+    // Renders are cleaned up by Testing Library; clear the QueryClient cache
     queryClient.clear()
   })
 
@@ -309,10 +329,10 @@ describe('ValidateGameModal', () => {
 
       // Navigate to step 3 (Away Roster)
       fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
-      await waitFor(() => expect(screen.getByText('Step 2 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 2 of 4')).toBeInTheDocument()
 
       fireEvent.click(screen.getByRole('button', { name: /Validate/i, hidden: true }))
-      await waitFor(() => expect(screen.getByText('Step 3 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 3 of 4')).toBeInTheDocument()
 
       // Away Roster panel shows team name
       expect(screen.getByText('VBC Basel')).toBeInTheDocument()
@@ -335,7 +355,7 @@ describe('ValidateGameModal', () => {
       })
       fireEvent.click(scorerStep)
 
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       // ScorerPanel shows search input and no-selection message
       expect(screen.getByPlaceholderText('Search scorer by name or ID...')).toBeInTheDocument()
@@ -459,7 +479,7 @@ describe('ValidateGameModal', () => {
       })
       fireEvent.click(scorerStep)
 
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       // Reopen modal with new key (simulates opening for different assignment)
       const newAssignment = createMockAssignment({ __identity: 'new-id' })
@@ -501,7 +521,7 @@ describe('ValidateGameModal', () => {
       })
       fireEvent.click(scorerStep)
 
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       expect(screen.getByRole('button', { name: /Finalize/i, hidden: true })).toBeInTheDocument()
     })
@@ -524,7 +544,7 @@ describe('ValidateGameModal', () => {
       })
       fireEvent.click(scorerStep)
 
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       const finishButton = screen.getByRole('button', {
         name: /Finalize/i,
@@ -549,7 +569,7 @@ describe('ValidateGameModal', () => {
         hidden: true,
       })
       fireEvent.click(scorerStep)
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       // Finalize button should be disabled because no scorer is selected and
       // previous required steps are not marked done
@@ -577,14 +597,15 @@ describe('ValidateGameModal', () => {
 
   describe('safe mode button labels', () => {
     it('shows Save button on last step when safe mode is enabled', async () => {
-      vi.mocked(useSettingsStore).mockImplementation((selector) => {
-        const state = {
-          isSafeModeEnabled: true,
-          isOCREnabled: false,
-          validationReferenceMode: 'quick-compare',
-        }
-        return typeof selector === 'function' ? selector(state) : state
-      })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            isSafeModeEnabled: true,
+            isOCREnabled: false,
+            validationReferenceMode: 'quick-compare',
+          })
+        )
+      )
 
       render(
         <ValidateGameModal
@@ -602,7 +623,7 @@ describe('ValidateGameModal', () => {
       })
       fireEvent.click(scorerStep)
 
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       expect(screen.getByRole('button', { name: /Save/i, hidden: true })).toBeInTheDocument()
       expect(
@@ -611,14 +632,15 @@ describe('ValidateGameModal', () => {
     })
 
     it('shows Finalize button on last step when safe mode is disabled', async () => {
-      vi.mocked(useSettingsStore).mockImplementation((selector) => {
-        const state = {
-          isSafeModeEnabled: false,
-          isOCREnabled: false,
-          validationReferenceMode: 'quick-compare',
-        }
-        return typeof selector === 'function' ? selector(state) : state
-      })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            isSafeModeEnabled: false,
+            isOCREnabled: false,
+            validationReferenceMode: 'quick-compare',
+          })
+        )
+      )
 
       render(
         <ValidateGameModal
@@ -636,7 +658,7 @@ describe('ValidateGameModal', () => {
       })
       fireEvent.click(scorerStep)
 
-      await waitFor(() => expect(screen.getByText('Step 4 of 4')).toBeInTheDocument())
+      expect(await screen.findByText('Step 4 of 4')).toBeInTheDocument()
 
       expect(screen.getByRole('button', { name: /Finalize/i, hidden: true })).toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /Save/i, hidden: true })).not.toBeInTheDocument()
@@ -647,47 +669,10 @@ describe('ValidateGameModal', () => {
     it('shows validated mode when assignment has closedAt even if game details query is stale', () => {
       // Simulate: game details query returns stale data (isValidated: false)
       // but the assignment list already has closedAt set (validated externally on volleymanager)
-      vi.mocked(useValidationStateModule.useValidationState).mockReturnValue({
-        state: {
-          homeRoster: {
-            reviewed: false,
-            playerModifications: { added: [], removed: [] },
-            coachModifications: { added: new Map(), removed: new Set() },
-          },
-          awayRoster: {
-            reviewed: false,
-            playerModifications: { added: [], removed: [] },
-            coachModifications: { added: new Map(), removed: new Set() },
-          },
-          scorer: { selected: null },
-          scoresheet: { file: null, uploaded: false },
-        },
-        isDirty: false,
-        completionStatus: {
-          homeRoster: false,
-          awayRoster: false,
-          scorer: false,
-          scoresheet: true,
-        },
-        isAllRequiredComplete: false,
-        isValidated: false, // Stale game details - doesn't know it's validated yet
-        validatedInfo: null,
-        pendingScorer: null,
-        scoresheetNotRequired: false,
-        setHomeRosterModifications: vi.fn(),
-        setAwayRosterModifications: vi.fn(),
-        setScorer: vi.fn(),
-        setScoresheet: vi.fn(),
-        reset: vi.fn(),
-        saveProgress: vi.fn().mockResolvedValue(undefined),
-        finalizeValidation: vi.fn().mockResolvedValue(undefined),
-        isSaving: false,
-        isFinalizing: false,
-        isLoadingGameDetails: false,
-        gameDetailsError: null,
-        homeNominationList: null,
-        awayNominationList: null,
-      })
+      vi.mocked(useValidationStateModule.useValidationState).mockReturnValue(
+        // Stale game details - the hook doesn't know it's validated yet
+        createValidationStateResult({ isValidated: false })
+      )
 
       // Assignment has closedAt from the assignments list (fresh data)
       const assignmentWithClosedAt = createMockAssignment({
@@ -708,7 +693,7 @@ describe('ValidateGameModal', () => {
             },
           },
         },
-      } as Partial<Assignment>)
+      })
 
       render(
         <ValidateGameModal

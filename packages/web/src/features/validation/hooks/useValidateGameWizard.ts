@@ -279,7 +279,7 @@ export function useValidateGameWizard({
     if (isOpen) {
       // Invalidate game details cache so we fetch fresh data.
       if (gameId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
+        void queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
       }
       // Reset all transient UI state for a fresh wizard session.
       // These setState calls are intentional — they reset dialog/error/toast state

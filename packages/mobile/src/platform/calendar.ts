@@ -6,6 +6,7 @@
 
 import { Platform } from 'react-native'
 
+import { PermissionStatus } from 'expo'
 import * as Calendar from 'expo-calendar/legacy'
 
 import type { CalendarInfo, CalendarEventData } from '../types/calendar'
@@ -50,7 +51,7 @@ function mapCalendar(cal: Calendar.Calendar): CalendarInfo {
 async function requestPermissions(): Promise<boolean> {
   try {
     const { status } = await Calendar.requestCalendarPermissionsAsync()
-    return status === 'granted'
+    return status === PermissionStatus.GRANTED
   } catch {
     return false
   }
@@ -62,7 +63,7 @@ async function requestPermissions(): Promise<boolean> {
 async function hasPermissions(): Promise<boolean> {
   try {
     const { status } = await Calendar.getCalendarPermissionsAsync()
-    return status === 'granted'
+    return status === PermissionStatus.GRANTED
   } catch {
     return false
   }

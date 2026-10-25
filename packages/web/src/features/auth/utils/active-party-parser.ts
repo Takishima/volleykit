@@ -40,15 +40,14 @@ export interface ActiveParty {
 // Zod schemas for runtime validation of parsed JSON
 // The inflatedValue can be an object with association details, or a primitive value
 // (e.g., false, null) for some attribute types like boolean flags
-const InflatedValueObjectSchema = z
-  .object({
-    __identity: z.string().optional(), // Some inflatedValue objects don't have __identity
-    name: z.string().optional(),
-    shortName: z.string().optional(),
-    identifier: z.string().optional(),
-    originId: z.number().optional(),
-  })
-  .passthrough() // Allow additional unknown properties from the API
+// looseObject allows additional unknown properties from the API
+const InflatedValueObjectSchema = z.looseObject({
+  __identity: z.string().optional(), // Some inflatedValue objects don't have __identity
+  name: z.string().optional(),
+  shortName: z.string().optional(),
+  identifier: z.string().optional(),
+  originId: z.number().optional(),
+})
 
 // inflatedValue can be an object, boolean, null, string, or number depending on the attribute type
 const InflatedValueSchema = z.union([
@@ -77,18 +76,17 @@ const RoleDefinitionSchema = z.object({
   packageKey: z.string().optional(),
 })
 
-const ActivePartySchema = z
-  .object({
-    __identity: z.string().optional(),
-    firstName: z.string().optional(),
-    lastName: z.string().optional(),
-    eligibleAttributeValues: z.array(AttributeValueSchema).optional(),
-    eligibleRoles: z.record(z.string(), RoleDefinitionSchema).optional(),
-    activeAttributeValue: AttributeValueSchema.optional(),
-    activeRoleIdentifier: z.string().optional(),
-    groupedEligibleAttributeValues: z.array(AttributeValueSchema).optional(),
-  })
-  .passthrough() // Allow additional unknown properties from the API
+// looseObject allows additional unknown properties from the API
+const ActivePartySchema = z.looseObject({
+  __identity: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  eligibleAttributeValues: z.array(AttributeValueSchema).optional(),
+  eligibleRoles: z.record(z.string(), RoleDefinitionSchema).optional(),
+  activeAttributeValue: AttributeValueSchema.optional(),
+  activeRoleIdentifier: z.string().optional(),
+  groupedEligibleAttributeValues: z.array(AttributeValueSchema).optional(),
+})
 
 /**
  * Regex pattern to match window.activeParty = JSON.parse('...') in HTML.

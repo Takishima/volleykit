@@ -332,7 +332,7 @@ function TravelSettingsSectionComponent() {
                       <button
                         type="button"
                         onClick={transport.handleClearCache}
-                        className="text-sm text-error-600 dark:text-error-400 hover:text-error-700 dark:hover:text-error-300"
+                        className="text-sm text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300"
                       >
                         {t('common.confirm')}
                       </button>

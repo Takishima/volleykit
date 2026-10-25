@@ -57,8 +57,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 describe('Auth Integration', () => {
   let queryClient: QueryClient
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {

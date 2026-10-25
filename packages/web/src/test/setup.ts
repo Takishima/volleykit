@@ -1,13 +1,16 @@
 // Polyfills must be imported first (via setupFiles order in vite.config.ts)
-import '@testing-library/jest-dom'
+import * as jestDomMatchers from '@testing-library/jest-dom/matchers'
 import { configure } from '@testing-library/react'
-import { afterAll, afterEach, beforeAll, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, expect, vi } from 'vitest'
 
 import { preloadDateLocales } from '@/common/hooks/useDateFormat'
 import { preloadTranslations } from '@/i18n'
 
 import { server } from './msw/server'
 import { ASYNC_UTIL_TIMEOUT_MS } from './timeouts'
+
+// The matcher types come from "@testing-library/jest-dom/vitest" in tsconfig.test.json
+expect.extend(jestDomMatchers)
 
 configure({ asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS })
 

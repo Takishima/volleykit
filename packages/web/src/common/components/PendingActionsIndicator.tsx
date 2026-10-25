@@ -39,7 +39,9 @@ function useAutoSync() {
 
   // Initialize store on mount
   useEffect(() => {
-    initializeActionQueueStore()
+    initializeActionQueueStore().catch((error: unknown) =>
+      log.error('Failed to initialize action queue store:', error)
+    )
   }, [])
 
   // Sync when coming back online

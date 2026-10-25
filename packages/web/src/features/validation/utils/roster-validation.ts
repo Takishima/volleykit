@@ -12,7 +12,6 @@ import type { NominationList } from '@/api/client'
 import type {
   RosterModifications,
   CoachModifications,
-  CoachRole,
 } from '@/features/validation/roster/hooks/useNominationList'
 
 /** Minimum number of players required for a valid roster */
@@ -63,8 +62,8 @@ export function validateRoster(
   // 1. Base nomination list has one AND it's not removed, OR
   // 2. A head coach addition is pending
   const hasBaseHeadCoach = !!nominationList.coachPerson
-  const headCoachRemoved = coachModifications.removed.has('head' as CoachRole)
-  const headCoachAdded = coachModifications.added.has('head' as CoachRole)
+  const headCoachRemoved = coachModifications.removed.has('head')
+  const headCoachAdded = coachModifications.added.has('head')
 
   const hasHeadCoach = headCoachAdded || (hasBaseHeadCoach && !headCoachRemoved)
   const hasMinPlayers = playerCount >= MIN_PLAYERS_REQUIRED

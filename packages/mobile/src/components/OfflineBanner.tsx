@@ -5,9 +5,9 @@
  */
 
 import type { JSX } from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
-import { View, Text, Animated } from 'react-native'
+import { View, Text, Animated, useAnimatedValue } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 
@@ -44,7 +44,7 @@ export function OfflineBanner({
   const { isOnline, isKnown } = useNetwork()
 
   // Animation for slide down
-  const slideAnim = useRef(new Animated.Value(-BANNER_HEIGHT_PX)).current
+  const slideAnim = useAnimatedValue(-BANNER_HEIGHT_PX)
 
   const showBanner = forceShow || (!isOnline && isKnown)
 

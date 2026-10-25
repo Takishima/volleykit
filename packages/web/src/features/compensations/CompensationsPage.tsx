@@ -68,7 +68,9 @@ export function CompensationsPage() {
       return (
         <ErrorState
           message={error instanceof Error ? error.message : t('compensations.errorLoading')}
-          onRetry={() => refetch()}
+          onRetry={() => {
+            void refetch()
+          }}
         />
       )
     }

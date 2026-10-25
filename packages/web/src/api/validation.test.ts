@@ -202,14 +202,11 @@ describe('personSearchResultSchema', () => {
   })
 
   it('allows unknown fields via passthrough', () => {
-    const result = personSearchResultSchema.safeParse({
+    const parsed = personSearchResultSchema.parse({
       ...validPerson,
       unknownField: 'some value',
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.unknownField).toBe('some value')
-    }
+    expect(parsed.unknownField).toBe('some value')
   })
 })
 

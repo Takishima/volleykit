@@ -120,9 +120,10 @@ async function waitForRateLimit(): Promise<void> {
  * Get API key from environment.
  */
 function getApiKey(): string | undefined {
-  // React Native uses process.env.EXPO_PUBLIC_* for env variables
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (process.env as any).EXPO_PUBLIC_OJP_API_KEY as string | undefined
+  // React Native uses process.env.EXPO_PUBLIC_* for env variables.
+  // Expo's process.env is untyped, so the value is narrowed before use.
+  const apiKey: unknown = process.env.EXPO_PUBLIC_OJP_API_KEY
+  return typeof apiKey === 'string' ? apiKey : undefined
 }
 
 /**

@@ -358,7 +358,9 @@ export function OCRPanel({
         isOpen={showCaptureModal}
         scoresheetType={scoresheetType}
         onClose={() => setShowCaptureModal(false)}
-        onImageSelected={handleImageSelected}
+        onImageSelected={(blob) => {
+          void handleImageSelected(blob)
+        }}
       />
     </div>
   )

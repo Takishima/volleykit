@@ -74,6 +74,45 @@ function findDriftedKeys(
   return drifted
 }
 
+/** Keys outside the tolerated drift window, as a report, or null when the baseline holds */
+function describeDriftProblem(
+  name: string,
+  drifted: ReturnType<typeof findDriftedKeys>,
+  baseline: number
+): string | null {
+  if (drifted.length > baseline) {
+    const report = drifted
+      .map((d) => `  ${d.key}:\n    web:    "${d.web}"\n    shared: "${d.shared}"`)
+      .join('\n')
+
+    return (
+      `Drift increased in ${name}: ${drifted.length} drifted keys (baseline: ${baseline}).\n` +
+      `New drift detected:\n${report}\n\n` +
+      'Either fix the drift or update DRIFT_BASELINE if the difference is intentional.'
+    )
+  }
+
+  // Also fail if drift decreased significantly — update baseline to track improvement
+  if (drifted.length < baseline - 2) {
+    return (
+      `Drift decreased in ${name}: ${drifted.length} drifted keys (baseline: ${baseline}).\n` +
+      `Update DRIFT_BASELINE["${name}"] to ${drifted.length} to lock in the improvement.`
+    )
+  }
+
+  return null
+}
+
+/** The keys missing from a locale, as a report, or null when it is complete */
+function describeMissingKeys(name: string, missingKeys: string[]): string | null {
+  if (missingKeys.length === 0) return null
+  return (
+    `${name}.ts is missing ${missingKeys.length} key(s) present in en.ts:\n` +
+    missingKeys.map((k) => `  ${k}`).join('\n') +
+    '\n\nAdd the missing translations to avoid silent English fallback.'
+  )
+}
+
 describe('i18n drift detection', () => {
   const locales = [
     { name: 'en', web: webEn, shared: sharedEn },
@@ -90,25 +129,7 @@ describe('i18n drift detection', () => {
 
       const baseline = DRIFT_BASELINE[name] ?? 0
 
-      if (drifted.length > baseline) {
-        const report = drifted
-          .map((d) => `  ${d.key}:\n    web:    "${d.web}"\n    shared: "${d.shared}"`)
-          .join('\n')
-
-        expect.fail(
-          `Drift increased in ${name}: ${drifted.length} drifted keys (baseline: ${baseline}).\n` +
-            `New drift detected:\n${report}\n\n` +
-            'Either fix the drift or update DRIFT_BASELINE if the difference is intentional.'
-        )
-      }
-
-      // Also fail if drift decreased significantly — update baseline to track improvement
-      if (drifted.length < baseline - 2) {
-        expect.fail(
-          `Drift decreased in ${name}: ${drifted.length} drifted keys (baseline: ${baseline}).\n` +
-            `Update DRIFT_BASELINE["${name}"] to ${drifted.length} to lock in the improvement.`
-        )
-      }
+      expect(describeDriftProblem(name, drifted, baseline)).toBeNull()
     })
   }
 
@@ -151,15 +172,7 @@ describe('i18n completeness', () => {
       const flat = flattenKeys(locale as unknown as Record<string, unknown>)
       const missingKeys = Object.keys(enFlat).filter((key) => !(key in flat))
 
-      if (missingKeys.length > 0) {
-        expect.fail(
-          `${name}.ts is missing ${missingKeys.length} key(s) present in en.ts:\n` +
-            missingKeys.map((k) => `  ${k}`).join('\n') +
-            '\n\nAdd the missing translations to avoid silent English fallback.'
-        )
-      }
-
-      expect(missingKeys).toHaveLength(0)
+      expect(describeMissingKeys(name, missingKeys)).toBeNull()
     })
   }
 })

@@ -152,7 +152,11 @@ export function RootNavigator() {
         failedAttempts={failedAttempts}
         maxAttempts={MAX_BIOMETRIC_ATTEMPTS}
         isAuthenticating={isAuthenticating}
-        onAuthenticate={handleBiometricAuthenticate}
+        onAuthenticate={() => {
+          handleBiometricAuthenticate().catch((error: unknown) => {
+            console.error('[RootNavigator] Biometric re-authentication failed:', error)
+          })
+        }}
         onFallbackToPassword={handleFallbackToPassword}
         onCancel={handleCancel}
       />

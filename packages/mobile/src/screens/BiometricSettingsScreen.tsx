@@ -54,7 +54,7 @@ export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
       }
     }
 
-    checkBiometricStatus()
+    void checkBiometricStatus()
   }, [storage, secureStorage])
 
   const handleToggle = useCallback(

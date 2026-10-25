@@ -13,6 +13,12 @@ import { checkNetworkStatus, isOnline } from './useNetworkStatus'
 jest.mock('@react-native-community/netinfo', () => ({
   fetch: jest.fn(),
   addEventListener: jest.fn(() => jest.fn()),
+  NetInfoStateType: {
+    unknown: 'unknown',
+    none: 'none',
+    cellular: 'cellular',
+    wifi: 'wifi',
+  },
 }))
 
 const mockedNetInfo = jest.mocked(NetInfo)

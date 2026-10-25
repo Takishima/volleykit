@@ -321,7 +321,7 @@ describe('Compensation details endpoint', () => {
     expect(firstComp?.convocationCompensation?.__identity).toBeDefined()
 
     const details = await mockApi.getCompensationDetails(
-      firstComp!.convocationCompensation!.__identity!
+      firstComp!.convocationCompensation.__identity!
     )
 
     expect(details).toHaveProperty('convocationCompensation')
@@ -341,7 +341,7 @@ describe('Compensation details endpoint', () => {
   it('updateCompensation modifies compensation data', async () => {
     const { compensations } = useDemoStore.getState()
     const firstComp = compensations[0]
-    const compensationId = firstComp!.convocationCompensation!.__identity!
+    const compensationId = firstComp!.convocationCompensation.__identity!
 
     await mockApi.updateCompensation(compensationId, {
       distanceInMetres: 50000,
@@ -650,7 +650,7 @@ describe('File upload endpoint', () => {
 
   it('uploadResource rejects files that are too large', async () => {
     // Create a mock file larger than 10MB
-    const largeContent = new Array(11 * 1024 * 1024).fill('x').join('')
+    const largeContent = 'x'.repeat(11 * 1024 * 1024)
     const largeFile = new File([largeContent], 'large.pdf', {
       type: 'application/pdf',
     })

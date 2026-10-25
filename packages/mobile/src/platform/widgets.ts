@@ -166,8 +166,8 @@ function createNoOpAdapter(): WidgetAdapter {
     async updateWidgetData(_data: WidgetData): Promise<void> {
       // No-op
     },
-    async getWidgetData(): Promise<WidgetData | null> {
-      return null
+    getWidgetData(): Promise<WidgetData | null> {
+      return Promise.resolve(null)
     },
     async clearWidgetData(): Promise<void> {
       // No-op

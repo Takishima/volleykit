@@ -18,6 +18,20 @@ import type { CompensationRecord } from '../api'
 /** Small delay for tests that need to wait a tick without triggering queries */
 const TEST_TICK_MS = 50
 
+// Helper to create a minimal valid compensation record
+function createRecord(
+  id: string,
+  convocationCompensation: CompensationRecord['convocationCompensation']
+): CompensationRecord {
+  return {
+    __identity: id,
+    refereeGame: {},
+    refereeConvocationStatus: 'active',
+    refereePosition: 'head-one',
+    convocationCompensation,
+  }
+}
+
 // Helper to create a wrapper with QueryClient
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -145,7 +159,9 @@ describe('useCompensations', () => {
       { wrapper: createWrapper() }
     )
 
-    await new Promise((r) => setTimeout(r, TEST_TICK_MS))
+    await new Promise((r) => {
+      setTimeout(r, TEST_TICK_MS)
+    })
 
     expect(mockApiClient.searchCompensations).not.toHaveBeenCalled()
   })
@@ -170,8 +186,8 @@ describe('useCompensations', () => {
 
   it('should return empty array when items is undefined', async () => {
     vi.mocked(mockApiClient.searchCompensations).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns undefined instead of array
-      items: undefined as any,
+      // Testing edge case: API returns undefined instead of array
+      items: undefined as unknown as CompensationRecord[],
       totalItemsCount: 0,
     })
 
@@ -215,21 +231,9 @@ describe('useCompensations', () => {
 
 describe('calculateTotalCompensation', () => {
   it('should calculate totals from compensation records', () => {
-    const records: CompensationRecord[] = [
-      {
-        __identity: '1',
-        convocationCompensation: {
-          gameCompensation: 50,
-          travelExpenses: 20,
-        },
-      } as CompensationRecord,
-      {
-        __identity: '2',
-        convocationCompensation: {
-          gameCompensation: 75,
-          travelExpenses: 30,
-        },
-      } as CompensationRecord,
+    const records = [
+      createRecord('1', { gameCompensation: 50, travelExpenses: 20 }),
+      createRecord('2', { gameCompensation: 75, travelExpenses: 30 }),
     ]
 
     const result = calculateTotalCompensation(records)
@@ -240,18 +244,11 @@ describe('calculateTotalCompensation', () => {
   })
 
   it('should handle records with missing compensation data', () => {
-    const records: CompensationRecord[] = [
-      {
-        __identity: '1',
-        convocationCompensation: {
-          gameCompensation: 50,
-          // No travel expenses
-        },
-      } as CompensationRecord,
-      {
-        __identity: '2',
-        convocationCompensation: undefined,
-      } as CompensationRecord,
+    const records = [
+      // No travel expenses
+      createRecord('1', { gameCompensation: 50 }),
+      // No compensation data at all
+      createRecord('2', {}),
     ]
 
     const result = calculateTotalCompensation(records)
@@ -274,8 +271,8 @@ describe('calculateTotalCompensation', () => {
       {
         __identity: '1',
         convocationCompensation: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns null instead of number
-          gameCompensation: null as any,
+          // Testing edge case: API returns null instead of number
+          gameCompensation: null as unknown as number,
           travelExpenses: 20,
         },
       } as CompensationRecord,

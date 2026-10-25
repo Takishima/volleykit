@@ -3,6 +3,9 @@ import { describe, it, expect } from 'vitest'
 
 import { ExpandArrow } from './ExpandArrow'
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('ExpandArrow', () => {
   describe('rendering', () => {
     it('renders an svg element', () => {
@@ -44,9 +47,9 @@ describe('ExpandArrow', () => {
     })
 
     it('applies custom className', () => {
-      const { container } = render(<ExpandArrow isExpanded={false} className="custom-class" />)
+      const { container } = render(<ExpandArrow isExpanded={false} className={CUSTOM_CLASS} />)
       const svg = container.querySelector('svg')
-      expect(svg).toHaveClass('custom-class')
+      expect(svg).toHaveClass(CUSTOM_CLASS)
     })
 
     it('merges custom className with base classes', () => {

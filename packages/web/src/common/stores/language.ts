@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+import { logger } from '@/common/utils/logger'
 import { setLocale, setLocaleImmediate, getLocale, type Locale } from '@/i18n'
 
 interface LanguageState {
@@ -13,7 +14,9 @@ export const useLanguageStore = create<LanguageState>()(
     (set) => ({
       locale: getLocale(),
       changeLocale: (locale: Locale) => {
-        setLocale(locale)
+        setLocale(locale).catch((error: unknown) =>
+          logger.error('Failed to load translations for locale:', error)
+        )
         set({ locale })
       },
     }),

@@ -83,7 +83,7 @@ describe('Integration: /health endpoint origin validation', () => {
       })
 
       const response = await worker.fetch(request, mockEnv)
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
@@ -111,7 +111,7 @@ describe('Integration: /health endpoint origin validation', () => {
       })
 
       const response = await worker.fetch(request, mockEnv)
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
 
       expect(response.status).toBe(503)
       expect(body.status).toBe('degraded')
@@ -137,7 +137,7 @@ describe('Integration: /health endpoint origin validation', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.status).toBe('degraded')
@@ -161,7 +161,7 @@ describe('Integration: /health endpoint origin validation', () => {
       })
 
       const response = await worker.fetch(request, mockEnv)
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
 
       expect(response.status).toBe(503)
       expect(body.status).toBe('degraded')
@@ -193,7 +193,7 @@ describe('Integration: /health endpoint origin validation', () => {
       })
 
       const response = await worker.fetch(request, mockEnv)
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
 
       expect(response.status).toBe(503)
       expect(body.status).toBe('degraded')
@@ -263,7 +263,7 @@ describe('Integration: /version endpoint', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
     expect(response.headers.get('Cache-Control')).toBe('public, max-age=300')
 
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
     expect(body).toHaveProperty('workerGitHash')
     expect(body).toHaveProperty('timestamp')
     // Default value when not defined

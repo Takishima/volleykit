@@ -3,6 +3,9 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { Button } from './Button'
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('Button', () => {
   describe('rendering', () => {
     it('renders children correctly', () => {
@@ -26,8 +29,8 @@ describe('Button', () => {
     })
 
     it('applies custom className', () => {
-      render(<Button className="custom-class">Test</Button>)
-      expect(screen.getByRole('button')).toHaveClass('custom-class')
+      render(<Button className={CUSTOM_CLASS}>Test</Button>)
+      expect(screen.getByRole('button')).toHaveClass(CUSTOM_CLASS)
     })
 
     it('passes through additional button attributes', () => {

@@ -4,10 +4,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { useAssociationSettings, useActiveSeason } from './useSettings'
+import type { AuthState } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFunction = (...args: any[]) => any
+import { useAssociationSettings, useActiveSeason } from './useSettings'
 
 /** Delay to allow React Query to process disabled queries before assertions */
 const QUERY_SETTLE_DELAY_MS = 10
@@ -25,8 +25,8 @@ vi.mock('@/api/client', async () => {
 })
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ dataSource: 'api', activeOccupationId: 'occupation-123' })
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api', activeOccupationId: 'occupation-123' }))
   ),
 }))
 
@@ -50,7 +50,7 @@ async function setupAuthStore(config: {
   activeOccupationId: string | null
 }) {
   const { useAuthStore } = await import('@/common/stores/auth')
-  vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) => selector(config))
+  vi.mocked(useAuthStore).mockImplementation((selector) => selector(partialMock<AuthState>(config)))
 }
 
 /** Get mocked API client */

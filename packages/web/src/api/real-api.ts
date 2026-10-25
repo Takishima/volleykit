@@ -229,11 +229,7 @@ export const api = {
     const data = await apiRequest<unknown>(
       '/indoorvolleyball.refadmin/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty'
     )
-    return validateResponse(
-      data,
-      associationSettingsSchema,
-      'getAssociationSettings'
-    ) as Schemas['AssociationSettings']
+    return validateResponse(data, associationSettingsSchema, 'getAssociationSettings')
   },
 
   async getActiveSeason(): Promise<Schemas['Season']> {
@@ -257,11 +253,7 @@ export const api = {
         onlyRelevantGender: options?.onlyRelevantGender ?? true,
       }
     )
-    return validateResponse(
-      data,
-      possibleNominationsResponseSchema,
-      'getPossiblePlayerNominations'
-    ) as PossibleNominationsResponse
+    return validateResponse(data, possibleNominationsResponseSchema, 'getPossiblePlayerNominations')
   },
 
   // Person search
@@ -655,11 +647,7 @@ export const api = {
       'POST',
       body
     )
-    return validateResponse(
-      data,
-      scoresheetValidationSchema,
-      'validateScoresheet'
-    ) as ScoresheetValidation
+    return validateResponse(data, scoresheetValidationSchema, 'validateScoresheet')
   },
 
   async finalizeScoresheet(
@@ -715,7 +703,7 @@ export const api = {
       '/sportmanager.resourcemanagement/api%5cpersistentresource/upload',
       formData
     )
-    return validateResponse(data, fileResourceArraySchema, 'uploadResource') as FileResource[]
+    return validateResponse(data, fileResourceArraySchema, 'uploadResource')
   },
 
   /**

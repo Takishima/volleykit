@@ -5,7 +5,7 @@ import {
   validateOriginAndPreflight,
   checkRateLimit,
 } from '../middleware'
-import { OCR_MAX_FILE_SIZE_BYTES } from '../utils'
+import { BYTES_PER_MB, HttpStatus, OCR_MAX_FILE_SIZE_BYTES } from '../utils'
 
 // OCR configuration constants
 const OCR_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] as const
@@ -88,7 +88,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
     if (imageFile.size > OCR_MAX_FILE_SIZE_BYTES) {
       return new Response(
         JSON.stringify({
-          error: `File too large: ${(imageFile.size / 1024 / 1024).toFixed(1)}MB. Maximum: 50MB`,
+          error: `File too large: ${(imageFile.size / BYTES_PER_MB).toFixed(1)}MB. Maximum: 50MB`,
         }),
         {
           status: 400,
@@ -141,7 +141,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
       console.error('Mistral OCR error:', mistralResponse.status, errorText)
 
       // Return appropriate error based on status
-      if (mistralResponse.status === 401) {
+      if (mistralResponse.status === HttpStatus.UNAUTHORIZED) {
         return new Response(JSON.stringify({ error: 'OCR service authentication failed' }), {
           status: 503,
           headers: {
@@ -152,7 +152,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
         })
       }
 
-      if (mistralResponse.status === 429) {
+      if (mistralResponse.status === HttpStatus.TOO_MANY_REQUESTS) {
         return new Response(JSON.stringify({ error: 'OCR service rate limit exceeded' }), {
           status: 429,
           headers: {

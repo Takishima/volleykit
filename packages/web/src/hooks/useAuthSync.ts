@@ -17,6 +17,13 @@ import { useSettingsStore } from '@/common/stores/settings'
 import { logger } from '@/common/utils/logger'
 import { queryClient } from '@/queryClientConfig'
 
+/** Drops every cached query; a failure must not block the auth transition. */
+function resetQueryCache(transition: 'login' | 'logout'): void {
+  queryClient
+    .resetQueries()
+    .catch((err) => logger.warn(`Failed to reset query cache on ${transition}:`, err))
+}
+
 export function useAuthSync() {
   useEffect(() => {
     // Set initial mode from auth store
@@ -27,7 +34,7 @@ export function useAuthSync() {
     // This ensures cache is cleared synchronously before state updates,
     // preventing any race conditions with React re-renders.
     const unregisterCacheCleanup = registerCacheCleanup(() => {
-      queryClient.resetQueries()
+      resetQueryCache('logout')
       // features.offline — Also clear the persisted IndexedDB cache and action queue
       if (features.offline) {
         clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
@@ -54,7 +61,7 @@ export function useAuthSync() {
       if (wasAuthenticated !== isAuthenticated && isAuthenticated) {
         // Only clear on login transition here - logout is handled synchronously
         // in the auth store via cacheCleanupCallback
-        queryClient.resetQueries()
+        resetQueryCache('login')
         logger.info('Query cache cleared on login')
       }
       wasAuthenticated = isAuthenticated

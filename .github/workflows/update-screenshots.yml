@@ -24,8 +24,8 @@ jobs:
     env:
       HOME: /root
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] git-auto-commit-action pushes the screenshots from this checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.branch || github.ref }}
 
@@ -66,7 +66,7 @@ jobs:
         run: pnpm run build
 
       - name: Commit and push screenshots
-        uses: stefanzweifel/git-auto-commit-action@v7
+        uses: stefanzweifel/git-auto-commit-action@d0b01107b5db882071f96de5dd4b54961ea93f4c # v7.2.1
         with:
           commit_message: 'chore(docs): update help-site screenshots'
           file_pattern: 'help-site/public/images/screenshots/*'

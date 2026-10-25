@@ -1,16 +1,22 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+import type { AuthState } from '@/common/stores/auth'
+import type { DemoState } from '@/common/stores/demo'
+import { partialMock } from '@/test/partial-mock'
 import type { ReactNode } from 'react'
 
-import type { GameExchange } from '@/api/client'
+import type { GameExchange, SearchConfiguration } from '@/api/client'
 import { DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
+import { assertDefined } from '@/test/assert-defined'
 
 import { useGameExchanges, useApplyForExchange } from './useExchanges'
 
-// Mock API client
-const mockSearchExchanges = vi.fn()
-const mockApplyForExchange = vi.fn()
+// Mock API client; the hooks only read `items` from the search response
+const mockSearchExchanges =
+  vi.fn<(config?: SearchConfiguration) => Promise<{ items?: GameExchange[] }>>()
+const mockApplyForExchange = vi.fn<(exchangeId: string) => Promise<unknown>>()
 vi.mock('@/api/client', () => ({
   getApiClient: () => ({
     searchExchanges: mockSearchExchanges,
@@ -29,15 +35,19 @@ const mockAuthStore: {
   user: { id: 'user-123' },
 }
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector) => selector(mockAuthStore)),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>(mockAuthStore))
+  ),
 }))
 
 // Mock demo store
-const mockDemoStore = {
+const mockDemoStore: Pick<DemoState, 'activeAssociationCode'> = {
   activeAssociationCode: 'SV',
 }
 vi.mock('@/common/stores/demo', () => ({
-  useDemoStore: vi.fn((selector) => selector(mockDemoStore)),
+  useDemoStore: vi.fn((selector: (state: DemoState) => unknown) =>
+    selector(partialMock<DemoState>(mockDemoStore))
+  ),
   DEMO_USER_PERSON_IDENTITY: 'demo-user-person',
 }))
 
@@ -192,7 +202,7 @@ describe('useGameExchanges', () => {
     })
 
     it('returns empty array when status is "mine" but no user identity', async () => {
-      mockAuthStore.user = null as unknown as { id: string }
+      mockAuthStore.user = null
 
       const exchanges = [
         createMockExchange('ex-1', 'person-1'),
@@ -227,7 +237,7 @@ describe('useGameExchanges', () => {
 
     it('handles exchanges with no submittedByPerson', async () => {
       const exchanges = [
-        createMockExchange('ex-1', undefined), // No submitter
+        createMockExchange('ex-1'), // No submitter
         createMockExchange('ex-2', 'user-123'),
       ]
       mockSearchExchanges.mockResolvedValue({ items: exchanges })
@@ -259,6 +269,7 @@ describe('useGameExchanges', () => {
       })
 
       const config = mockSearchExchanges.mock.calls[0]![0]
+      assertDefined(config)
       expect(config.offset).toBe(0)
       expect(config.limit).toBeDefined()
       expect(config.propertyFilters).toBeDefined()

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type { Env } from '../types'
+
 interface JsonBody {
   [key: string]: unknown
   success?: boolean
@@ -33,7 +35,7 @@ describe('Integration: proxy handler', () => {
   // Auth credentials in simple form format (what hasAuthCredentials checks for)
   const AUTH_BODY = 'username=user&password=pass'
 
-  function createMockEnv(overrides: Record<string, unknown> = {}) {
+  function createMockEnv(overrides: Partial<Record<keyof Env, unknown>> = {}) {
     return {
       ALLOWED_ORIGINS: 'https://example.com',
       TARGET_HOST: 'https://volleymanager.volleyball.ch',
@@ -41,7 +43,7 @@ describe('Integration: proxy handler', () => {
         limit: vi.fn().mockResolvedValue({ success: true }),
       },
       ...overrides,
-    }
+    } as unknown as Env & { AUTH_LOCKOUT: { get: ReturnType<typeof vi.fn> } }
   }
 
   function createRequest(path: string, options: RequestInit & { origin?: string } = {}) {
@@ -124,7 +126,7 @@ describe('Integration: proxy handler', () => {
       const response = await worker.fetch(request, mockEnv)
 
       expect(response.status).toBe(423)
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
       expect(body.error).toBe('Too many failed login attempts')
       expect(response.headers.get('Retry-After')).toBeTruthy()
     })
@@ -134,9 +136,10 @@ describe('Integration: proxy handler', () => {
       const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
 
+      const lockoutGet = vi.fn()
       const mockEnv = createMockEnv({
         AUTH_LOCKOUT: {
-          get: vi.fn(),
+          get: lockoutGet,
           put: vi.fn(),
           delete: vi.fn(),
         },
@@ -148,7 +151,7 @@ describe('Integration: proxy handler', () => {
       const response = await worker.fetch(request, mockEnv)
 
       expect(response.status).not.toBe(423)
-      expect(mockEnv.AUTH_LOCKOUT.get).not.toHaveBeenCalled()
+      expect(lockoutGet).not.toHaveBeenCalled()
     })
   })
 
@@ -169,7 +172,7 @@ describe('Integration: proxy handler', () => {
       expect(response.status).toBe(200)
       expect(mockFetch).toHaveBeenCalledTimes(1)
 
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       expect(fetchedRequest.url).toContain('volleymanager.volleyball.ch')
       expect(fetchedRequest.headers.get('Host')).toBe('volleymanager.volleyball.ch')
     })
@@ -206,7 +209,7 @@ describe('Integration: proxy handler', () => {
       const mockEnv = createMockEnv()
       await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       expect(fetchedRequest.redirect).toBe('manual')
     })
 
@@ -224,7 +227,7 @@ describe('Integration: proxy handler', () => {
 
       await worker.fetch(request, mockEnv)
 
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       expect(fetchedRequest.headers.get('Origin')).toBe('https://volleymanager.volleyball.ch')
       const referer = fetchedRequest.headers.get('Referer')
       expect(referer).toContain('volleymanager.volleyball.ch')
@@ -239,7 +242,7 @@ describe('Integration: proxy handler', () => {
       const mockEnv = createMockEnv()
       await worker.fetch(createRequest(ALLOWED_PATH), mockEnv)
 
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       expect(fetchedRequest.headers.get('User-Agent')).toContain('VolleyKit')
     })
   })
@@ -296,7 +299,7 @@ describe('Integration: proxy handler', () => {
 
       await worker.fetch(request, mockEnv)
 
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       expect(fetchedRequest.url).toContain('authentication')
     })
 
@@ -310,7 +313,7 @@ describe('Integration: proxy handler', () => {
 
       await worker.fetch(request, mockEnv)
 
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       expect(fetchedRequest.method).toBe('POST')
       expect(fetchedRequest.headers.get('Content-Type')).toBe('application/x-www-form-urlencoded')
     })
@@ -364,7 +367,7 @@ describe('Integration: proxy handler', () => {
       // Should be converted to 200 JSON for iOS Safari
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('application/json')
-      const body = (await response.json()) as JsonBody
+      const body = await response.json<JsonBody>()
       expect(body.redirectUrl).toBeTruthy()
     })
   })
@@ -409,7 +412,7 @@ describe('Integration: proxy handler', () => {
       await worker.fetch(request, mockEnv)
 
       expect(mockFetch).toHaveBeenCalledTimes(1)
-      const fetchedRequest = mockFetch.mock.calls[0][0] as Request
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
       const cookie = fetchedRequest.headers.get('Cookie')
       expect(cookie).toContain('Neos_Session=abc123')
     })

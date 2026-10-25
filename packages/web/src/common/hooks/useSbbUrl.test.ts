@@ -1,6 +1,14 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type {
+  getOrFetchTravelTime,
+  GetOrFetchTravelTimeParams,
+  TravelTimeResult,
+} from '@/common/services/transport'
+import type { generateSbbUrl, openSbbUrl, SbbUrlParams } from '@/common/utils/sbb-url'
+import { partialMock } from '@/test/partial-mock'
+
 import { useSbbUrl } from './useSbbUrl'
 
 // Mock stores - simple mocks that return fixed values
@@ -32,10 +40,10 @@ vi.mock('@/common/hooks/useActiveAssociation', () => ({
 }))
 
 // Mock transport services
-const mockGetOrFetchTravelTime = vi.fn()
+const mockGetOrFetchTravelTime = vi.fn<typeof getOrFetchTravelTime>()
 
 vi.mock('@/common/services/transport', () => ({
-  getOrFetchTravelTime: (...args: unknown[]) => mockGetOrFetchTravelTime(...args),
+  getOrFetchTravelTime: (params: GetOrFetchTravelTimeParams) => mockGetOrFetchTravelTime(params),
   isOjpConfigured: () => false, // Always use mock transport
   hashLocation: () => 'location-hash',
   getDayType: () => 'weekday',
@@ -45,17 +53,17 @@ vi.mock('@/common/services/transport', () => ({
 }))
 
 // Mock SBB URL utils
-const mockGenerateSbbUrl = vi.fn()
-const mockOpenSbbUrl = vi.fn()
+const mockGenerateSbbUrl = vi.fn<typeof generateSbbUrl>()
+const mockOpenSbbUrl = vi.fn<typeof openSbbUrl>()
 
 vi.mock('@/common/utils/sbb-url', () => ({
-  generateSbbUrl: (...args: unknown[]) => mockGenerateSbbUrl(...args),
+  generateSbbUrl: (params: SbbUrlParams) => mockGenerateSbbUrl(params),
   calculateArrivalTime: (date: Date, buffer: number) => {
     const arrival = new Date(date)
     arrival.setMinutes(arrival.getMinutes() - buffer)
     return arrival
   },
-  openSbbUrl: (...args: unknown[]) => mockOpenSbbUrl(...args),
+  openSbbUrl: (url: string) => mockOpenSbbUrl(url),
 }))
 
 describe('useSbbUrl', () => {
@@ -106,11 +114,11 @@ describe('useSbbUrl', () => {
   it('uses cached trip result when available', async () => {
     // Caching lives inside getOrFetchTravelTime (see travel-time-fetcher.test);
     // the hook simply consumes whatever it resolves.
-    const cachedResult = {
-      travelTimeMinutes: 45,
+    const cachedResult = partialMock<TravelTimeResult>({
+      durationMinutes: 45,
       originStation: { id: 'origin-123', name: 'Zurich HB' },
       destinationStation: { id: 'dest-456', name: 'Basel SBB' },
-    }
+    })
     mockGetOrFetchTravelTime.mockResolvedValue(cachedResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
@@ -124,11 +132,13 @@ describe('useSbbUrl', () => {
   })
 
   it('fetches trip data when not cached', async () => {
-    mockGetOrFetchTravelTime.mockResolvedValue({
-      travelTimeMinutes: 30,
-      originStation: { id: 'mock-origin', name: 'Mock Origin' },
-      destinationStation: { id: 'mock-dest', name: 'Mock Dest' },
-    })
+    mockGetOrFetchTravelTime.mockResolvedValue(
+      partialMock<TravelTimeResult>({
+        durationMinutes: 30,
+        originStation: { id: 'mock-origin', name: 'Mock Origin' },
+        destinationStation: { id: 'mock-dest', name: 'Mock Dest' },
+      })
+    )
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 
@@ -141,11 +151,11 @@ describe('useSbbUrl', () => {
   })
 
   it('stores station info after successful fetch', async () => {
-    const tripResult = {
-      travelTimeMinutes: 30,
+    const tripResult = partialMock<TravelTimeResult>({
+      durationMinutes: 30,
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
-    }
+    })
     mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
@@ -159,11 +169,11 @@ describe('useSbbUrl', () => {
   })
 
   it('requests the trip with the shared travel-mode parameters', async () => {
-    const tripResult = {
-      travelTimeMinutes: 30,
+    const tripResult = partialMock<TravelTimeResult>({
+      durationMinutes: 30,
       originStation: { id: 's1', name: 'S1' },
       destinationStation: { id: 's2', name: 'S2' },
-    }
+    })
     mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
@@ -213,11 +223,11 @@ describe('useSbbUrl', () => {
   })
 
   it('generates URL with station info', async () => {
-    const tripResult = {
-      travelTimeMinutes: 30,
+    const tripResult = partialMock<TravelTimeResult>({
+      durationMinutes: 30,
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
-    }
+    })
     mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
@@ -237,11 +247,11 @@ describe('useSbbUrl', () => {
   })
 
   it('passes hall address as destination address', async () => {
-    const tripResult = {
-      travelTimeMinutes: 30,
+    const tripResult = partialMock<TravelTimeResult>({
+      durationMinutes: 30,
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
-    }
+    })
     mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
@@ -258,11 +268,11 @@ describe('useSbbUrl', () => {
   })
 
   it('handles null hall address', async () => {
-    const tripResult = {
-      travelTimeMinutes: 30,
+    const tripResult = partialMock<TravelTimeResult>({
+      durationMinutes: 30,
       originStation: { id: 'origin-id', name: 'Origin Station' },
       destinationStation: { id: 'dest-id', name: 'Dest Station' },
-    }
+    })
     mockGetOrFetchTravelTime.mockResolvedValue(tripResult)
 
     const { result } = renderHook(() => useSbbUrl({ ...defaultOptions, hallAddress: null }))
@@ -281,37 +291,42 @@ describe('useSbbUrl', () => {
   // Keep last in this file: it overrides the settings-store mock implementation
   it('subtracts the cycling egress from the arrival time when routing to the station in e-bike mode', async () => {
     const { useSettingsStore } = await import('@/common/stores/settings')
-    vi.mocked(useSettingsStore).mockImplementation((selector: (state: unknown) => unknown) =>
-      selector({
-        homeLocation: {
-          latitude: 47.3769,
-          longitude: 8.5417,
-          label: 'Zurich, Switzerland',
-          source: 'geocoded',
-        },
-        getArrivalBufferForAssociation: () => 30,
-        travelTimeFilter: {
-          sbbDestinationType: 'station',
-          travelMode: 'ebikeTrain',
-          maxBikeDistanceKm: 15,
+    type SettingsState = ReturnType<typeof useSettingsStore.getState>
+    vi.mocked(useSettingsStore).mockImplementation((selector) =>
+      selector(
+        partialMock<SettingsState>({
+          homeLocation: {
+            latitude: 47.3769,
+            longitude: 8.5417,
+            label: 'Zurich, Switzerland',
+            source: 'geocoded',
+          },
+          getArrivalBufferForAssociation: () => 30,
+          travelTimeFilter: {
+            sbbDestinationType: 'station',
+            travelMode: 'ebikeTrain',
+            maxBikeDistanceKm: 15,
+          },
+        })
+      )
+    )
+
+    mockGetOrFetchTravelTime.mockResolvedValue(
+      partialMock<TravelTimeResult>({
+        durationMinutes: 80,
+        transfers: 0,
+        originStation: { id: 'origin-id', name: 'Origin Station' },
+        destinationStation: { id: 'dest-id', name: 'Dest Station' },
+        finalWalkingMinutes: 0,
+        travelMode: 'ebikeTrain',
+        bikeLegs: {
+          toStationMinutes: 10,
+          toStationKm: 4,
+          fromStationMinutes: 27,
+          fromStationKm: 11,
         },
       })
     )
-
-    mockGetOrFetchTravelTime.mockResolvedValue({
-      durationMinutes: 80,
-      transfers: 0,
-      originStation: { id: 'origin-id', name: 'Origin Station' },
-      destinationStation: { id: 'dest-id', name: 'Dest Station' },
-      finalWalkingMinutes: 0,
-      travelMode: 'ebikeTrain',
-      bikeLegs: {
-        toStationMinutes: 10,
-        toStationKm: 4,
-        fromStationMinutes: 27,
-        fromStationKm: 11,
-      },
-    })
 
     const { result } = renderHook(() => useSbbUrl(defaultOptions))
 

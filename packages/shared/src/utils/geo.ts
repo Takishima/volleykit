@@ -9,6 +9,9 @@ export interface Coordinates {
   lng: number
 }
 
+/** Degrees in a half turn, used to convert degrees to radians */
+const DEGREES_PER_HALF_TURN = 180
+
 /**
  * Calculate the distance between two points using the Haversine formula
  *
@@ -19,7 +22,7 @@ export interface Coordinates {
 export const haversineDistance = (point1: Coordinates, point2: Coordinates): number => {
   const R = 6371000 // Earth's radius in meters
 
-  const toRadians = (degrees: number): number => degrees * (Math.PI / 180)
+  const toRadians = (degrees: number): number => degrees * (Math.PI / DEGREES_PER_HALF_TURN)
 
   const lat1Rad = toRadians(point1.lat)
   const lat2Rad = toRadians(point2.lat)

@@ -104,7 +104,7 @@ export async function prefetchAllTabData(
   const prefetchPromises = [
     // Assignments tab - upcoming assignments
     queryClient
-      .prefetchQuery({
+      .query({
         queryKey: queryKeys.assignments.list(upcomingAssignmentsConfig, newOccupationId),
         queryFn: () => apiClient.searchAssignments(upcomingAssignmentsConfig),
         staleTime: ASSIGNMENTS_STALE_TIME_MS,
@@ -113,7 +113,7 @@ export async function prefetchAllTabData(
 
     // Compensations tab
     queryClient
-      .prefetchQuery({
+      .query({
         queryKey: queryKeys.compensations.list(compensationsConfig, newOccupationId),
         queryFn: () => apiClient.searchCompensations(compensationsConfig),
         staleTime: COMPENSATIONS_STALE_TIME_MS,
@@ -122,7 +122,7 @@ export async function prefetchAllTabData(
 
     // Exchange tab
     queryClient
-      .prefetchQuery({
+      .query({
         queryKey: queryKeys.exchanges.list(exchangesConfig, newOccupationId),
         queryFn: () => apiClient.searchExchanges(exchangesConfig),
         staleTime: EXCHANGES_STALE_TIME_MS,
@@ -131,7 +131,7 @@ export async function prefetchAllTabData(
 
     // Settings - needed for validation-closed assignments
     queryClient
-      .prefetchQuery({
+      .query({
         queryKey: queryKeys.settings.association(newOccupationId),
         queryFn: () => apiClient.getAssociationSettings(),
         staleTime: SETTINGS_STALE_TIME_MS,
@@ -140,7 +140,7 @@ export async function prefetchAllTabData(
 
     // Active season - needed for validation-closed assignments
     queryClient
-      .prefetchQuery({
+      .query({
         queryKey: queryKeys.seasons.active(newOccupationId),
         queryFn: () => apiClient.getActiveSeason(),
         staleTime: SEASON_STALE_TIME_MS,

@@ -1,0 +1,70 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "react",
+    "jsx-a11y",
+    "import",
+    "promise",
+    "vitest",
+    "unicorn",
+    "oxc"
+  ],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
+  },
+  "settings": {
+    "react": {
+      "version": "19"
+    },
+    "jsx-a11y": {}
+  },
+  "env": {
+    "browser": true,
+    "es2024": true
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/no-array-index-key": "error",
+    "import/no-cycle": "error",
+    "no-underscore-dangle": "off",
+    "vitest/require-mock-type-parameters": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "unicorn/no-array-sort": "off",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "promise/always-return": "off",
+    "no-await-in-loop": "off",
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css"]
+      }
+    ]
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/dev-dist/**",
+    "**/coverage/**",
+    "**/node_modules/**",
+    "**/schema.ts",
+    "ocr-poc/**",
+    "help-site/**",
+    "**/.expo/**",
+    "**/playwright-report/**"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.{ts,tsx}",
+        "**/*.spec.{ts,tsx}",
+        "**/e2e/**",
+        "**/src/test/**"
+      ],
+      "rules": {
+        "react/no-array-index-key": "off"
+      }
+    }
+  ]
+}

@@ -1,10 +1,15 @@
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { AuthState } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
+
 import { ScoresheetPanel } from './ScoresheetPanel'
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 const SIMULATED_UPLOAD_DURATION_MS = 1500
@@ -12,7 +17,7 @@ const PROGRESS_INTERVAL_MS = SIMULATED_UPLOAD_DURATION_MS / 10
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
 
 function createValidFile(name = 'test.jpg', type = 'image/jpeg', size = 1024): File {
-  const content = new Array(size).fill('a').join('')
+  const content = 'a'.repeat(size)
   return new File([content], name, { type })
 }
 

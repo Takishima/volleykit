@@ -30,7 +30,7 @@ export function Tabs({ tabs, activeTab, onTabChange, ariaLabel, endContent }: Ta
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-border-default dark:border-border-default-dark pb-2">
-      <div className="overflow-x-auto scrollbar-hide" role="tablist" aria-label={ariaLabel}>
+      <div className="overflow-x-auto" role="tablist" aria-label={ariaLabel}>
         <div className="flex gap-1 min-w-max">
           {tabs.map((tab, index) => {
             const isActive = activeTab === tab.id

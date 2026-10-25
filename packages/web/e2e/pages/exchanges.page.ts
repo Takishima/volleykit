@@ -58,7 +58,7 @@ export class ExchangesPage extends BasePage {
   }
 
   async waitForLevelFilterHidden() {
-    await expect(this.levelFilterToggle).not.toBeVisible()
+    await expect(this.levelFilterToggle).toBeHidden()
   }
 
   async waitForLevelFilterVisible() {

@@ -107,7 +107,9 @@ export function createAuthService(config: AuthServiceConfig) {
    */
   async function fetchDashboard(): Promise<{ html: string; csrfToken: string | null }> {
     // Small delay to allow cookie processing (configurable via cookieProcessingDelayMs)
-    await new Promise((resolve) => setTimeout(resolve, cookieProcessingDelayMs))
+    await new Promise((resolve) => {
+      setTimeout(resolve, cookieProcessingDelayMs)
+    })
 
     const response = await fetch(DASHBOARD_URL, {
       credentials: 'include',

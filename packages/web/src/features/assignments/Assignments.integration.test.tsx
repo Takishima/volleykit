@@ -18,8 +18,8 @@ const originalSearchAssignments = mockApi.searchAssignments.bind(mockApi)
 describe('Assignments Integration', () => {
   let queryClient: QueryClient
 
-  beforeEach(() => {
-    setLocale('en')
+  beforeEach(async () => {
+    await setLocale('en')
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -128,7 +128,7 @@ describe('Assignments Integration', () => {
 
       // Upcoming assignments should have future dates
       expect(
-        futureAssignments.every((a) => new Date(a.refereeGame!.game!.startingDateTime!) >= now)
+        futureAssignments.every((a) => new Date(a.refereeGame.game!.startingDateTime!) >= now)
       ).toBe(true)
     })
   })

@@ -11,7 +11,7 @@
 import type { JSX } from 'react'
 import { useEffect, useRef } from 'react'
 
-import { View, Text, Animated } from 'react-native'
+import { View, Text, Animated, useAnimatedValue } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 
@@ -47,7 +47,9 @@ function useAutoSync() {
 
   // Initialize store on mount
   useEffect(() => {
-    initializeActionQueueStore()
+    initializeActionQueueStore().catch((error: unknown) => {
+      console.error('[PendingActionsIndicator] Failed to initialize action queue:', error)
+    })
   }, [])
 
   // Reset sync trigger when sync completes
@@ -115,7 +117,7 @@ export interface PendingActionsBadgeProps {
 export function PendingActionsBadge({ style }: PendingActionsBadgeProps): JSX.Element | null {
   const { t } = useTranslation()
   const { pendingCount, isSyncing } = useActionQueueStore()
-  const pulseAnim = useRef(new Animated.Value(1)).current
+  const pulseAnim = useAnimatedValue(1)
 
   useAutoSync()
 

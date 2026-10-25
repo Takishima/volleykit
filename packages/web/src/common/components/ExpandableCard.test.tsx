@@ -1,3 +1,5 @@
+import { isValidElement } from 'react'
+
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 
@@ -14,6 +16,9 @@ const mockData: TestData = {
   title: 'Test Title',
   description: 'Test Description',
 }
+
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
 
 describe('ExpandableCard', () => {
   describe('rendering', () => {
@@ -52,14 +57,14 @@ describe('ExpandableCard', () => {
       const { container } = render(
         <ExpandableCard
           data={mockData}
-          className="custom-class"
+          className={CUSTOM_CLASS}
           renderCompact={(data) => <span>{data.title}</span>}
           renderDetails={(data) => <span>{data.description}</span>}
         />
       )
 
       // The Card wrapper should have the custom class
-      expect(container.firstChild).toHaveClass('custom-class')
+      expect(container.firstChild).toHaveClass(CUSTOM_CLASS)
     })
   })
 
@@ -175,13 +180,9 @@ describe('ExpandableCard', () => {
         />
       )
 
-      // expandArrow should not be null
-      expect(renderCompact).toHaveBeenCalledWith(
-        mockData,
-        expect.objectContaining({
-          expandArrow: expect.not.objectContaining({ type: null }),
-        })
-      )
+      // expandArrow should be a rendered element, not null
+      const [, { expandArrow }] = renderCompact.mock.calls[0]!
+      expect(isValidElement(expandArrow)).toBe(true)
     })
 
     it('does not toggle when disableExpansion is true', () => {

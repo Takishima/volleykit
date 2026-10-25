@@ -9,6 +9,9 @@ import * as TaskManager from 'expo-task-manager'
 
 import { MS_PER_HOUR } from '@volleykit/shared/utils'
 
+/** Outcome of a location permission request. */
+export type LocationPermissionStatus = 'granted' | 'denied' | 'restricted'
+
 /** Background location task name */
 export const LOCATION_TASK_NAME = 'volleykit-background-location'
 
@@ -25,9 +28,9 @@ export interface Coordinates {
  */
 export interface LocationAdapter {
   /** Request foreground location permissions */
-  requestForegroundPermissions(): Promise<'granted' | 'denied' | 'restricted'>
+  requestForegroundPermissions(): Promise<LocationPermissionStatus>
   /** Request background location permissions (requires foreground first) */
-  requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'restricted'>
+  requestBackgroundPermissions(): Promise<LocationPermissionStatus>
   /** Check if foreground permission is granted */
   hasForegroundPermissions(): Promise<boolean>
   /** Check if background permission is granted */
@@ -45,10 +48,10 @@ export interface LocationAdapter {
 /**
  * Request foreground location permissions.
  */
-async function requestForegroundPermissions(): Promise<'granted' | 'denied' | 'restricted'> {
+async function requestForegroundPermissions(): Promise<LocationPermissionStatus> {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync()
-    if (status === 'granted') return 'granted'
+    if (status === Location.PermissionStatus.GRANTED) return 'granted'
     return 'denied'
   } catch {
     return 'denied'
@@ -59,7 +62,7 @@ async function requestForegroundPermissions(): Promise<'granted' | 'denied' | 'r
  * Request background location permissions.
  * Must have foreground permissions first.
  */
-async function requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'restricted'> {
+async function requestBackgroundPermissions(): Promise<LocationPermissionStatus> {
   try {
     // Check foreground first
     const foreground = await hasForegroundPermissions()
@@ -68,7 +71,7 @@ async function requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'r
     }
 
     const { status } = await Location.requestBackgroundPermissionsAsync()
-    if (status === 'granted') return 'granted'
+    if (status === Location.PermissionStatus.GRANTED) return 'granted'
     return 'denied'
   } catch {
     return 'denied'
@@ -81,7 +84,7 @@ async function requestBackgroundPermissions(): Promise<'granted' | 'denied' | 'r
 async function hasForegroundPermissions(): Promise<boolean> {
   try {
     const { status } = await Location.getForegroundPermissionsAsync()
-    return status === 'granted'
+    return status === Location.PermissionStatus.GRANTED
   } catch {
     return false
   }
@@ -93,7 +96,7 @@ async function hasForegroundPermissions(): Promise<boolean> {
 async function hasBackgroundPermissions(): Promise<boolean> {
   try {
     const { status } = await Location.getBackgroundPermissionsAsync()
-    return status === 'granted'
+    return status === Location.PermissionStatus.GRANTED
   } catch {
     return false
   }

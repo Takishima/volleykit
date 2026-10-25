@@ -4,7 +4,6 @@ import type { NominationList } from '@/api/client'
 import type {
   RosterModifications,
   CoachModifications,
-  CoachRole,
 } from '@/features/validation/roster/hooks/useNominationList'
 
 import { validateRoster, validateBothRosters, MIN_PLAYERS_REQUIRED } from './roster-validation'
@@ -26,7 +25,7 @@ function createMockNominationList(playerCount: number, hasHeadCoach: boolean): N
     __identity: 'nomination-list-1',
     indoorPlayerNominations: nominations,
     coachPerson: hasHeadCoach ? { displayName: 'Head Coach' } : undefined,
-  } as NominationList
+  }
 }
 
 /**
@@ -219,7 +218,7 @@ describe('roster-validation', () => {
       it('head coach addition makes roster valid', () => {
         const nominationList = createMockNominationList(6, false)
         const coachMods: CoachModifications = {
-          added: new Map([['head' as CoachRole, { id: 'coach-1', displayName: 'New Coach' }]]),
+          added: new Map([['head', { id: 'coach-1', displayName: 'New Coach' }]]),
           removed: new Set(),
         }
 
@@ -233,7 +232,7 @@ describe('roster-validation', () => {
         const nominationList = createMockNominationList(6, true)
         const coachMods: CoachModifications = {
           added: new Map(),
-          removed: new Set(['head' as CoachRole]),
+          removed: new Set(['head']),
         }
 
         const result = validateRoster(nominationList, createEmptyModifications(), coachMods)
@@ -245,8 +244,8 @@ describe('roster-validation', () => {
       it('adding head coach after removal makes roster valid', () => {
         const nominationList = createMockNominationList(6, true)
         const coachMods: CoachModifications = {
-          added: new Map([['head' as CoachRole, { id: 'new-coach', displayName: 'New Coach' }]]),
-          removed: new Set(['head' as CoachRole]),
+          added: new Map([['head', { id: 'new-coach', displayName: 'New Coach' }]]),
+          removed: new Set(['head']),
         }
 
         const result = validateRoster(nominationList, createEmptyModifications(), coachMods)
@@ -259,10 +258,8 @@ describe('roster-validation', () => {
       it('assistant coach changes do not affect validation', () => {
         const nominationList = createMockNominationList(6, true)
         const coachMods: CoachModifications = {
-          added: new Map([
-            ['firstAssistant' as CoachRole, { id: 'asst-1', displayName: 'Assistant 1' }],
-          ]),
-          removed: new Set(['secondAssistant' as CoachRole]),
+          added: new Map([['firstAssistant', { id: 'asst-1', displayName: 'Assistant 1' }]]),
+          removed: new Set(['secondAssistant']),
         }
 
         const result = validateRoster(nominationList, createEmptyModifications(), coachMods)

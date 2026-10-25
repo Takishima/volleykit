@@ -3,6 +3,7 @@ import { isValidElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
+import { createConvocationRef, createMockExchange } from '@/test/exchange-factory'
 
 import {
   createExchangeActions,
@@ -12,22 +13,7 @@ import {
   getConvocationIdFromExchange,
 } from './exchange-actions'
 
-const mockExchange: GameExchange = {
-  __identity: 'test-exchange-1',
-  status: 'open',
-  refereeGame: {
-    game: {
-      startingDateTime: '2025-12-15T18:00:00Z',
-      encounter: {
-        teamHome: { name: 'Team A' },
-        teamAway: { name: 'Team B' },
-      },
-      hall: {
-        name: 'Main Arena',
-      },
-    },
-  },
-} as GameExchange
+const mockExchange = createMockExchange()
 
 describe('createExchangeActions', () => {
   it('should create both action handlers', () => {
@@ -153,60 +139,62 @@ describe('getConvocationIdFromExchange', () => {
   })
 
   it('returns convocation ID for head-one position', () => {
-    const exchange = {
+    const exchange = createMockExchange({
       refereePosition: 'head-one',
       refereeGame: {
-        activeRefereeConvocationFirstHeadReferee: { __identity: 'convocation-123' },
+        activeRefereeConvocationFirstHeadReferee: createConvocationRef('convocation-123'),
       },
-    } as GameExchange
+    })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-123')
   })
 
   it('returns convocation ID for head-two position', () => {
-    const exchange = {
+    const exchange = createMockExchange({
       refereePosition: 'head-two',
       refereeGame: {
-        activeRefereeConvocationSecondHeadReferee: { __identity: 'convocation-456' },
+        activeRefereeConvocationSecondHeadReferee: createConvocationRef('convocation-456'),
       },
-    } as GameExchange
+    })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-456')
   })
 
   it('returns convocation ID for linesman-one position', () => {
-    const exchange = {
+    const exchange = createMockExchange({
       refereePosition: 'linesman-one',
       refereeGame: {
-        activeRefereeConvocationFirstLinesman: { __identity: 'convocation-789' },
+        activeRefereeConvocationFirstLinesman: createConvocationRef('convocation-789'),
       },
-    } as GameExchange
+    })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-789')
   })
 
   it('returns convocation ID for linesman-two position', () => {
-    const exchange = {
+    const exchange = createMockExchange({
       refereePosition: 'linesman-two',
       refereeGame: {
-        activeRefereeConvocationSecondLinesman: { __identity: 'convocation-abc' },
+        activeRefereeConvocationSecondLinesman: createConvocationRef('convocation-abc'),
       },
-    } as GameExchange
+    })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-abc')
   })
 
   it('returns convocation ID for standby-head position', () => {
-    const exchange = {
+    const exchange = createMockExchange({
       refereePosition: 'standby-head',
       refereeGame: {
-        activeRefereeConvocationStandbyHeadReferee: { __identity: 'convocation-def' },
+        activeRefereeConvocationStandbyHeadReferee: createConvocationRef('convocation-def'),
       },
-    } as GameExchange
+    })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-def')
   })
 
   it('returns undefined for unknown position', () => {
-    const exchange = {
-      refereePosition: 'unknown-position',
+    // Deliberately outside the RefereePosition union to exercise the fallback branch
+    const unknownPosition = 'unknown-position' as unknown as GameExchange['refereePosition']
+    const exchange = createMockExchange({
+      refereePosition: unknownPosition,
       refereeGame: {},
-    } as GameExchange
+    })
     expect(getConvocationIdFromExchange(exchange)).toBeUndefined()
   })
 })

@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 
 import { useSettingsStore } from '../stores'
 
+import type { Language } from './types'
 import { translate, useTranslation } from './useTranslation'
 
 describe('translate', () => {

@@ -153,18 +153,11 @@ describe('useDemoStore', () => {
       it('takes over an exchange and creates a new assignment', () => {
         const { exchanges, assignments } = useDemoStore.getState()
         // Find an exchange not submitted by the demo user (user can't apply for their own exchange)
-        // Note: Demo data generator may not always create exchanges from other users,
-        // so this test will pass without assertions if no suitable exchange exists.
-        // This is expected behavior as the demo data is dynamically generated.
         const exchange = exchanges.find(
           (e) => e.submittedByPerson?.__identity !== 'demo-user-person-id'
         )
-
         if (!exchange) {
-          // No suitable exchange exists in generated demo data - test passes trivially
-          // This can happen when all generated exchanges are from the demo user
-          expect(exchanges.length).toBeGreaterThanOrEqual(0) // Explicit assertion for coverage
-          return
+          throw new Error('Demo data must contain an exchange submitted by another referee')
         }
 
         const initialAssignmentCount = assignments.length
@@ -385,7 +378,13 @@ describe('useDemoStore', () => {
         useDemoStore.getState().updateNominationListPlayers(gameId, 'home', playerIds)
 
         const updated = useDemoStore.getState().nominationLists[gameId]
-        expect(updated?.home?.indoorPlayerNominations?.length).toBeGreaterThan(0)
+        const nominations = updated?.home?.indoorPlayerNominations ?? []
+        expect(nominations.length).toBeGreaterThan(0)
+        // Players added from the possible-players list keep the API shape the
+        // roster readers rely on (indoorPlayer.person), so they stay visible
+        for (const nomination of nominations) {
+          expect(nomination.indoorPlayer?.person).toBeDefined()
+        }
       })
 
       it('handles non-existent game ID gracefully', () => {
@@ -559,14 +558,13 @@ describe('useDemoStore', () => {
       })
 
       const updatedComp = findCompensationById(compensationId!)
-      // Cast to access correctionReason which is in ConvocationCompensationDetailed, not ConvocationCompensation
-      const compensation = updatedComp?.convocationCompensation as
-        | { correctionReason?: string | null; distanceInMetres?: number; travelExpenses?: number }
-        | undefined
-
-      expect(compensation?.distanceInMetres).toBe(newDistanceInMetres)
-      expect(compensation?.travelExpenses).toBe(expectedTravelExpenses)
-      expect(compensation?.correctionReason).toBe(testReason)
+      // correctionReason lives on ConvocationCompensationDetailed, not on the
+      // list record's ConvocationCompensation, so match the stored object loosely
+      expect(updatedComp?.convocationCompensation).toMatchObject({
+        distanceInMetres: newDistanceInMetres,
+        travelExpenses: expectedTravelExpenses,
+        correctionReason: testReason,
+      })
     })
   })
 })

@@ -1,0 +1,1217 @@
+{
+  "src/App.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/QueryErrorHandler.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/RouteGuards.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/api/association-guard.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/api/error-handling.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/api/form-serialization.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/api/mock-api.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    },
+    "max-params": {
+      "count": 2
+    }
+  },
+  "src/api/real-api.ts": {
+    "max-lines-per-function": {
+      "count": 5
+    },
+    "max-params": {
+      "count": 4
+    }
+  },
+  "src/api/session-crypto.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/Button.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/Card.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ErrorFallbackUI.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ExpandableCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/FilterChip.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/LanguageSwitcher.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/Modal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ModalErrorBoundary.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ModalHeader.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/OfflineIndicator.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/PageErrorBoundary.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/PdfLanguageModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/PendingActionsIndicator.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/PullToRefresh.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ReloadPromptPWA.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ResponsiveSheet.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/SafeModeWarningModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/SwipeableCard.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/SwipeableCardActions.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/Tabs.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/Toast.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/ToggleSwitch.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/TravelTimeBadge.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/WizardStepContainer.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/WizardStepIndicator.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/debug/AuthLogsSection.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/debug/ComparisonSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/DebugHeader.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/DebugPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/OccupationsSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/RawStorageSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/Section.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/TransportDebugSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/UserIdentitySection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/debug/debug-utils.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/common/components/layout/AppShell.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/layout/BottomNavigation.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/layout/CrossAssociationGameNotices.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/layout/HeaderDropdown.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/tour/TourAutoSwipe.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/tour/TourModeBanner.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/components/tour/TourProvider.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/components/tour/TourSpotlight.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/common/components/tour/TourTooltip.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useCacheWarming.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useCombinedGeocode.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/hooks/useCrossAssociationGames.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useDateFormat.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/hooks/useGeocode.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/hooks/useGeolocation.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/hooks/useModalState.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/usePaginatedQuery.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/usePrefetchTabData.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/usePullToRefresh.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useSafeMutation.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useSbbUrl.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    },
+    "max-params": {
+      "count": 2
+    }
+  },
+  "src/common/hooks/useSwipeGesture.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useTabNavigation.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useTour.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useTravelTime.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useTravelTimeFilter.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/hooks/useViewportZoom.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/hooks/useWizardNavigation.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/calendar/calendar-client.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/calendar/calendar-helpers.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/services/calendar/ical/assignment-mapper.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/services/calendar/ical/description-parsers.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/calendar/ical/ical-tokenizer.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/notifications/notification-service.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/notifications/unified-notification-service.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/services/offline/action-sync.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/services/offline/indexed-db.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/transport/ebike-trip-adapter.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/common/services/transport/mock-transport.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/transport/ojp-client.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/services/transport/persistence.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/common/services/transport/travel-time-fetcher.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/action-queue.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/auth-persistence.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/auth.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/stores/demo-generators/assignments.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/common/stores/demo-generators/compensations.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/stores/demo-generators/exchanges.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/demo-generators/nominations.ts": {
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "src/common/stores/demo-generators/shared.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/stores/demo/compensations.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/demo/exchanges.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/demo/index.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/demo/nominations.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/common/stores/demo/validation.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/settings/migrations.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/stores/settings/store.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/stores/tour.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/common/utils/confetti.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/common/utils/pdf-form-filler.ts": {
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "src/common/utils/sbb-url.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/contexts/PWAProviderInternal.tsx": {
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "src/features/assignments/AssignmentsPage.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/assignments/components/AssignmentCard/AssignmentCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/components/AssignmentCard/Location.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/components/CalendarAssociationDropdown.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/components/CalendarErrorHandler.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/components/CalendarErrorModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/hooks/useAssignmentActions.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/assignments/hooks/useAssignments.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/assignments/hooks/useAssignmentsPageLogic.ts": {
+    "max-lines-per-function": {
+      "count": 4
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/hooks/useCalendarAssociationFilter.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/hooks/useCalendarConflicts.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/hooks/useCalendarErrorHandler.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/hooks/useDailyGameBadge.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/utils/assignment-actions.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/assignments/utils/conflict-detection.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/assignments/utils/date-range.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/auth/LoginPage.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/auth/components/LoginErrorWithUpdateHint.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/auth/components/LoginUpdateBanner.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/auth/hooks/useLoginPageLogic.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/auth/services/calendar-auth.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/auth/utils/active-party-parser.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/auth/utils/api-auth-flow.ts": {
+    "max-lines-per-function": {
+      "count": 5
+    }
+  },
+  "src/features/auth/utils/auth-parsers.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/compensations/CompensationsPage.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/compensations/components/CompensationCard.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/compensations/components/CompensationForm.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/components/EditCompensationModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/components/TwintPaymentModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/hooks/useCompensationActions.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/hooks/useCompensationData.ts": {
+    "max-lines-per-function": {
+      "count": 6
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/hooks/useCompensationForm.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/compensations/hooks/useCompensationMutations.ts": {
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "src/features/compensations/hooks/useCompensationsPageLogic.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/compensations/hooks/useCompensationsQuery.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/hooks/useUpdateAssignmentCompensation.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/compensations/utils/compensation-actions.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/utils/compensation-pdf.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/compensations/utils/demo-compensation.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/exchanges/ExchangePage.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/exchanges/components/ActiveFilterIcons.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/exchanges/components/ExchangeCard.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/exchanges/components/ExchangeConfirmationModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/exchanges/components/ExchangeFilterMenu.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/exchanges/components/ExchangeSettingsSheet.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/exchanges/hooks/useExchangeActions.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/exchanges/hooks/useExchangeFilters.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/exchanges/hooks/useExchangePageLogic.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/exchanges/hooks/useExchanges.ts": {
+    "max-lines-per-function": {
+      "count": 7
+    }
+  },
+  "src/features/ocr/components/EasterEggModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/ocr/hooks/useOCRScoresheet.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/ocr/services/mistral-ocr.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/ocr/utils/manuscript-parser/concatenated-data.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/ocr/utils/manuscript-parser/official-parsing.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/ocr/utils/manuscript-parser/player-parsing.ts": {
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "src/features/ocr/utils/manuscript-parser/sequential.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/ocr/utils/manuscript-parser/swiss-tabular.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/ocr/utils/player-list-parser/electronic-parser.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/ocr/utils/player-list-parser/ocr-aware-parser.ts": {
+    "max-lines-per-function": {
+      "count": 4
+    }
+  },
+  "src/features/ocr/utils/player-list-parser/parsing-helpers.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/ocr/utils/roster-comparison.ts": {
+    "max-lines-per-function": {
+      "count": 5
+    }
+  },
+  "src/features/referee-backup/components/OnCallCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/referee-backup/hooks/useMyOnCallAssignments.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/referee-backup/hooks/useRefereeBackups.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/SettingsPage.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/AppInfoSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/DataRetentionSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/DemoSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/HelpToursSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/HomeLocationSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/PreferencesSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/ProfileSection.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/settings/components/SafeModeSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/SettingsGroup.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/components/TravelSettingsSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/hooks/useHomeLocationSettings.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/settings/hooks/useTransportSettings.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/CommentStep.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/sports-hall-report/components/HappyPathContent.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/LanguageSelector.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/NonConformantOverlay.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/PdfPreview.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/SectionSelector.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/SignatureCanvas.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/sports-hall-report/components/SignatureCollectionStep.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/sports-hall-report/components/SportsHallReportWizardModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/SubItemSelector.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/sports-hall-report/components/WizardStepIndicator.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/sports-hall-report/hooks/useNonConformantWizard.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/sports-hall-report/hooks/usePdfGeneration.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/api/api-helpers.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    },
+    "max-params": {
+      "count": 4
+    }
+  },
+  "src/features/validation/components/CollapsibleSection.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/components/SafeValidationCompleteModal.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/components/StepRenderer.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/components/UnsavedChangesDialog.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/components/ValidateGameModal.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/components/WizardButtons.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/hooks/useValidateGameWizard.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/hooks/useValidationActions.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/validation/hooks/useValidationState.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/hooks/useValidationSubmit.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/ImageCropEditor.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/OCRCaptureModal.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/ocr/components/OCREntryModal.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/ocr/components/OCRImageOverlay.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/OCRIntroStep.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/OCRPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/ocr/components/OCRResultsStep.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/RawOcrDataPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/ReferenceImageViewer.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/ScoresheetGuide.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/components/ScoresheetPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/ocr/hooks/useFileUpload.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/roster/components/AddCoachSheet.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/roster/components/AddPlayerSheet.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/roster/components/CoachesSection.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/roster/components/PlayerComparisonList.tsx": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  },
+  "src/features/validation/roster/components/PlayerListItem.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/roster/components/RawTeamData.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/roster/components/RosterValidationWarningDialog.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/roster/components/RosterVerificationPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/roster/hooks/useNominationList.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/scorer/components/ScorerPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/scorer/components/ScorerResultsList.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/scorer/components/ScorerSearchPanel.tsx": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/features/validation/scorer/components/SelectedScorerCard.tsx": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/features/validation/utils/image-crop.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    },
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/validation/utils/roster-validation.ts": {
+    "max-params": {
+      "count": 1
+    }
+  },
+  "src/features/validation/utils/wizard-steps.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/hooks/useAuthSync.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "vite.config.ts": {
+    "max-lines-per-function": {
+      "count": 3
+    }
+  }
+}

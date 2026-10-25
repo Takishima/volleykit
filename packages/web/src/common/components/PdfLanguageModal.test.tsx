@@ -1,10 +1,16 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type { useLanguageStore } from '@/common/stores/language'
+
 import { PdfLanguageModal } from './PdfLanguageModal'
 
+type LanguageState = ReturnType<typeof useLanguageStore.getState>
+
 vi.mock('@/common/stores/language', () => ({
-  useLanguageStore: vi.fn((selector) => selector({ locale: 'de', changeLocale: vi.fn() })),
+  useLanguageStore: vi.fn((selector: (state: LanguageState) => unknown) =>
+    selector({ locale: 'de', changeLocale: vi.fn() })
+  ),
 }))
 
 describe('PdfLanguageModal', () => {
