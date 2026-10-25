@@ -76,7 +76,7 @@
     "lint:fix": "eslint src --max-warnings 0 --fix --prune-suppressions",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node ../../node_modules/typescript7/bin/tsc --noEmit",
     "knip": "knip"
   },
   "peerDependencies": {

@@ -108,7 +108,13 @@ covers the same packages CI does.
 blocks of every `.astro` file as well as the `.ts` sources.
 
 Non-build checks run in parallel, then all builds in parallel. The web build
-includes `tsc -b` and the bundle-size check. API types regenerate first if
+includes `tsc -b` and the bundle-size check.
+
+Two TypeScript compilers are installed on purpose. `typescript` (6.x) is the
+JavaScript API that typescript-eslint, tsup, openapi-typescript and
+`astro check` link against. `typescript7` (an alias of `typescript@7`, the
+native Go compiler, ~10-20x faster) is what every `typecheck` script and the
+web `tsc -b` run; both check the same sources with the same tsconfig. API types regenerate first if
 `volleymanager-openapi.yaml` changed.
 
 **Docs-only changes** run `format` only — markdown is in the format glob and

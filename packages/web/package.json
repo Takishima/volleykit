@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node ../../node_modules/typescript7/bin/tsc -b && vite build",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"e2e/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css}\" \"e2e/**/*.ts\"",
     "lint": "eslint . --max-warnings 0",

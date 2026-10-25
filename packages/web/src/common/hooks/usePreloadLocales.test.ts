@@ -7,14 +7,6 @@ import type { Logger } from '@/common/utils/logger'
 
 import { usePreloadLocales } from './usePreloadLocales'
 
-// Extend Window interface for requestIdleCallback
-declare global {
-  interface Window {
-    requestIdleCallback: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number
-    cancelIdleCallback: (id: number) => void
-  }
-}
-
 vi.mock('@/i18n', () => ({
   preloadTranslations: vi.fn(),
 }))
