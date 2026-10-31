@@ -191,7 +191,7 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
           setWasQueued(true)
         }
       } catch (err) {
-        const failure = err instanceof Error ? err : new Error(String(err))
+        const failure = ensureError(err)
         log.error('Failed to update assignment compensation:', failure)
         setIsError(true)
         setError(failure)

@@ -84,7 +84,7 @@ export function NonConformantOverlay({
       {...touchGuard}
     >
       {/* Header */}
-      <div className="flex-shrink-0 px-4 pt-[env(safe-area-inset-top,0px)] pb-2">
+      <div className="flex-shrink-0 px-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] pb-2">
         <ModalHeader
           title={t('pdf.wizard.nonConformant.title')}
           titleId={MODAL_TITLE_ID}
@@ -150,7 +150,7 @@ export function NonConformantOverlay({
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 px-4 pb-[env(safe-area-inset-bottom,0px)] pt-2 border-t border-border-default dark:border-border-default-dark">
+      <div className="flex-shrink-0 px-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] pt-2 border-t border-border-default dark:border-border-default-dark">
         <div className="flex gap-3">
           <Button
             variant="secondary"

@@ -263,7 +263,7 @@ export function OCRCaptureModal({
         </div>
 
         {/* Camera controls */}
-        <div className="flex-shrink-0 flex items-center justify-between px-6 pt-4 pb-[env(safe-area-inset-bottom,0px)] bg-surface-page-dark">
+        <div className="flex-shrink-0 flex items-center justify-between px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-surface-page-dark">
           <button
             type="button"
             onClick={handleCameraCancel}

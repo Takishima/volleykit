@@ -142,13 +142,35 @@ export function detectDiscrepancies(
  * back to showing the data themselves.
  */
 export function copyToClipboard(text: string): Promise<boolean> {
-  if (!navigator.clipboard?.writeText) {
-    return Promise.resolve(false)
+  if (navigator.clipboard?.writeText) {
+    return navigator.clipboard
+      .writeText(text)
+      .then(() => true)
+      .catch(() => false)
   }
-  return navigator.clipboard
-    .writeText(text)
-    .then(() => true)
-    .catch(() => false)
+  return Promise.resolve(copyViaSelection(text))
+}
+
+/**
+ * Fallback for insecure contexts (plain-http LAN dev server, embedded
+ * webviews) where the Clipboard API does not exist. execCommand is deprecated
+ * but is the only copy primitive those contexts offer.
+ */
+function copyViaSelection(text: string): boolean {
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.left = '-9999px'
+    document.body.appendChild(textarea)
+    textarea.select()
+    // eslint-disable-next-line sonarjs/deprecation -- no non-deprecated copy API exists in insecure contexts
+    const success = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return success
+  } catch {
+    return false
+  }
 }
 
 /** Custom hook for copy with visual feedback */

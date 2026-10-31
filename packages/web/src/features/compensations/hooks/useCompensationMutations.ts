@@ -92,7 +92,7 @@ export function useUpdateCompensation(): OfflineMutationResult<
           setWasQueued(true)
         }
       } catch (err) {
-        const failure = err instanceof Error ? err : new Error(String(err))
+        const failure = ensureError(err)
         log.error('Failed to update compensation:', failure)
         setIsError(true)
         setError(failure)
@@ -229,7 +229,7 @@ export function useBatchUpdateCompensations(): OfflineMutationResult<
           }
         }
       } catch (err) {
-        const failure = err instanceof Error ? err : new Error(String(err))
+        const failure = ensureError(err)
         log.error('Failed to batch update compensations:', failure)
         setIsError(true)
         setError(failure)

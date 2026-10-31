@@ -11,7 +11,7 @@
 import { useMemo, useEffect } from 'react'
 import type { ReactNode } from 'react'
 
-import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { StorageContext, type StorageContextValue } from '@volleykit/shared/adapters'
 import { HttpStatus } from '@volleykit/shared/api'
@@ -51,8 +51,6 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
   const queryClient = useMemo(
     () =>
       new QueryClient({
-        queryCache: new QueryCache(),
-        mutationCache: new MutationCache(),
         defaultOptions: {
           queries: {
             staleTime: MS_PER_MINUTE * 5, // 5 minutes
@@ -71,15 +69,29 @@ function QueryClientWithSessionMonitor({ children }: { children: ReactNode }) {
     []
   )
 
-  // Always use the latest handler without recreating the QueryClient
+  // Always use the latest handler without recreating the QueryClient: both
+  // caches publish an `updated` event with an `error` action whenever a fetch
+  // or mutation fails, so subscribe there instead of touching cache config.
   useEffect(() => {
     const handleError = (error: unknown) => {
       if (isAuthError(error)) {
         handleSessionExpired()
       }
     }
-    queryClient.getQueryCache().config.onError = handleError
-    queryClient.getMutationCache().config.onError = handleError
+    const unsubscribeQueries = queryClient.getQueryCache().subscribe((event) => {
+      if (event.type === 'updated' && event.action.type === 'error') {
+        handleError(event.action.error)
+      }
+    })
+    const unsubscribeMutations = queryClient.getMutationCache().subscribe((event) => {
+      if (event.type === 'updated' && event.action.type === 'error') {
+        handleError(event.action.error)
+      }
+    })
+    return () => {
+      unsubscribeQueries()
+      unsubscribeMutations()
+    }
   }, [queryClient, handleSessionExpired])
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

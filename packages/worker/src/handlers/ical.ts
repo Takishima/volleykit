@@ -21,7 +21,7 @@ export async function handleICal(
   // Only allow GET and HEAD requests for iCal
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-      status: 405,
+      status: HttpStatus.METHOD_NOT_ALLOWED,
       headers: {
         'Content-Type': 'application/json',
         Allow: 'GET, HEAD',
@@ -70,7 +70,7 @@ export async function handleICal(
     // For HEAD requests, return empty body (used for validation)
     const iCalBody = request.method === 'HEAD' ? null : await iCalResponse.text()
     return new Response(iCalBody, {
-      status: 200,
+      status: HttpStatus.OK,
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
         'Cache-Control': 'public, max-age=300', // 5 minutes

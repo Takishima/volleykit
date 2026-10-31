@@ -151,9 +151,12 @@ export function useExchangeFilters({
       userRefereeLevelGradationValue !== null
     ) {
       result = result.filter(({ exchange }) => {
-        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue
+        // The schema passes the field through untouched, so the runtime value can
+        // be null even though the generated type only says `string | undefined`.
+        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue as
+          string | null | undefined
         // If no gradation value, show the exchange (conservative approach)
-        if (requiredGradationStr === undefined) {
+        if (requiredGradationStr === undefined || requiredGradationStr === null) {
           return true
         }
         // Parse string to number for comparison (API returns string)

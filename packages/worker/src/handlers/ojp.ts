@@ -32,7 +32,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
   // Only allow POST for OJP
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-      status: 405,
+      status: HttpStatus.METHOD_NOT_ALLOWED,
       headers: {
         'Content-Type': 'application/json',
         Allow: 'POST',
@@ -45,7 +45,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
   // Check if OJP API key is configured
   if (!env.OJP_API_KEY) {
     return new Response(JSON.stringify({ error: 'OJP service not configured' }), {
-      status: 503,
+      status: HttpStatus.SERVICE_UNAVAILABLE,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders(origin),
@@ -61,7 +61,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
     // Validate body size to prevent abuse (OJP XML requests are typically a few KB)
     if (ojpBody.length > OJP_MAX_BODY_SIZE_BYTES) {
       return new Response(JSON.stringify({ error: 'Request body too large' }), {
-        status: 413,
+        status: HttpStatus.PAYLOAD_TOO_LARGE,
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders(origin),
@@ -85,7 +85,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
 
       if (ojpResponse.status === HttpStatus.UNAUTHORIZED) {
         return new Response(JSON.stringify({ error: 'OJP service authentication failed' }), {
-          status: 503,
+          status: HttpStatus.SERVICE_UNAVAILABLE,
           headers: {
             'Content-Type': 'application/json',
             ...corsHeaders(origin),
@@ -96,7 +96,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
 
       if (ojpResponse.status === HttpStatus.TOO_MANY_REQUESTS) {
         return new Response(JSON.stringify({ error: 'OJP service rate limit exceeded' }), {
-          status: 429,
+          status: HttpStatus.TOO_MANY_REQUESTS,
           headers: {
             'Content-Type': 'application/json',
             'Retry-After': String(OJP_RATE_LIMIT_RETRY_SECONDS),
@@ -107,7 +107,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
       }
 
       return new Response(JSON.stringify({ error: 'OJP request failed' }), {
-        status: 502,
+        status: HttpStatus.BAD_GATEWAY,
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders(origin),
@@ -119,7 +119,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
     // Return the OJP API response
     const ojpResult = await ojpResponse.text()
     return new Response(ojpResult, {
-      status: 200,
+      status: HttpStatus.OK,
       headers: {
         'Content-Type': ojpResponse.headers.get('Content-Type') || 'application/xml',
         ...corsHeaders(origin),
@@ -129,7 +129,7 @@ export async function handleOjp(request: Request, env: Env, _url: URL): Promise<
   } catch (error) {
     console.error('OJP proxy error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error during OJP request' }), {
-      status: 500,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders(origin),

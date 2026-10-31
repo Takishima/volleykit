@@ -189,7 +189,7 @@ export function useApplyForExchange(): OfflineMutationResult<PickExchangeRespons
           return null // No response when queued
         }
       } catch (err) {
-        const failure = err instanceof Error ? err : new Error(String(err))
+        const failure = ensureError(err)
         log.error('Failed to apply for exchange:', failure)
         setIsError(true)
         setError(failure)
@@ -285,7 +285,7 @@ export function useRemoveOwnExchange(): OfflineMutationResult<void, string> {
           setWasQueued(true)
         }
       } catch (err) {
-        const failure = err instanceof Error ? err : new Error(String(err))
+        const failure = ensureError(err)
         log.error('Failed to remove own exchange:', failure)
         setIsError(true)
         setError(failure)
@@ -381,7 +381,7 @@ export function useAddToExchange(): OfflineMutationResult<void, string> {
           setWasQueued(true)
         }
       } catch (err) {
-        const failure = err instanceof Error ? err : new Error(String(err))
+        const failure = ensureError(err)
         log.error('Failed to add to exchange:', failure)
         setIsError(true)
         setError(failure)

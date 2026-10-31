@@ -56,7 +56,13 @@ export class LoginPage {
    */
   private async dismissPWANotification() {
     const notification = this.page.getByRole('alert').filter({ hasText: /offline|ready/i })
-    if (await notification.isVisible()) {
+    // The service worker registers asynchronously, so the toast can show up a
+    // moment after load; give it a bounded chance to appear before dismissing.
+    const appeared = await notification.waitFor({ state: 'visible', timeout: 1000 }).then(
+      () => true,
+      () => false
+    )
+    if (appeared) {
       await notification.getByRole('button', { name: /close/i }).click()
     }
     await expect(notification).toBeHidden()
