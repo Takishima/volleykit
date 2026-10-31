@@ -12,18 +12,18 @@ import { logger } from '@/common/utils/logger'
 
 import { downloadPdf } from './pdf-download'
 import {
-  ALL_SIGNATURE_POSITIONS,
   COMMENT_FIELD_FONT_SIZE,
   RADIO_NOT_OK_OPTION,
   RADIO_OK_OPTION,
-  SIGNATURE_POSITIONS,
+  SIGNATURE_GAP_PT,
+  SIGNATURE_WIDTH_PT,
   type FieldMapping,
   getFieldMapping,
   getPdfChecklistSections,
   getSignatureNameFields,
   getWizardFieldMapping,
-  type AllSignaturePositions,
   type PdfChecklistSection,
+  type SignatureNameFields,
   type SignaturePosition,
 } from './pdf-field-mappings'
 import {
@@ -93,6 +93,10 @@ function trySetTextField(form: PDFForm, fieldName: string, value: string | undef
  * native form-field rendering.  `setFontSize(0)` tells pdf-lib to scale each
  * field's text to fit its bounding box — the same behaviour browsers use for
  * un-flattened form fields.
+ *
+ * The signature-block name fields are deliberately excluded: they are much
+ * taller than the header cells, so auto-sizing would inflate the names to
+ * ~20pt. They are handled by `fitSignatureNameFonts` instead.
  */
 function autoSizeHeaderFields(form: PDFForm, mapping: FieldMapping): void {
   const headerFields = [
@@ -102,14 +106,50 @@ function autoSizeHeaderFields(form: PDFForm, mapping: FieldMapping): void {
     mapping.hallName,
     mapping.location,
     mapping.date,
-    mapping.firstRefereeName,
-    mapping.secondRefereeName,
   ]
   for (const fieldName of headerFields) {
     try {
       form.getTextField(fieldName).setFontSize(0)
     } catch {
       // Field may not exist in every template variant — skip silently
+    }
+  }
+}
+
+/** Matches the templates' default appearance (`/Helv 12 Tf`). */
+const SIGNATURE_NAME_FONT_SIZE = 12
+/** pdf-lib draws text field content inset from the widget border. */
+const TEXT_FIELD_INNER_PADDING_PT = 4
+
+/**
+ * Keeps the signature-block names at the template's 12pt and only shrinks a
+ * name when it would not fit the field's width on a single line.
+ */
+async function fitSignatureNameFonts(
+  pdfDoc: PDFDocument,
+  form: PDFForm,
+  nameFields: SignatureNameFields
+): Promise<void> {
+  const { StandardFonts } = await import('pdf-lib')
+  const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica)
+  const fieldNames = [
+    nameFields.firstReferee,
+    nameFields.secondReferee,
+    nameFields.homeTeam,
+    nameFields.awayTeam,
+  ]
+  for (const fieldName of fieldNames) {
+    try {
+      const field = form.getTextField(fieldName)
+      const text = field.getText()
+      const widget = field.acroField.getWidgets()[0]
+      if (!text || !widget) continue
+      const available = widget.getRectangle().width - TEXT_FIELD_INNER_PADDING_PT
+      const natural = helvetica.widthOfTextAtSize(text, SIGNATURE_NAME_FONT_SIZE)
+      const scale = natural > available ? available / natural : 1
+      field.setFontSize(Math.floor(SIGNATURE_NAME_FONT_SIZE * scale))
+    } catch (error) {
+      logger.warn(`Could not size name field "${fieldName}":`, error)
     }
   }
 }
@@ -287,30 +327,55 @@ async function embedSignatureAtPosition(
   })
 }
 
+/**
+ * The signature cell sits in the same table row as the signer's name field, so
+ * its vertical extent is read from that field's widget rectangle. This keeps
+ * the boxes aligned across the NLA/NLB and de/fr templates, whose rows differ
+ * in both height and vertical offset.
+ *
+ * Must be called before `form.flatten()`, which removes the fields.
+ */
+export function signatureBoxFor(form: PDFForm, nameField: string): SignaturePosition {
+  const widget = form.getTextField(nameField).acroField.getWidgets()[0]
+  if (!widget) throw new Error(`Name field "${nameField}" has no widget`)
+  const rect = widget.getRectangle()
+  return {
+    x: rect.x + rect.width + SIGNATURE_GAP_PT,
+    y: rect.y,
+    width: SIGNATURE_WIDTH_PT,
+    height: rect.height,
+  }
+}
+
 async function embedSignature(
   pdfDoc: PDFDocument,
+  form: PDFForm,
   signatureDataUrl: string,
   leagueCategory: LeagueCategory
 ): Promise<void> {
-  await embedSignatureAtPosition(pdfDoc, signatureDataUrl, SIGNATURE_POSITIONS[leagueCategory])
+  const nameFields = getSignatureNameFields(leagueCategory)
+  const position = signatureBoxFor(form, nameFields.firstReferee)
+  await embedSignatureAtPosition(pdfDoc, signatureDataUrl, position)
 }
 
 async function embedAllSignatures(
   pdfDoc: PDFDocument,
-  positions: AllSignaturePositions,
+  form: PDFForm,
+  leagueCategory: LeagueCategory,
   signatures: NonConformantSignatures
 ): Promise<void> {
-  const entries: Array<[string | undefined, SignaturePosition]> = [
-    [signatures.firstReferee, positions.firstReferee],
-    [signatures.secondReferee, positions.secondReferee],
-    [signatures.homeTeamCoach?.signature, positions.homeTeam],
-    [signatures.awayTeamCoach?.signature, positions.awayTeam],
+  const nameFields = getSignatureNameFields(leagueCategory)
+  const entries: Array<[string | undefined, string]> = [
+    [signatures.firstReferee, nameFields.firstReferee],
+    [signatures.secondReferee, nameFields.secondReferee],
+    [signatures.homeTeamCoach?.signature, nameFields.homeTeam],
+    [signatures.awayTeamCoach?.signature, nameFields.awayTeam],
   ]
 
-  for (const [dataUrl, position] of entries) {
+  for (const [dataUrl, nameField] of entries) {
     if (!dataUrl) continue
     try {
-      await embedSignatureAtPosition(pdfDoc, dataUrl, position)
+      await embedSignatureAtPosition(pdfDoc, dataUrl, signatureBoxFor(form, nameField))
     } catch (error) {
       logger.warn('Could not embed signature:', error)
     }
@@ -453,13 +518,14 @@ export async function fillSportsHallReportWizard(
   // Embed first referee signature if provided
   if (signatureDataUrl) {
     try {
-      await embedSignature(pdfDoc, signatureDataUrl, leagueCategory)
+      await embedSignature(pdfDoc, form, signatureDataUrl, leagueCategory)
     } catch (error) {
       logger.warn('Could not embed signature in PDF:', error)
     }
   }
 
   autoSizeHeaderFields(form, mapping)
+  await fitSignatureNameFonts(pdfDoc, form, getSignatureNameFields(leagueCategory))
   form.flatten()
   return pdfDoc.save()
 }
@@ -522,9 +588,14 @@ export async function fillNonConformantReport(
   }
 
   if (signatures) {
-    await embedAllSignatures(pdfDoc, ALL_SIGNATURE_POSITIONS[leagueCategory], signatures)
+    try {
+      await embedAllSignatures(pdfDoc, form, leagueCategory, signatures)
+    } catch (error) {
+      logger.warn('Could not embed signatures in PDF:', error)
+    }
   }
 
+  await fitSignatureNameFonts(pdfDoc, form, signatureNameFields)
   if (options.flatten !== false) {
     autoSizeHeaderFields(form, mapping)
     form.flatten()
