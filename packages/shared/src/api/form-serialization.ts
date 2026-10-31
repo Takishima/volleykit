@@ -9,6 +9,12 @@
 
 const MAX_DEPTH = 10
 
+/**
+ * Every value a form payload can hold, spelled out so the leaf branch of
+ * `flatten` narrows to the primitives `String()` renders meaningfully.
+ */
+type FormValue = string | number | boolean | bigint | symbol | object | null | undefined
+
 export interface BuildFormDataOptions {
   /**
    * CSRF token to include in the request.
@@ -32,7 +38,7 @@ export function buildFormData(
   // Track objects in current path to detect true circular references
   const pathStack = new Set<object>()
 
-  function flatten(obj: unknown, prefix: string, depth: number): void {
+  function flatten(obj: FormValue, prefix: string, depth: number): void {
     // Prevent infinite recursion from deeply nested structures
     if (depth > MAX_DEPTH) {
       throw new Error(`Form data exceeds maximum nesting depth of ${MAX_DEPTH}`)
@@ -49,11 +55,11 @@ export function buildFormData(
 
       try {
         if (Array.isArray(obj)) {
-          obj.forEach((item: unknown, index: number) => {
+          obj.forEach((item: FormValue, index: number) => {
             flatten(item, `${prefix}[${index}]`, depth + 1)
           })
         } else {
-          Object.entries(obj as Record<string, unknown>).forEach(([key, value]) => {
+          Object.entries(obj as Record<string, FormValue>).forEach(([key, value]) => {
             flatten(value, prefix ? `${prefix}[${key}]` : key, depth + 1)
           })
         }
@@ -67,7 +73,7 @@ export function buildFormData(
   }
 
   Object.entries(data).forEach(([key, value]) => {
-    flatten(value, key, 0)
+    flatten(value as FormValue, key, 0)
   })
 
   // Include CSRF token if provided

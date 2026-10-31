@@ -9,7 +9,7 @@ import type { StorageAdapter, SecureStorageAdapter } from '../types'
  * Default no-op storage adapter (for SSR/testing)
  */
 export const noopStorageAdapter: StorageAdapter = {
-  getItem: async () => null,
+  getItem: () => Promise.resolve(null),
   setItem: async () => {},
   removeItem: async () => {},
 }
@@ -19,9 +19,9 @@ export const noopStorageAdapter: StorageAdapter = {
  */
 export const noopSecureStorageAdapter: SecureStorageAdapter = {
   setCredentials: async () => {},
-  getCredentials: async () => null,
+  getCredentials: () => Promise.resolve(null),
   clearCredentials: async () => {},
-  hasCredentials: async () => false,
+  hasCredentials: () => Promise.resolve(false),
 }
 
 /**

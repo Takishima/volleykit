@@ -57,9 +57,9 @@ const realUser: UserProfile = {
 }
 
 describe('AppShell', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    setLocale('en')
+    await setLocale('en')
   })
 
   function renderAppShell() {
@@ -129,8 +129,8 @@ describe('AppShell', () => {
       { locale: 'de', expected: 'Demo-Modus - Beispieldaten werden angezeigt' },
       { locale: 'fr', expected: "Mode Démo - Données d'exemple" },
       { locale: 'it', expected: 'Modalità Demo - Dati di esempio' },
-    ])('displays correct translation for $locale locale', ({ locale, expected }) => {
-      setLocale(locale)
+    ])('displays correct translation for $locale locale', async ({ locale, expected }) => {
+      await setLocale(locale)
 
       vi.mocked(useAuthStore).mockReturnValue(
         createMockAuthStore({
@@ -286,8 +286,8 @@ describe('AppShell', () => {
         { locale: 'it', expectedPattern: /modalità calendario/i },
       ])(
         'displays correct translation for $locale locale in calendar mode',
-        ({ locale, expectedPattern }) => {
-          setLocale(locale)
+        async ({ locale, expectedPattern }) => {
+          await setLocale(locale)
 
           vi.mocked(useAuthStore).mockReturnValue(
             createMockAuthStore({

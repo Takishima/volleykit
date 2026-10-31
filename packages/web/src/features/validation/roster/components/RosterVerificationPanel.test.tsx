@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import * as useNominationListModule from '@/features/validation/roster/hooks/useNominationList'
 import type { RosterPlayer } from '@/features/validation/roster/hooks/useNominationList'
 
-import { RosterVerificationPanel } from './RosterVerificationPanel'
+import { RosterVerificationPanel, type RosterPanelModifications } from './RosterVerificationPanel'
 
 vi.mock('@/features/validation/roster/hooks/useNominationList')
 
@@ -388,14 +388,13 @@ describe('RosterVerificationPanel', () => {
     })
 
     it('simulates wizard navigation: state persists after unmount/remount', () => {
-      const onModificationsChange = vi.fn()
       let capturedPlayerModifications: { added: RosterPlayer[]; removed: string[] } = {
         added: [],
         removed: [],
       }
 
       // Track modifications as they're reported
-      onModificationsChange.mockImplementation((mods) => {
+      const onModificationsChange = vi.fn((mods: RosterPanelModifications) => {
         capturedPlayerModifications = mods.players
       })
 

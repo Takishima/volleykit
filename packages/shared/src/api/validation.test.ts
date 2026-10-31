@@ -184,43 +184,32 @@ describe('assignmentSchema', () => {
   })
 
   it('transforms boolean-like string values', () => {
-    const result = assignmentSchema.safeParse({
+    const data = assignmentSchema.parse({
       ...validAssignment,
       isOpenEntryInRefereeGameExchange: '1',
       hasLastMessageToReferee: '0',
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.isOpenEntryInRefereeGameExchange).toBe(true)
-      expect(result.data.hasLastMessageToReferee).toBe(false)
-    }
+    expect(data.isOpenEntryInRefereeGameExchange).toBe(true)
+    expect(data.hasLastMessageToReferee).toBe(false)
   })
 
   it('transforms non-standard boolean-like strings to null', () => {
-    const result = assignmentSchema.safeParse({
+    const data = assignmentSchema.parse({
       ...validAssignment,
       isOpenEntryInRefereeGameExchange: 'true',
       hasLastMessageToReferee: 'yes',
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      // Non-"0"/"1" strings are transformed to null
-      expect(result.data.isOpenEntryInRefereeGameExchange).toBe(null)
-      expect(result.data.hasLastMessageToReferee).toBe(null)
-    }
+    // Non-"0"/"1" strings are transformed to null
+    expect(data.isOpenEntryInRefereeGameExchange).toBe(null)
+    expect(data.hasLastMessageToReferee).toBe(null)
   })
 
   it('keeps a string linked double convocation as a single part', () => {
-    const result = assignmentSchema.safeParse({
+    const data = assignmentSchema.parse({
       ...validAssignment,
       linkedDoubleConvocationGameNumberAndRefereePosition: '12345/head-two',
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual([
-        '12345/head-two',
-      ])
-    }
+    expect(data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual(['12345/head-two'])
   })
 
   it.each([
@@ -239,23 +228,17 @@ describe('assignmentSchema', () => {
   ])(
     'normalizes linked double convocation value: %s',
     (_label, value: unknown, expected: string[] | null) => {
-      const result = assignmentSchema.safeParse({
+      const data = assignmentSchema.parse({
         ...validAssignment,
         linkedDoubleConvocationGameNumberAndRefereePosition: value,
       })
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual(expected)
-      }
+      expect(data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual(expected)
     }
   )
 
   it('accepts assignment without linked double convocation field', () => {
-    const result = assignmentSchema.safeParse(validAssignment)
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toBeUndefined()
-    }
+    const data = assignmentSchema.parse(validAssignment)
+    expect(data.linkedDoubleConvocationGameNumberAndRefereePosition).toBeUndefined()
   })
 
   it('rejects assignment with invalid UUID', () => {
@@ -275,14 +258,11 @@ describe('assignmentSchema', () => {
   })
 
   it('allows unknown fields via passthrough', () => {
-    const result = assignmentSchema.safeParse({
+    const data = assignmentSchema.parse({
       ...validAssignment,
       unknownField: 'some value',
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.unknownField).toBe('some value')
-    }
+    expect(data.unknownField).toBe('some value')
   })
 })
 
@@ -419,20 +399,17 @@ describe('gameExchangeSchema', () => {
   })
 
   it('normalizes an array-shaped linked double convocation (SRBA)', () => {
-    const result = gameExchangeSchema.safeParse({
+    const data = gameExchangeSchema.parse({
       ...validExchange,
       linkedDoubleConvocationGameNumberAndRefereePosition: [
         '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun ',
         'ARB 2',
       ],
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual([
-        '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun',
-        'ARB 2',
-      ])
-    }
+    expect(data.linkedDoubleConvocationGameNumberAndRefereePosition).toEqual([
+      '#401727 | 13.03.2027 18:00 | VB Therwil — VBC Thun',
+      'ARB 2',
+    ])
   })
 
   it('rejects exchange with invalid status', () => {
@@ -501,14 +478,11 @@ describe('personSearchResultSchema', () => {
   })
 
   it('allows unknown fields via passthrough', () => {
-    const result = personSearchResultSchema.safeParse({
+    const data = personSearchResultSchema.parse({
       ...validPerson,
       unknownField: 'some value',
     })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.unknownField).toBe('some value')
-    }
+    expect(data.unknownField).toBe('some value')
   })
 })
 
@@ -693,7 +667,9 @@ describe('validateResponse', () => {
   it('logs error to console', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    expect(() => validateResponse(INVALID_ASSIGNMENT, assignmentSchema, 'test')).toThrow()
+    expect(() => validateResponse(INVALID_ASSIGNMENT, assignmentSchema, 'test')).toThrow(
+      'Invalid API response for test'
+    )
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('API validation error (test)'),
       expect.any(Array)

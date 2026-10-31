@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": ["src/**/*.{ts,astro}"],
+  "ignoreBinaries": ["prettier"],
+  "ignoreDependencies": [
+    "prettier-plugin-astro",
+    "tailwindcss",
+    "@tailwindcss/typography"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "duplicates": "off"
+  }
+}

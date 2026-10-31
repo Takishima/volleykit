@@ -2,6 +2,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type { SettingsState } from '@/common/stores/settings/types'
+import { partialMock } from '@/test/partial-mock'
+
 import type { GameExchange } from '@/api/client'
 
 import { ExchangeCard } from './ExchangeCard'
@@ -12,10 +15,12 @@ vi.mock('@/common/hooks/useActiveAssociation', () => ({
 }))
 
 vi.mock('@/common/stores/settings', () => ({
-  useSettingsStore: vi.fn((selector) =>
-    selector({
-      isTransportEnabledForAssociation: () => true,
-    })
+  useSettingsStore: vi.fn((selector: (state: SettingsState) => unknown) =>
+    selector(
+      partialMock<SettingsState>({
+        isTransportEnabledForAssociation: () => true,
+      })
+    )
   ),
 }))
 
@@ -133,9 +138,9 @@ describe('ExchangeCard', () => {
     it('renders TBD when no start date', () => {
       const exchange = createMockExchange({
         refereeGame: {
-          ...createMockExchange().refereeGame!,
+          ...createMockExchange().refereeGame,
           game: {
-            ...createMockExchange().refereeGame!.game!,
+            ...createMockExchange().refereeGame.game!,
             startingDateTime: undefined,
           },
         },
@@ -162,9 +167,9 @@ describe('ExchangeCard', () => {
     it('renders female icon for female gender', () => {
       const exchange = createMockExchange({
         refereeGame: {
-          ...createMockExchange().refereeGame!,
+          ...createMockExchange().refereeGame,
           game: {
-            ...createMockExchange().refereeGame!.game!,
+            ...createMockExchange().refereeGame.game!,
             group: {
               phase: {
                 league: {
@@ -184,9 +189,9 @@ describe('ExchangeCard', () => {
     it('does not render gender icon when gender is not m or f', () => {
       const exchange = createMockExchange({
         refereeGame: {
-          ...createMockExchange().refereeGame!,
+          ...createMockExchange().refereeGame,
           game: {
-            ...createMockExchange().refereeGame!.game!,
+            ...createMockExchange().refereeGame.game!,
             group: {
               phase: {
                 league: {
@@ -215,9 +220,9 @@ describe('ExchangeCard', () => {
     it('renders TBD for missing team names', () => {
       const exchange = createMockExchange({
         refereeGame: {
-          ...createMockExchange().refereeGame!,
+          ...createMockExchange().refereeGame,
           game: {
-            ...createMockExchange().refereeGame!.game!,
+            ...createMockExchange().refereeGame.game!,
             encounter: undefined,
           },
         },
@@ -365,7 +370,7 @@ describe('ExchangeCard', () => {
       const user = userEvent.setup()
       const exchange = createMockExchange({
         refereeGame: {
-          ...createMockExchange().refereeGame!,
+          ...createMockExchange().refereeGame,
           activeFirstHeadRefereeName: undefined,
           activeSecondHeadRefereeName: undefined,
         },

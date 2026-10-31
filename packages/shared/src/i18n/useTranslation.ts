@@ -9,29 +9,20 @@ import { locales } from './locales'
 import type { TranslationKey, Language, Translations } from './types'
 
 /**
- * Type representing possible intermediate values during nested object traversal.
- * More type-safe than `any` while still allowing dynamic property access.
- */
-type TranslationSection = Translations[keyof Translations]
-type NestedValue =
-  | Translations
-  | TranslationSection
-  | TranslationSection[keyof TranslationSection]
-  | string
-  | undefined
-
-/**
  * Get a nested value from an object using dot notation.
+ *
+ * Intermediate values are `unknown`: the path is dynamic, so only the final
+ * leaf is checked for being a string.
  */
 function getNestedValue(obj: Translations, path: string): string | undefined {
   const keys = path.split('.')
-  let current: NestedValue = obj
+  let current: unknown = obj
 
   for (const key of keys) {
-    if (current === undefined || typeof current === 'string') {
+    if (typeof current !== 'object' || current === null) {
       return undefined
     }
-    current = (current as Record<string, unknown>)[key] as NestedValue
+    current = (current as Record<string, unknown>)[key]
   }
 
   return typeof current === 'string' ? current : undefined

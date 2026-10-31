@@ -83,25 +83,40 @@ A package is affected when a changed path falls under its input paths (see
 consumers, so a shared edit validates web and mobile too. `ocr-poc` is a
 throwaway proof of concept and is deliberately unvalidated.
 
-Not every check is package-scoped: `format`, `tokens` and the `validation:*`
-checks register from their own constants in the policy file, not from the
-package table.
+Not every check is package-scoped: `format`, `tokens`, `oxlint` and the
+`validation:*` checks register from their own constants in the policy file, not
+from the package table. `oxlint` is a single root-level run over every
+TypeScript package (`.oxlintrc.json`); it is the fast first pass, and
+`eslint-plugin-oxlint` switches off the ESLint rules it already covers so the
+two never disagree. CI runs the same pass in `ci-shell.yml` (no path filter),
+and the React hooks rules stay with ESLint only, because the compiler
+diagnostics live there.
 
 | Package   | format¹ | lint | knip | typecheck  | test | build |
 | --------- | ------- | ---- | ---- | ---------- | ---- | ----- |
 | web       | ✓       | ✓    | ✓²   | (in build) | ✓    | ✓     |
 | shared    | ✓       | ✓    | ✓²   | ✓          | ✓    | ✓     |
 | mobile    | ✓       | ✓    | ✓²   | ✓          | ✓    | –     |
-| worker    | ✓       | ✓    | –    | –          | ✓    | –     |
-| help-site | ✓       | –    | –    | –          | –    | ✓     |
+| worker    | ✓       | ✓    | ✓    | ✓          | ✓    | –     |
+| help-site | ✓       | ✓³   | ✓    | ✓⁴         | –    | ✓     |
 
 ¹ Runs once over all changed files, not per-package
 ² Was CI-only while knip 5 was too slow for pre-commit. On knip 6 a run is
 1-2s per package and only re-runs when that package changes, so the gate now
-covers the same three packages CI does.
+covers the same packages CI does.
+³ `eslint-plugin-astro` (recommended + jsx-a11y) over `.astro`, `.ts` and
+`.mjs` files.
+⁴ `astro check`, which typechecks the frontmatter and inline `<script>`
+blocks of every `.astro` file as well as the `.ts` sources.
 
 Non-build checks run in parallel, then all builds in parallel. The web build
-includes `tsc -b` and the bundle-size check. API types regenerate first if
+includes `tsc -b` and the bundle-size check.
+
+Two TypeScript compilers are installed on purpose. `typescript` (6.x) is the
+JavaScript API that typescript-eslint, tsup, openapi-typescript and
+`astro check` link against. `typescript7` (an alias of `typescript@7`, the
+native Go compiler, ~10-20x faster) is what every `typecheck` script and the
+web `tsc -b` run; both check the same sources with the same tsconfig. API types regenerate first if
 `volleymanager-openapi.yaml` changed.
 
 **Docs-only changes** run `format` only — markdown is in the format glob and

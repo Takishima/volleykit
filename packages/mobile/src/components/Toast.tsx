@@ -8,7 +8,7 @@
 import type { JSX } from 'react'
 import { useEffect, useRef } from 'react'
 
-import { View, Text, Animated, Pressable, StyleSheet } from 'react-native'
+import { View, Text, Animated, Pressable, StyleSheet, useAnimatedValue } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -80,8 +80,8 @@ interface ToastItemProps {
 function ToastItem({ toast }: ToastItemProps): JSX.Element {
   const { t } = useTranslation()
   const removeToast = useToastStore((state) => state.removeToast)
-  const opacityAnim = useRef(new Animated.Value(0)).current
-  const translateYAnim = useRef(new Animated.Value(-20)).current
+  const opacityAnim = useAnimatedValue(0)
+  const translateYAnim = useAnimatedValue(-20)
   const dismissTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Entrance animation

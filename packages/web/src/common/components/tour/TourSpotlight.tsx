@@ -162,7 +162,7 @@ export function TourSpotlight({
 
     // Also elevate SwipeableCard container if target is inside one
     // This ensures the swipe drawer actions are also above the overlay
-    const swipeableContainer = element.closest('.overflow-hidden') as HTMLElement | null
+    const swipeableContainer = element.closest<HTMLElement>('.overflow-hidden')
     let originalContainerPosition: string | undefined
     let originalContainerZIndex: string | undefined
 
@@ -317,7 +317,8 @@ export function TourSpotlight({
 
   return createPortal(
     <div
-      className="tour-spotlight pointer-events-none"
+      className="pointer-events-none"
+      data-testid="tour-spotlight"
       role="dialog"
       aria-modal="true"
       aria-label={t('tour.accessibility.spotlightLabel')}

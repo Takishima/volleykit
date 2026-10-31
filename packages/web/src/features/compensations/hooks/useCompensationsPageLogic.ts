@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 
+import { useCurrentMinute } from '@volleykit/shared/hooks'
 import { parseISO, compareAsc, compareDesc } from 'date-fns'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -64,10 +65,9 @@ export function useCompensationsPageLogic() {
   // Calculate season date range for filtering
   const seasonRange = useMemo(() => getSeasonDateRange(), [])
 
-  // Memoize current date to avoid recreating on every render.
-  // Note: This value is fixed for the component's lifetime. If a user keeps the page open
-  // past midnight, past/future classification won't update until they refresh or navigate away.
-  const now = useMemo(() => new Date(), [])
+  // Stable within a minute, so past/future classification follows the clock
+  // on the next render after a minute boundary without making renders impure.
+  const minute = useCurrentMinute()
 
   // When tour is active (or about to auto-start), show ONLY the dummy compensation
   const data = useMemo(() => {
@@ -91,10 +91,11 @@ export function useCompensationsPageLogic() {
       }
 
       // Filter by past/future based on selected tab
-      if (filter === 'pendingPast' && gameDate > now) {
+      const gameTime = gameDate.getTime()
+      if (filter === 'pendingPast' && gameTime > minute) {
         return false // Only show past items for pendingPast tab
       }
-      if (filter === 'pendingFuture' && gameDate <= now) {
+      if (filter === 'pendingFuture' && gameTime <= minute) {
         return false // Only show future items for pendingFuture tab
       }
 
@@ -115,7 +116,7 @@ export function useCompensationsPageLogic() {
       if (!dateB) return -1
       return compareFn(parseISO(dateA), parseISO(dateB))
     })
-  }, [showDummyData, rawData, filter, seasonRange, now])
+  }, [showDummyData, rawData, filter, seasonRange, minute])
 
   // Group compensations by week for visual separation
   const groupedData = useMemo(() => {
@@ -131,7 +132,9 @@ export function useCompensationsPageLogic() {
     (compensation: CompensationRecord): SwipeConfig => {
       const actions = createCompensationActions(compensation, {
         onEditCompensation: editCompensationModal.open,
-        onGeneratePDF: handleGeneratePDF,
+        onGeneratePDF: (target) => {
+          void handleGeneratePDF(target)
+        },
         onTwintPayment: twintModal.open,
       })
 

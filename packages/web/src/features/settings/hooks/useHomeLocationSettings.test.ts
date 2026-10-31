@@ -118,7 +118,9 @@ describe('useHomeLocationSettings', () => {
 
     vi.mocked(useCombinedGeocode).mockReturnValue({
       results: (options.geocodeResults ?? []).map((r, i) => ({
-        ...r,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        displayName: r.displayName,
         id: i + 1,
         source: 'swiss' as const,
       })),

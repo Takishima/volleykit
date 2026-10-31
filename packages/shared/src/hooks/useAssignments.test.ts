@@ -18,9 +18,23 @@ import {
   NEXT_MONTH_DAYS,
   type AssignmentsApiClient,
 } from './useAssignments'
+import type { Assignment } from '../api'
 
 /** Small delay for tests that need to wait a tick without triggering queries */
 const TEST_TICK_MS = 50
+
+// Helper to create a minimal valid assignment for API mocks
+function createMockAssignment(id: string, gameNumber: string): Assignment {
+  return {
+    __identity: id,
+    refereeGame: { game: { gameNumber } },
+    refereeConvocationStatus: 'active',
+    refereePosition: 'head-one',
+    isOpenEntryInRefereeGameExchange: false,
+    hasLastMessageToReferee: false,
+    hasLinkedDoubleConvocation: false,
+  }
+}
 
 // Helper to create a wrapper with QueryClient
 function createWrapper() {
@@ -126,9 +140,9 @@ describe('sortByGameDate', () => {
 
     const sorted = sortByGameDate(items)
 
-    expect(sorted[0].refereeGame?.game?.startingDateTime).toContain('2024-06-15')
-    expect(sorted[1].refereeGame?.game?.startingDateTime).toContain('2024-06-20')
-    expect(sorted[2].refereeGame?.game?.startingDateTime).toContain('2024-06-25')
+    expect(sorted[0]?.refereeGame?.game?.startingDateTime).toContain('2024-06-15')
+    expect(sorted[1]?.refereeGame?.game?.startingDateTime).toContain('2024-06-20')
+    expect(sorted[2]?.refereeGame?.game?.startingDateTime).toContain('2024-06-25')
   })
 
   it('should sort assignments by date descending', () => {
@@ -140,9 +154,9 @@ describe('sortByGameDate', () => {
 
     const sorted = sortByGameDate(items, true)
 
-    expect(sorted[0].refereeGame?.game?.startingDateTime).toContain('2024-06-25')
-    expect(sorted[1].refereeGame?.game?.startingDateTime).toContain('2024-06-20')
-    expect(sorted[2].refereeGame?.game?.startingDateTime).toContain('2024-06-15')
+    expect(sorted[0]?.refereeGame?.game?.startingDateTime).toContain('2024-06-25')
+    expect(sorted[1]?.refereeGame?.game?.startingDateTime).toContain('2024-06-20')
+    expect(sorted[2]?.refereeGame?.game?.startingDateTime).toContain('2024-06-15')
   })
 
   it('should handle null dates', () => {
@@ -155,9 +169,9 @@ describe('sortByGameDate', () => {
     const sorted = sortByGameDate(items)
 
     // Null dates should be at the end in ascending order
-    expect(sorted[0].refereeGame?.game?.startingDateTime).toContain('2024-06-15')
-    expect(sorted[1].refereeGame?.game?.startingDateTime).toContain('2024-06-20')
-    expect(sorted[2].refereeGame?.game?.startingDateTime).toBeNull()
+    expect(sorted[0]?.refereeGame?.game?.startingDateTime).toContain('2024-06-15')
+    expect(sorted[1]?.refereeGame?.game?.startingDateTime).toContain('2024-06-20')
+    expect(sorted[2]?.refereeGame?.game?.startingDateTime).toBeNull()
   })
 
   it('should not mutate original array', () => {
@@ -169,8 +183,8 @@ describe('sortByGameDate', () => {
     const original = [...items]
     sortByGameDate(items)
 
-    expect(items[0].refereeGame?.game?.startingDateTime).toBe(
-      original[0].refereeGame?.game?.startingDateTime
+    expect(items[0]?.refereeGame?.game?.startingDateTime).toBe(
+      original[0]?.refereeGame?.game?.startingDateTime
     )
   })
 
@@ -230,10 +244,7 @@ describe('useAssignments', () => {
   })
 
   it('should fetch assignments with default period', async () => {
-    const mockAssignments = [
-      { id: '1', refereeGame: { game: { gameNumber: 'G001' } } },
-      { id: '2', refereeGame: { game: { gameNumber: 'G002' } } },
-    ]
+    const mockAssignments = [createMockAssignment('1', 'G001'), createMockAssignment('2', 'G002')]
 
     vi.mocked(mockApiClient.searchAssignments).mockResolvedValue({
       items: mockAssignments,
@@ -299,7 +310,9 @@ describe('useAssignments', () => {
     )
 
     // Wait a tick to ensure no fetch was made
-    await new Promise((r) => setTimeout(r, TEST_TICK_MS))
+    await new Promise((r) => {
+      setTimeout(r, TEST_TICK_MS)
+    })
 
     expect(mockApiClient.searchAssignments).not.toHaveBeenCalled()
   })
@@ -329,8 +342,8 @@ describe('useAssignments', () => {
 
   it('should return empty array when API returns null items', async () => {
     vi.mocked(mockApiClient.searchAssignments).mockResolvedValue({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Testing edge case: API returns undefined instead of array
-      items: undefined as any,
+      // Testing edge case: API returns undefined instead of array
+      items: undefined as unknown as Assignment[],
       totalItemsCount: 0,
     })
 
@@ -379,15 +392,9 @@ describe('useAssignmentDetails', () => {
   })
 
   it('should fetch assignment details', async () => {
-    const mockAssignment = {
-      id: 'assign-123',
-      refereeGame: {
-        game: { gameNumber: 'G001', hall: { name: 'Test Hall' } },
-      },
-    }
+    const mockAssignment = createMockAssignment('assign-123', 'G001')
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Partial mock object for testing
-    vi.mocked(mockApiClient.getAssignmentDetails!).mockResolvedValue(mockAssignment as any)
+    vi.mocked(mockApiClient.getAssignmentDetails!).mockResolvedValue(mockAssignment)
 
     const { result } = renderHook(() => useAssignmentDetails('assign-123', mockApiClient), {
       wrapper: createWrapper(),
@@ -397,10 +404,10 @@ describe('useAssignmentDetails', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(result.current.data?.id).toBe('assign-123')
+    expect(result.current.data?.__identity).toBe('assign-123')
   })
 
-  it('should not fetch when id is null', async () => {
+  it('should not fetch when id is null', () => {
     const { result } = renderHook(() => useAssignmentDetails(null, mockApiClient), {
       wrapper: createWrapper(),
     })
@@ -410,7 +417,7 @@ describe('useAssignmentDetails', () => {
     expect(mockApiClient.getAssignmentDetails).not.toHaveBeenCalled()
   })
 
-  it('should return null when getAssignmentDetails is not provided', async () => {
+  it('should return null when getAssignmentDetails is not provided', () => {
     const apiWithoutDetails: AssignmentsApiClient = {
       searchAssignments: vi.fn(),
       // No getAssignmentDetails

@@ -439,7 +439,9 @@ export function OCREntryModal({
             setStep('intro')
           }
         }}
-        onImageSelected={handleImageSelected}
+        onImageSelected={(blob) => {
+          void handleImageSelected(blob)
+        }}
       />
 
       {/* Easter egg modal */}

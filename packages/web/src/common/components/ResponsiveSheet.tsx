@@ -64,7 +64,6 @@ export function ResponsiveSheet({ isOpen, onClose, titleId, children }: Responsi
           max-h-[80vh] md:max-h-[70vh] md:max-w-lg md:w-full
           bg-surface-card dark:bg-surface-card-dark rounded-t-xl md:rounded-lg
           shadow-xl flex flex-col
-          animate-in slide-in-from-bottom md:slide-in-from-bottom-0 md:fade-in
           duration-200
         "
       >

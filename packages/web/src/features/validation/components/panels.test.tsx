@@ -2,6 +2,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { AuthState } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
+
 import type { Assignment } from '@/api/client'
 import * as useNominationListModule from '@/features/validation/roster/hooks/useNominationList'
 
@@ -156,7 +159,9 @@ vi.mock('@/features/validation/scorer/hooks/useScorerSearch', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 describe('ScorerPanel', () => {
@@ -265,7 +270,7 @@ describe('ScoresheetPanel', () => {
 
   it('shows error for file too large', () => {
     render(<ScoresheetPanel />, { wrapper: createWrapper() })
-    const largeContent = new Array(11 * 1024 * 1024).fill('a').join('')
+    const largeContent = 'a'.repeat(11 * 1024 * 1024)
     selectFile(getFileInput(), 'large.jpg', 'image/jpeg', largeContent)
     expect(screen.getByText('File is too large. Maximum size is 10 MB.')).toBeInTheDocument()
   })
@@ -561,7 +566,7 @@ describe('ScoresheetPanel', () => {
 
     it('displays correct file size formatting for KB', () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() })
-      const kbContent = new Array(TWO_KILOBYTES).fill('a').join('')
+      const kbContent = 'a'.repeat(TWO_KILOBYTES)
       uploadTestFile(getFileInput(), 'small.jpg', 'image/jpeg', kbContent)
 
       expect(screen.getByText('2.0 KB')).toBeInTheDocument()
@@ -576,7 +581,7 @@ describe('ScoresheetPanel', () => {
 
     it('displays correct file size formatting for MB', () => {
       render(<ScoresheetPanel />, { wrapper: createWrapper() })
-      const mbContent = new Array(TWO_MEGABYTES).fill('a').join('')
+      const mbContent = 'a'.repeat(TWO_MEGABYTES)
       uploadTestFile(getFileInput(), 'large.jpg', 'image/jpeg', mbContent)
 
       expect(screen.getByText('2.0 MB')).toBeInTheDocument()

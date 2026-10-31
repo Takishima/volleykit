@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { PullToRefresh } from './PullToRefresh'
 
 // Mock usePwaStandalone hook
-const mockUsePwaStandalone = vi.fn()
+const mockUsePwaStandalone = vi.fn<() => boolean>()
 vi.mock('../hooks/usePwaStandalone', () => ({
   usePwaStandalone: () => mockUsePwaStandalone(),
 }))

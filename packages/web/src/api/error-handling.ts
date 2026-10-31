@@ -30,20 +30,18 @@ function stripHtmlTags(html: string): string {
 }
 
 // Backend error response schema
-const backendErrorSchema = z
-  .object({
-    error: z.string().optional(),
-    message: z.string().optional(),
-    errors: z
-      .array(
-        z.object({
-          field: z.string().optional(),
-          message: z.string(),
-        })
-      )
-      .optional(),
-  })
-  .passthrough()
+const backendErrorSchema = z.looseObject({
+  error: z.string().optional(),
+  message: z.string().optional(),
+  errors: z
+    .array(
+      z.object({
+        field: z.string().optional(),
+        message: z.string(),
+      })
+    )
+    .optional(),
+})
 
 /**
  * Parses backend error response to extract meaningful error message.
@@ -56,7 +54,7 @@ export async function parseErrorResponse(response: Response): Promise<string> {
     const contentType = response.headers.get('Content-Type') || ''
 
     if (contentType.includes('application/json')) {
-      const data = await response.json()
+      const data: unknown = await response.json()
       const parsed = backendErrorSchema.safeParse(data)
 
       if (parsed.success) {

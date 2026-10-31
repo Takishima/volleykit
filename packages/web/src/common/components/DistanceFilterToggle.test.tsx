@@ -44,8 +44,7 @@ describe('DistanceFilterToggle', () => {
     const toggle = screen.getByRole('switch')
     fireEvent.click(toggle)
 
-    expect(onChange).toHaveBeenCalledOnce()
-    expect(onChange).toHaveBeenCalledWith(true)
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(true)
   })
 
   it('calls onChange with false when clicking checked toggle', () => {
@@ -56,8 +55,7 @@ describe('DistanceFilterToggle', () => {
     const toggle = screen.getByRole('switch')
     fireEvent.click(toggle)
 
-    expect(onChange).toHaveBeenCalledOnce()
-    expect(onChange).toHaveBeenCalledWith(false)
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(false)
   })
 
   it('displays the label when unchecked', () => {

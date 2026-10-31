@@ -198,7 +198,7 @@ export function useValidationActions({
         fileResourceId
       )
 
-      await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId!) })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.validation.gameDetail(gameId) })
       await queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
       logger.debug('[VS] finalize done')
     } catch (error) {

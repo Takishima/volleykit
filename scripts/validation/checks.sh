@@ -199,6 +199,10 @@ register_all_checks() {
         "$TOKENS_INPUTS"
     fi
 
+    if matches "$(paths_to_regex "$OXLINT_INPUTS")"; then
+      register_check "oxlint" "lint" "$ROOT_DIR" "pnpm run lint:oxlint" "$OXLINT_INPUTS"
+    fi
+
     if affected web; then
       register_check "web:lint" "lint" "$ROOT_DIR/packages/web" "pnpm run lint" "${PKG_INPUTS[web]}"
       register_check "web:test" "test" "$ROOT_DIR/packages/web" "pnpm test" "${PKG_INPUTS[web]}"
@@ -223,10 +227,15 @@ register_all_checks() {
 
     if affected worker; then
       register_check "worker:lint" "lint" "$ROOT_DIR/packages/worker" "pnpm run lint" "${PKG_INPUTS[worker]}"
+      register_check "worker:typecheck" "typecheck" "$ROOT_DIR/packages/worker" "pnpm run typecheck" "${PKG_INPUTS[worker]}"
       register_check "worker:test" "test" "$ROOT_DIR/packages/worker" "pnpm test" "${PKG_INPUTS[worker]}"
+      register_check "worker:knip" "knip" "$ROOT_DIR/packages/worker" "pnpm run knip" "${PKG_INPUTS[worker]}"
     fi
 
     if affected help-site; then
+      register_check "help-site:lint" "lint" "$ROOT_DIR/help-site" "pnpm run lint" "${PKG_INPUTS[help-site]}"
+      register_check "help-site:typecheck" "typecheck" "$ROOT_DIR/help-site" "pnpm run typecheck" "${PKG_INPUTS[help-site]}"
+      register_check "help-site:knip" "knip" "$ROOT_DIR/help-site" "pnpm run knip" "${PKG_INPUTS[help-site]}"
       register_check "help-site:build" "build" "$ROOT_DIR/help-site" "pnpm run build" "${PKG_INPUTS[help-site]}"
     fi
 

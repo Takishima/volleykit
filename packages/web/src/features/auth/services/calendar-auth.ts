@@ -45,7 +45,7 @@ export async function performCalendarLogin(code: string, set: SetFn): Promise<vo
     // Create synthetic occupations from associations found in calendar
     // This allows transport settings to work per-association like regular mode
     const occupations: Occupation[] = Array.from(uniqueAssociations)
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .map((assoc) => ({
         id: `calendar-${assoc}`,
         type: 'referee' as const,

@@ -6,7 +6,7 @@ import * as propertyConfigs from './property-configs'
  * `__identity` is a domain segment the endpoints resolve like any other, at the
  * root and nested; every other leading-underscore segment is framework-level.
  */
-const DOMAIN_UNDERSCORE_SEGMENTS = ['__identity']
+const DOMAIN_UNDERSCORE_SEGMENTS = new Set(['__identity'])
 
 /**
  * `propertyRenderConfiguration` paths are resolved against the domain model, so
@@ -26,9 +26,7 @@ describe('property configurations', () => {
       const frameworkPaths = properties.filter((path) =>
         path
           .split('.')
-          .some(
-            (segment) => segment.startsWith('_') && !DOMAIN_UNDERSCORE_SEGMENTS.includes(segment)
-          )
+          .some((segment) => segment.startsWith('_') && !DOMAIN_UNDERSCORE_SEGMENTS.has(segment))
       )
 
       expect(frameworkPaths).toEqual([])

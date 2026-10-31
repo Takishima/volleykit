@@ -23,12 +23,14 @@ describe('Auth Lockout', () => {
     const store = new Map<string, string>()
     return {
       store,
-      get: vi.fn(async (key: string) => store.get(key) ?? null),
-      put: vi.fn(async (key: string, value: string) => {
+      get: vi.fn((key: string) => Promise.resolve(store.get(key) ?? null)),
+      put: vi.fn((key: string, value: string) => {
         store.set(key, value)
+        return Promise.resolve()
       }),
-      delete: vi.fn(async (key: string) => {
+      delete: vi.fn((key: string) => {
         store.delete(key)
+        return Promise.resolve()
       }),
     }
   }

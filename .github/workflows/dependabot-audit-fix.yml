@@ -18,18 +18,22 @@ on:
 concurrency:
   group: dependabot-audit-fix-${{ github.head_ref }}
   cancel-in-progress: true
+permissions:
+  contents: read
+
 jobs:
   audit-fix:
     name: Audit Fix
-    # Only run on dependabot PRs
-    if: github.actor == 'dependabot[bot]'
+    # Only run on dependabot PRs. The PR author is checked rather than
+    # github.actor, which anyone can spoof by re-running the workflow.
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout PR branch
-        uses: actions/checkout@v7
+      - name: Checkout PR branch  # zizmor: ignore[artipacked] the job pushes the lockfile fix back to the dependabot branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.head_ref }}
           # Use a token with write access to push back to the branch
@@ -73,6 +77,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pnpm-lock.yaml package.json **/package.json
+          git add -- pnpm-lock.yaml package.json **/package.json
           git commit -m "fix(deps): reconcile lockfile and auto-fix audit vulnerabilities"
           git push

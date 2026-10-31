@@ -20,37 +20,33 @@ interface Props {
 const { steps } = Astro.props
 ---
 
-<ol
-  class="relative my-8 list-none space-y-8 border-l-2 border-border-default pl-8 dark:border-border-default-dark"
->
-  {
-    steps.map((step, index) => (
-      <li class="relative">
-        {/* Step number circle */}
-        <div class="absolute -left-[calc(2rem+1px)] flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-500 bg-surface-card text-sm font-bold text-primary-600 dark:border-primary-400 dark:bg-surface-card-dark dark:text-primary-400">
-          {index + 1}
-        </div>
+<ol class="relative my-8 list-none space-y-8 border-l-2 border-border-default pl-8 dark:border-border-default-dark">
+  {steps.map((step, index) => (
+    <li class="relative">
+      {/* Step number circle */}
+      <div class="absolute -left-[calc(2rem+1px)] flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-500 bg-surface-card text-sm font-bold text-primary-600 dark:border-primary-400 dark:bg-surface-card-dark dark:text-primary-400">
+        {index + 1}
+      </div>
 
-        {/* Step content */}
-        <div class="pt-0.5">
-          <h4
-            class="mb-1 font-semibold text-text-primary dark:text-text-primary-dark"
-            {...(step.titleKey ? { 'data-i18n': step.titleKey } : {})}
+      {/* Step content */}
+      <div class="pt-0.5">
+        <h4
+          class="mb-1 font-semibold text-text-primary dark:text-text-primary-dark"
+          {...(step.titleKey ? { 'data-i18n': step.titleKey } : {})}
+        >
+          {step.title}
+        </h4>
+        {step.description && (
+          <p
+            class="text-sm text-text-secondary dark:text-text-secondary-dark"
+            {...(step.descriptionKey ? { 'data-i18n': step.descriptionKey } : {})}
           >
-            {step.title}
-          </h4>
-          {step.description && (
-            <p
-              class="text-sm text-text-secondary dark:text-text-secondary-dark"
-              {...(step.descriptionKey ? { 'data-i18n': step.descriptionKey } : {})}
-            >
-              {step.description}
-            </p>
-          )}
-        </div>
-      </li>
-    ))
-  }
+            {step.description}
+          </p>
+        )}
+      </div>
+    </li>
+  ))}
 </ol>
 
 <style>

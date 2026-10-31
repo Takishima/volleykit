@@ -4,12 +4,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import { anyOfType } from '@/test/matchers'
+
 import type { TranslationKey } from '@/i18n'
 import * as authStore from '@/common/stores/auth'
 import * as settingsStore from '@/common/stores/settings'
 import { toast } from '@/common/stores/toast'
+import type { Logger } from '@/common/utils/logger'
 
 import { useSafeMutation } from './useSafeMutation'
+
+/** Shape of the function `useSafeMutation` wraps */
+type MutationFn<TArg, TResult = void> = (arg: TArg, log: Logger) => Promise<TResult>
 
 // Test translation keys (cast for type safety in tests)
 const TEST_ERROR = 'compensations.pdfDownloadFailed' as TranslationKey
@@ -71,7 +77,7 @@ describe('useSafeMutation', () => {
   })
 
   it('should execute mutation successfully', async () => {
-    const mutationFn = vi.fn().mockResolvedValue('result')
+    const mutationFn = vi.fn<MutationFn<string, string>>().mockResolvedValue('result')
     const onSuccess = vi.fn()
 
     const { result } = renderHook(
@@ -364,8 +370,8 @@ describe('useSafeMutation', () => {
   })
 
   it('should pass logger to mutation function', async () => {
-    const mutationFn = vi.fn().mockImplementation((_arg, log) => {
-      log.debug('Test log message')
+    const mutationFn = vi.fn<MutationFn<string>>().mockImplementation((_arg, log) => {
+      log.info('Test log message')
       return Promise.resolve(undefined)
     })
 
@@ -385,8 +391,8 @@ describe('useSafeMutation', () => {
     expect(mutationFn).toHaveBeenCalledWith(
       'arg',
       expect.objectContaining({
-        debug: expect.any(Function),
-        error: expect.any(Function),
+        info: anyOfType<Logger['info']>(Function),
+        error: anyOfType<Logger['error']>(Function),
       })
     )
   })

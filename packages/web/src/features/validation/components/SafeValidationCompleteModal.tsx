@@ -1,5 +1,7 @@
 import { useCallback, useRef } from 'react'
 
+import { runUnlessInProgress } from '@volleykit/shared/utils'
+
 import { Button } from '@/common/components/Button'
 import { Modal } from '@/common/components/Modal'
 import { ModalFooter } from '@/common/components/ModalFooter'
@@ -18,16 +20,14 @@ export function SafeValidationCompleteModal({ isOpen, onClose }: SafeValidationC
   const { t } = useTranslation()
   const isOpeningRef = useRef(false)
 
-  const handleOpenVolleyManager = useCallback(() => {
-    if (isOpeningRef.current) return
-    isOpeningRef.current = true
-    try {
-      window.open(VOLLEYMANAGER_URL, '_blank', 'noopener,noreferrer')
-      onClose()
-    } finally {
-      isOpeningRef.current = false
-    }
-  }, [onClose])
+  const handleOpenVolleyManager = useCallback(
+    () =>
+      runUnlessInProgress(isOpeningRef, () => {
+        window.open(VOLLEYMANAGER_URL, '_blank', 'noopener,noreferrer')
+        onClose()
+      }),
+    [onClose]
+  )
 
   const successIcon = (
     <div className="flex-shrink-0 w-12 h-12 rounded-full bg-success-100 dark:bg-success-900 flex items-center justify-center">

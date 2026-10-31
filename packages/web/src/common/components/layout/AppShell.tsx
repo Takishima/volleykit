@@ -54,7 +54,7 @@ const allNavItems: NavItem[] = [
 ]
 
 // Paths that are hidden in calendar mode (read-only view)
-const CALENDAR_MODE_HIDDEN_PATHS = ['/compensations', '/exchange']
+const CALENDAR_MODE_HIDDEN_PATHS = new Set(['/compensations', '/exchange'])
 
 export function AppShell() {
   const { t } = useTranslation()
@@ -125,7 +125,7 @@ export function AppShell() {
   // Filter nav items based on calendar mode
   const navItems = useMemo(() => {
     if (isCalendarMode) {
-      return allNavItems.filter((item) => !CALENDAR_MODE_HIDDEN_PATHS.includes(item.path))
+      return allNavItems.filter((item) => !CALENDAR_MODE_HIDDEN_PATHS.has(item.path))
     }
     return allNavItems
   }, [isCalendarMode])
@@ -152,7 +152,7 @@ export function AppShell() {
     [user?.occupations, getOccupationLabel]
   )
 
-  const handleOccupationSelect = async (id: string) => {
+  const switchOccupation = async (id: string) => {
     // Don't switch if selecting the same occupation
     if (id === activeOccupationId) {
       return
@@ -194,6 +194,17 @@ export function AppShell() {
         setAssociationSwitching(false)
       }
     }
+  }
+
+  // Event handlers return void; switchOccupation reports its own failures.
+  const handleOccupationSelect = (id: string) => {
+    switchOccupation(id).catch((error: unknown) =>
+      log.error('Unexpected association switch failure:', error)
+    )
+  }
+
+  const handleLogout = () => {
+    logout().catch((error: unknown) => log.error('Logout failed:', error))
   }
 
   return (
@@ -261,7 +272,7 @@ export function AppShell() {
                   </span>
                 )}
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="text-sm text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark"
                 >
                   {t('auth.logout')}

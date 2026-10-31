@@ -52,20 +52,20 @@ export class LoginPage {
   /**
    * Dismiss any visible PWA notification that might block UI interactions.
    * This handles the "App ready for offline use" notification.
-   * Waits briefly for the notification to appear before checking.
+   * Always ends with the notification hidden, whether it was closed or never shown.
    */
   private async dismissPWANotification() {
-    // Give the PWA notification a moment to appear
     const notification = this.page.getByRole('alert').filter({ hasText: /offline|ready/i })
-    const isVisible = await notification.isVisible({ timeout: 1000 }).catch(() => false)
-    if (isVisible) {
-      const closeButton = notification.getByRole('button', { name: /close/i })
-      await closeButton.click()
-      // Wait for the notification to disappear
-      await expect(notification)
-        .not.toBeVisible({ timeout: 2000 })
-        .catch(() => {})
+    // The service worker registers asynchronously, so the toast can show up a
+    // moment after load; give it a bounded chance to appear before dismissing.
+    const appeared = await notification.waitFor({ state: 'visible', timeout: 1000 }).then(
+      () => true,
+      () => false
+    )
+    if (appeared) {
+      await notification.getByRole('button', { name: /close/i }).click()
     }
+    await expect(notification).toBeHidden()
   }
 
   /**
@@ -76,9 +76,8 @@ export class LoginPage {
     // Dismiss any PWA notification that might block the click
     await this.dismissPWANotification()
 
-    // Use force click to bypass any remaining overlay issues
-    // This is necessary because PWA notifications can sometimes appear mid-click
-    await this.demoButton.click({ force: true })
+    await expect(this.demoButton).toBeVisible()
+    await this.demoButton.click()
 
     // Wait for navigation away from login page and main content to appear
     await expect(this.page).not.toHaveURL(/login/)
@@ -118,13 +117,5 @@ export class LoginPage {
     // Wait for navigation away from login page and main content to appear
     await expect(this.page).not.toHaveURL(/login/)
     await expect(this.page.getByRole('main')).toBeVisible()
-  }
-
-  /**
-   * Expect calendar mode tab to be visible.
-   */
-  async expectCalendarModeTabVisible() {
-    await expect(this.calendarModeTab).toBeVisible()
-    await expect(this.fullLoginTab).toBeVisible()
   }
 }

@@ -9,7 +9,7 @@
 
 import { useMemo } from 'react'
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { addDays, startOfDay, endOfDay, subDays } from 'date-fns'
+import { addDays, startOfDay, endOfDay, parseISO, subDays } from 'date-fns'
 
 import {
   queryKeys,
@@ -22,6 +22,7 @@ import {
   ASSIGNMENTS_STALE_TIME_MS,
   ASSIGNMENT_DETAILS_STALE_TIME_MS,
 } from '../api/constants'
+import { useTodayKey } from './useClock'
 
 export { DEFAULT_PAGE_SIZE, ASSIGNMENTS_STALE_TIME_MS, ASSIGNMENT_DETAILS_STALE_TIME_MS }
 
@@ -48,12 +49,16 @@ export interface AssignmentsApiClient {
 
 /**
  * Get date range for a given period preset.
+ *
+ * @param referenceDate - The day the period is relative to (defaults to today);
+ *   only its calendar day matters since every bound is a start or end of day.
  */
 export function getDateRangeForPeriod(
   period: DatePeriod,
-  customRange?: { from: Date; to: Date }
+  customRange?: { from: Date; to: Date },
+  referenceDate: Date = new Date()
 ): { from: string; to: string } {
-  const now = new Date()
+  const now = referenceDate
 
   switch (period) {
     case 'upcoming':
@@ -83,7 +88,7 @@ export function getDateRangeForPeriod(
           to: endOfDay(customRange.to).toISOString(),
         }
       }
-      return getDateRangeForPeriod('upcoming')
+      return getDateRangeForPeriod('upcoming', undefined, referenceDate)
   }
 }
 
@@ -146,7 +151,10 @@ export function useAssignments(
 ): UseQueryResult<Assignment[], Error> {
   const { apiClient, period = 'upcoming', customRange, associationKey, enabled = true } = options
 
-  const dateRange = getDateRangeForPeriod(period, customRange)
+  // Day granularity is all the period bounds need, and the key only changes
+  // once the component renders again after midnight.
+  const todayKey = useTodayKey()
+  const dateRange = getDateRangeForPeriod(period, customRange, parseISO(todayKey))
 
   // Memoize date range values to prevent query key changes on every render
   const { fromDate, toDate } = useMemo(

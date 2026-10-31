@@ -46,7 +46,7 @@ function getErrorIcon(type: ErrorType): keyof typeof Feather.glyphMap {
       return 'wifi-off'
     case 'application':
       return 'alert-triangle'
-    default:
+    case 'unknown':
       return 'alert-circle'
   }
 }
@@ -60,7 +60,7 @@ function getErrorColor(type: ErrorType): string {
       return COLORS.warning500
     case 'application':
       return COLORS.danger500
-    default:
+    case 'unknown':
       return COLORS.gray500
   }
 }

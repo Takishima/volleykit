@@ -13,7 +13,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getConfirmedServerAssociation, invalidateServerAssociation } from '@/api/association-guard'
 import type { AuthState } from '@/common/stores/auth'
 
-const mockSwitchRoleAndAttribute = vi.fn()
+const mockSwitchRoleAndAttribute = vi.fn<(attributeValueId: string) => Promise<void>>()
 
 vi.mock('@/api/client', async () => {
   // The guard itself stays real so the tests can observe what the check recorded
@@ -21,7 +21,8 @@ vi.mock('@/api/client', async () => {
     await vi.importActual<typeof import('@/api/association-guard')>('@/api/association-guard')
   return {
     api: {
-      switchRoleAndAttribute: (...args: unknown[]) => mockSwitchRoleAndAttribute(...args),
+      switchRoleAndAttribute: (attributeValueId: string) =>
+        mockSwitchRoleAndAttribute(attributeValueId),
     },
     noteServerAssociation: guard.noteServerAssociation,
     captureSessionToken: vi.fn(),

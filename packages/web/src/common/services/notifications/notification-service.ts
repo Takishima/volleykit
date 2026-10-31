@@ -14,6 +14,8 @@
  * - For true background notifications, a push notification server is required
  */
 
+import { logger } from '@/common/utils/logger'
+
 import {
   ONE_DAY_MS,
   type NotificationPermission,
@@ -40,7 +42,7 @@ function getPermission(): NotificationPermission {
   if (!isSupported()) {
     return 'denied'
   }
-  return Notification.permission as NotificationPermission
+  return Notification.permission
 }
 
 /**
@@ -55,17 +57,18 @@ async function requestPermission(): Promise<NotificationPermission> {
 
   // Already granted or denied - don't re-request
   if (Notification.permission !== 'default') {
-    return Notification.permission as NotificationPermission
+    return Notification.permission
   }
 
   try {
     const result = await Notification.requestPermission()
-    return result as NotificationPermission
+    return result
   } catch {
-    // Some browsers (older Safari) use callback-based API
+    // Some browsers (older Safari) use the callback-based API, which returns
+    // undefined at runtime, so the typed return value cannot be chained.
     return new Promise((resolve) => {
-      Notification.requestPermission((result) => {
-        resolve(result as NotificationPermission)
+      void Notification.requestPermission((result) => {
+        resolve(result)
       })
     })
   }
@@ -92,26 +95,23 @@ async function showNotification(options: ShowNotificationOptions): Promise<Notif
     }
   }
 
+  const notificationOptions: NotificationOptions = {
+    body: options.body,
+    icon: options.icon ?? '/icons/icon-192x192.png',
+    tag: options.tag,
+    requireInteraction: options.requireInteraction ?? false,
+    data: options.data,
+  }
+
   try {
     // Try to use service worker for better notification experience
     if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
       const registration = await navigator.serviceWorker.ready
-      await registration.showNotification(options.title, {
-        body: options.body,
-        icon: options.icon ?? '/icons/icon-192x192.png',
-        tag: options.tag,
-        requireInteraction: options.requireInteraction ?? false,
-        data: options.data,
-      })
+      await registration.showNotification(options.title, notificationOptions)
     } else {
-      // Fallback to regular Notification API
-      new Notification(options.title, {
-        body: options.body,
-        icon: options.icon ?? '/icons/icon-192x192.png',
-        tag: options.tag,
-        requireInteraction: options.requireInteraction ?? false,
-        data: options.data,
-      })
+      // Fallback to regular Notification API, which shows the notification on construction
+      const notification = new Notification(options.title, notificationOptions)
+      logger.debug('Notification shown without service worker:', notification.tag)
     }
 
     return { success: true }
@@ -122,6 +122,14 @@ async function showNotification(options: ShowNotificationOptions): Promise<Notif
       error: `Failed to show notification: ${message}`,
     }
   }
+}
+
+/** Shows a scheduled notification once its timer fires and forgets the schedule. */
+function fireScheduledNotification(id: string, options: ShowNotificationOptions): void {
+  showNotification(options).catch((error: unknown) =>
+    logger.error('Failed to show scheduled notification:', error)
+  )
+  scheduledNotifications.delete(id)
 }
 
 /**
@@ -158,10 +166,7 @@ function scheduleNotification(
     return null
   }
 
-  const timeoutId = setTimeout(() => {
-    showNotification(options)
-    scheduledNotifications.delete(id)
-  }, delay)
+  const timeoutId = setTimeout(() => fireScheduledNotification(id, options), delay)
 
   const scheduled: ScheduledNotification = {
     id,

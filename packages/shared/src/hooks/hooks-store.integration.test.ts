@@ -204,7 +204,9 @@ describe('useAssignments + Store Integration', () => {
     )
 
     // Wait a tick to ensure no fetch
-    await new Promise((r) => setTimeout(r, TEST_TICK_MS))
+    await new Promise((r) => {
+      setTimeout(r, TEST_TICK_MS)
+    })
 
     expect(mockApiClient.searchAssignments).not.toHaveBeenCalled()
     expect(result.current.fetchStatus).toBe('idle')
@@ -229,7 +231,9 @@ describe('useAssignments + Store Integration', () => {
       }
     )
 
-    await new Promise((r) => setTimeout(r, TEST_TICK_MS))
+    await new Promise((r) => {
+      setTimeout(r, TEST_TICK_MS)
+    })
     expect(mockApiClient.searchAssignments).not.toHaveBeenCalled()
 
     // Simulate auth state change - enable queries

@@ -6,7 +6,7 @@ import { useSwipeGesture } from './useSwipeGesture'
 // Mock ResizeObserver
 class MockResizeObserver {
   callback: ResizeObserverCallback
-  static instances: MockResizeObserver[] = []
+  static readonly instances: MockResizeObserver[] = []
 
   constructor(callback: ResizeObserverCallback) {
     this.callback = callback
@@ -20,14 +20,14 @@ class MockResizeObserver {
   // Helper to simulate resize
   static triggerResize(entry: Partial<ResizeObserverEntry>) {
     MockResizeObserver.instances.forEach((instance) => {
-      instance.callback([entry as ResizeObserverEntry], instance as unknown as ResizeObserver)
+      instance.callback([entry as ResizeObserverEntry], instance)
     })
   }
 }
 
 describe('useSwipeGesture', () => {
   beforeEach(() => {
-    MockResizeObserver.instances = []
+    MockResizeObserver.instances.length = 0
     vi.stubGlobal('ResizeObserver', MockResizeObserver)
   })
 

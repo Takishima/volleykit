@@ -21,17 +21,12 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
   <div
     class="fixed inset-0 bg-surface-page-dark/50 backdrop-blur-sm transition-opacity"
     data-search-backdrop
-  >
-  </div>
+  ></div>
 
   <!-- Modal -->
-  <div
-    class="fixed inset-4 mx-auto flex max-w-2xl flex-col overflow-hidden rounded-xl bg-surface-card shadow-2xl dark:bg-surface-card-dark sm:inset-auto sm:left-1/2 sm:top-[10%] sm:max-h-[80vh] sm:w-full sm:-translate-x-1/2"
-  >
+  <div class="fixed inset-4 mx-auto flex max-w-2xl flex-col overflow-hidden rounded-xl bg-surface-card shadow-2xl dark:bg-surface-card-dark sm:inset-auto sm:left-1/2 sm:top-[10%] sm:max-h-[80vh] sm:w-full sm:-translate-x-1/2">
     <!-- Search input -->
-    <div
-      class="flex items-center gap-3 border-b border-border-default px-4 dark:border-border-default-dark"
-    >
+    <div class="flex items-center gap-3 border-b border-border-default px-4 dark:border-border-default-dark">
       <svg
         class="h-5 w-5 shrink-0 text-text-muted dark:text-text-muted-dark"
         fill="none"
@@ -43,7 +38,8 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        ></path>
       </svg>
       <input
         type="search"
@@ -79,7 +75,8 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="1.5"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          ></path>
         </svg>
         <p>Type to start searching</p>
         <p class="mt-2 text-sm">Search across all documentation pages</p>
@@ -90,10 +87,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
         class="hidden py-12 text-center text-text-muted dark:text-text-muted-dark"
         data-search-loading
       >
-        <div
-          class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"
-        >
-        </div>
+        <div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
         <p>Searching...</p>
       </div>
 
@@ -148,26 +142,21 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
     </div>
 
     <!-- Footer -->
-    <div
-      class="flex items-center justify-between border-t border-border-default px-4 py-2 text-xs text-text-muted dark:border-border-default-dark dark:text-text-muted-dark"
-    >
+    <div class="flex items-center justify-between border-t border-border-default px-4 py-2 text-xs text-text-muted dark:border-border-default-dark dark:text-text-muted-dark">
       <div class="flex items-center gap-4">
         <span class="flex items-center gap-1">
-          <kbd
-            class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark"
-            >↑</kbd
-          >
-          <kbd
-            class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark"
-            >↓</kbd
-          >
+          <kbd class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark">
+            ↑
+          </kbd>
+          <kbd class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark">
+            ↓
+          </kbd>
           to navigate
         </span>
         <span class="flex items-center gap-1">
-          <kbd
-            class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark"
-            >↵</kbd
-          >
+          <kbd class="rounded border border-border-default bg-surface-subtle px-1 dark:border-border-default-dark dark:bg-surface-muted-dark">
+            ↵
+          </kbd>
           to select
         </span>
       </div>
@@ -272,7 +261,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
       unavailableState?.classList.toggle('hidden', state !== 'unavailable')
     }
 
-    function openModal() {
+    const openModal = () => {
       modal.classList.remove('hidden')
       document.body.style.overflow = 'hidden'
       input.focus()
@@ -281,7 +270,7 @@ import { BASE_PATH, TIMING, MAX_SEARCH_RESULTS } from '../constants'
       })
     }
 
-    function closeModal() {
+    const closeModal = () => {
       modal.classList.add('hidden')
       document.body.style.overflow = ''
       input.value = ''

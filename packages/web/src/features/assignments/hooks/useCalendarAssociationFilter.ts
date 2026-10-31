@@ -92,7 +92,7 @@ export function useCalendarAssociationFilter(
     }
 
     // Sort alphabetically for consistent ordering
-    return Array.from(uniqueAssociations).sort()
+    return Array.from(uniqueAssociations).sort((a, b) => a.localeCompare(b))
   }, [calendarData])
 
   // Sync extracted associations to store (only when they actually change)

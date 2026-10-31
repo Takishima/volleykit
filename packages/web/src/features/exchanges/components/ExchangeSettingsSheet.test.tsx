@@ -2,12 +2,15 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type { SettingsState } from '@/common/stores/settings/types'
+import { partialMock } from '@/test/partial-mock'
+
 import { ExchangeSettingsSheet } from './ExchangeSettingsSheet'
 
 // Mock useSettingsStore - need to handle useShallow wrapper
-const mockSettingsState = vi.fn()
+const mockSettingsState = vi.fn<() => SettingsState>()
 vi.mock('@/common/stores/settings', () => ({
-  useSettingsStore: (selector: (state: unknown) => unknown) => {
+  useSettingsStore: (selector: (state: SettingsState) => unknown) => {
     // Handle useShallow-wrapped selectors
     const state = mockSettingsState()
     const result = selector(state)
@@ -37,7 +40,7 @@ vi.mock('@/common/hooks/useTranslation', () => ({
 }))
 
 // Mock useTravelTimeAvailable hook
-const mockUseTravelTimeAvailable = vi.fn()
+const mockUseTravelTimeAvailable = vi.fn<() => boolean>()
 vi.mock('@/common/hooks/useTravelTime', () => ({
   useTravelTimeAvailable: () => mockUseTravelTimeAvailable(),
 }))
@@ -60,8 +63,8 @@ vi.mock('@/common/components/ResponsiveSheet', () => ({
 }))
 
 describe('ExchangeSettingsSheet', () => {
-  const defaultSettingsState = {
-    homeLocation: { lat: 47.3769, lng: 8.5417, name: 'Zurich' },
+  const defaultSettingsState = partialMock<SettingsState>({
+    homeLocation: { latitude: 47.3769, longitude: 8.5417, label: 'Zurich', source: 'manual' },
     distanceFilter: { maxDistanceKm: 50, enabled: true },
     distanceFilterByAssociation: {},
     setDistanceFilterForAssociation: vi.fn(),
@@ -77,7 +80,7 @@ describe('ExchangeSettingsSheet', () => {
       enabled: false,
     },
     setMinGameGapMinutes: vi.fn(),
-  }
+  })
 
   beforeEach(() => {
     vi.clearAllMocks()

@@ -29,17 +29,20 @@ export class NavigationPage extends BasePage {
 
   /**
    * Dismiss any visible PWA notification that might block UI interactions.
+   * Always ends with the notification hidden, whether it was closed or never shown.
    */
   private async dismissPWANotification() {
     const notification = this.page.getByRole('alert').filter({ hasText: /offline|ready/i })
-    const isVisible = await notification.isVisible({ timeout: 500 }).catch(() => false)
-    if (isVisible) {
-      const closeButton = notification.getByRole('button', { name: /close/i })
-      await closeButton.click().catch(() => {})
-      await expect(notification)
-        .not.toBeVisible({ timeout: 1000 })
-        .catch(() => {})
+    // The service worker registers asynchronously, so the toast can show up a
+    // moment after load; give it a bounded chance to appear before dismissing.
+    const appeared = await notification.waitFor({ state: 'visible', timeout: 1000 }).then(
+      () => true,
+      () => false
+    )
+    if (appeared) {
+      await notification.getByRole('button', { name: /close/i }).click()
     }
+    await expect(notification).toBeHidden()
   }
 
   /**
@@ -56,9 +59,7 @@ export class NavigationPage extends BasePage {
 
     // Ensure the link is visible and clickable
     await expect(link).toBeVisible()
-
-    // Use force click to avoid interception issues with overlays
-    await link.click({ force: true })
+    await link.click()
 
     // Wait for URL and main content
     await expect(this.page).toHaveURL(expectedUrl)

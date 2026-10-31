@@ -78,8 +78,8 @@ export function ImageCropEditor({
   const aspectRatio =
     scoresheetType === 'electronic' ? ELECTRONIC_ASPECT_RATIO : MANUSCRIPT_ASPECT_RATIO
 
-  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
-    setCroppedAreaPixels(croppedAreaPixels)
+  const onCropComplete = useCallback((_croppedArea: Area, areaPixels: Area) => {
+    setCroppedAreaPixels(areaPixels)
   }, [])
 
   const handleRotateLeft = useCallback(() => {
@@ -183,7 +183,9 @@ export function ImageCropEditor({
         </button>
         <button
           type="button"
-          onClick={handleConfirm}
+          onClick={() => {
+            void handleConfirm()
+          }}
           disabled={isProcessing || !croppedAreaPixels}
           className="flex-1 flex items-center justify-center gap-2 min-h-12 px-4 py-3 text-white bg-primary-500 hover:bg-primary-600 rounded-lg font-medium transition-colors disabled:opacity-50"
         >

@@ -145,7 +145,8 @@ export class StubOCR implements OCREngine {
     return MOCK_RESULT
   }
 
-  async terminate(): Promise<void> {
+  terminate(): Promise<void> {
     this.#initialized = false
+    return Promise.resolve()
   }
 }

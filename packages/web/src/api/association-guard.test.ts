@@ -3,7 +3,7 @@
  * on the selected association before any scoped request, and any write makes
  * that confirmation stale.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest'
 
 import {
   API_METHOD_SCOPES,
@@ -16,11 +16,16 @@ import { api as rawApi } from './real-api'
 
 type RawApi = typeof rawApi
 
+/** A stand-in for any raw client method: records its arguments, resolves with a marker */
+type RecordingMock = Mock<(...args: unknown[]) => Promise<unknown>>
+
 /** A raw client whose every classified method records its call */
 function createRawClient() {
-  const client = {} as Record<keyof RawApi, ReturnType<typeof vi.fn>>
+  const client = {} as Record<keyof RawApi, RecordingMock>
   for (const name of Object.keys(API_METHOD_SCOPES) as (keyof RawApi)[]) {
-    client[name] = vi.fn().mockResolvedValue(`${name}-result`)
+    client[name] = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue(`${name}-result`)
   }
   return client
 }
@@ -42,8 +47,7 @@ function setup(expectedOccupationId: string | null = 'occupation-b') {
 const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
 
 /** Waits until the given mock has been called at least once */
-const calledOnce = (mock: ReturnType<typeof vi.fn>) =>
-  vi.waitFor(() => expect(mock).toHaveBeenCalled())
+const calledOnce = (mock: RecordingMock) => vi.waitFor(() => expect(mock).toHaveBeenCalled())
 
 /** Deferred promise helper for controlling the switch request */
 function deferred<T = void>() {
@@ -58,8 +62,8 @@ function deferred<T = void>() {
 
 describe('API_METHOD_SCOPES', () => {
   it('classifies every method of the real API client', () => {
-    const rawMethods = Object.keys(rawApi).sort()
-    const classified = Object.keys(API_METHOD_SCOPES).sort()
+    const rawMethods = Object.keys(rawApi).sort((a, b) => a.localeCompare(b))
+    const classified = Object.keys(API_METHOD_SCOPES).sort((a, b) => a.localeCompare(b))
 
     expect(classified).toEqual(rawMethods)
   })
@@ -209,21 +213,19 @@ describe('withAssociationGuard', () => {
       expect(getConfirmedServerAssociation()).toBeNull()
     })
 
-    it('treats every classified write the same way', async () => {
-      const writes = Object.entries(API_METHOD_SCOPES)
-        .filter(([, scope]) => scope === 'write')
-        .map(([name]) => name as keyof RawApi)
+    const writes = Object.entries(API_METHOD_SCOPES)
+      .filter(([, scope]) => scope === 'write')
+      .map(([name]) => name as keyof RawApi)
 
-      for (const name of writes) {
-        invalidateServerAssociation()
-        const { raw, guarded } = setup('occupation-b')
-        noteServerAssociation('occupation-b')
+    it.each(writes)('forwards %s and forgets the association afterwards', async (name) => {
+      invalidateServerAssociation()
+      const { raw, guarded } = setup('occupation-b')
+      noteServerAssociation('occupation-b')
 
-        await (guarded[name] as (...args: unknown[]) => Promise<unknown>)()
+      await (guarded[name] as (...args: unknown[]) => Promise<unknown>)()
 
-        expect(raw[name], name).toHaveBeenCalledTimes(1)
-        expect(getConfirmedServerAssociation(), name).toBeNull()
-      }
+      expect(raw[name]).toHaveBeenCalledTimes(1)
+      expect(getConfirmedServerAssociation()).toBeNull()
     })
   })
 

@@ -116,13 +116,13 @@ export function Modal({
 
       if (e.shiftKey) {
         // Shift + Tab: if on first element, wrap to last
-        if (document.activeElement === firstElement && lastElement) {
+        if (firstElement && lastElement && document.activeElement === firstElement) {
           e.preventDefault()
           lastElement.focus()
         }
       } else {
         // Tab: if on last element, wrap to first
-        if (document.activeElement === lastElement && firstElement) {
+        if (firstElement && lastElement && document.activeElement === lastElement) {
           e.preventDefault()
           firstElement.focus()
         }
@@ -146,7 +146,7 @@ export function Modal({
     >
       {/* Backdrop: purely decorative overlay */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className="absolute inset-0 bg-black/50"
         onClick={handleBackdropClick}
         aria-hidden="true"
       />

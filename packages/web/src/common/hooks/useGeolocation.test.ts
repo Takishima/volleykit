@@ -1,10 +1,27 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import { partialMock } from '@/test/partial-mock'
+
 import { useGeolocation } from './useGeolocation'
 
+/** The hook only reads `coords.latitude` and `coords.longitude` */
+function createPosition(latitude: number, longitude: number): GeolocationPosition {
+  return partialMock<GeolocationPosition>({ coords: { latitude, longitude } })
+}
+
+/** The hook compares `code` against the error's own constants */
+function createPositionError(code: number): GeolocationPositionError {
+  return partialMock<GeolocationPositionError>({
+    code,
+    PERMISSION_DENIED: 1,
+    POSITION_UNAVAILABLE: 2,
+    TIMEOUT: 3,
+  })
+}
+
 describe('useGeolocation', () => {
-  const mockGetCurrentPosition = vi.fn()
+  const mockGetCurrentPosition = vi.fn<Geolocation['getCurrentPosition']>()
   const originalGeolocation = navigator.geolocation
 
   beforeEach(() => {
@@ -75,12 +92,7 @@ describe('useGeolocation', () => {
     })
 
     it('returns position on success', async () => {
-      const mockPosition = {
-        coords: {
-          latitude: 47.3769,
-          longitude: 8.5417,
-        },
-      }
+      const mockPosition = createPosition(47.3769, 8.5417)
 
       mockGetCurrentPosition.mockImplementation((success) => {
         success(mockPosition)
@@ -103,12 +115,7 @@ describe('useGeolocation', () => {
     })
 
     it('calls onSuccess callback when provided', async () => {
-      const mockPosition = {
-        coords: {
-          latitude: 47.3769,
-          longitude: 8.5417,
-        },
-      }
+      const mockPosition = createPosition(47.3769, 8.5417)
       const onSuccess = vi.fn()
 
       mockGetCurrentPosition.mockImplementation((success) => {
@@ -131,7 +138,7 @@ describe('useGeolocation', () => {
 
     it('handles permission denied error', async () => {
       mockGetCurrentPosition.mockImplementation((_, error) => {
-        error({ code: 1, PERMISSION_DENIED: 1 })
+        error?.(createPositionError(1))
       })
 
       const { result } = renderHook(() => useGeolocation())
@@ -149,7 +156,7 @@ describe('useGeolocation', () => {
 
     it('handles position unavailable error', async () => {
       mockGetCurrentPosition.mockImplementation((_, error) => {
-        error({ code: 2, POSITION_UNAVAILABLE: 2 })
+        error?.(createPositionError(2))
       })
 
       const { result } = renderHook(() => useGeolocation())
@@ -165,7 +172,7 @@ describe('useGeolocation', () => {
 
     it('handles timeout error', async () => {
       mockGetCurrentPosition.mockImplementation((_, error) => {
-        error({ code: 3, TIMEOUT: 3 })
+        error?.(createPositionError(3))
       })
 
       const { result } = renderHook(() => useGeolocation())
@@ -181,7 +188,7 @@ describe('useGeolocation', () => {
 
     it('handles unknown error', async () => {
       mockGetCurrentPosition.mockImplementation((_, error) => {
-        error({ code: 99 })
+        error?.(createPositionError(99))
       })
 
       const { result } = renderHook(() => useGeolocation())
@@ -240,12 +247,7 @@ describe('useGeolocation', () => {
 
   describe('clear', () => {
     it('clears position and error', async () => {
-      const mockPosition = {
-        coords: {
-          latitude: 47.3769,
-          longitude: 8.5417,
-        },
-      }
+      const mockPosition = createPosition(47.3769, 8.5417)
 
       mockGetCurrentPosition.mockImplementation((success) => {
         success(mockPosition)

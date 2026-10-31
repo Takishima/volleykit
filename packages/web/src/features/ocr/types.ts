@@ -232,7 +232,7 @@ export interface OCRScoresheetActions {
   /** Reset state to initial values */
   reset: () => void
   /** Cancel ongoing processing */
-  cancel: () => void
+  cancel: () => Promise<void>
 }
 
 /**

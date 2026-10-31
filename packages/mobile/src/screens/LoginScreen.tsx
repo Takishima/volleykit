@@ -45,7 +45,7 @@ export function LoginScreen(_props: Props) {
 
   // Check biometric status on mount
   useEffect(() => {
-    checkBiometricStatus()
+    void checkBiometricStatus()
   }, [checkBiometricStatus])
 
   // Show biometric option if enabled and not fallen back to password
@@ -125,7 +125,7 @@ export function LoginScreen(_props: Props) {
   useEffect(() => {
     if (pendingBiometricLoginRef.current && username && password) {
       pendingBiometricLoginRef.current = false
-      handleLogin()
+      void handleLogin()
     }
   }, [username, password, handleLogin])
 

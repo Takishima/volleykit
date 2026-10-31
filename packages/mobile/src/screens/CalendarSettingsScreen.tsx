@@ -203,7 +203,11 @@ export function CalendarSettingsScreen(_props: Props) {
         visible={showCalendarPicker}
         calendars={calendars}
         selectedCalendarId={settings.selectedCalendarId}
-        onSelect={handleCalendarSelect}
+        onSelect={(calendarId) => {
+          handleCalendarSelect(calendarId).catch((error: unknown) => {
+            console.error('[CalendarSettingsScreen] Failed to save calendar selection:', error)
+          })
+        }}
         onClose={() => setShowCalendarPicker(false)}
       />
     </ScrollView>

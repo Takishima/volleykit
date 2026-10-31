@@ -8,6 +8,10 @@ updates:
       day: "monday"
       time: "07:00"
       timezone: "UTC"
+    # Wait a week after a release before proposing it, so a yanked or
+    # quickly-patched version never reaches a PR (zizmor's recommended floor).
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     reviewers:
       - "Takishima"
@@ -41,6 +45,9 @@ updates:
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
       # TypeScript major bumps require manual tsconfig migration (baseUrl deprecation,
       # lib changes, etc.). Every package is on TS 6; TS 7 is the Go port.
+      # `typescript` (6.x) stays on the JS-API line that typescript-eslint, tsup,
+      # openapi-typescript and astro check link against; `typescript7` (the
+      # native compiler, alias of typescript@7) is what typecheck/build run.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       # @react-navigation packages are pinned by Expo SDK — upgrade via `expo install`.
@@ -90,6 +97,8 @@ updates:
       day: "monday"
       time: "07:00"
       timezone: "UTC"
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: "chore"
       prefix-development: "chore"

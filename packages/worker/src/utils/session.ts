@@ -2,6 +2,12 @@
  * Session detection for the VolleyKit CORS Proxy Worker.
  */
 
+import {
+  HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE,
+  HTTP_REDIRECT_STATUS_MIN,
+  HttpStatus,
+} from './constants'
+
 /**
  * Response-like interface for session detection.
  * Used to allow testing without full Response objects.
@@ -17,7 +23,10 @@ export interface SessionCheckResponse {
  * the session has expired, which we should detect and not cache.
  */
 export function detectSessionIssue(response: SessionCheckResponse, responseBody?: string): boolean {
-  if (response.status >= 300 && response.status < 400) {
+  if (
+    response.status >= HTTP_REDIRECT_STATUS_MIN &&
+    response.status < HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE
+  ) {
     const location = response.headers.get('Location')
     if (location) {
       const normalizedLocation = location.toLowerCase()
@@ -31,7 +40,7 @@ export function detectSessionIssue(response: SessionCheckResponse, responseBody?
     }
   }
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === HttpStatus.UNAUTHORIZED || response.status === HttpStatus.FORBIDDEN) {
     return true
   }
 

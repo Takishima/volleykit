@@ -6,6 +6,8 @@ import type { Assignment } from '@/api/client'
 import * as assignmentHooks from './hooks/useAssignments'
 import * as calendarHooks from './hooks/useCalendarAssignments'
 import * as authStore from '@/common/stores/auth'
+import type { AuthState } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
 
 import { AssignmentsPage } from './AssignmentsPage'
 
@@ -95,18 +97,15 @@ vi.mock('@/common/hooks/useTranslation', () => ({
 }))
 
 // Helper to mock auth store
-function mockAuthStoreState(overrides: Record<string, unknown> = {}) {
-  const state = {
+function mockAuthStoreState(overrides: Partial<AuthState> = {}) {
+  const state = partialMock<AuthState>({
     isAssociationSwitching: false,
     isCalendarMode: () => false,
     ...overrides,
-  }
-  vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
-    if (typeof selector === 'function') {
-      return selector(state)
-    }
-    return state as ReturnType<typeof authStore.useAuthStore>
   })
+  vi.mocked(authStore.useAuthStore).mockImplementation(
+    (selector?: (state: AuthState) => unknown) => (selector ? selector(state) : state)
+  )
 }
 vi.mock('./hooks/useAssignmentActions', () => ({
   useAssignmentActions: () => ({
@@ -161,7 +160,7 @@ function createMockAssignment(overrides: Partial<Assignment> = {}): Assignment {
       },
     },
     ...overrides,
-  } as Assignment
+  }
 }
 
 function createMockQueryResult(
@@ -170,7 +169,7 @@ function createMockQueryResult(
   error: Error | null = null
 ): UseQueryResult<Assignment[], Error> {
   // Compute status first, then derive other flags from it
-  const status = isLoading ? 'pending' : error !== null ? 'error' : 'success'
+  const status = isLoading ? 'pending' : error ? 'error' : 'success'
   return {
     data,
     isLoading,
@@ -185,19 +184,19 @@ function createMockQueryResult(
 
 // Create a mock for calendar assignments
 function createMockCalendarQueryResult(
-  data: calendarHooks.CalendarAssignment[] | undefined = [],
+  data: calendarHooks.CalendarAssignment[] = [],
   isLoading = false,
   error: Error | null = null
 ) {
   // Compute status first, then derive other flags from it
-  const status = isLoading ? 'pending' : error !== null ? 'error' : 'success'
+  const status = isLoading ? 'pending' : error ? 'error' : 'success'
   return {
     data,
     isLoading,
     isFetching: false,
     isError: status === 'error',
     error,
-    isSuccess: status === 'success' && data !== undefined,
+    isSuccess: status === 'success',
     status,
     refetch: vi.fn(),
   } as unknown as ReturnType<typeof calendarHooks.useCalendarAssignments>
@@ -368,7 +367,7 @@ describe('AssignmentsPage', () => {
             hall: { name: 'Bern Arena' },
           },
         },
-      } as Partial<Assignment>)
+      })
       vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue(
         createMockQueryResult([assignment])
       )
@@ -408,7 +407,7 @@ describe('AssignmentsPage', () => {
       vi.mocked(assignmentHooks.useUpcomingAssignments).mockReturnValue({
         ...createMockQueryResult(undefined, false, new Error('Failed')),
         refetch: mockRefetch,
-      } as unknown as UseQueryResult<Assignment[], Error>)
+      })
 
       renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('button', { name: /retry/i }))
@@ -421,7 +420,7 @@ describe('AssignmentsPage', () => {
       vi.mocked(assignmentHooks.useValidationClosedAssignments).mockReturnValue({
         ...createMockQueryResult(undefined, false, new Error('Failed')),
         refetch: mockRefetch,
-      } as unknown as UseQueryResult<Assignment[], Error>)
+      })
 
       renderWithProviders(<AssignmentsPage />)
       fireEvent.click(screen.getByRole('tab', { name: /validation closed/i }))
@@ -590,7 +589,7 @@ describe('AssignmentsPage', () => {
         vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue({
           ...createMockCalendarQueryResult(undefined, false, new Error('Calendar fetch failed')),
           refetch: mockRefetch,
-        } as unknown as ReturnType<typeof calendarHooks.useCalendarAssignments>)
+        })
 
         renderWithProviders(<AssignmentsPage />)
 
@@ -603,7 +602,7 @@ describe('AssignmentsPage', () => {
         vi.mocked(calendarHooks.useCalendarAssignments).mockReturnValue({
           ...createMockCalendarQueryResult(undefined, false, new Error('Failed')),
           refetch: mockRefetch,
-        } as unknown as ReturnType<typeof calendarHooks.useCalendarAssignments>)
+        })
 
         renderWithProviders(<AssignmentsPage />)
         fireEvent.click(screen.getByRole('button', { name: /retry/i }))

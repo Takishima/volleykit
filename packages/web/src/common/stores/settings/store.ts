@@ -73,12 +73,12 @@ export const useSettingsStore = create<SettingsState>()(
         // Global settings
         isSafeModeEnabled: true,
         isOCREnabled: false,
-        validationReferenceMode: 'quick-compare' as ValidationReferenceMode,
+        validationReferenceMode: 'quick-compare',
         preventZoom: false,
         settingsGroupExpanded: {},
 
         // Mode tracking
-        currentMode: 'api' as DataSource,
+        currentMode: 'api',
         settingsByMode: {
           api: { ...DEFAULT_MODE_SETTINGS },
           demo: { ...DEFAULT_MODE_SETTINGS },
@@ -445,7 +445,7 @@ export const useSettingsStore = create<SettingsState>()(
                     persistedModeSettings.homeLocation ?? DEFAULT_MODE_SETTINGS.homeLocation,
                   distanceFilter: {
                     ...DEFAULT_MODE_SETTINGS.distanceFilter,
-                    ...(persistedModeSettings.distanceFilter ?? {}),
+                    ...persistedModeSettings.distanceFilter,
                   },
                   distanceFilterByAssociation:
                     persistedModeSettings.distanceFilterByAssociation ??
@@ -458,7 +458,7 @@ export const useSettingsStore = create<SettingsState>()(
                     DEFAULT_MODE_SETTINGS.transportEnabledByAssociation,
                   travelTimeFilter: {
                     ...DEFAULT_MODE_SETTINGS.travelTimeFilter,
-                    ...(persistedModeSettings.travelTimeFilter ?? {}),
+                    ...persistedModeSettings.travelTimeFilter,
                     // Ensure new fields exist
                     maxTravelTimeByAssociation:
                       persistedModeSettings.travelTimeFilter?.maxTravelTimeByAssociation ??
@@ -478,11 +478,11 @@ export const useSettingsStore = create<SettingsState>()(
                     DEFAULT_MODE_SETTINGS.levelFilterEnabled,
                   notificationSettings: {
                     ...DEFAULT_NOTIFICATION_SETTINGS,
-                    ...(persistedModeSettings.notificationSettings ?? {}),
+                    ...persistedModeSettings.notificationSettings,
                   },
                   gameGapFilter: {
                     ...DEFAULT_MODE_SETTINGS.gameGapFilter,
-                    ...(persistedModeSettings.gameGapFilter ?? {}),
+                    ...persistedModeSettings.gameGapFilter,
                   },
                   hideOwnExchangesByAssociation:
                     persistedModeSettings.hideOwnExchangesByAssociation ??

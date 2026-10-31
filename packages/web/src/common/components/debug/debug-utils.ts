@@ -4,6 +4,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 
+import { logger } from '@/common/utils/logger'
+
 export const STORAGE_KEY = 'volleykit-auth'
 export const EXPECTED_VERSION = 2 // AUTH_STORE_VERSION from auth.ts
 const COPY_FEEDBACK_DURATION_MS = 2000
@@ -134,17 +136,27 @@ export function detectDiscrepancies(
   return discrepancies
 }
 
-/** Safely copy text to clipboard with fallback for mobile/iframe contexts */
+/**
+ * Copy text to the clipboard, resolving to false instead of throwing.
+ * The Clipboard API is unavailable in insecure contexts; callers then fall
+ * back to showing the data themselves.
+ */
 export function copyToClipboard(text: string): Promise<boolean> {
-  // Try modern clipboard API first
   if (navigator.clipboard?.writeText) {
     return navigator.clipboard
       .writeText(text)
       .then(() => true)
       .catch(() => false)
   }
+  return Promise.resolve(copyViaSelection(text))
+}
 
-  // Fallback: create temporary textarea
+/**
+ * Fallback for insecure contexts (plain-http LAN dev server, embedded
+ * webviews) where the Clipboard API does not exist. execCommand is deprecated
+ * but is the only copy primitive those contexts offer.
+ */
+function copyViaSelection(text: string): boolean {
   try {
     const textarea = document.createElement('textarea')
     textarea.value = text
@@ -152,11 +164,12 @@ export function copyToClipboard(text: string): Promise<boolean> {
     textarea.style.left = '-9999px'
     document.body.appendChild(textarea)
     textarea.select()
+    // eslint-disable-next-line sonarjs/deprecation -- no non-deprecated copy API exists in insecure contexts
     const success = document.execCommand('copy')
     document.body.removeChild(textarea)
-    return Promise.resolve(success)
+    return success
   } catch {
-    return Promise.resolve(false)
+    return false
   }
 }
 
@@ -173,15 +186,17 @@ export function useCopyWithFeedback() {
     }
   }, [])
 
-  const handleCopy = useCallback(async (value: string, label: string) => {
-    const success = await copyToClipboard(value)
-    if (success) {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      setCopied(label)
-      timeoutRef.current = setTimeout(() => setCopied(null), COPY_FEEDBACK_DURATION_MS)
-    }
+  const handleCopy = useCallback((value: string, label: string) => {
+    copyToClipboard(value)
+      .then((success) => {
+        if (!success) return
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+        }
+        setCopied(label)
+        timeoutRef.current = setTimeout(() => setCopied(null), COPY_FEEDBACK_DURATION_MS)
+      })
+      .catch((error: unknown) => logger.warn('Copy to clipboard failed:', error))
   }, [])
 
   return { copied, handleCopy }

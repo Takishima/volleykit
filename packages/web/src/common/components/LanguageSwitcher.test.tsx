@@ -5,6 +5,9 @@ import { useLanguageStore } from '@/common/stores/language'
 
 import { LanguageSwitcher } from './LanguageSwitcher'
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('LanguageSwitcher', () => {
   beforeEach(() => {
     // Reset to default locale before each test
@@ -43,9 +46,9 @@ describe('LanguageSwitcher', () => {
     })
 
     it('applies custom className', () => {
-      const { container } = render(<LanguageSwitcher className="custom-class" />)
+      const { container } = render(<LanguageSwitcher className={CUSTOM_CLASS} />)
       const wrapper = container.firstChild as HTMLElement
-      expect(wrapper).toHaveClass('custom-class')
+      expect(wrapper).toHaveClass(CUSTOM_CLASS)
     })
   })
 

@@ -125,8 +125,8 @@ async function addSpotlight(page: Page, selector: string, padding = 8) {
   }
 
   await page.evaluate(
-    ({ selector, padding, styles }) => {
-      const element = document.querySelector(selector)
+    ({ selector: targetSelector, padding: spotlightPadding, styles: spotlightStyles }) => {
+      const element = document.querySelector(targetSelector)
       if (!element) return
 
       const rect = element.getBoundingClientRect()
@@ -137,17 +137,17 @@ async function addSpotlight(page: Page, selector: string, padding = 8) {
       overlay.style.cssText = `
         position: fixed;
         inset: 0;
-        z-index: ${styles.overlayZIndex};
+        z-index: ${spotlightStyles.overlayZIndex};
         pointer-events: none;
-        background: rgba(0, 0, 0, ${styles.overlayOpacity});
+        background: rgba(0, 0, 0, ${spotlightStyles.overlayOpacity});
         clip-path: polygon(
           0% 0%, 0% 100%,
-          ${rect.left - padding}px 100%,
-          ${rect.left - padding}px ${rect.top - padding}px,
-          ${rect.right + padding}px ${rect.top - padding}px,
-          ${rect.right + padding}px ${rect.bottom + padding}px,
-          ${rect.left - padding}px ${rect.bottom + padding}px,
-          ${rect.left - padding}px 100%,
+          ${rect.left - spotlightPadding}px 100%,
+          ${rect.left - spotlightPadding}px ${rect.top - spotlightPadding}px,
+          ${rect.right + spotlightPadding}px ${rect.top - spotlightPadding}px,
+          ${rect.right + spotlightPadding}px ${rect.bottom + spotlightPadding}px,
+          ${rect.left - spotlightPadding}px ${rect.bottom + spotlightPadding}px,
+          ${rect.left - spotlightPadding}px 100%,
           100% 100%, 100% 0%
         );
       `
@@ -158,15 +158,15 @@ async function addSpotlight(page: Page, selector: string, padding = 8) {
       border.id = 'screenshot-spotlight-border'
       border.style.cssText = `
         position: fixed;
-        left: ${rect.left - padding}px;
-        top: ${rect.top - padding}px;
-        width: ${rect.width + padding * 2}px;
-        height: ${rect.height + padding * 2}px;
-        z-index: ${styles.borderZIndex};
+        left: ${rect.left - spotlightPadding}px;
+        top: ${rect.top - spotlightPadding}px;
+        width: ${rect.width + spotlightPadding * 2}px;
+        height: ${rect.height + spotlightPadding * 2}px;
+        z-index: ${spotlightStyles.borderZIndex};
         pointer-events: none;
-        border: ${styles.borderWidth}px solid rgba(255, 255, 255, ${styles.borderOpacity});
-        border-radius: ${styles.borderRadius}px;
-        box-shadow: 0 0 ${styles.shadowBlur}px rgba(0, 0, 0, ${styles.shadowOpacity});
+        border: ${spotlightStyles.borderWidth}px solid rgba(255, 255, 255, ${spotlightStyles.borderOpacity});
+        border-radius: ${spotlightStyles.borderRadius}px;
+        box-shadow: 0 0 ${spotlightStyles.shadowBlur}px rgba(0, 0, 0, ${spotlightStyles.shadowOpacity});
       `
       document.body.appendChild(border)
     },

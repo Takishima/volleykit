@@ -25,13 +25,16 @@ export interface SecureStorageAdapter {
   hasCredentials(): Promise<boolean>
 }
 
+/** Biometric hardware type reported by the platform, or null when unavailable. */
+export type BiometricType = 'faceId' | 'touchId' | 'fingerprint' | null
+
 /**
  * Biometric authentication adapter
  */
 export interface BiometricAdapter {
   isAvailable(): Promise<boolean>
   authenticate(promptMessage: string): Promise<boolean>
-  getBiometricType(): Promise<'faceId' | 'touchId' | 'fingerprint' | null>
+  getBiometricType(): Promise<BiometricType>
 }
 
 /**

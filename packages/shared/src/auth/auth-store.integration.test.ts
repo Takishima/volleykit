@@ -15,7 +15,7 @@ import { useAuthStore } from '../stores'
 
 // Mock fetch globally
 const mockFetch = vi.fn()
-global.fetch = mockFetch
+vi.stubGlobal('fetch', mockFetch)
 
 describe('Auth Service + Store Integration', () => {
   const mockConfig: AuthServiceConfig = {
@@ -125,7 +125,7 @@ describe('Auth Service + Store Integration', () => {
       expect(state.user).not.toBeNull()
       expect(state.user?.id).toBe('user-123')
       expect(state.user?.occupations).toHaveLength(1)
-      expect(state.user?.occupations[0].associationCode).toBe('SV')
+      expect(state.user?.occupations[0]?.associationCode).toBe('SV')
       expect(state.activeOccupationId).toBe('occ-referee-sv')
     })
 

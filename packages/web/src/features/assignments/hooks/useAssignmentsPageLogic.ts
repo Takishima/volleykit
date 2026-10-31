@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 
+import { useCurrentMinute } from '@volleykit/shared/hooks'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { Assignment } from '@/api/client'
@@ -84,17 +85,18 @@ function useCalendarDisplayItems(
   calendarData: CalendarAssignment[] | undefined,
   filterByAssociation: (items: CalendarAssignment[]) => CalendarAssignment[]
 ) {
+  // Stable within a minute, so the split is only recomputed once a minute has passed.
+  const minute = useCurrentMinute()
+
   const calendarUpcoming = useMemo(() => {
     if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
-    return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) >= now))
-  }, [isCalendarMode, calendarData, filterByAssociation])
+    return filterByAssociation(calendarData.filter((a) => Date.parse(a.startTime) >= minute))
+  }, [isCalendarMode, calendarData, filterByAssociation, minute])
 
   const calendarPast = useMemo(() => {
     if (!isCalendarMode || !calendarData) return []
-    const now = new Date()
-    return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) < now))
-  }, [isCalendarMode, calendarData, filterByAssociation])
+    return filterByAssociation(calendarData.filter((a) => Date.parse(a.startTime) < minute))
+  }, [isCalendarMode, calendarData, filterByAssociation, minute])
 
   return { calendarUpcoming, calendarPast }
 }
@@ -103,9 +105,9 @@ interface DerivedLoadingErrorOptions {
   isAssociationSwitching: boolean
   isCalendarMode: boolean
   activeTab: TabType
-  calendar: { loading: boolean; error: Error | null; refetch: () => void }
-  upcoming: { loading: boolean; error: Error | null; refetch: () => void }
-  validationClosed: { loading: boolean; error: Error | null; refetch: () => void }
+  calendar: { loading: boolean; error: Error | null; refetch: () => Promise<unknown> }
+  upcoming: { loading: boolean; error: Error | null; refetch: () => Promise<unknown> }
+  validationClosed: { loading: boolean; error: Error | null; refetch: () => Promise<unknown> }
 }
 
 /** Derives isLoading, error, and a unified refetch from the three query results. */
@@ -348,7 +350,8 @@ export function useAssignmentsPageLogic() {
 
   // Tab counts
   const upcomingCount = useMemo(() => {
-    const regularCount = (isCalendarMode ? calendarUpcoming : upcomingData)?.length ?? 0
+    const regularItems = isCalendarMode ? calendarUpcoming : upcomingData
+    const regularCount = regularItems?.length ?? 0
     const onCallCount = isCalendarMode ? 0 : onCallAssignments.length
     return regularCount + onCallCount
   }, [isCalendarMode, calendarUpcoming, upcomingData, onCallAssignments.length])

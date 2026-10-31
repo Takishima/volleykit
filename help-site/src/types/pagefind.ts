@@ -4,7 +4,7 @@
  */
 
 /** Pagefind search result metadata */
-export interface PagefindResultMeta {
+interface PagefindResultMeta {
   title?: string
   image?: string
   [key: string]: string | undefined
@@ -35,7 +35,7 @@ export interface PagefindResultData {
 }
 
 /** Pagefind search result reference (lazy-loaded) */
-export interface PagefindResult {
+interface PagefindResult {
   /** Unique ID of the result */
   id: string
   /** Relevance score (0-1) */
@@ -47,7 +47,7 @@ export interface PagefindResult {
 }
 
 /** Pagefind search response */
-export interface PagefindSearchResponse {
+interface PagefindSearchResponse {
   /** Array of search results */
   results: PagefindResult[]
   /** Total unfilterable results count */
@@ -77,7 +77,7 @@ export interface PagefindAPI {
 }
 
 /** Pagefind search options */
-export interface PagefindSearchOptions {
+interface PagefindSearchOptions {
   /** Filter results by specific values */
   filters?: Record<string, string | string[]>
   /** Sort results by a specific key */

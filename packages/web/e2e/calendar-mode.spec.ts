@@ -51,13 +51,14 @@ test.describe('Calendar Mode', () => {
 
   test.describe('Login Page Tab Rendering', () => {
     test('displays both login mode tabs', async () => {
-      await loginPage.expectCalendarModeTabVisible()
+      await expect(loginPage.calendarModeTab).toBeVisible()
+      await expect(loginPage.fullLoginTab).toBeVisible()
     })
 
     test('defaults to calendar mode tab', async () => {
       // Calendar input should be visible by default (calendar mode is the default)
       await expect(loginPage.calendarInput).toBeVisible()
-      await expect(loginPage.usernameInput).not.toBeVisible()
+      await expect(loginPage.usernameInput).toBeHidden()
     })
 
     test('can switch to full login tab', async () => {
@@ -68,7 +69,7 @@ test.describe('Calendar Mode', () => {
       await expect(loginPage.passwordInput).toBeVisible()
 
       // Calendar input should be hidden
-      await expect(loginPage.calendarInput).not.toBeVisible()
+      await expect(loginPage.calendarInput).toBeHidden()
     })
 
     test('can switch back to calendar mode tab', async () => {
@@ -80,7 +81,7 @@ test.describe('Calendar Mode', () => {
       await expect(loginPage.calendarLoginButton).toBeVisible()
 
       // Username/password should be hidden
-      await expect(loginPage.usernameInput).not.toBeVisible()
+      await expect(loginPage.usernameInput).toBeHidden()
     })
 
     test('demo button is visible in calendar mode tab', async () => {
@@ -155,12 +156,12 @@ test.describe('Calendar Mode', () => {
 
     test('hides Compensations nav item in calendar mode', async ({ page }) => {
       // Compensations link should not be visible
-      await expect(page.getByRole('link', { name: /compensation/i })).not.toBeVisible()
+      await expect(page.getByRole('link', { name: /compensation/i })).toBeHidden()
     })
 
     test('hides Exchange nav item in calendar mode', async ({ page }) => {
       // Exchange link should not be visible
-      await expect(page.getByRole('link', { name: /exchange/i })).not.toBeVisible()
+      await expect(page.getByRole('link', { name: /exchange/i })).toBeHidden()
     })
 
     test('shows Assignments nav item in calendar mode', async ({ page }) => {
@@ -181,7 +182,7 @@ test.describe('Calendar Mode', () => {
 
       // In calendar mode, compensations are hidden from nav but page may still render
       // Verify the nav item is still hidden and we see a restricted/empty state
-      await expect(page.getByRole('link', { name: /compensation/i })).not.toBeVisible()
+      await expect(page.getByRole('link', { name: /compensation/i })).toBeHidden()
     })
 
     test('navigating to exchange shows empty state in calendar mode', async ({ page }) => {
@@ -190,7 +191,7 @@ test.describe('Calendar Mode', () => {
 
       // In calendar mode, exchange is hidden from nav but page may still render
       // Verify the nav item is still hidden
-      await expect(page.getByRole('link', { name: /exchange/i })).not.toBeVisible()
+      await expect(page.getByRole('link', { name: /exchange/i })).toBeHidden()
     })
   })
 
@@ -228,7 +229,7 @@ test.describe('Calendar Mode', () => {
       await logoutButton.click()
 
       // On login page, no calendar banner
-      await expect(calendarBanner).not.toBeVisible()
+      await expect(calendarBanner).toBeHidden()
     })
   })
 
@@ -248,9 +249,10 @@ test.describe('Calendar Mode', () => {
       // Inject a fetch mock at the JavaScript level BEFORE page loads
       // This is more reliable than Playwright route interception in WebKit
       await page.addInitScript(() => {
-        const originalFetch = window.fetch
+        const originalFetch = window.fetch.bind(window)
         window.fetch = async (input, init) => {
-          const url = typeof input === 'string' ? input : input.toString()
+          const url =
+            typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
           if (url.includes('/iCal/referee/')) {
             // Return 404 for calendar validation requests
             return new Response('Not Found', {

@@ -6,14 +6,11 @@ import { ModalErrorBoundary } from '@/common/components/ModalErrorBoundary'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ValidationStepId } from '@/features/validation/hooks/useValidateGameWizard'
 import type { UseValidationStateResult } from '@/features/validation/hooks/useValidationState'
-
-import {
-  HomeRosterPanel,
-  AwayRosterPanel,
-  ScorerPanel,
-  ScoresheetPanel,
-  ReferenceImageViewer,
-} from '.'
+import { ReferenceImageViewer } from '@/features/validation/ocr/components/ReferenceImageViewer'
+import { ScoresheetPanel } from '@/features/validation/ocr/components/ScoresheetPanel'
+import { AwayRosterPanel } from '@/features/validation/roster/components/AwayRosterPanel'
+import { HomeRosterPanel } from '@/features/validation/roster/components/HomeRosterPanel'
+import { ScorerPanel } from '@/features/validation/scorer/components/ScorerPanel'
 
 interface LoadingState {
   isLoading: boolean

@@ -163,7 +163,13 @@ export function SettingsPage() {
 
       {/* Logout */}
       <div className="pt-4 border-t border-border-default dark:border-border-default-dark">
-        <Button variant="secondary" onClick={logout} className="w-full sm:w-auto">
+        <Button
+          variant="secondary"
+          onClick={() => {
+            void logout()
+          }}
+          className="w-full sm:w-auto"
+        >
           {t('auth.logout')}
         </Button>
       </div>

@@ -81,7 +81,7 @@ export function ExchangesScreen(_props: Props) {
   const notTakeableCount = data?.notTakeableCount ?? 0
 
   const onRefresh = useCallback(() => {
-    refetch()
+    void refetch()
   }, [refetch])
 
   // Loading state

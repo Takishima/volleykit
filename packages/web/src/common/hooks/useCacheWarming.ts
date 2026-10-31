@@ -132,12 +132,12 @@ async function warmCache(
 
   // Prefetch assignments and compensations in parallel
   const results = await Promise.allSettled([
-    queryClient.prefetchQuery({
+    queryClient.query({
       queryKey: queryKeys.assignments.list(assignmentsConfig, associationKey),
       queryFn: () => apiClient.searchAssignments(assignmentsConfig),
       staleTime: PREFETCH_STALE_TIME_MS,
     }),
-    queryClient.prefetchQuery({
+    queryClient.query({
       queryKey: queryKeys.compensations.list(compensationsConfig, associationKey),
       queryFn: () => apiClient.searchCompensations(compensationsConfig),
       staleTime: PREFETCH_STALE_TIME_MS,

@@ -7,7 +7,7 @@ import { corsHeaders, securityHeaders, validateOriginAndPreflight } from '../mid
  * if session tokens need to be invalidated (worker auth logic changed).
  * This endpoint is public and includes CORS headers for browser access.
  */
-export async function handleVersion(request: Request, env: Env, _url: URL): Promise<Response> {
+export function handleVersion(request: Request, env: Env, _url: URL): Response {
   const check = validateOriginAndPreflight(request, env)
   if (check.response) return check.response
 

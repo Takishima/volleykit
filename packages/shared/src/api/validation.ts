@@ -152,12 +152,15 @@ export type PersonSearchItemsAreSchemaOutput = AssertTrue<
 >
 
 // `resilientListSchema` is a separate function body carrying four of the six
-// list responses, so it needs its own cover. Both item schemas below reach
-// `tolerantEnum`, which is what makes input and output differ; exchanges are
-// skipped because `gameExchangeSchema` is `z.ZodType<any>` and `Exact` would
-// hold vacuously.
+// list responses, so it needs its own cover. The item schemas below reach
+// `tolerantEnum` or `linkedDoubleConvocationSchema`, which is what makes input
+// and output differ.
 export type AssignmentItemsAreSchemaOutput = AssertTrue<
   Exact<AssignmentsResponse['items'][number], Assignment>
+>
+
+export type ExchangeItemsAreSchemaOutput = AssertTrue<
+  Exact<ExchangesResponse['items'][number], GameExchange>
 >
 
 export type BackupItemsAreSchemaOutput = AssertTrue<

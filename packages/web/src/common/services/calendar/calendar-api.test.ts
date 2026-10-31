@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
+import { assertDefined } from '@/test/assert-defined'
 import { server } from '@/test/msw/server'
+import { partialMock } from '@/test/partial-mock'
 
 import {
   fetchCalendarAssignments,
@@ -20,7 +22,7 @@ afterAll(() => {
 })
 
 // Mock fetch
-const mockFetch = vi.fn()
+const mockFetch = vi.fn<typeof fetch>()
 vi.stubGlobal('fetch', mockFetch)
 
 // Sample iCal content for testing
@@ -67,12 +69,13 @@ function createMockResponse(
   options: { ok?: boolean; status?: number; statusText?: string } = {}
 ) {
   const { ok = true, status = 200, statusText = 'OK' } = options
-  return {
+  // Only the fields the calendar client reads
+  return partialMock<Response>({
     ok,
     status,
     statusText,
     text: () => Promise.resolve(content),
-  }
+  })
 }
 
 describe('fetchCalendarAssignments', () => {
@@ -150,6 +153,7 @@ describe('fetchCalendarAssignments', () => {
       await fetchCalendarAssignments('ABC123')
 
       const [, options] = mockFetch.mock.calls[0]!
+      assertDefined(options)
       expect(options.credentials).toBeUndefined()
     })
 
@@ -160,6 +164,7 @@ describe('fetchCalendarAssignments', () => {
       await fetchCalendarAssignments('ABC123', controller.signal)
 
       const [, options] = mockFetch.mock.calls[0]!
+      assertDefined(options)
       expect(options.signal).toBe(controller.signal)
     })
   })
@@ -312,6 +317,7 @@ describe('validateCalendarCode', () => {
       await validateCalendarCode('ABC123', controller.signal)
 
       const [, options] = mockFetch.mock.calls[0]!
+      assertDefined(options)
       expect(options.signal).toBe(controller.signal)
     })
   })

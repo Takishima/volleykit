@@ -1,6 +1,8 @@
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { RegisterSWOptions } from 'virtual:pwa-register'
+
 import { PWAProvider, usePWA } from './PWAContext'
 
 // Mock the virtual:pwa-register module
@@ -30,10 +32,10 @@ function TestConsumer() {
       <span data-testid="lastChecked">{lastChecked?.toISOString() ?? 'null'}</span>
       <span data-testid="checkError">{checkError?.message ?? 'null'}</span>
       <span data-testid="registrationError">{registrationError?.message ?? 'null'}</span>
-      <button data-testid="checkForUpdate" onClick={checkForUpdate}>
+      <button data-testid="checkForUpdate" onClick={() => void checkForUpdate()}>
         Check
       </button>
-      <button data-testid="updateApp" onClick={updateApp}>
+      <button data-testid="updateApp" onClick={() => void updateApp()}>
         Update
       </button>
       <button data-testid="dismissPrompt" onClick={dismissPrompt}>
@@ -112,7 +114,7 @@ describe('PWAContext', () => {
 
     it('sets offlineReady when onOfflineReady callback is called', async () => {
       let onOfflineReadyCallback: (() => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onOfflineReadyCallback = options?.onOfflineReady
         return vi.fn()
       })
@@ -138,7 +140,7 @@ describe('PWAContext', () => {
 
     it('sets needRefresh when onNeedRefresh callback is called', async () => {
       let onNeedRefreshCallback: (() => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onNeedRefreshCallback = options?.onNeedRefresh
         return vi.fn()
       })
@@ -164,7 +166,7 @@ describe('PWAContext', () => {
 
     it('sets registrationError when onRegisterError is called', async () => {
       let onRegisterErrorCallback: ((error: Error) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisterErrorCallback = options?.onRegisterError
         return vi.fn()
       })
@@ -217,7 +219,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -249,7 +251,7 @@ describe('PWAContext', () => {
     it('resets offlineReady and needRefresh to false', async () => {
       let onOfflineReadyCallback: (() => void) | undefined
       let onNeedRefreshCallback: (() => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onOfflineReadyCallback = options?.onOfflineReady
         onNeedRefreshCallback = options?.onNeedRefresh
         return vi.fn()
@@ -321,7 +323,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -358,7 +360,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -395,7 +397,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -438,7 +440,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -488,7 +490,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -537,7 +539,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })
@@ -581,7 +583,7 @@ describe('PWAContext', () => {
 
       let onRegisteredSWCallback:
         ((url: string, reg: ServiceWorkerRegistration) => void) | undefined
-      const mockRegisterSW = vi.fn((options) => {
+      const mockRegisterSW = vi.fn((options?: RegisterSWOptions) => {
         onRegisteredSWCallback = options?.onRegisteredSW
         return vi.fn()
       })

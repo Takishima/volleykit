@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useTranslation } from '@/common/hooks/useTranslation'
+import { logger } from '@/common/utils/logger'
 import { usePWA } from '@/contexts/PWAContext'
 
 export default function ReloadPromptPWA() {
@@ -12,14 +13,12 @@ export default function ReloadPromptPWA() {
     return null
   }
 
-  const handleReload = async () => {
+  const handleReload = () => {
     if (isUpdating) return
     setIsUpdating(true)
-    try {
-      await updateApp()
-    } finally {
-      setIsUpdating(false)
-    }
+    updateApp()
+      .catch((error: unknown) => logger.error('Failed to apply app update:', error))
+      .finally(() => setIsUpdating(false))
   }
 
   return (

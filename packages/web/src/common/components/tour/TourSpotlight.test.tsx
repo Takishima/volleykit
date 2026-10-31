@@ -180,7 +180,7 @@ describe('TourSpotlight', () => {
     })
 
     // The spotlight should be a direct child of body (via portal)
-    const spotlight = document.body.querySelector('.tour-spotlight')
+    const spotlight = document.body.querySelector('[data-testid="tour-spotlight"]')
     expect(spotlight).toBeInTheDocument()
     expect(spotlight?.parentElement).toBe(document.body)
   })

@@ -28,7 +28,8 @@ function mapGender(gender: Gender): 'm' | 'f' | undefined {
       return 'm'
     case 'women':
       return 'f'
-    default:
+    case 'mixed':
+    case 'unknown':
       return undefined
   }
 }
@@ -221,7 +222,7 @@ export function mapCalendarAssignmentToAssignment(
               leagueCategory: calendarAssignment.leagueCategory
                 ? { name: calendarAssignment.leagueCategory }
                 : undefined,
-            } as { gender?: 'm' | 'f'; leagueCategory?: { name: string } },
+            },
           },
         },
         hall: {

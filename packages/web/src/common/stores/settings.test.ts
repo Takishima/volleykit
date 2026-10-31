@@ -10,6 +10,8 @@ import {
 } from './settings'
 
 import type { DataSource } from './auth'
+import type { SettingsState } from './settings/types'
+import { readPersistedState } from '@/test/persisted-state'
 
 /** Default mode settings for tests */
 const DEFAULT_MODE_SETTINGS: ModeSettings = {
@@ -103,14 +105,8 @@ describe('useSettingsStore', () => {
 
     setSafeMode(false)
 
-    const storageKey = 'volleykit-settings'
-    const persistedData = localStorage.getItem(storageKey)
-    expect(persistedData).toBeTruthy()
-
-    if (persistedData) {
-      const parsed = JSON.parse(persistedData)
-      expect(parsed.state.isSafeModeEnabled).toBe(false)
-    }
+    const persisted = readPersistedState<SettingsState>('volleykit-settings')
+    expect(persisted.isSafeModeEnabled).toBe(false)
   })
 
   describe('mode-specific settings', () => {
@@ -187,16 +183,10 @@ describe('useSettingsStore', () => {
       useSettingsStore.getState()._setCurrentMode('demo')
       useSettingsStore.getState().setHomeLocation(demoLocation)
 
-      const storageKey = 'volleykit-settings'
-      const persistedData = localStorage.getItem(storageKey)
-      expect(persistedData).toBeTruthy()
-
-      if (persistedData) {
-        const parsed = JSON.parse(persistedData)
-        expect(parsed.state.settingsByMode.api.homeLocation).toEqual(apiLocation)
-        expect(parsed.state.settingsByMode.demo.homeLocation).toEqual(demoLocation)
-        expect(parsed.state.settingsByMode.calendar.homeLocation).toBeNull()
-      }
+      const persisted = readPersistedState<SettingsState>('volleykit-settings')
+      expect(persisted.settingsByMode.api.homeLocation).toEqual(apiLocation)
+      expect(persisted.settingsByMode.demo.homeLocation).toEqual(demoLocation)
+      expect(persisted.settingsByMode.calendar.homeLocation).toBeNull()
     })
   })
 
@@ -237,15 +227,9 @@ describe('useSettingsStore', () => {
 
       setHomeLocation(testLocation)
 
-      const storageKey = 'volleykit-settings'
-      const persistedData = localStorage.getItem(storageKey)
-      expect(persistedData).toBeTruthy()
-
-      if (persistedData) {
-        const parsed = JSON.parse(persistedData)
-        // Current mode is "api"
-        expect(parsed.state.settingsByMode.api.homeLocation).toEqual(testLocation)
-      }
+      const persisted = readPersistedState<SettingsState>('volleykit-settings')
+      // Current mode is "api"
+      expect(persisted.settingsByMode.api.homeLocation).toEqual(testLocation)
     })
   })
 
@@ -291,15 +275,9 @@ describe('useSettingsStore', () => {
       setDistanceFilterEnabled(true)
       setMaxDistanceKm(75)
 
-      const storageKey = 'volleykit-settings'
-      const persistedData = localStorage.getItem(storageKey)
-      expect(persistedData).toBeTruthy()
-
-      if (persistedData) {
-        const parsed = JSON.parse(persistedData)
-        expect(parsed.state.settingsByMode.api.distanceFilter.enabled).toBe(true)
-        expect(parsed.state.settingsByMode.api.distanceFilter.maxDistanceKm).toBe(75)
-      }
+      const persisted = readPersistedState<SettingsState>('volleykit-settings')
+      expect(persisted.settingsByMode.api.distanceFilter.enabled).toBe(true)
+      expect(persisted.settingsByMode.api.distanceFilter.maxDistanceKm).toBe(75)
     })
   })
 
@@ -445,22 +423,16 @@ describe('useSettingsStore', () => {
 
         setArrivalBufferForAssociation('SV', 120)
 
-        const storageKey = 'volleykit-settings'
-        const persistedData = localStorage.getItem(storageKey)
-        expect(persistedData).toBeTruthy()
-
-        if (persistedData) {
-          const parsed = JSON.parse(persistedData)
-          expect(
-            parsed.state.settingsByMode.api.travelTimeFilter.arrivalBufferByAssociation['SV']
-          ).toBe(120)
-        }
+        const persisted = readPersistedState<SettingsState>('volleykit-settings')
+        expect(persisted.settingsByMode.api.travelTimeFilter.arrivalBufferByAssociation['SV']).toBe(
+          120
+        )
       })
     })
   })
 
   describe('persistence migration', () => {
-    it('should migrate version 1 flat settings to version 2 settingsByMode', () => {
+    it('should migrate version 1 flat settings to version 2 settingsByMode', async () => {
       const testLocation: UserLocation = {
         latitude: 47.3769,
         longitude: 8.5417,
@@ -491,7 +463,7 @@ describe('useSettingsStore', () => {
       localStorage.setItem('volleykit-settings', JSON.stringify(v1Data))
 
       // Trigger rehydration
-      useSettingsStore.persist.rehydrate()
+      await useSettingsStore.persist.rehydrate()
 
       const state = useSettingsStore.getState()
 
@@ -743,7 +715,7 @@ describe('useSettingsStore', () => {
       expect(travelTimeFilter.maxBikeDistanceKm).toBe(10)
     })
 
-    it('should migrate v11 settings without travel mode fields', () => {
+    it('should migrate v11 settings without travel mode fields', async () => {
       const v11Data = {
         state: {
           isSafeModeEnabled: true,
@@ -778,7 +750,7 @@ describe('useSettingsStore', () => {
       }
       localStorage.setItem('volleykit-settings', JSON.stringify(v11Data))
 
-      useSettingsStore.persist.rehydrate()
+      await useSettingsStore.persist.rehydrate()
 
       const state = useSettingsStore.getState()
       expect(state.settingsByMode.api.travelTimeFilter.travelMode).toBe('publicTransport')
@@ -788,7 +760,7 @@ describe('useSettingsStore', () => {
       expect(state.settingsByMode.api.travelTimeFilter.maxTravelTimeMinutes).toBe(90)
     })
 
-    it('should migrate v12 settings without hide not takeable exchanges', () => {
+    it('should migrate v12 settings without hide not takeable exchanges', async () => {
       const v12Data = {
         state: {
           isSafeModeEnabled: true,
@@ -804,7 +776,7 @@ describe('useSettingsStore', () => {
       }
       localStorage.setItem('volleykit-settings', JSON.stringify(v12Data))
 
-      useSettingsStore.persist.rehydrate()
+      await useSettingsStore.persist.rehydrate()
 
       const state = useSettingsStore.getState()
       expect(state.settingsByMode.api.hideNotTakeableExchangesByAssociation).toEqual({})
@@ -952,7 +924,7 @@ describe('useSettingsStore', () => {
       resetStore()
     })
 
-    it('should preserve homeLocation when localStorage has partial data', () => {
+    it('should preserve homeLocation when localStorage has partial data', async () => {
       // Simulate partial localStorage data with new structure
       const partialData = {
         state: {
@@ -966,7 +938,7 @@ describe('useSettingsStore', () => {
       localStorage.setItem('volleykit-settings', JSON.stringify(partialData))
 
       // Trigger rehydration
-      useSettingsStore.persist.rehydrate()
+      await useSettingsStore.persist.rehydrate()
 
       const state = useSettingsStore.getState()
       expect(state.settingsByMode.api.homeLocation).toEqual(testLocation)
@@ -975,19 +947,19 @@ describe('useSettingsStore', () => {
       expect(state.settingsByMode.api.distanceFilter.maxDistanceKm).toBe(50)
     })
 
-    it('should use defaults when localStorage data is completely corrupted', () => {
+    it('should use defaults when localStorage data is completely corrupted', async () => {
       // Simulate corrupted data
       localStorage.setItem('volleykit-settings', 'not-valid-json{')
 
       // This should not throw and should use defaults
-      useSettingsStore.persist.rehydrate()
+      await useSettingsStore.persist.rehydrate()
 
       const state = useSettingsStore.getState()
       expect(state.settingsByMode.api.homeLocation).toBeNull()
       expect(state.isSafeModeEnabled).toBe(true)
     })
 
-    it('should merge nested travelTimeFilter fields correctly', () => {
+    it('should merge nested travelTimeFilter fields correctly', async () => {
       // Simulate data missing new nested fields
       const oldData = {
         state: {
@@ -1006,7 +978,7 @@ describe('useSettingsStore', () => {
       }
       localStorage.setItem('volleykit-settings', JSON.stringify(oldData))
 
-      useSettingsStore.persist.rehydrate()
+      await useSettingsStore.persist.rehydrate()
 
       const state = useSettingsStore.getState()
       expect(state.settingsByMode.api.homeLocation).toEqual(testLocation)

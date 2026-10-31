@@ -68,6 +68,7 @@ export const personSummarySchema = z
 // Referee convocation reference schema
 const refereeConvocationRefSchema = z
   .object({
+    __identity: uuidSchema.optional(),
     indoorAssociationReferee: z
       .object({
         indoorReferee: z

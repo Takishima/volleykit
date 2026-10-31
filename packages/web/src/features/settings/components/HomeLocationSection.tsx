@@ -62,7 +62,7 @@ function HomeLocationSectionComponent() {
 
           {/* Geolocation error */}
           {homeLocation.geoError && (
-            <p className="text-sm text-error-600 dark:text-error-400">
+            <p className="text-sm text-danger-600 dark:text-danger-400">
               {getGeolocationErrorMessage(homeLocation.geoError, t)}
             </p>
           )}
@@ -93,7 +93,7 @@ function HomeLocationSectionComponent() {
 
             {/* Geocoding error */}
             {homeLocation.geocodeError && (
-              <p className="text-sm text-error-600 dark:text-error-400">
+              <p className="text-sm text-danger-600 dark:text-danger-400">
                 {t('settings.homeLocation.searchError')}
               </p>
             )}

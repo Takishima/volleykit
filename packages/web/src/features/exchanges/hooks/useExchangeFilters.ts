@@ -116,14 +116,14 @@ export function useExchangeFilters({
   // Also reports how many entries were hidden because the server refuses to hand
   // them over, so the page can say so instead of claiming the marketplace is empty.
   const { filteredData, notTakeableCount } = useMemo(() => {
-    let notTakeableCount = 0
+    let hiddenCount = 0
 
     // When tour is active, show ONLY the dummy exchange
     if (showDummyData) {
-      return { filteredData: dummyExchanges, notTakeableCount }
+      return { filteredData: dummyExchanges, notTakeableCount: hiddenCount }
     }
 
-    if (!exchangesWithDistance) return { filteredData: null, notTakeableCount }
+    if (!exchangesWithDistance) return { filteredData: null, notTakeableCount: hiddenCount }
 
     let result = exchangesWithDistance
 
@@ -139,7 +139,7 @@ export function useExchangeFilters({
     // and the predicate itself is shared - keep it that way if either side moves.
     if (hideNotTakeableExchanges && statusFilter === 'open') {
       const takeable = result.filter((entry) => entry.takeable)
-      notTakeableCount = result.length - takeable.length
+      hiddenCount = result.length - takeable.length
       result = takeable
     }
 
@@ -151,7 +151,10 @@ export function useExchangeFilters({
       userRefereeLevelGradationValue !== null
     ) {
       result = result.filter(({ exchange }) => {
-        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue
+        // The schema passes the field through untouched, so the runtime value can
+        // be null even though the generated type only says `string | undefined`.
+        const requiredGradationStr = exchange.requiredRefereeLevelGradationValue as
+          string | null | undefined
         // If no gradation value, show the exchange (conservative approach)
         if (requiredGradationStr === undefined || requiredGradationStr === null) {
           return true
@@ -219,7 +222,7 @@ export function useExchangeFilters({
       )
     }
 
-    return { filteredData: result, notTakeableCount }
+    return { filteredData: result, notTakeableCount: hiddenCount }
   }, [
     showDummyData,
     dummyExchanges,

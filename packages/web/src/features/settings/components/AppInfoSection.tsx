@@ -131,13 +131,21 @@ function AppInfoSectionComponent({ showUpdates }: AppInfoSectionProps) {
                 )}
               </div>
               {needRefresh ? (
-                <Button variant="primary" onClick={updateApp} aria-label={t('settings.updateNow')}>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    void updateApp()
+                  }}
+                  aria-label={t('settings.updateNow')}
+                >
                   {t('settings.updateNow')}
                 </Button>
               ) : (
                 <Button
                   variant="secondary"
-                  onClick={checkForUpdate}
+                  onClick={() => {
+                    void checkForUpdate()
+                  }}
                   loading={isChecking}
                   aria-label={t('settings.checkForUpdates')}
                 >

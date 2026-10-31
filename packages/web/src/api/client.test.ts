@@ -8,6 +8,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { http, HttpResponse } from 'msw'
 
+import { createCapture } from '@/test/capture'
 import { server } from '@/test/msw/server'
 
 import { api, setCsrfToken, clearSession } from './client'
@@ -33,36 +34,36 @@ describe('API Client', () => {
     it('setCsrfToken stores token for use in requests', async () => {
       setCsrfToken('test-token-123')
 
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
       server.use(
         http.post('*/api%5crefereeconvocation/searchMyRefereeConvocations', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json(mockAssignmentsResponse)
         })
       )
 
       await api.searchAssignments({})
 
-      expect(capturedBody?.get('__csrfToken')).toBe('test-token-123')
+      expect(capturedBody.value?.get('__csrfToken')).toBe('test-token-123')
     })
 
     it('clearSession removes CSRF token', async () => {
       setCsrfToken('test-token')
       clearSession()
 
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
       server.use(
         http.post('*/api%5crefereeconvocation/searchMyRefereeConvocations', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json(mockAssignmentsResponse)
         })
       )
 
       await api.searchAssignments({})
 
-      expect(capturedBody?.get('__csrfToken')).toBeNull()
+      expect(capturedBody.value?.get('__csrfToken')).toBeNull()
     })
   })
 
@@ -162,86 +163,88 @@ describe('API Client', () => {
       )
 
       const result = await api.searchAssignments({})
-      expect(result).toMatchObject(mockAssignmentsResponse)
-      expect(result.droppedItems).toEqual([])
+      // The resilient list parse always adds droppedItems (empty when nothing was rejected)
+      expect(result).toMatchObject({ ...mockAssignmentsResponse, droppedItems: [] })
     })
   })
 
   describe('searchAssignments', () => {
     it('sends POST request to correct endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.post('*/api%5crefereeconvocation/searchMyRefereeConvocations', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json(mockAssignmentsResponse)
         })
       )
 
       await api.searchAssignments({})
 
-      expect(capturedUrl).toContain('api%5crefereeconvocation/searchMyRefereeConvocations')
-      expect(capturedMethod).toBe('POST')
+      expect(capturedUrl.value).toContain('api%5crefereeconvocation/searchMyRefereeConvocations')
+      expect(capturedMethod.value).toBe('POST')
     })
 
     it('includes search configuration in request', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5crefereeconvocation/searchMyRefereeConvocations', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json(mockAssignmentsResponse)
         })
       )
 
       await api.searchAssignments({ offset: 0, limit: 10 })
 
-      expect(capturedBody?.get('searchConfiguration[offset]')).toBe('0')
-      expect(capturedBody?.get('searchConfiguration[limit]')).toBe('10')
+      expect(capturedBody.value?.get('searchConfiguration[offset]')).toBe('0')
+      expect(capturedBody.value?.get('searchConfiguration[limit]')).toBe('10')
     })
 
     it('includes propertyRenderConfiguration in request', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5crefereeconvocation/searchMyRefereeConvocations', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json(mockAssignmentsResponse)
         })
       )
 
       await api.searchAssignments({})
 
-      expect(capturedBody?.get('propertyRenderConfiguration[0]')).toBe('refereeConvocationStatus')
-      expect(capturedBody?.get('propertyRenderConfiguration[12]')).toBe('refereePosition')
+      expect(capturedBody.value?.get('propertyRenderConfiguration[0]')).toBe(
+        'refereeConvocationStatus'
+      )
+      expect(capturedBody.value?.get('propertyRenderConfiguration[12]')).toBe('refereePosition')
     })
   })
 
   describe('searchCompensations', () => {
     it('sends POST request to correct endpoint', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.post('*/api%5crefereeconvocationcompensation/search', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(mockCompensationsResponse)
         })
       )
 
       await api.searchCompensations({})
 
-      expect(capturedUrl).toContain('api%5crefereeconvocationcompensation/search')
+      expect(capturedUrl.value).toContain('api%5crefereeconvocationcompensation/search')
     })
   })
 
   describe('getCompensationDetails', () => {
     it('sends GET request to showWithNestedObjects endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
       const mockDetailsResponse = {
         convocationCompensation: {
           __identity: UUID1,
@@ -252,31 +255,31 @@ describe('API Client', () => {
 
       server.use(
         http.get('*/api%5cconvocationcompensation/showWithNestedObjects', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json(mockDetailsResponse)
         })
       )
 
       await api.getCompensationDetails('comp-123')
 
-      expect(capturedUrl).toContain('showWithNestedObjects')
-      expect(capturedMethod).toBe('GET')
+      expect(capturedUrl.value).toContain('showWithNestedObjects')
+      expect(capturedMethod.value).toBe('GET')
     })
 
     it('includes compensation ID in query parameters', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5cconvocationcompensation/showWithNestedObjects', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json({ convocationCompensation: {} })
         })
       )
 
       await api.getCompensationDetails('test-comp-id')
 
-      expect(capturedUrl).toContain('convocationCompensation%5B__identity%5D=test-comp-id')
+      expect(capturedUrl.value).toContain('convocationCompensation%5B__identity%5D=test-comp-id')
     })
 
     it('returns detailed compensation data', async () => {
@@ -304,43 +307,43 @@ describe('API Client', () => {
 
   describe('updateCompensation', () => {
     it('sends PUT request to correct endpoint', async () => {
-      let capturedMethod: string | null = null
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.put('*/api%5cconvocationcompensation', ({ request }) => {
-          capturedMethod = request.method
+          capturedMethod.value = request.method
           return HttpResponse.json({})
         })
       )
 
       await api.updateCompensation('comp-123', { distanceInMetres: 50000 })
 
-      expect(capturedMethod).toBe('PUT')
+      expect(capturedMethod.value).toBe('PUT')
     })
 
     it('includes compensation ID nested in convocationCompensation', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.put('*/api%5cconvocationcompensation', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.updateCompensation('comp-456', { distanceInMetres: 60000 })
 
-      expect(capturedBody?.get('convocationCompensation[__identity]')).toBe('comp-456')
+      expect(capturedBody.value?.get('convocationCompensation[__identity]')).toBe('comp-456')
     })
 
     it('includes both distanceInMetres and correctionReason when provided', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.put('*/api%5cconvocationcompensation', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
@@ -350,8 +353,8 @@ describe('API Client', () => {
         correctionReason: 'Alternative route',
       })
 
-      expect(capturedBody?.get('convocationCompensation[distanceInMetres]')).toBe('88000')
-      expect(capturedBody?.get('convocationCompensation[correctionReason]')).toBe(
+      expect(capturedBody.value?.get('convocationCompensation[distanceInMetres]')).toBe('88000')
+      expect(capturedBody.value?.get('convocationCompensation[correctionReason]')).toBe(
         'Alternative route'
       )
     })
@@ -359,33 +362,33 @@ describe('API Client', () => {
 
   describe('searchExchanges', () => {
     it('sends POST request to correct endpoint', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.post('*/api%5crefereegameexchange/search', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(mockExchangesResponse)
         })
       )
 
       await api.searchExchanges({})
 
-      expect(capturedUrl).toContain('api%5crefereegameexchange/search')
+      expect(capturedUrl.value).toContain('api%5crefereegameexchange/search')
     })
   })
 
   describe('applyForExchange', () => {
     it('sends PUT request with refereeGameExchange[__identity] per confirmed API spec', async () => {
-      let capturedBody: URLSearchParams | null = null
-      let capturedMethod: string | null = null
-      let capturedUrl: string | null = null
+      const capturedBody = createCapture<URLSearchParams>()
+      const capturedMethod = createCapture<string>()
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.put('*/api%5crefereegameexchange/pickFromRefereeGameExchange', async ({ request }) => {
-          capturedMethod = request.method
-          capturedUrl = request.url
+          capturedMethod.value = request.method
+          capturedUrl.value = request.url
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({
             refereeGameExchange: {
               __identity: UUID1,
@@ -398,9 +401,9 @@ describe('API Client', () => {
 
       const result = await api.applyForExchange(UUID1)
 
-      expect(capturedMethod).toBe('PUT')
-      expect(capturedUrl).toContain('pickFromRefereeGameExchange')
-      expect(capturedBody?.get('refereeGameExchange[__identity]')).toBe(UUID1)
+      expect(capturedMethod.value).toBe('PUT')
+      expect(capturedUrl.value).toContain('pickFromRefereeGameExchange')
+      expect(capturedBody.value?.get('refereeGameExchange[__identity]')).toBe(UUID1)
       expect(result.refereeGameExchange.__identity).toBe(UUID1)
       expect(result.refereeGameExchange.status).toBe('applied')
     })
@@ -408,73 +411,73 @@ describe('API Client', () => {
 
   describe('searchPersons', () => {
     it('uses GET method for person search', async () => {
-      let capturedMethod: string | null = null
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.get('*/api%5celasticsearchperson/search', ({ request }) => {
-          capturedMethod = request.method
+          capturedMethod.value = request.method
           return HttpResponse.json(mockPersonSearchResponse)
         })
       )
 
       await api.searchPersons({ lastName: 'müller' })
 
-      expect(capturedMethod).toBe('GET')
+      expect(capturedMethod.value).toBe('GET')
     })
 
     it('does not include CSRF token in GET request URL', async () => {
       setCsrfToken('test-csrf-token')
 
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5celasticsearchperson/search', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(mockPersonSearchResponse)
         })
       )
 
       await api.searchPersons({ lastName: 'müller' })
 
-      expect(capturedUrl).not.toContain('__csrfToken')
+      expect(capturedUrl.value).not.toContain('__csrfToken')
     })
 
     it('uses default limit when not specified', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5celasticsearchperson/search', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(mockPersonSearchResponse)
         })
       )
 
       await api.searchPersons({ lastName: 'müller' })
 
-      expect(capturedUrl).toContain('searchConfiguration%5Blimit%5D=100')
+      expect(capturedUrl.value).toContain('searchConfiguration%5Blimit%5D=100')
     })
 
     it('respects custom limit when provided', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5celasticsearchperson/search', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(mockPersonSearchResponse)
         })
       )
 
       await api.searchPersons({ lastName: 'müller' }, { limit: 100 })
 
-      expect(capturedUrl).toContain('searchConfiguration%5Blimit%5D=100')
+      expect(capturedUrl.value).toContain('searchConfiguration%5Blimit%5D=100')
     })
 
     it('requests all required properties for displaying search results', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5celasticsearchperson/search', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(mockPersonSearchResponse)
         })
       )
@@ -491,7 +494,7 @@ describe('API Client', () => {
       ]
 
       requiredProperties.forEach((prop) => {
-        expect(capturedUrl).toContain(prop)
+        expect(capturedUrl.value).toContain(prop)
       })
     })
 
@@ -607,18 +610,18 @@ describe('API Client', () => {
 
   describe('request headers', () => {
     it('includes Accept: application/json header', async () => {
-      let capturedHeaders: Headers | null = null
+      const capturedHeaders = createCapture<Headers>()
 
       server.use(
         http.post('*/api%5crefereeconvocation/searchMyRefereeConvocations', ({ request }) => {
-          capturedHeaders = request.headers
+          capturedHeaders.value = request.headers
           return HttpResponse.json(mockAssignmentsResponse)
         })
       )
 
       await api.searchAssignments({})
 
-      expect(capturedHeaders?.get('Accept')).toBe('application/json')
+      expect(capturedHeaders.value?.get('Accept')).toBe('application/json')
     })
   })
 
@@ -692,13 +695,13 @@ describe('API Client', () => {
     })
 
     it('sends POST request with FormData', async () => {
-      let capturedMethod: string | null = null
-      let capturedContentType: string | null = null
+      const capturedMethod = createCapture<string>()
+      const capturedContentType = createCapture<string>()
 
       server.use(
         http.post('*/api%5cpersistentresource/upload', ({ request }) => {
-          capturedMethod = request.method
-          capturedContentType = request.headers.get('Content-Type')
+          capturedMethod.value = request.method
+          capturedContentType.value = request.headers.get('Content-Type')
           return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
@@ -706,19 +709,19 @@ describe('API Client', () => {
       const pdfFile = createMockFile('doc.pdf', 'application/pdf')
       await api.uploadResource(pdfFile)
 
-      expect(capturedMethod).toBe('POST')
+      expect(capturedMethod.value).toBe('POST')
       // FormData sets multipart/form-data with boundary
-      expect(capturedContentType).toContain('multipart/form-data')
+      expect(capturedContentType.value).toContain('multipart/form-data')
     })
 
     it('includes CSRF token in FormData when available', async () => {
       setCsrfToken('upload-csrf-token')
 
-      let capturedFormData: FormData | null = null
+      const capturedFormData = createCapture<FormData>()
 
       server.use(
         http.post('*/api%5cpersistentresource/upload', async ({ request }) => {
-          capturedFormData = await request.formData()
+          capturedFormData.value = await request.formData()
           return HttpResponse.json([{ __identity: UUID1 }])
         })
       )
@@ -726,7 +729,7 @@ describe('API Client', () => {
       const pdfFile = createMockFile('doc.pdf', 'application/pdf')
       await api.uploadResource(pdfFile)
 
-      expect(capturedFormData?.get('__csrfToken')).toBe('upload-csrf-token')
+      expect(capturedFormData.value?.get('__csrfToken')).toBe('upload-csrf-token')
     })
 
     it('clears session and throws on 401 response', async () => {
@@ -765,51 +768,51 @@ describe('API Client', () => {
     }
 
     it('sends GET request with convocation ID', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.get('*/api%5crefereeconvocation/showWithNestedObjects', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json(validAssignment)
         })
       )
 
       await api.getAssignmentDetails('conv-123', ['refereeGame.game'])
 
-      expect(capturedMethod).toBe('GET')
-      expect(capturedUrl).toContain('convocation=conv-123')
+      expect(capturedMethod.value).toBe('GET')
+      expect(capturedUrl.value).toContain('convocation=conv-123')
     })
 
     it('includes nested property names in query', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5crefereeconvocation/showWithNestedObjects', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json(validAssignment)
         })
       )
 
       await api.getAssignmentDetails('conv-123', ['prop1', 'prop2', 'prop3'])
 
-      expect(capturedUrl).toContain('nestedPropertyNames%5B0%5D=prop1')
-      expect(capturedUrl).toContain('nestedPropertyNames%5B1%5D=prop2')
-      expect(capturedUrl).toContain('nestedPropertyNames%5B2%5D=prop3')
+      expect(capturedUrl.value).toContain('nestedPropertyNames%5B0%5D=prop1')
+      expect(capturedUrl.value).toContain('nestedPropertyNames%5B1%5D=prop2')
+      expect(capturedUrl.value).toContain('nestedPropertyNames%5B2%5D=prop3')
     })
   })
 
   describe('getPossiblePlayerNominations', () => {
     it('sends POST request with nomination list ID', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post(
           '*/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList',
           async ({ request }) => {
             const text = await request.text()
-            capturedBody = new URLSearchParams(text)
+            capturedBody.value = new URLSearchParams(text)
             return HttpResponse.json({ items: [], totalItemsCount: 0 })
           }
         )
@@ -817,18 +820,18 @@ describe('API Client', () => {
 
       await api.getPossiblePlayerNominations('nl-123')
 
-      expect(capturedBody?.get('nominationList')).toBe('nl-123')
+      expect(capturedBody.value?.get('nominationList')).toBe('nl-123')
     })
 
     it('uses default options when not specified', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post(
           '*/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList',
           async ({ request }) => {
             const text = await request.text()
-            capturedBody = new URLSearchParams(text)
+            capturedBody.value = new URLSearchParams(text)
             return HttpResponse.json({ items: [], totalItemsCount: 0 })
           }
         )
@@ -836,19 +839,19 @@ describe('API Client', () => {
 
       await api.getPossiblePlayerNominations('nl-123')
 
-      expect(capturedBody?.get('onlyFromMyTeam')).toBe('true')
-      expect(capturedBody?.get('onlyRelevantGender')).toBe('true')
+      expect(capturedBody.value?.get('onlyFromMyTeam')).toBe('true')
+      expect(capturedBody.value?.get('onlyRelevantGender')).toBe('true')
     })
 
     it('respects custom options', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post(
           '*/api%5cnominationlist/getPossibleIndoorPlayerNominationsForNominationList',
           async ({ request }) => {
             const text = await request.text()
-            capturedBody = new URLSearchParams(text)
+            capturedBody.value = new URLSearchParams(text)
             return HttpResponse.json({ items: [], totalItemsCount: 0 })
           }
         )
@@ -859,87 +862,93 @@ describe('API Client', () => {
         onlyRelevantGender: false,
       })
 
-      expect(capturedBody?.get('onlyFromMyTeam')).toBe('false')
-      expect(capturedBody?.get('onlyRelevantGender')).toBe('false')
+      expect(capturedBody.value?.get('onlyFromMyTeam')).toBe('false')
+      expect(capturedBody.value?.get('onlyRelevantGender')).toBe('false')
     })
   })
 
   describe('updateNominationList', () => {
     it('sends PUT request with all required fields', async () => {
-      let capturedBody: URLSearchParams | null = null
-      let capturedMethod: string | null = null
+      const capturedBody = createCapture<URLSearchParams>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.put('*/api%5cnominationlist', async ({ request }) => {
-          capturedMethod = request.method
+          capturedMethod.value = request.method
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.updateNominationList('nl-1', 'game-1', 'team-1', ['player-1', 'player-2'])
 
-      expect(capturedMethod).toBe('PUT')
-      expect(capturedBody?.get('nominationList[__identity]')).toBe('nl-1')
-      expect(capturedBody?.get('nominationList[game][__identity]')).toBe('game-1')
-      expect(capturedBody?.get('nominationList[team][__identity]')).toBe('team-1')
-      expect(capturedBody?.get('nominationList[closed]')).toBe('false')
-      expect(capturedBody?.get('nominationList[isClosedForTeam]')).toBe('true')
+      expect(capturedMethod.value).toBe('PUT')
+      expect(capturedBody.value?.get('nominationList[__identity]')).toBe('nl-1')
+      expect(capturedBody.value?.get('nominationList[game][__identity]')).toBe('game-1')
+      expect(capturedBody.value?.get('nominationList[team][__identity]')).toBe('team-1')
+      expect(capturedBody.value?.get('nominationList[closed]')).toBe('false')
+      expect(capturedBody.value?.get('nominationList[isClosedForTeam]')).toBe('true')
     })
 
     it('includes player nomination IDs with indexed keys', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.put('*/api%5cnominationlist', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.updateNominationList('nl-1', 'game-1', 'team-1', ['p1', 'p2', 'p3'])
 
-      expect(capturedBody?.get('nominationList[indoorPlayerNominations][0][__identity]')).toBe('p1')
-      expect(capturedBody?.get('nominationList[indoorPlayerNominations][1][__identity]')).toBe('p2')
-      expect(capturedBody?.get('nominationList[indoorPlayerNominations][2][__identity]')).toBe('p3')
+      expect(
+        capturedBody.value?.get('nominationList[indoorPlayerNominations][0][__identity]')
+      ).toBe('p1')
+      expect(
+        capturedBody.value?.get('nominationList[indoorPlayerNominations][1][__identity]')
+      ).toBe('p2')
+      expect(
+        capturedBody.value?.get('nominationList[indoorPlayerNominations][2][__identity]')
+      ).toBe('p3')
     })
   })
 
   describe('finalizeNominationList', () => {
     it('sends POST request to finalize endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.post('*/api%5cnominationlist/finalize', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json({})
         })
       )
 
       await api.finalizeNominationList('nl-1', 'game-1', 'team-1', ['p1'])
 
-      expect(capturedUrl).toContain('nominationlist/finalize')
-      expect(capturedMethod).toBe('POST')
+      expect(capturedUrl.value).toContain('nominationlist/finalize')
+      expect(capturedMethod.value).toBe('POST')
     })
 
     it('includes validation ID when provided', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5cnominationlist/finalize', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.finalizeNominationList('nl-1', 'game-1', 'team-1', ['p1'], 'validation-1')
 
-      expect(capturedBody?.get('nominationList[nominationListValidation][__identity]')).toBe(
+      expect(capturedBody.value?.get('nominationList[nominationListValidation][__identity]')).toBe(
         'validation-1'
       )
     })
@@ -947,101 +956,101 @@ describe('API Client', () => {
 
   describe('updateScoresheet', () => {
     it('sends PUT request when scoresheetId is provided', async () => {
-      let capturedBody: URLSearchParams | null = null
-      let capturedMethod: string | null = null
+      const capturedBody = createCapture<URLSearchParams>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.put('*/api%5cscoresheet', async ({ request }) => {
-          capturedMethod = request.method
+          capturedMethod.value = request.method
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.updateScoresheet('ss-1', 'game-1', 'scorer-1', false)
 
-      expect(capturedMethod).toBe('PUT')
-      expect(capturedBody?.get('scoresheet[__identity]')).toBe('ss-1')
-      expect(capturedBody?.get('scoresheet[game][__identity]')).toBe('game-1')
-      expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
-      expect(capturedBody?.get('scoresheet[isSimpleScoresheet]')).toBe('false')
-      expect(capturedBody?.get('scoresheet[hasFile]')).toBe('false')
+      expect(capturedMethod.value).toBe('PUT')
+      expect(capturedBody.value?.get('scoresheet[__identity]')).toBe('ss-1')
+      expect(capturedBody.value?.get('scoresheet[game][__identity]')).toBe('game-1')
+      expect(capturedBody.value?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
+      expect(capturedBody.value?.get('scoresheet[isSimpleScoresheet]')).toBe('false')
+      expect(capturedBody.value?.get('scoresheet[hasFile]')).toBe('false')
     })
 
     it('sends POST request when scoresheetId is undefined (new scoresheet)', async () => {
-      let capturedBody: URLSearchParams | null = null
-      let capturedMethod: string | null = null
+      const capturedBody = createCapture<URLSearchParams>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.post('*/api%5cscoresheet', async ({ request }) => {
-          capturedMethod = request.method
+          capturedMethod.value = request.method
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.updateScoresheet(undefined, 'game-1', 'scorer-1', false)
 
-      expect(capturedMethod).toBe('POST')
-      expect(capturedBody?.has('scoresheet[__identity]')).toBe(false)
-      expect(capturedBody?.get('scoresheet[game][__identity]')).toBe('game-1')
-      expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
+      expect(capturedMethod.value).toBe('POST')
+      expect(capturedBody.value?.has('scoresheet[__identity]')).toBe(false)
+      expect(capturedBody.value?.get('scoresheet[game][__identity]')).toBe('game-1')
+      expect(capturedBody.value?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
     })
 
     it('supports simple scoresheet flag', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.put('*/api%5cscoresheet', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.updateScoresheet('ss-1', 'game-1', 'scorer-1', true)
 
-      expect(capturedBody?.get('scoresheet[isSimpleScoresheet]')).toBe('true')
+      expect(capturedBody.value?.get('scoresheet[isSimpleScoresheet]')).toBe('true')
     })
   })
 
   describe('validateScoresheet', () => {
     it('sends POST request to validateScoresheet endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.post('*/api%5cscoresheet/validateScoresheet', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json({ __identity: UUID1, hasValidationIssues: false })
         })
       )
 
       await api.validateScoresheet('game-1', 'scorer-1')
 
-      expect(capturedUrl).toContain('scoresheet/validateScoresheet')
-      expect(capturedMethod).toBe('POST')
+      expect(capturedUrl.value).toContain('scoresheet/validateScoresheet')
+      expect(capturedMethod.value).toBe('POST')
     })
 
     it('includes game and scorer in request body', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5cscoresheet/validateScoresheet', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({ __identity: UUID1, hasValidationIssues: false })
         })
       )
 
       await api.validateScoresheet('game-1', 'scorer-1', true)
 
-      expect(capturedBody?.get('scoresheet[game][__identity]')).toBe('game-1')
-      expect(capturedBody?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
-      expect(capturedBody?.get('scoresheet[isSimpleScoresheet]')).toBe('true')
+      expect(capturedBody.value?.get('scoresheet[game][__identity]')).toBe('game-1')
+      expect(capturedBody.value?.get('scoresheet[writerPerson][__identity]')).toBe('scorer-1')
+      expect(capturedBody.value?.get('scoresheet[isSimpleScoresheet]')).toBe('true')
     })
 
     it('returns validation result with identity', async () => {
@@ -1064,90 +1073,90 @@ describe('API Client', () => {
 
   describe('finalizeScoresheet', () => {
     it('sends POST request to finalize endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.post('*/api%5cscoresheet/finalize', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json({})
         })
       )
 
       await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
 
-      expect(capturedUrl).toContain('scoresheet/finalize')
-      expect(capturedMethod).toBe('POST')
+      expect(capturedUrl.value).toContain('scoresheet/finalize')
+      expect(capturedMethod.value).toBe('POST')
     })
 
     it('includes file resource ID and sets hasFile to true', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
 
-      expect(capturedBody?.get('scoresheet[file][__identity]')).toBe('file-res-1')
-      expect(capturedBody?.get('scoresheet[hasFile]')).toBe('true')
+      expect(capturedBody.value?.get('scoresheet[file][__identity]')).toBe('file-res-1')
+      expect(capturedBody.value?.get('scoresheet[hasFile]')).toBe('true')
     })
 
     it('includes scoresheet identity in body', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1')
 
-      expect(capturedBody?.get('scoresheet[__identity]')).toBe('ss-1')
+      expect(capturedBody.value?.get('scoresheet[__identity]')).toBe('ss-1')
     })
 
     it('includes validation ID when provided', async () => {
-      let capturedBody: URLSearchParams | null = null
+      const capturedBody = createCapture<URLSearchParams>()
 
       server.use(
         http.post('*/api%5cscoresheet/finalize', async ({ request }) => {
           const text = await request.text()
-          capturedBody = new URLSearchParams(text)
+          capturedBody.value = new URLSearchParams(text)
           return HttpResponse.json({})
         })
       )
 
       await api.finalizeScoresheet('ss-1', 'game-1', 'scorer-1', 'file-res-1', 'val-1')
 
-      expect(capturedBody?.get('scoresheet[scoresheetValidation][__identity]')).toBe('val-1')
+      expect(capturedBody.value?.get('scoresheet[scoresheetValidation][__identity]')).toBe('val-1')
     })
   })
 
   describe('getGameWithScoresheet', () => {
     it('requests game with scoresheet and nomination list properties', async () => {
-      let capturedUrl: string | null = null
+      const capturedUrl = createCapture<string>()
 
       server.use(
         http.get('*/api%5cgame/showWithNestedObjects', ({ request }) => {
-          capturedUrl = request.url
+          capturedUrl.value = request.url
           return HttpResponse.json({ game: { __identity: UUID1 } })
         })
       )
 
       await api.getGameWithScoresheet('game-123')
 
-      expect(capturedUrl).toContain('game%5B__identity%5D=game-123')
-      expect(capturedUrl).toContain('scoresheet')
-      expect(capturedUrl).toContain('nominationListOfTeamHome')
-      expect(capturedUrl).toContain('nominationListOfTeamAway')
+      expect(capturedUrl.value).toContain('game%5B__identity%5D=game-123')
+      expect(capturedUrl.value).toContain('scoresheet')
+      expect(capturedUrl.value).toContain('nominationListOfTeamHome')
+      expect(capturedUrl.value).toContain('nominationListOfTeamAway')
     })
 
     it('returns the game object from the response wrapper', async () => {
@@ -1172,15 +1181,15 @@ describe('API Client', () => {
 
   describe('getAssociationSettings', () => {
     it('sends GET request to correct endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.get(
           '*/api%5crefereeassociationsettings/getRefereeAssociationSettingsOfActiveParty',
           ({ request }) => {
-            capturedUrl = request.url
-            capturedMethod = request.method
+            capturedUrl.value = request.url
+            capturedMethod.value = request.method
             return HttpResponse.json({})
           }
         )
@@ -1188,28 +1197,28 @@ describe('API Client', () => {
 
       await api.getAssociationSettings()
 
-      expect(capturedUrl).toContain('getRefereeAssociationSettingsOfActiveParty')
-      expect(capturedMethod).toBe('GET')
+      expect(capturedUrl.value).toContain('getRefereeAssociationSettingsOfActiveParty')
+      expect(capturedMethod.value).toBe('GET')
     })
   })
 
   describe('getActiveSeason', () => {
     it('sends GET request to correct endpoint', async () => {
-      let capturedUrl: string | null = null
-      let capturedMethod: string | null = null
+      const capturedUrl = createCapture<string>()
+      const capturedMethod = createCapture<string>()
 
       server.use(
         http.get('*/api%5cindoorseason/getActiveIndoorSeason', ({ request }) => {
-          capturedUrl = request.url
-          capturedMethod = request.method
+          capturedUrl.value = request.url
+          capturedMethod.value = request.method
           return HttpResponse.json({})
         })
       )
 
       await api.getActiveSeason()
 
-      expect(capturedUrl).toContain('getActiveIndoorSeason')
-      expect(capturedMethod).toBe('GET')
+      expect(capturedUrl.value).toContain('getActiveIndoorSeason')
+      expect(capturedMethod.value).toBe('GET')
     })
   })
 
@@ -1381,7 +1390,7 @@ describe('API Client', () => {
 
       const result = await api.uploadResource(createMockFile('test.pdf', 'application/pdf'))
 
-      expect(result[0].__identity).toBe(UUID1)
+      expect(result[0]?.__identity).toBe(UUID1)
     })
 
     it('getAssociationSettings validates response', async () => {

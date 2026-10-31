@@ -2,6 +2,8 @@ import { isValidElement } from 'react'
 
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
+import { objectContaining } from '@/test/matchers'
+
 import type { Assignment, CompensationRecord } from '@/api/client'
 import { server } from '@/test/msw/server'
 
@@ -54,6 +56,7 @@ describe('createCompensationActions', () => {
     const handlers = {
       onEditCompensation: vi.fn(),
       onGeneratePDF: vi.fn(),
+      onTwintPayment: vi.fn(),
     }
 
     const actions = createCompensationActions(mockCompensation, handlers)
@@ -66,6 +69,7 @@ describe('createCompensationActions', () => {
     const handlers = {
       onEditCompensation: vi.fn(),
       onGeneratePDF: vi.fn(),
+      onTwintPayment: vi.fn(),
     }
 
     const actions = createCompensationActions(mockCompensation, handlers)
@@ -75,12 +79,17 @@ describe('createCompensationActions', () => {
 
     actions.generatePDF.onAction()
     expect(handlers.onGeneratePDF).toHaveBeenCalledWith(mockCompensation)
+
+    // Twint receives the total: game compensation (50) + travel expenses (20)
+    actions.twintPayment.onAction()
+    expect(handlers.onTwintPayment).toHaveBeenCalledWith(70)
   })
 
   it('should have correct action properties', () => {
     const handlers = {
       onEditCompensation: vi.fn(),
       onGeneratePDF: vi.fn(),
+      onTwintPayment: vi.fn(),
     }
 
     const actions = createCompensationActions(mockCompensation, handlers)
@@ -142,7 +151,7 @@ describe('downloadCompensationPDF', () => {
       expect.objectContaining({
         method: 'GET',
         credentials: 'include',
-        headers: expect.objectContaining({
+        headers: objectContaining({
           'X-Session-Token': 'mock-session-token',
         }),
       })

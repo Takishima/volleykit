@@ -62,11 +62,8 @@ describe('generateDemoUuid', () => {
     // Second pass: verify they're all different and reproducible
     for (const seed of seeds) {
       expect(generateDemoUuid(seed)).toBe(results[seed])
-      for (const otherSeed of seeds) {
-        if (seed !== otherSeed) {
-          expect(results[seed]).not.toBe(results[otherSeed])
-        }
-      }
+      const otherUuids = seeds.filter((other) => other !== seed).map((other) => results[other])
+      expect(otherUuids).not.toContain(results[seed])
     }
   })
 

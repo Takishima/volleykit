@@ -6,6 +6,9 @@ on:
       - 'packages/worker/**'
       - '.github/workflows/deploy-worker.yml'
   workflow_dispatch: # Allow manual trigger
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy to Cloudflare
@@ -17,7 +20,9 @@ jobs:
         working-directory: packages/worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -36,7 +41,8 @@ jobs:
           echo "hash=$WORKER_GIT_HASH" >> "$GITHUB_OUTPUT"
           echo "Worker git hash: $WORKER_GIT_HASH"
       - name: Deploy to Cloudflare Workers
-        run: pnpm exec wrangler deploy --define __WORKER_GIT_HASH__:\"${{ steps.worker-hash.outputs.hash }}\"
+        run: pnpm exec wrangler deploy --define "__WORKER_GIT_HASH__:\"$WORKER_GIT_HASH\""
         env:
+          WORKER_GIT_HASH: ${{ steps.worker-hash.outputs.hash }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

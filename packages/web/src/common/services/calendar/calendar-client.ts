@@ -204,44 +204,44 @@ export const calendarApi = {
   },
 
   // Compensations - not supported in calendar mode
-  async searchCompensations(): Promise<CompensationsResponse> {
-    throw new CalendarModeNotSupportedError('Compensations')
+  searchCompensations(): Promise<CompensationsResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Compensations'))
   },
 
-  async getCompensationDetails(): Promise<ConvocationCompensationDetailed> {
-    throw new CalendarModeNotSupportedError('Compensation details')
+  getCompensationDetails(): Promise<ConvocationCompensationDetailed> {
+    return Promise.reject(new CalendarModeNotSupportedError('Compensation details'))
   },
 
-  async updateCompensation(): Promise<void> {
-    throw new CalendarModeNotSupportedError('Compensation updates')
+  updateCompensation(): Promise<void> {
+    return Promise.reject(new CalendarModeNotSupportedError('Compensation updates'))
   },
 
   // Exchanges - not supported in calendar mode
-  async searchExchanges(): Promise<ExchangesResponse> {
-    throw new CalendarModeNotSupportedError('Exchanges')
+  searchExchanges(): Promise<ExchangesResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Exchanges'))
   },
 
-  async applyForExchange(): Promise<PickExchangeResponse> {
-    throw new CalendarModeNotSupportedError('Exchange applications')
+  applyForExchange(): Promise<PickExchangeResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Exchange applications'))
   },
 
-  async addToExchange(): Promise<void> {
-    throw new CalendarModeNotSupportedError('Adding to exchange')
+  addToExchange(): Promise<void> {
+    return Promise.reject(new CalendarModeNotSupportedError('Adding to exchange'))
   },
 
-  async removeOwnExchange(): Promise<void> {
-    throw new CalendarModeNotSupportedError('Removing own exchange')
+  removeOwnExchange(): Promise<void> {
+    return Promise.reject(new CalendarModeNotSupportedError('Removing own exchange'))
   },
 
   // Settings - return mock data for UI compatibility
-  async getAssociationSettings(): Promise<AssociationSettings> {
+  getAssociationSettings(): Promise<AssociationSettings> {
     // Return sensible defaults for calendar mode
-    return {
+    return Promise.resolve({
       hoursAfterGameStartForRefereeToEditGameList: DEFAULT_REFEREE_EDIT_HOURS,
-    } as AssociationSettings
+    })
   },
 
-  async getActiveSeason(): Promise<Season> {
+  getActiveSeason(): Promise<Season> {
     // Return a season spanning the current volleyball year
     // Season typically runs September to June
     const now = new Date()
@@ -254,54 +254,54 @@ export const calendarApi = {
     const seasonStart = new Date(seasonStartYear, SEASON_START_MONTH, SEASON_START_DAY)
     const seasonEnd = new Date(seasonStartYear + 1, SEASON_END_MONTH, SEASON_END_DAY)
 
-    return {
+    return Promise.resolve({
       seasonStartDate: seasonStart.toISOString(),
       seasonEndDate: seasonEnd.toISOString(),
-    } as Season
+    })
   },
 
   // Nominations - not supported in calendar mode
-  async getPossiblePlayerNominations(): Promise<PossibleNominationsResponse> {
-    throw new CalendarModeNotSupportedError('Player nominations')
+  getPossiblePlayerNominations(): Promise<PossibleNominationsResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Player nominations'))
   },
 
-  async searchPersons(): Promise<PersonSearchResponse> {
-    throw new CalendarModeNotSupportedError('Person search')
+  searchPersons(): Promise<PersonSearchResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Person search'))
   },
 
-  async getGameWithScoresheet(): Promise<GameDetails> {
-    throw new CalendarModeNotSupportedError('Scoresheet access')
+  getGameWithScoresheet(): Promise<GameDetails> {
+    return Promise.reject(new CalendarModeNotSupportedError('Scoresheet access'))
   },
 
-  async updateNominationList(): Promise<NominationList> {
-    throw new CalendarModeNotSupportedError('Nomination list updates')
+  updateNominationList(): Promise<NominationList> {
+    return Promise.reject(new CalendarModeNotSupportedError('Nomination list updates'))
   },
 
-  async finalizeNominationList(): Promise<NominationListResponse> {
-    throw new CalendarModeNotSupportedError('Nomination list finalization')
+  finalizeNominationList(): Promise<NominationListResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Nomination list finalization'))
   },
 
-  async updateScoresheet(): Promise<Scoresheet> {
-    throw new CalendarModeNotSupportedError('Scoresheet updates')
+  updateScoresheet(): Promise<Scoresheet> {
+    return Promise.reject(new CalendarModeNotSupportedError('Scoresheet updates'))
   },
 
-  async validateScoresheet(): Promise<ScoresheetValidation> {
-    throw new CalendarModeNotSupportedError('Scoresheet validation')
+  validateScoresheet(): Promise<ScoresheetValidation> {
+    return Promise.reject(new CalendarModeNotSupportedError('Scoresheet validation'))
   },
 
-  async finalizeScoresheet(): Promise<Scoresheet> {
-    throw new CalendarModeNotSupportedError('Scoresheet finalization')
+  finalizeScoresheet(): Promise<Scoresheet> {
+    return Promise.reject(new CalendarModeNotSupportedError('Scoresheet finalization'))
   },
 
-  async uploadResource(): Promise<FileResource[]> {
-    throw new CalendarModeNotSupportedError('File uploads')
+  uploadResource(): Promise<FileResource[]> {
+    return Promise.reject(new CalendarModeNotSupportedError('File uploads'))
   },
 
-  async switchRoleAndAttribute(): Promise<void> {
-    throw new CalendarModeNotSupportedError('Role switching')
+  switchRoleAndAttribute(): Promise<void> {
+    return Promise.reject(new CalendarModeNotSupportedError('Role switching'))
   },
 
-  async searchRefereeBackups(): Promise<RefereeBackupSearchResponse> {
-    throw new CalendarModeNotSupportedError('Referee backups')
+  searchRefereeBackups(): Promise<RefereeBackupSearchResponse> {
+    return Promise.reject(new CalendarModeNotSupportedError('Referee backups'))
   },
 } satisfies ApiClient

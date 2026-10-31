@@ -13,3 +13,4 @@ export {
 export { useCompensations, type UseCompensationsOptions } from './useCompensations'
 export { useExchanges, type UseExchangesOptions, type ExchangeListResult } from './useExchanges'
 export * from './useAuth'
+export { useTodayKey, useCurrentMinute } from './useClock'

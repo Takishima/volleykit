@@ -6,6 +6,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as pwaContext from '@/contexts/PWAContext'
 import * as authStore from '@/common/stores/auth'
+import type { AuthState, UserProfile } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
 import * as settingsStore from '@/common/stores/settings'
 
 import { SettingsPage } from './SettingsPage'
@@ -38,7 +40,7 @@ vi.stubGlobal('__PWA_ENABLED__', false)
 // Stub app version to avoid test failures on version bumps
 vi.stubGlobal('__APP_VERSION__', '1.0.0-test')
 
-const mockUser = {
+const mockUser: UserProfile = {
   id: 'user-1',
   firstName: 'John',
   lastName: 'Doe',
@@ -49,21 +51,18 @@ const mockUser = {
 const mockLogout = vi.fn()
 const mockSetSafeMode = vi.fn()
 
-function mockAuthStore(overrides: Record<string, unknown> = {}) {
-  const dataSource = (overrides.dataSource ?? 'api') as 'api' | 'demo' | 'calendar'
-  const state = {
+function mockAuthStore(overrides: Partial<AuthState> = {}) {
+  const dataSource = overrides.dataSource ?? 'api'
+  const state = partialMock<AuthState>({
     user: mockUser,
     logout: mockLogout,
     dataSource,
     isCalendarMode: () => dataSource === 'calendar',
     ...overrides,
-  }
-  vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
-    if (typeof selector === 'function') {
-      return selector(state)
-    }
-    return state as ReturnType<typeof authStore.useAuthStore>
   })
+  vi.mocked(authStore.useAuthStore).mockImplementation(
+    (selector?: (state: AuthState) => unknown) => (selector ? selector(state) : state)
+  )
 }
 
 function mockSettingsStore(overrides = {}) {
@@ -74,9 +73,7 @@ function mockSettingsStore(overrides = {}) {
     setSettingsGroupExpanded: vi.fn(),
     ...overrides,
   }
-  vi.mocked(settingsStore.useSettingsStore).mockReturnValue(
-    state as ReturnType<typeof settingsStore.useSettingsStore>
-  )
+  vi.mocked(settingsStore.useSettingsStore).mockReturnValue(state)
 }
 
 describe('SettingsPage', () => {

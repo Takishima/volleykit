@@ -13,6 +13,7 @@ import {
   HOURS_PER_DAY,
   formatDateTime,
   formatDate,
+  formatDateKey,
   formatDOB,
   isDateInPast,
   isDateToday,
@@ -99,6 +100,16 @@ describe('formatDate', () => {
 
   it('should handle ISO datetime strings', () => {
     expect(formatDate('2025-01-15T14:30:00Z')).toBe('15.01.2025')
+  })
+})
+
+describe('formatDateKey', () => {
+  it('pads month and day', () => {
+    expect(formatDateKey(new Date(2026, 0, 5))).toBe('2026-01-05')
+  })
+
+  it('uses the local date, not UTC', () => {
+    expect(formatDateKey(new Date(2026, 9, 25, 23, 59))).toBe('2026-10-25')
   })
 })
 
@@ -215,8 +226,8 @@ describe('groupByWeek', () => {
 
     const groups = groupByWeek(items, getDate)
     expect(groups).toHaveLength(1)
-    expect(groups[0].items).toHaveLength(3)
-    expect(groups[0].week.weekNumber).toBe(3)
+    expect(groups[0]?.items).toHaveLength(3)
+    expect(groups[0]?.week.weekNumber).toBe(3)
   })
 
   it('should create separate groups for different weeks', () => {
@@ -227,8 +238,8 @@ describe('groupByWeek', () => {
 
     const groups = groupByWeek(items, getDate)
     expect(groups).toHaveLength(2)
-    expect(groups[0].items).toHaveLength(1)
-    expect(groups[1].items).toHaveLength(1)
+    expect(groups[0]?.items).toHaveLength(1)
+    expect(groups[1]?.items).toHaveLength(1)
   })
 
   it('should handle week boundaries correctly (Monday start)', () => {
@@ -239,8 +250,8 @@ describe('groupByWeek', () => {
 
     const groups = groupByWeek(items, getDate)
     expect(groups).toHaveLength(2)
-    expect(groups[0].week.weekNumber).toBe(3)
-    expect(groups[1].week.weekNumber).toBe(4)
+    expect(groups[0]?.week.weekNumber).toBe(3)
+    expect(groups[1]?.week.weekNumber).toBe(4)
   })
 
   it('should skip items with invalid dates', () => {
@@ -252,7 +263,7 @@ describe('groupByWeek', () => {
 
     const groups = groupByWeek(items, getDate)
     expect(groups).toHaveLength(1)
-    expect(groups[0].items).toHaveLength(2)
+    expect(groups[0]?.items).toHaveLength(2)
   })
 
   it('should skip items with null/undefined dates', () => {
@@ -264,14 +275,16 @@ describe('groupByWeek', () => {
 
     const groups = groupByWeek(items, (item) => item.date)
     expect(groups).toHaveLength(1)
-    expect(groups[0].items).toHaveLength(1)
+    expect(groups[0]?.items).toHaveLength(1)
   })
 
   it('should include correct week info', () => {
     const items: TestItem[] = [{ id: 1, date: '2025-01-15' }] // Wednesday of Week 3
 
     const groups = groupByWeek(items, getDate)
-    const week = groups[0].week
+    const week = groups[0]?.week
+    expect(week).toBeDefined()
+    if (!week) throw new Error('Expected one week group')
 
     expect(week.key).toBe('2025-W03')
     expect(week.weekNumber).toBe(3)

@@ -3,6 +3,10 @@ import { corsHeaders, securityHeaders } from '../middleware'
 import {
   AUTH_ENDPOINT,
   CAPTURE_SESSION_TOKEN_HEADER,
+  HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE,
+  HTTP_REDIRECT_STATUS_MIN,
+  HttpStatus,
+  extractRawPathAndSearch,
   getUserAgent,
   detectSessionIssue,
   errorResponse,
@@ -40,12 +44,12 @@ export async function handleProxy(
 ): Promise<Response> {
   // Validate pathname for security (path traversal prevention)
   if (!isPathSafe(url.pathname)) {
-    return errorResponse(400, 'Bad Request: Invalid path', origin)
+    return errorResponse(HttpStatus.BAD_REQUEST, 'Bad Request: Invalid path', origin)
   }
 
   // Only proxy allowed paths
   if (!isAllowedPath(url.pathname)) {
-    return errorResponse(404, 'Not Found: Path not proxied', origin)
+    return errorResponse(HttpStatus.NOT_FOUND, 'Not Found: Path not proxied', origin)
   }
 
   // Auth lockout check - block auth requests from locked-out IPs
@@ -82,9 +86,7 @@ export async function handleProxy(
   // Build target URL
   // Extract the raw path + search from request URL to preserve URL encoding
   // This is critical for backslash (%5c) encoding required by TYPO3 Neos/Flow
-  const requestUrlStr = request.url
-  const pathStart = requestUrlStr.indexOf('/', requestUrlStr.indexOf('://') + 3)
-  let rawPathAndSearch = pathStart >= 0 ? requestUrlStr.substring(pathStart) : '/'
+  let rawPathAndSearch = extractRawPathAndSearch(request.url)
 
   // iOS Safari workaround: Detect requests to /login with auth credentials
   // iOS Safari can trigger form submission with incorrect method (GET instead of POST)
@@ -284,7 +286,10 @@ export async function handleProxy(
     }
 
     // Handle redirects
-    if (response.status >= 300 && response.status < 400) {
+    if (
+      response.status >= HTTP_REDIRECT_STATUS_MIN &&
+      response.status < HTTP_REDIRECT_STATUS_MAX_EXCLUSIVE
+    ) {
       const location = response.headers.get('Location')
       if (location) {
         // Rewrite redirect to go through proxy
@@ -349,6 +354,6 @@ export async function handleProxy(
     })
   } catch (error) {
     console.error('Proxy error:', error)
-    return errorResponse(502, 'Proxy Error', origin)
+    return errorResponse(HttpStatus.BAD_GATEWAY, 'Proxy Error', origin)
   }
 }

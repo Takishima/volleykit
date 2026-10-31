@@ -63,7 +63,10 @@ class ModalErrorBoundaryClass extends Component<ModalErrorBoundaryClassProps, St
     this.props.onClose?.()
   }
 
-  override render() {
+  /**
+   * @returns the inline modal error UI while in an error state, otherwise the children
+   */
+  override render(): ReactNode {
     if (this.state.hasError) {
       const { translations, onClose } = this.props
       const isNetworkError = this.state.errorType === 'network'

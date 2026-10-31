@@ -105,7 +105,7 @@ describe('syncPendingActions', () => {
     const action = createTestAction({
       type: 'applyForExchange',
       payload: { exchangeId: 'ex-1' },
-    } as Partial<OfflineAction>)
+    })
     mockActions.push(action)
 
     await syncPendingActions()
@@ -117,7 +117,7 @@ describe('syncPendingActions', () => {
     const action = createTestAction({
       type: 'addToExchange',
       payload: { convocationId: 'conv-1' },
-    } as Partial<OfflineAction>)
+    })
     mockActions.push(action)
 
     await syncPendingActions()
@@ -129,7 +129,7 @@ describe('syncPendingActions', () => {
     const action = createTestAction({
       type: 'removeOwnExchange',
       payload: { convocationId: 'conv-2' },
-    } as Partial<OfflineAction>)
+    })
     mockActions.push(action)
 
     await syncPendingActions()

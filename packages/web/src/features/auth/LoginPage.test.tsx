@@ -4,6 +4,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import * as calendarHelpers from '@/common/services/calendar/calendar-helpers'
 import * as authStore from '@/common/stores/auth'
 import * as demoStore from '@/common/stores/demo'
+import type { AuthState } from '@/common/stores/auth'
+import type { DemoState } from '@/common/stores/demo'
+import { partialMock } from '@/test/partial-mock'
 
 import { LoginPage } from './LoginPage'
 
@@ -29,35 +32,29 @@ const mockSetDemoAuthenticated = vi.fn()
 const mockClearStaleSession = vi.fn()
 const mockInitializeDemoData = vi.fn()
 
-function mockAuthStoreState(overrides = {}) {
-  const state = {
+function mockAuthStoreState(overrides: Partial<AuthState> = {}) {
+  const state = partialMock<AuthState>({
     login: mockLogin,
     loginWithCalendar: mockLoginWithCalendar,
-    status: 'idle' as const,
+    status: 'idle',
     error: null,
     lockedUntil: null,
     setDemoAuthenticated: mockSetDemoAuthenticated,
     clearStaleSession: mockClearStaleSession,
     ...overrides,
-  }
-  vi.mocked(authStore.useAuthStore).mockImplementation((selector?: unknown) => {
-    if (typeof selector === 'function') {
-      return selector(state)
-    }
-    return state as ReturnType<typeof authStore.useAuthStore>
   })
+  vi.mocked(authStore.useAuthStore).mockImplementation(
+    (selector?: (state: AuthState) => unknown) => (selector ? selector(state) : state)
+  )
 }
 
 function mockDemoStoreState() {
-  const state = {
+  const state = partialMock<DemoState>({
     initializeDemoData: mockInitializeDemoData,
-  }
-  vi.mocked(demoStore.useDemoStore).mockImplementation((selector?: unknown) => {
-    if (typeof selector === 'function') {
-      return selector(state)
-    }
-    return state as ReturnType<typeof demoStore.useDemoStore>
   })
+  vi.mocked(demoStore.useDemoStore).mockImplementation(
+    (selector?: (state: DemoState) => unknown) => (selector ? selector(state) : state)
+  )
 }
 
 // Helper to switch to full login mode (calendar mode is now the default)

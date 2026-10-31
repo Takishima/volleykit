@@ -4,7 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import type { CompensationRecord } from '@/api/client'
+import type { AuthState } from '@/common/stores/auth'
+import type { DemoState } from '@/common/stores/demo'
+import { partialMock } from '@/test/partial-mock'
+
+import type { CompensationRecord, SearchConfiguration } from '@/api/client'
 
 import {
   useCompensations,
@@ -14,9 +18,6 @@ import {
   useUpdateAssignmentCompensation,
   COMPENSATION_ERROR_KEYS,
 } from './useCompensations'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFunction = (...args: any[]) => any
 
 // Mock dependencies
 vi.mock('@/api/client', () => ({
@@ -31,27 +32,36 @@ vi.mock('@/api/client', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector: AnyFunction) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 vi.mock('@/common/stores/demo', () => ({
-  useDemoStore: vi.fn((selector: AnyFunction) =>
-    selector({
-      activeAssociationCode: 'TEST',
-      updateAssignmentCompensation: vi.fn(),
-    })
+  useDemoStore: vi.fn((selector: (state: DemoState) => unknown) =>
+    selector(
+      partialMock<DemoState>({
+        activeAssociationCode: 'SV',
+        updateAssignmentCompensation: vi.fn(),
+      })
+    )
   ),
 }))
 
 vi.mock('@/api/queryKeys', () => ({
   queryKeys: {
     compensations: {
-      list: vi.fn((config, code) => ['compensations', 'list', config, code]),
+      list: vi.fn((config?: SearchConfiguration, code?: string | null) => [
+        'compensations',
+        'list',
+        config,
+        code,
+      ]),
       lists: vi.fn(() => ['compensations', 'list']),
       all: ['compensations'],
     },
     assignments: {
-      detail: vi.fn((id) => ['assignments', 'detail', id]),
+      detail: vi.fn((id: string) => ['assignments', 'detail', id]),
       lists: vi.fn(() => ['assignments', 'list']),
       all: ['assignments'],
     },
@@ -606,15 +616,17 @@ describe('useUpdateAssignmentCompensation', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useDemoStore } = await import('@/common/stores/demo')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo' }))
     )
 
-    vi.mocked(useDemoStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        activeAssociationCode: 'DEMO',
-        updateAssignmentCompensation: mockDemoUpdate,
-      })
+    vi.mocked(useDemoStore).mockImplementation((selector) =>
+      selector(
+        partialMock<DemoState>({
+          activeAssociationCode: 'SVRZ',
+          updateAssignmentCompensation: mockDemoUpdate,
+        })
+      )
     )
 
     const { result } = renderHook(() => useUpdateAssignmentCompensation(), {
@@ -638,15 +650,17 @@ describe('useUpdateAssignmentCompensation', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useDemoStore } = await import('@/common/stores/demo')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo' }))
     )
 
-    vi.mocked(useDemoStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        activeAssociationCode: 'DEMO',
-        updateAssignmentCompensation: mockDemoUpdate,
-      })
+    vi.mocked(useDemoStore).mockImplementation((selector) =>
+      selector(
+        partialMock<DemoState>({
+          activeAssociationCode: 'SVRZ',
+          updateAssignmentCompensation: mockDemoUpdate,
+        })
+      )
     )
 
     const queryClient = createQueryClient()

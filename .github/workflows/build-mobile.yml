@@ -17,7 +17,7 @@ on:
           - both
         default: android
 permissions:
-  contents: write
+  contents: read
 # Prevent concurrent builds
 concurrency:
   group: build-mobile-${{ github.event.inputs.commit || github.sha }}
@@ -28,12 +28,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check authorization
+        env:
+          ACTOR: ${{ github.actor }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: |
-          if [ "${{ github.actor }}" != "${{ github.repository_owner }}" ]; then
-            echo "::error::This workflow can only be triggered by the repository owner (${{ github.repository_owner }})."
+          if [ "$ACTOR" != "$REPOSITORY_OWNER" ]; then
+            echo "::error::This workflow can only be triggered by the repository owner ($REPOSITORY_OWNER)."
             exit 1
           fi
-          echo "Authorized: ${{ github.actor }}"
+          echo "Authorized: $ACTOR"
   # Validate commit is on main
   validate:
     needs: authorize
@@ -43,14 +46,15 @@ jobs:
       short_sha: ${{ steps.resolve.outputs.short_sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Resolve and validate commit
         id: resolve
+        env:
+          COMMIT: ${{ github.event.inputs.commit }}
         run: |
-          COMMIT="${{ github.event.inputs.commit }}"
-
           # If no commit specified, use HEAD of main
           if [ -z "$COMMIT" ]; then
             COMMIT=$(git rev-parse origin/main)

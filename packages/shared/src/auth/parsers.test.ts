@@ -377,8 +377,8 @@ describe('parseOccupationsFromActiveParty', () => {
     const result = parseOccupationsFromActiveParty(attrs)
 
     expect(result).toHaveLength(2)
-    expect(result[0].associationCode).toBe('RVNO')
-    expect(result[1].associationCode).toBe('RVSZ')
+    expect(result[0]?.associationCode).toBe('RVNO')
+    expect(result[1]?.associationCode).toBe('RVSZ')
   })
 
   it('should filter out non-referee roles', () => {
@@ -398,7 +398,7 @@ describe('parseOccupationsFromActiveParty', () => {
     const result = parseOccupationsFromActiveParty(attrs)
 
     expect(result).toHaveLength(1)
-    expect(result[0].associationCode).toBe('RVNO')
+    expect(result[0]?.associationCode).toBe('RVNO')
   })
 
   it('should deduplicate by association code', () => {
@@ -453,7 +453,7 @@ describe('filterRefereeAssociations', () => {
     const result = filterRefereeAssociations(attrs)
 
     expect(result).toHaveLength(1)
-    expect(result[0].__identity).toBe('1')
+    expect(result[0]?.__identity).toBe('1')
   })
 
   it('should return empty array for null input', () => {

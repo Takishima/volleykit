@@ -83,8 +83,8 @@ export function ScoresheetPanel({
   return (
     <div className="py-4">
       {scoresheetNotRequired && (
-        <div className="mb-4 border border-info-200 dark:border-info-800 bg-info-50 dark:bg-info-900/20 rounded-lg p-3 flex items-start gap-2">
-          <Info className="w-5 h-5 flex-shrink-0 text-info-500 mt-0.5" aria-hidden="true" />
+        <div className="mb-4 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 flex items-start gap-2">
+          <Info className="w-5 h-5 flex-shrink-0 text-blue-500 mt-0.5" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium text-text-primary dark:text-text-primary-dark">
               {t('validation.scoresheetUpload.notRequired')}

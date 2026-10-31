@@ -18,7 +18,7 @@ describe('Environment Validation', () => {
 
   it('validates TARGET_HOST must be a valid URL', () => {
     expect(() => new URL('https://example.com')).not.toThrow()
-    expect(() => new URL('not-a-url')).toThrow()
+    expect(() => new URL('not-a-url')).toThrow(TypeError)
   })
 })
 
@@ -74,12 +74,11 @@ describe('Rate Limiting', () => {
   })
 
   it('allows requests under rate limit', async () => {
-    const mockRateLimiter: RateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: true }),
-    }
+    const limit = vi.fn().mockResolvedValue({ success: true })
+    const mockRateLimiter: RateLimiter = { limit }
     const result = await checkRateLimit(mockRateLimiter, '192.168.1.1')
     expect(result).toBe(true)
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '192.168.1.1' })
+    expect(limit).toHaveBeenCalledWith({ key: '192.168.1.1' })
   })
 
   it('blocks requests over rate limit', async () => {
@@ -91,11 +90,10 @@ describe('Rate Limiting', () => {
   })
 
   it('uses client IP as rate limit key', async () => {
-    const mockRateLimiter: RateLimiter = {
-      limit: vi.fn().mockResolvedValue({ success: true }),
-    }
+    const limit = vi.fn().mockResolvedValue({ success: true })
+    const mockRateLimiter: RateLimiter = { limit }
     await checkRateLimit(mockRateLimiter, '10.0.0.1')
-    expect(mockRateLimiter.limit).toHaveBeenCalledWith({ key: '10.0.0.1' })
+    expect(limit).toHaveBeenCalledWith({ key: '10.0.0.1' })
   })
 })
 

@@ -1,9 +1,11 @@
-name: Shell
+name: Shell, workflows, manifests
 
-# Lints every shell script git knows about (tracked or untracked) and runs
-# the validation-system test suite.
-# No `paths:` filter on purpose: the whole job takes seconds, and a filter is
-# one more list that must be kept in agreement with what the scripts read.
+# Lints every shell script git knows about (tracked or untracked), runs
+# the validation-system test suite, lints the GitHub Actions workflows and
+# checks that the workspace manifests agree with each other.
+# No `paths:` filter on purpose: the whole job takes well under a minute, and
+# a filter is one more list that must be kept in agreement with what the
+# scripts read.
 
 on:
   push:
@@ -15,14 +17,58 @@ permissions:
 
 jobs:
   shell:
-    name: Shellcheck + validation tests
+    name: Shell, workflows, manifests
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Shellcheck
         run: bash scripts/shellcheck.sh
 
       - name: Validation system tests
         run: bash scripts/validate.test.sh
+
+      # Workflow syntax and expressions; the embedded shellcheck pass covers
+      # the `run:` scripts, which scripts/shellcheck.sh does not see.
+      - name: Actionlint
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+        with:
+          shellcheck: true
+          pyflakes: false
+        env:
+          # Same floor as scripts/shellcheck.sh: style/info findings in `run:`
+          # scripts do not fail the gate, warnings and errors do.
+          SHELLCHECK_OPTS: --severity=warning
+
+      # Workflow security audit. Without advanced-security the step fails the
+      # job on findings instead of uploading SARIF, so contents: read is enough.
+      # Rule-wide exceptions live in .github/zizmor.yml.
+      - name: Zizmor
+        uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+        with:
+          advanced-security: false
+          persona: regular
+
+      # Cross-workspace manifest consistency (duplicate dependency versions,
+      # missing fields, ...). sherif only reads package.json files, so no
+      # dependency install is needed.
+      - name: Setup pnpm
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Monorepo manifest check
+        run: pnpm dlx sherif@1.13.0
+
+      # oxlint is the fast first pass over every TypeScript package; the
+      # package ESLint configs switch off the rules it owns, so it has to run
+      # in CI too, not only in the local gate. Only the root devDependencies
+      # are needed (oxlint is a self-contained binary).
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile --filter volleykit --ignore-scripts
+      - name: oxlint
+        run: pnpm run lint:oxlint

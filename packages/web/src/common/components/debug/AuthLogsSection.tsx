@@ -23,6 +23,25 @@ function formatTime(timestamp: number): string {
   return `${hours}:${minutes}:${seconds}.${ms}`
 }
 
+/** Renders attached log data: objects as indented JSON, primitives verbatim */
+function formatLogData(data: unknown): string {
+  switch (typeof data) {
+    case 'string':
+      return data
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+      return String(data)
+    case 'object':
+      return JSON.stringify(data, null, 1) ?? 'null'
+    case 'symbol':
+      return data.toString()
+    case 'undefined':
+    case 'function':
+      return typeof data
+  }
+}
+
 /** Color for each log level */
 const LOG_LEVEL_COLORS: Record<AuthLogEntry['level'], string> = {
   debug: '#888',
@@ -81,7 +100,7 @@ export function AuthLogsSection() {
         >
           {logs.map((entry, index) => (
             <div
-              key={`${entry.timestamp}-${index}`}
+              key={entry.id}
               style={{
                 padding: '2px 4px',
                 borderBottom: index < logs.length - 1 ? '1px solid #1a1a2e' : 'none',
@@ -106,9 +125,7 @@ export function AuthLogsSection() {
                     fontSize: '8px',
                   }}
                 >
-                  {typeof entry.data === 'object'
-                    ? JSON.stringify(entry.data, null, 1)
-                    : String(entry.data)}
+                  {formatLogData(entry.data)}
                 </pre>
               )}
             </div>

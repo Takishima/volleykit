@@ -19,6 +19,13 @@ export function QueryErrorHandler({ children }: { children: React.ReactNode }) {
   const isRedirectingRef = useRef(false)
 
   useEffect(() => {
+    const redirectToLogin = () =>
+      logout()
+        .catch((err: unknown) => logger.error('Logout failed during redirect:', err))
+        .finally(() => {
+          void navigate('/login', { replace: true })
+        })
+
     const handleQueryError = (error: unknown) => {
       // Only handle auth errors for API mode - demo and calendar modes don't use server auth
       if (dataSource !== 'api' || isRedirectingRef.current) return
@@ -26,11 +33,7 @@ export function QueryErrorHandler({ children }: { children: React.ReactNode }) {
       if (isAuthError(error)) {
         isRedirectingRef.current = true
         logger.warn('Authentication error detected, redirecting to login:', error)
-        logout()
-          .catch((err) => logger.error('Logout failed during redirect:', err))
-          .finally(() => {
-            navigate('/login', { replace: true })
-          })
+        void redirectToLogin()
       }
     }
 

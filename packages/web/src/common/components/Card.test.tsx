@@ -3,6 +3,9 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { Card, CardHeader, CardContent, CardFooter } from './Card'
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('Card', () => {
   it('renders children', () => {
     render(<Card>Test content</Card>)
@@ -10,9 +13,9 @@ describe('Card', () => {
   })
 
   it('applies custom className', () => {
-    render(<Card className="custom-class">Content</Card>)
+    render(<Card className={CUSTOM_CLASS}>Content</Card>)
     const card = screen.getByText('Content')
-    expect(card).toHaveClass('custom-class')
+    expect(card).toHaveClass(CUSTOM_CLASS)
   })
 
   it('adds button role when onClick is provided', () => {

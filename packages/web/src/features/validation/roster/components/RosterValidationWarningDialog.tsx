@@ -122,7 +122,7 @@ export function RosterValidationWarningDialog({
       onTouchStart={stopOverlayTouchStart}
     >
       <div
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className="absolute inset-0 bg-black/50"
         onClick={handleBackdropClick}
         aria-hidden="true"
       />

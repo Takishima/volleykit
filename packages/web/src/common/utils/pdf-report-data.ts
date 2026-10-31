@@ -79,7 +79,7 @@ export function extractSportsHallReportData(assignment: Assignment): SportsHallR
     gameNumber: game.number?.toString() ?? '',
     homeTeam: game.encounter?.teamHome?.name ?? '',
     awayTeam: game.encounter?.teamAway?.name ?? '',
-    gender: (game.group?.phase?.league?.gender ?? 'm') as Gender,
+    gender: game.group?.phase?.league?.gender ?? 'm',
     hallName: game.hall?.name ?? '',
     location: game.hall?.primaryPostalAddress?.city ?? '',
     date: formatDateForReport(game.startingDateTime),

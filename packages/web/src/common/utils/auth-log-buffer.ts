@@ -15,6 +15,8 @@ const MAX_LOG_ENTRIES = 50
 
 /** Log entry with timestamp and level */
 export interface AuthLogEntry {
+  /** Unique, increasing per entry; identifies an entry across buffer snapshots */
+  id: number
   timestamp: number
   level: 'debug' | 'info' | 'warn' | 'error'
   message: string
@@ -23,6 +25,9 @@ export interface AuthLogEntry {
 
 /** Circular buffer for log entries */
 const logBuffer: AuthLogEntry[] = []
+
+/** Source of the next entry id */
+let nextEntryId = 1
 
 /** Cached snapshot for useSyncExternalStore - only update when buffer changes */
 let cachedSnapshot: AuthLogEntry[] = []
@@ -36,6 +41,7 @@ const subscribers = new Set<LogChangeCallback>()
  */
 function addLogEntry(level: AuthLogEntry['level'], message: string, data?: unknown): void {
   const entry: AuthLogEntry = {
+    id: nextEntryId++,
     timestamp: Date.now(),
     level,
     message,

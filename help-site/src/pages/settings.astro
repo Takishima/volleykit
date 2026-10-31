@@ -42,9 +42,7 @@ import { t } from '../i18n'
   </ul>
 
   <InfoBox type="info">
-    <p data-i18n="settings.profile.infoBox">
-      {t('settings.profile.infoBox')}
-    </p>
+    <p data-i18n="settings.profile.infoBox">{t('settings.profile.infoBox')}</p>
   </InfoBox>
 
   <h3 data-i18n="settings.profile.loggingOut.title">{t('settings.profile.loggingOut.title')}</h3>
@@ -105,14 +103,14 @@ import { t } from '../i18n'
   />
 
   <InfoBox type="tip">
-    <p data-i18n="settings.homeLocation.tip">
-      {t('settings.homeLocation.tip')}
-    </p>
+    <p data-i18n="settings.homeLocation.tip">{t('settings.homeLocation.tip')}</p>
   </InfoBox>
 
   <p data-i18n="settings.homeLocation.seeGuide">
     {t('settings.homeLocation.seeGuide')}
-    <a href={`${BASE_PATH}/travel-time/`} data-i18n-skip="true">{t('nav.travelTime')}</a>
+    <a href={`${BASE_PATH}/travel-time/`} data-i18n-skip="true">
+      {t('nav.travelTime')}
+    </a>
   </p>
 
   <h2 data-i18n="settings.dataPrivacy.title">{t('settings.dataPrivacy.title')}</h2>
@@ -187,8 +185,6 @@ import { t } from '../i18n'
   </ul>
 
   <InfoBox type="info">
-    <p data-i18n="settings.about.infoBox">
-      {t('settings.about.infoBox')}
-    </p>
+    <p data-i18n="settings.about.infoBox">{t('settings.about.infoBox')}</p>
   </InfoBox>
 </DocLayout>

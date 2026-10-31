@@ -77,7 +77,7 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
         )
 
         if (response.ok) {
-          const data: PersonProfileResponse = await response.json()
+          const data = (await response.json()) as PersonProfileResponse
           const person = data.person
           if (person?.profilePicture?.publicResourceUri) {
             // Rewrite the full volleymanager URL to go through our proxy.
@@ -114,7 +114,8 @@ function ProfileSectionComponent({ user }: ProfileSectionProps) {
       }
     }
 
-    fetchProfileData()
+    // fetchProfileData handles its own errors, so the promise can be safely discarded
+    void fetchProfileData()
 
     return () => controller.abort()
   }, [user.id, isDemoMode])

@@ -5,7 +5,7 @@ import {
   validateOriginAndPreflight,
   checkRateLimit,
 } from '../middleware'
-import { OCR_MAX_FILE_SIZE_BYTES } from '../utils'
+import { BYTES_PER_MB, HttpStatus, OCR_MAX_FILE_SIZE_BYTES } from '../utils'
 
 // OCR configuration constants
 const OCR_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'] as const
@@ -27,7 +27,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
   // Only allow POST for OCR
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-      status: 405,
+      status: HttpStatus.METHOD_NOT_ALLOWED,
       headers: {
         'Content-Type': 'application/json',
         Allow: 'POST',
@@ -40,7 +40,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
   // Check if Mistral API key is configured
   if (!env.MISTRAL_API_KEY) {
     return new Response(JSON.stringify({ error: 'OCR service not configured' }), {
-      status: 503,
+      status: HttpStatus.SERVICE_UNAVAILABLE,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders(origin),
@@ -56,7 +56,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
 
     if (!imageFile) {
       return new Response(JSON.stringify({ error: "Missing 'image' field in form data" }), {
-        status: 400,
+        status: HttpStatus.BAD_REQUEST,
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders(origin),
@@ -74,7 +74,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
           error: `Unsupported file type: ${imageFile.type}. Allowed: ${OCR_ALLOWED_MIME_TYPES.join(', ')}`,
         }),
         {
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           headers: {
             'Content-Type': 'application/json',
             ...corsHeaders(origin),
@@ -88,10 +88,10 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
     if (imageFile.size > OCR_MAX_FILE_SIZE_BYTES) {
       return new Response(
         JSON.stringify({
-          error: `File too large: ${(imageFile.size / 1024 / 1024).toFixed(1)}MB. Maximum: 50MB`,
+          error: `File too large: ${(imageFile.size / BYTES_PER_MB).toFixed(1)}MB. Maximum: 50MB`,
         }),
         {
-          status: 400,
+          status: HttpStatus.BAD_REQUEST,
           headers: {
             'Content-Type': 'application/json',
             ...corsHeaders(origin),
@@ -141,9 +141,9 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
       console.error('Mistral OCR error:', mistralResponse.status, errorText)
 
       // Return appropriate error based on status
-      if (mistralResponse.status === 401) {
+      if (mistralResponse.status === HttpStatus.UNAUTHORIZED) {
         return new Response(JSON.stringify({ error: 'OCR service authentication failed' }), {
-          status: 503,
+          status: HttpStatus.SERVICE_UNAVAILABLE,
           headers: {
             'Content-Type': 'application/json',
             ...corsHeaders(origin),
@@ -152,9 +152,9 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
         })
       }
 
-      if (mistralResponse.status === 429) {
+      if (mistralResponse.status === HttpStatus.TOO_MANY_REQUESTS) {
         return new Response(JSON.stringify({ error: 'OCR service rate limit exceeded' }), {
-          status: 429,
+          status: HttpStatus.TOO_MANY_REQUESTS,
           headers: {
             'Content-Type': 'application/json',
             'Retry-After': String(OCR_RATE_LIMIT_RETRY_SECONDS),
@@ -165,7 +165,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
       }
 
       return new Response(JSON.stringify({ error: 'OCR processing failed' }), {
-        status: 502,
+        status: HttpStatus.BAD_GATEWAY,
         headers: {
           'Content-Type': 'application/json',
           ...corsHeaders(origin),
@@ -177,7 +177,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
     // Return the Mistral OCR response
     const ocrResult = await mistralResponse.json()
     return new Response(JSON.stringify(ocrResult), {
-      status: 200,
+      status: HttpStatus.OK,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders(origin),
@@ -187,7 +187,7 @@ export async function handleOcr(request: Request, env: Env, _url: URL): Promise<
   } catch (error) {
     console.error('OCR proxy error:', error)
     return new Response(JSON.stringify({ error: 'Internal server error during OCR processing' }), {
-      status: 500,
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
       headers: {
         'Content-Type': 'application/json',
         ...corsHeaders(origin),

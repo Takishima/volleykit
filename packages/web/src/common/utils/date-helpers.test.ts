@@ -11,7 +11,7 @@ import {
 
 describe('formatDateTime', () => {
   it('returns TBD for undefined', () => {
-    expect(formatDateTime(undefined)).toBe('TBD')
+    expect(formatDateTime()).toBe('TBD')
   })
 
   it('returns TBD for invalid date string', () => {
@@ -364,7 +364,7 @@ describe('formatRosterEntries', () => {
 
 describe('getMaxLastNameWidth', () => {
   it('returns 0 for empty map', () => {
-    const entries = new Map()
+    const entries: ReturnType<typeof formatRosterEntries> = new Map()
     expect(getMaxLastNameWidth(entries)).toBe(0)
   })
 

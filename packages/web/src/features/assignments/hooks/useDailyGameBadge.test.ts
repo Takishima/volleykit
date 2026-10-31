@@ -2,13 +2,14 @@ import { renderHook } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { Assignment } from '@/api/client'
+import type { BadgeService } from '@/common/services/badge/types'
 
 import { useDailyGameBadge, countTodaysGames } from './useDailyGameBadge'
 
 // Mock the badge service
-const mockSetBadge = vi.fn().mockResolvedValue({ success: true })
-const mockClearBadge = vi.fn().mockResolvedValue({ success: true })
-const mockIsSupported = vi.fn(() => true)
+const mockSetBadge = vi.fn<BadgeService['setBadge']>().mockResolvedValue({ success: true })
+const mockClearBadge = vi.fn<BadgeService['clearBadge']>().mockResolvedValue({ success: true })
+const mockIsSupported = vi.fn<BadgeService['isSupported']>(() => true)
 
 vi.mock('@/common/services/badge', () => ({
   badgeService: {
@@ -36,7 +37,7 @@ function createMockAssignment(
         startingDateTime: dateTime,
       },
     },
-  } as Assignment
+  }
 }
 
 // Helper to get today's date at a specific time

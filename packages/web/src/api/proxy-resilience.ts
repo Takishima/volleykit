@@ -26,7 +26,7 @@ function getProxyUrls(): string[] {
   const fallbacksRaw = import.meta.env.VITE_FALLBACK_PROXY_URLS || ''
   const fallbacks = fallbacksRaw
     .split(',')
-    .map((u: string) => u.trim())
+    .map((u) => u.trim())
     .filter(Boolean)
   // Deduplicate while preserving order
   return [...new Set([primary, ...fallbacks])].filter(Boolean)

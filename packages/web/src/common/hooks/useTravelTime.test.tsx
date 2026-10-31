@@ -4,12 +4,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { AuthState } from '@/common/stores/auth'
+import type { SettingsState } from '@/common/stores/settings/types'
+import { partialMock } from '@/test/partial-mock'
+
 import type { TravelTimeResult, Coordinates } from '@/common/services/transport'
 
 import { useTravelTime, formatTravelTime, useTravelTimeAvailable } from './useTravelTime'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFunction = (...args: any[]) => any
 
 // Mock the transport service
 vi.mock('@/common/services/transport', () => ({
@@ -27,20 +28,22 @@ vi.mock('@/common/services/transport', () => ({
   TRAVEL_TIME_GC_TIME: 14 * 24 * 60 * 60 * 1000,
 }))
 
-// Mock the stores - using AnyFunction to avoid strict type checking in tests
+// Mock the stores with the fields the hook reads
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector: AnyFunction) =>
-    selector({ dataSource: 'api', user: null, activeOccupationId: null })
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api', user: null, activeOccupationId: null }))
   ),
 }))
 
 vi.mock('@/common/stores/settings', () => ({
-  useSettingsStore: vi.fn((selector: AnyFunction) =>
-    selector({
-      homeLocation: null,
-      transportEnabled: false,
-      isTransportEnabledForAssociation: () => false,
-    })
+  useSettingsStore: vi.fn((selector: (state: SettingsState) => unknown) =>
+    selector(
+      partialMock<SettingsState>({
+        homeLocation: null,
+        transportEnabled: false,
+        isTransportEnabledForAssociation: () => false,
+      })
+    )
   ),
 }))
 
@@ -87,12 +90,14 @@ describe('useTravelTime', () => {
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: false,
-          isTransportEnabledForAssociation: () => false,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: false,
+            isTransportEnabledForAssociation: () => false,
+          })
+        )
       )
 
       const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
@@ -108,12 +113,14 @@ describe('useTravelTime', () => {
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: null,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: null,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       const { result } = renderHook(() => useTravelTime('hall-1', mockHallCoords), {
@@ -129,12 +136,14 @@ describe('useTravelTime', () => {
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       const { result } = renderHook(() => useTravelTime('hall-1', null), {
@@ -150,12 +159,14 @@ describe('useTravelTime', () => {
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       const { result } = renderHook(() => useTravelTime(undefined, mockHallCoords), {
@@ -174,16 +185,20 @@ describe('useTravelTime', () => {
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(
+          partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null })
+        )
       )
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       vi.mocked(getOrFetchTravelTime).mockResolvedValue(mockTravelTimeResult)
@@ -215,16 +230,18 @@ describe('useTravelTime', () => {
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'api' })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(partialMock<AuthState>({ dataSource: 'api' }))
       )
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       vi.mocked(isOjpConfigured).mockReturnValue(true)
@@ -256,16 +273,18 @@ describe('useTravelTime', () => {
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'api' })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(partialMock<AuthState>({ dataSource: 'api' }))
       )
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       vi.mocked(isOjpConfigured).mockReturnValue(false)
@@ -286,16 +305,20 @@ describe('useTravelTime', () => {
       const { useAuthStore } = await import('@/common/stores/auth')
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(
+          partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null })
+        )
       )
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: mockHomeLocation,
-          transportEnabled: true,
-          isTransportEnabledForAssociation: () => true,
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: mockHomeLocation,
+            transportEnabled: true,
+            isTransportEnabledForAssociation: () => true,
+          })
+        )
       )
 
       vi.mocked(getOrFetchTravelTime).mockRejectedValue(new Error('API error'))
@@ -345,8 +368,8 @@ describe('useTravelTimeAvailable', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { isOjpConfigured } = await import('@/common/services/transport')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null }))
     )
     vi.mocked(isOjpConfigured).mockReturnValue(false)
 
@@ -359,8 +382,8 @@ describe('useTravelTimeAvailable', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { isOjpConfigured } = await import('@/common/services/transport')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'api' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'api' }))
     )
     vi.mocked(isOjpConfigured).mockReturnValue(true)
 
@@ -373,8 +396,8 @@ describe('useTravelTimeAvailable', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { isOjpConfigured } = await import('@/common/services/transport')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'api' })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'api' }))
     )
     vi.mocked(isOjpConfigured).mockReturnValue(false)
 
@@ -409,16 +432,18 @@ describe('day type caching', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null }))
     )
 
-    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        homeLocation: mockHomeLocation,
-        transportEnabled: true,
-        isTransportEnabledForAssociation: () => true,
-      })
+    vi.mocked(useSettingsStore).mockImplementation((selector) =>
+      selector(
+        partialMock<SettingsState>({
+          homeLocation: mockHomeLocation,
+          transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
+        })
+      )
     )
 
     vi.mocked(getDayType).mockReturnValue('saturday')
@@ -441,16 +466,18 @@ describe('day type caching', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null }))
     )
 
-    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        homeLocation: mockHomeLocation,
-        transportEnabled: true,
-        isTransportEnabledForAssociation: () => true,
-      })
+    vi.mocked(useSettingsStore).mockImplementation((selector) =>
+      selector(
+        partialMock<SettingsState>({
+          homeLocation: mockHomeLocation,
+          transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
+        })
+      )
     )
 
     vi.mocked(getDayType).mockReturnValue('sunday')
@@ -496,16 +523,18 @@ describe('localStorage persistence', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null }))
     )
 
-    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        homeLocation: mockHomeLocation,
-        transportEnabled: true,
-        isTransportEnabledForAssociation: () => true,
-      })
+    vi.mocked(useSettingsStore).mockImplementation((selector) =>
+      selector(
+        partialMock<SettingsState>({
+          homeLocation: mockHomeLocation,
+          transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
+        })
+      )
     )
 
     vi.mocked(getDayType).mockReturnValue('weekday')
@@ -538,16 +567,18 @@ describe('localStorage persistence', () => {
     const { useAuthStore } = await import('@/common/stores/auth')
     const { useSettingsStore } = await import('@/common/stores/settings')
 
-    vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-      selector({ dataSource: 'demo', user: null, activeOccupationId: null })
+    vi.mocked(useAuthStore).mockImplementation((selector) =>
+      selector(partialMock<AuthState>({ dataSource: 'demo', user: null, activeOccupationId: null }))
     )
 
-    vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-      selector({
-        homeLocation: mockHomeLocation,
-        transportEnabled: true,
-        isTransportEnabledForAssociation: () => true,
-      })
+    vi.mocked(useSettingsStore).mockImplementation((selector) =>
+      selector(
+        partialMock<SettingsState>({
+          homeLocation: mockHomeLocation,
+          transportEnabled: true,
+          isTransportEnabledForAssociation: () => true,
+        })
+      )
     )
 
     // Set up mocks

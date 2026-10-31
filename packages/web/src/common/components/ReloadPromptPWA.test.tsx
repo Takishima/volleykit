@@ -76,10 +76,10 @@ describe('ReloadPromptPWA', () => {
     const reloadButton = screen.getByRole('button', {
       name: /reload application/i,
     })
-    await act(async () => {
-      fireEvent.click(reloadButton)
+    fireEvent.click(reloadButton)
+    await waitFor(() => {
+      expect(mockUpdateApp).toHaveBeenCalled()
     })
-    expect(mockUpdateApp).toHaveBeenCalled()
   })
 
   it('disables reload button and shows loading text while updating', async () => {
@@ -100,16 +100,14 @@ describe('ReloadPromptPWA', () => {
     expect(reloadButton).toHaveTextContent('Reload')
 
     // Start the update
-    act(() => {
-      fireEvent.click(reloadButton)
-    })
+    fireEvent.click(reloadButton)
 
     // Button should be disabled and show loading text
     await waitFor(() => {
       expect(reloadButton).toBeDisabled()
-      expect(reloadButton).toHaveTextContent('Reloading...')
-      expect(reloadButton).toHaveAttribute('aria-busy', 'true')
     })
+    expect(reloadButton).toHaveAttribute('aria-busy', 'true')
+    expect(reloadButton).toHaveTextContent('Reloading...')
 
     // Resolve the update
     await act(async () => {
@@ -139,14 +137,10 @@ describe('ReloadPromptPWA', () => {
     })
 
     // Start first update
-    act(() => {
-      fireEvent.click(reloadButton)
-    })
+    fireEvent.click(reloadButton)
 
     // Try to click again while updating
-    act(() => {
-      fireEvent.click(reloadButton)
-    })
+    fireEvent.click(reloadButton)
 
     // Should only be called once
     expect(mockUpdateApp).toHaveBeenCalledTimes(1)

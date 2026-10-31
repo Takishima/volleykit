@@ -8,6 +8,7 @@
  */
 
 import { useDemoStore } from '@/common/stores/demo'
+import type { DemoState } from '@/common/stores/demo/types'
 import { BYTES_PER_KB } from '@/common/utils/constants'
 
 import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
@@ -26,9 +27,7 @@ import type {
   PropertyFilter,
   PropertyOrdering,
   Assignment,
-  CompensationRecord,
   ConvocationCompensationDetailed,
-  GameExchange,
   AssignmentsResponse,
   CompensationsResponse,
   ExchangesResponse,
@@ -148,6 +147,28 @@ function applyFilters<T>(items: T[], filters?: PropertyFilter[]): T[] {
 }
 
 /**
+ * String form of a sort value. Primitives stringify naturally; objects are
+ * serialised so two distinct objects do not collapse to "[object Object]".
+ */
+function toComparableString(value: unknown): string {
+  switch (typeof value) {
+    case 'string':
+      return value
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+      return String(value)
+    case 'object':
+      return JSON.stringify(value) ?? ''
+    case 'symbol':
+      return value.description ?? ''
+    case 'undefined':
+    case 'function':
+      return ''
+  }
+}
+
+/**
  * Compare two values for sorting.
  * Returns negative if a < b, positive if a > b, 0 if equal.
  */
@@ -174,9 +195,7 @@ function compareValues(valueA: unknown, valueB: unknown, descending: boolean): n
   }
 
   // Handle strings
-  const strA = String(valueA)
-  const strB = String(valueB)
-  const comparison = strA.localeCompare(strB)
+  const comparison = toComparableString(valueA).localeCompare(toComparableString(valueB))
   return descending ? -comparison : comparison
 }
 
@@ -221,8 +240,7 @@ function applySorting<T>(items: T[], orderings?: PropertyOrdering[]): T[] {
  */
 function applyPagination<T>(items: T[], offset?: number, limit?: number): T[] {
   const start = offset ?? 0
-  const end = limit ? start + limit : undefined
-  return items.slice(start, end)
+  return limit ? items.slice(start, start + limit) : items.slice(start)
 }
 
 /**
@@ -251,6 +269,32 @@ function processSearchRequest<T>(
  * Mock API implementation that mirrors the real API interface.
  * Uses demo store data and applies the same filtering/sorting logic.
  */
+/**
+ * Returns the assignment with `scoresheet.closedAt` set from its validated
+ * game record, or the assignment itself when the game was not validated.
+ */
+function withValidatedScoresheet(
+  assignment: Assignment,
+  validatedGames: DemoState['validatedGames']
+): Assignment {
+  const gameId = assignment.refereeGame?.game?.__identity
+  const validatedData = gameId ? validatedGames[gameId] : null
+  if (!validatedData || !assignment.refereeGame?.game) return assignment
+
+  return {
+    ...assignment,
+    refereeGame: {
+      ...assignment.refereeGame,
+      game: {
+        ...assignment.refereeGame.game,
+        scoresheet: {
+          closedAt: validatedData.validatedAt,
+        },
+      },
+    },
+  }
+}
+
 export const mockApi = {
   async searchAssignments(config: SearchConfiguration = {}): Promise<AssignmentsResponse> {
     await delay(MOCK_NETWORK_DELAY_MS)
@@ -259,29 +303,12 @@ export const mockApi = {
     const { items, total } = processSearchRequest(store.assignments, config)
 
     // Enrich assignments with scoresheet.closedAt from validated games
-    const enrichedItems = items.map((assignment) => {
-      const gameId = assignment.refereeGame?.game?.__identity
-      const validatedData = gameId ? store.validatedGames[gameId] : null
-
-      if (validatedData && assignment.refereeGame?.game) {
-        return {
-          ...assignment,
-          refereeGame: {
-            ...assignment.refereeGame,
-            game: {
-              ...assignment.refereeGame.game,
-              scoresheet: {
-                closedAt: validatedData.validatedAt,
-              },
-            },
-          },
-        }
-      }
-      return assignment
-    })
+    const enrichedItems = items.map((assignment) =>
+      withValidatedScoresheet(assignment, store.validatedGames)
+    )
 
     const response = {
-      items: enrichedItems as Assignment[],
+      items: enrichedItems,
       totalItemsCount: total,
     }
 
@@ -312,7 +339,7 @@ export const mockApi = {
     const { items, total } = processSearchRequest(store.compensations, config)
 
     const response = {
-      items: items as CompensationRecord[],
+      items: items,
       totalItemsCount: total,
     }
 
@@ -364,7 +391,7 @@ export const mockApi = {
     const { items, total } = processSearchRequest(store.exchanges, config)
 
     const response = {
-      items: items as GameExchange[],
+      items: items,
       totalItemsCount: total,
     }
 
@@ -395,7 +422,7 @@ export const mockApi = {
         persistenceObjectIdentifier: exchangeId,
         status: 'applied' as const,
         refereePosition: exchange.refereePosition ?? 'head-one',
-        submittingType: (exchange.submittingType as 'referee' | 'admin') ?? 'referee',
+        submittingType: exchange.submittingType ?? 'referee',
         submittedAt: exchange.submittedAt ?? now,
         appliedAt: now,
         createdAt: exchange.submittedAt ?? now,
@@ -434,7 +461,7 @@ export const mockApi = {
     // Return mock settings with default validation deadline
     return {
       hoursAfterGameStartForRefereeToEditGameList: 6,
-    } as AssociationSettings
+    }
   },
 
   async getActiveSeason(): Promise<Season> {
@@ -450,7 +477,7 @@ export const mockApi = {
     return {
       seasonStartDate: seasonStart.toISOString(),
       seasonEndDate: seasonEnd.toISOString(),
-    } as Season
+    }
   },
 
   async getPossiblePlayerNominations(

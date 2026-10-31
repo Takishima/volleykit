@@ -6,11 +6,18 @@ on:
       - 'packages/worker/**'
       - '.github/workflows/ci-worker.yml'
       - '.github/actions/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
   pull_request:
     paths:
       - 'packages/worker/**'
       - '.github/workflows/ci-worker.yml'
       - '.github/actions/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
@@ -20,22 +27,23 @@ jobs:
         working-directory: packages/worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/worker
-      # Cache ESLint results per branch
-      - name: Cache ESLint
-        uses: actions/cache@v6
-        with:
-          path: packages/worker/.eslintcache
-          key: packages/worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('packages/worker/src/**/*.ts') }}
-          restore-keys: |
-            packages/worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            packages/worker-eslint-${{ runner.os }}-
+      # No ESLint result cache: the type-aware rules depend on types from
+      # other files, which ESLint's per-file cache cannot see change.
       - name: Lint
-        run: pnpm run lint --cache --cache-location .eslintcache
+        run: pnpm run lint
+      - name: TypeScript Check
+        if: ${{ !cancelled() }}
+        run: pnpm run typecheck
+      - name: Check for dead code
+        if: ${{ !cancelled() }}
+        run: pnpm run knip
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -44,7 +52,9 @@ jobs:
         working-directory: packages/worker
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:

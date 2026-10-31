@@ -18,7 +18,7 @@ on:
         type: boolean
         default: false
 permissions:
-  contents: write
+  contents: read
 # Prevent concurrent releases
 concurrency:
   group: release
@@ -32,7 +32,9 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -50,6 +52,8 @@ jobs:
   release:
     needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # changeset version and the release commit, tag and push
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       released: ${{ steps.get_version.outputs.released }}
@@ -65,15 +69,15 @@ jobs:
             exit 1
           fi
           echo "RELEASE_TOKEN is configured"
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] the job commits, tags and pushes the release with RELEASE_TOKEN
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
       - name: Install root dependencies (changesets)
@@ -122,8 +126,10 @@ jobs:
           echo "Synced app.json version to $MOBILE_VERSION"
       - name: Get new version
         id: get_version
+        env:
+          CHANGESET_COUNT: ${{ steps.check_changesets.outputs.changeset_count }}
         run: |
-          if [ "${{ steps.check_changesets.outputs.changeset_count }}" -eq 0 ]; then
+          if [ "$CHANGESET_COUNT" -eq 0 ]; then
             echo "released=false" >> "$GITHUB_OUTPUT"
             echo "version=" >> "$GITHUB_OUTPUT"
           else
@@ -146,9 +152,9 @@ jobs:
       - name: Extract release notes
         if: steps.get_version.outputs.released == 'true'
         id: release_notes
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
-
           # Function to extract notes for a version from a changelog file
           extract_notes() {
             local changelog="$1"
@@ -169,7 +175,7 @@ jobs:
 
           # Collect release notes from all package CHANGELOGs
           # Each package may have different changes for the same version
-          > /tmp/release_notes.md
+          : > /tmp/release_notes.md
 
           # Define packages and their changelog paths
           declare -A PACKAGES=(
@@ -206,8 +212,9 @@ jobs:
           fi
       - name: Show changes (dry run)
         if: inputs.dry_run && steps.get_version.outputs.released == 'true'
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
           TAG="v$VERSION"
 
           echo "=== Version bump ==="
@@ -253,16 +260,16 @@ jobs:
           echo "=== Would create tag: $TAG ==="
       - name: Commit changes
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           git add .
-          git commit -m "$(cat <<'EOF'
-          chore(release): prepare v${{ steps.get_version.outputs.version }} release
-          EOF
-          )"
+          git commit -m "chore(release): prepare v$VERSION release"
       - name: Create tag
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
           TAG="v$VERSION"
 
           # Check if tag already exists (locally or remotely)
@@ -286,27 +293,32 @@ jobs:
           git tag -a "$TAG" -m "Release $TAG"
       - name: Push changes
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          git push origin ${{ github.event.repository.default_branch }}
-          git push origin "v${{ steps.get_version.outputs.version }}"
+          git push origin "$DEFAULT_BRANCH"
+          git push origin "v$VERSION"
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run && steps.get_version.outputs.released == 'true' }}
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          gh release create "v${{ steps.get_version.outputs.version }}" \
-            --title "v${{ steps.get_version.outputs.version }}" \
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
             --notes-file /tmp/release_notes.md
       - name: Summary
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
+          RELEASED: ${{ steps.get_version.outputs.released }}
+          DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
-          RELEASED="${{ steps.get_version.outputs.released }}"
-
           if [ "$RELEASED" != "true" ]; then
             echo "## No Release" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "No changesets found. Nothing to release." >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ inputs.dry_run }}" = "true" ]; then
+          elif [ "$DRY_RUN" = "true" ]; then
             echo "## Dry Run Complete" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"

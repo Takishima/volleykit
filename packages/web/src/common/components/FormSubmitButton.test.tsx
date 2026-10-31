@@ -3,8 +3,8 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { FormSubmitButton } from './FormSubmitButton'
 
-// Mock useFormStatus from react-dom
-const mockUseFormStatus = vi.fn()
+// Mock useFormStatus from react-dom; the component only reads `pending`
+const mockUseFormStatus = vi.fn<() => { pending: boolean }>()
 vi.mock('react-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-dom')>()
   return {

@@ -77,7 +77,7 @@ function SectionSubItems({ section, flaggedSubItems, onToggle }: SectionSubItems
               onClick={() => handleToggle(subItem.id)}
               className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
                 isFlagged
-                  ? 'bg-error-50 dark:bg-error-900/20'
+                  ? 'bg-danger-50 dark:bg-danger-900/20'
                   : 'hover:bg-surface-subtle dark:hover:bg-surface-subtle-dark'
               }`}
             >
@@ -86,7 +86,7 @@ function SectionSubItems({ section, flaggedSubItems, onToggle }: SectionSubItems
               </span>
               {isFlagged ? (
                 <AlertTriangle
-                  className="w-4 h-4 text-error-500 flex-shrink-0"
+                  className="w-4 h-4 text-danger-500 flex-shrink-0"
                   aria-hidden="true"
                 />
               ) : (

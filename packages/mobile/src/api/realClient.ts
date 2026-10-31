@@ -4,7 +4,7 @@
  * Implements the mobile API client interface using the actual backend API.
  * Uses the same endpoints and form serialization as the web app.
  *
- * Resolves TODO(#775): Replace mock API client with real implementation.
+ * Resolves issue #775: Replace mock API client with real implementation.
  */
 
 import type {
@@ -122,16 +122,14 @@ async function apiRequest<T>(
     url = `${url}?${params.toString()}`
   }
 
+  const init: RequestInit = { method, headers, credentials: 'include' }
+
   if (method !== 'GET' && body) {
     headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    init.body = buildFormDataWithToken(body)
   }
 
-  const response = await fetch(url, {
-    method,
-    headers,
-    credentials: 'include',
-    body: method !== 'GET' && body ? buildFormDataWithToken(body) : undefined,
-  })
+  const response = await fetch(url, init)
 
   captureSessionToken(response)
 
@@ -150,7 +148,7 @@ async function apiRequest<T>(
   const contentType = response.headers.get('Content-Type') || ''
 
   try {
-    return await response.json()
+    return (await response.json()) as T
   } catch {
     if (contentType.includes('text/html')) {
       const pathname = new URL(response.url).pathname.toLowerCase()

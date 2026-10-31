@@ -104,7 +104,9 @@ export function ReadOnlyStepButtons({
       navigation={navigation}
       onBack={onBack}
       onNext={onNext}
-      onClose={() => onFinish()}
+      onClose={() => {
+        void onFinish()
+      }}
       closeLabel={isFinalizing ? t('common.loading') : finishLabel}
       closeVariant="success"
       closeDisabled={finishDisabled}
@@ -170,7 +172,9 @@ export function EditModeButtons({
         {navigation.isLastStep ? (
           <Button
             variant="success"
-            onClick={() => onFinish()}
+            onClick={() => {
+              void onFinish()
+            }}
             disabled={finishDisabled}
             title={
               !state.allPreviousRequiredStepsDone

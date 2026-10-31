@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
+import { useTodayKey } from '@volleykit/shared/hooks'
+import { startOfDay, endOfDay, parseISO, subDays, isWithinInterval } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -70,7 +71,7 @@ function enrichWithValidationData(
             },
           },
         },
-      } as Assignment
+      }
     }
     return assignment
   })
@@ -225,21 +226,24 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   } = useAssociationSettings()
   const { data: season, isSuccess: seasonSuccess, isError: seasonError } = useActiveSeason()
 
+  // Day granularity is enough for the window bounds; the key rolls over after midnight.
+  const todayKey = useTodayKey()
+
   // Memoize date calculations to prevent query key changes on every render.
-  // Only recalculate when season data actually changes.
+  // Only recalculate when season data or the day actually changes.
   const { fromDate, toDate } = useMemo(() => {
-    const now = new Date()
+    const today = parseISO(todayKey)
     const seasonStart = parseDateOrFallback(
       season?.seasonStartDate,
-      subDays(now, DEFAULT_DATE_RANGE_DAYS)
+      subDays(today, DEFAULT_DATE_RANGE_DAYS)
     )
-    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now)
+    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, today)
 
     return {
       fromDate: startOfDay(seasonStart).toISOString(),
-      toDate: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
+      toDate: endOfDay(today < seasonEnd ? today : seasonEnd).toISOString(),
     }
-  }, [season?.seasonStartDate, season?.seasonEndDate])
+  }, [season?.seasonStartDate, season?.seasonEndDate, todayKey])
 
   const deadlineHours =
     settings?.hoursAfterGameStartForRefereeToEditGameList ?? DEFAULT_VALIDATION_DEADLINE_HOURS
@@ -268,14 +272,12 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   // Use isSuccess for reliable state detection (avoids race conditions where
   // isLoading is false but data hasn't arrived yet).
   // If either query fails, proceed with defaults rather than blocking indefinitely.
-  // Extra checks: verify we have actual data when queries succeed to prevent
-  // race conditions where isSuccess is true but derived values use stale data.
+  // Extra check: a successful season query must carry the season start date so
+  // derived date ranges never use stale data (isSuccess already guarantees data).
   const settingsResolved = settingsSuccess || settingsError
   const seasonResolved = seasonSuccess || seasonError
-  const hasSettingsData = settingsSuccess ? settings !== undefined : true
-  const hasSeasonDates = seasonSuccess ? season?.seasonStartDate !== undefined : true
-  const isReady =
-    !isDemoMode && settingsResolved && seasonResolved && hasSettingsData && hasSeasonDates
+  const hasSeasonDates = seasonSuccess ? season.seasonStartDate !== undefined : true
+  const isReady = !isDemoMode && settingsResolved && seasonResolved && hasSeasonDates
 
   const query = useQuery({
     queryKey: queryKeys.assignments.validationClosed(

@@ -206,7 +206,7 @@ export function AddCoachSheet({ isOpen, onClose, role, onSelectCoach }: AddCoach
             {t('validation.roster.noCoachesFound')}
           </div>
         ) : (
-          <ul
+          <div
             id={COACH_LISTBOX_ID}
             role="listbox"
             aria-label={t('validation.roster.coaches')}
@@ -215,7 +215,7 @@ export function AddCoachSheet({ isOpen, onClose, role, onSelectCoach }: AddCoach
             {results.map((coach, index) => {
               const isHighlighted = index === highlightedIndex
               return (
-                <li
+                <div
                   key={coach.__identity}
                   id={`coach-option-${coach.__identity}`}
                   role="option"
@@ -254,10 +254,10 @@ export function AddCoachSheet({ isOpen, onClose, role, onSelectCoach }: AddCoach
                       aria-hidden="true"
                     />
                   </button>
-                </li>
+                </div>
               )
             })}
-          </ul>
+          </div>
         )}
       </div>
 

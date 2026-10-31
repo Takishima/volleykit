@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 
+import { createLogger } from '@/common/utils/logger'
+
 /**
  * Swiss-specific location data from geo.admin.ch.
  */
@@ -58,6 +60,8 @@ const DEFAULT_LIMIT = 5
 const MIN_QUERY_LENGTH = 3
 const MAX_API_RESULTS = 50 // Maximum results supported by geo.admin.ch API
 
+const log = createLogger('useCombinedGeocode')
+
 /**
  * Hook for geocoding addresses with Swiss priority and Nominatim fallback.
  *
@@ -110,7 +114,7 @@ export function useCombinedGeocode(
 
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  const search = useCallback(
+  const runSearch = useCallback(
     async (query: string) => {
       if (query.trim().length < MIN_QUERY_LENGTH) {
         setState({ results: [], isLoading: false, error: null })
@@ -168,6 +172,14 @@ export function useCombinedGeocode(
     [limit]
   )
 
+  // runSearch reports failures through state; the public search() returns void.
+  const search = useCallback(
+    (query: string) => {
+      runSearch(query).catch((error: unknown) => log.error('Geocoding failed:', error))
+    },
+    [runSearch]
+  )
+
   const clear = useCallback(() => {
     abortControllerRef.current?.abort()
     setState({ results: [], isLoading: false, error: null })
@@ -201,7 +213,7 @@ async function searchSwiss(
     throw new Error(`HTTP ${response.status}`)
   }
 
-  const data: GeoAdminSearchResponse = await response.json()
+  const data = (await response.json()) as GeoAdminSearchResponse
 
   return data.results.map((item) => ({
     id: item.id,
@@ -244,7 +256,7 @@ async function searchNominatim(
     throw new Error(`HTTP ${response.status}`)
   }
 
-  const data: NominatimResult[] = await response.json()
+  const data = (await response.json()) as NominatimResult[]
 
   return data.map((item) => ({
     id: item.place_id,

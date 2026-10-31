@@ -17,7 +17,7 @@ on:
         type: boolean
         default: false
 permissions:
-  contents: write
+  contents: read
 # Concurrency group serializes all GitHub Pages deployments
 # cancel-in-progress: false ensures deployments queue rather than cancel each other
 concurrency:
@@ -26,18 +26,21 @@ concurrency:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # actions-gh-pages pushes the gh-pages branch
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] git ls-remote and actions-gh-pages reach the gh-pages branch with the token
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Validate PR number input
         if: github.event.inputs.pr_number != ''
+        env:
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
         run: |
-          pr_number="${{ inputs.pr_number }}"
-          if ! [[ "$pr_number" =~ ^[0-9]+$ ]]; then
-            echo "::error::PR number must be a positive integer, got '$pr_number'"
+          if ! [[ "$PR_NUMBER_INPUT" =~ ^[0-9]+$ ]]; then
+            echo "::error::PR number must be a positive integer, got '$PR_NUMBER_INPUT'"
             exit 1
           fi
-          echo "✓ PR number validation passed: $pr_number"
+          echo "✓ PR number validation passed: $PR_NUMBER_INPUT"
       - name: Download existing gh-pages content
         id: download
         run: |
@@ -46,16 +49,17 @@ jobs:
             git clone --depth 1 --branch gh-pages \
               https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
               gh-pages-current
-            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "gh-pages branch does not exist, nothing to clean up"
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Find PR previews to clean up
         if: steps.download.outputs.exists == 'true'
         id: find
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_NUMBER_INPUT: ${{ inputs.pr_number }}
         run: |
           cd gh-pages-current
 
@@ -64,16 +68,16 @@ jobs:
 
           if [ -z "$pr_dirs" ]; then
             echo "No PR preview directories found"
-            echo "to_remove=" >> $GITHUB_OUTPUT
+            echo "to_remove=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "Found PR preview directories: $pr_dirs"
 
           # Determine which PRs to check
-          if [ -n "${{ inputs.pr_number }}" ]; then
+          if [ -n "$PR_NUMBER_INPUT" ]; then
             # Manual trigger with specific PR number
-            prs_to_check="${{ inputs.pr_number }}"
+            prs_to_check="$PR_NUMBER_INPUT"
           else
             # Scheduled or manual trigger without PR number - check all
             prs_to_check="$pr_dirs"
@@ -120,16 +124,18 @@ jobs:
 
           to_remove=$(echo "$to_remove" | xargs)  # trim whitespace
           echo "PR numbers to remove: ${to_remove:-none}"
-          echo "to_remove=$to_remove" >> $GITHUB_OUTPUT
+          echo "to_remove=$to_remove" >> "$GITHUB_OUTPUT"
       - name: Remove PR previews and prepare deployment
         if: steps.find.outputs.to_remove != ''
+        env:
+          TO_REMOVE: ${{ steps.find.outputs.to_remove }}
         run: |
           mkdir -p deploy
 
           # Build rsync exclude arguments safely using proper array handling
           # to_remove contains only validated numeric PR numbers (space-separated)
           rsync_args=(-a --exclude='.git')
-          IFS=' ' read -ra prs <<< "${{ steps.find.outputs.to_remove }}"
+          IFS=' ' read -ra prs <<< "$TO_REMOVE"
           for pr_num in "${prs[@]}"; do
             rsync_args+=(--exclude="pr-$pr_num")
           done
@@ -146,10 +152,10 @@ jobs:
             exit 1
           fi
 
-          echo "✓ Prepared deployment without PR previews: ${{ steps.find.outputs.to_remove }}"
+          echo "✓ Prepared deployment without PR previews: $TO_REMOVE"
       - name: Deploy to GitHub Pages
         if: steps.find.outputs.to_remove != ''
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy
@@ -157,33 +163,37 @@ jobs:
           enable_jekyll: false
           cname: volleykit.ch
       - name: Summary
+        env:
+          TO_REMOVE: ${{ steps.find.outputs.to_remove }}
         run: |
-          echo "## Cleanup Summary" >> $GITHUB_STEP_SUMMARY
-          if [ -n "${{ steps.find.outputs.to_remove }}" ]; then
-            echo "Removed the following PR previews:" >> $GITHUB_STEP_SUMMARY
-            IFS=' ' read -ra prs <<< "${{ steps.find.outputs.to_remove }}"
+          echo "## Cleanup Summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$TO_REMOVE" ]; then
+            echo "Removed the following PR previews:" >> "$GITHUB_STEP_SUMMARY"
+            IFS=' ' read -ra prs <<< "$TO_REMOVE"
             for pr_num in "${prs[@]}"; do
-              echo "- \`pr-$pr_num\`" >> $GITHUB_STEP_SUMMARY
+              echo "- \`pr-$pr_num\`" >> "$GITHUB_STEP_SUMMARY"
             done
           else
-            echo "No PR previews needed cleanup." >> $GITHUB_STEP_SUMMARY
+            echo "No PR previews needed cleanup." >> "$GITHUB_STEP_SUMMARY"
           fi
   # Squash gh-pages history to reduce repository size
   # Runs monthly (1st of month) or on manual trigger with squash_history=true
   squash-history:
     runs-on: ubuntu-latest
     needs: cleanup
+    permissions:
+      contents: write # force-pushes the squashed gh-pages branch
     # Run on monthly schedule (second cron) or manual trigger with squash_history
     if: github.event.schedule == '0 4 1 * *' || inputs.squash_history == true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] git fetch/push of the gh-pages branch needs the token
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check gh-pages exists and get commit count
         id: check
         run: |
           if ! git ls-remote --exit-code --heads origin gh-pages; then
             echo "gh-pages branch does not exist, nothing to squash"
-            echo "should_squash=false" >> $GITHUB_OUTPUT
+            echo "should_squash=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -191,14 +201,14 @@ jobs:
           git fetch origin gh-pages --depth=1000
           commit_count=$(git rev-list --count origin/gh-pages 2>/dev/null || echo "0")
           echo "Current gh-pages commit count: $commit_count"
-          echo "commit_count=$commit_count" >> $GITHUB_OUTPUT
+          echo "commit_count=$commit_count" >> "$GITHUB_OUTPUT"
 
           # Only squash if there are more than 10 commits (avoid unnecessary churn)
           if [ "$commit_count" -gt 10 ]; then
-            echo "should_squash=true" >> $GITHUB_OUTPUT
+            echo "should_squash=true" >> "$GITHUB_OUTPUT"
           else
             echo "Only $commit_count commits, skipping squash (threshold: 10)"
-            echo "should_squash=false" >> $GITHUB_OUTPUT
+            echo "should_squash=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Download gh-pages content
         if: steps.check.outputs.should_squash == 'true'
@@ -208,6 +218,8 @@ jobs:
             gh-pages-content
       - name: Create squashed commit
         if: steps.check.outputs.should_squash == 'true'
+        env:
+          COMMIT_COUNT: ${{ steps.check.outputs.commit_count }}
         run: |
           cd gh-pages-content
 
@@ -224,7 +236,7 @@ jobs:
 
           # Add all files and create single commit
           git add -A
-          git commit -m "chore: squash gh-pages history (was ${{ steps.check.outputs.commit_count }} commits)
+          git commit -m "chore: squash gh-pages history (was $COMMIT_COUNT commits)
 
           Automated monthly cleanup to reduce repository size.
           All content preserved, only git history removed."
@@ -238,17 +250,20 @@ jobs:
           git push --force origin gh-pages
           echo "✓ Force pushed squashed gh-pages branch"
       - name: Summary
+        env:
+          SHOULD_SQUASH: ${{ steps.check.outputs.should_squash }}
+          COMMIT_COUNT: ${{ steps.check.outputs.commit_count }}
         run: |
-          echo "## History Squash Summary" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.check.outputs.should_squash }}" == "true" ]; then
-            echo "✅ Successfully squashed gh-pages history" >> $GITHUB_STEP_SUMMARY
-            echo "- Previous commits: ${{ steps.check.outputs.commit_count }}" >> $GITHUB_STEP_SUMMARY
-            echo "- New commits: 1" >> $GITHUB_STEP_SUMMARY
-            echo "- All content preserved" >> $GITHUB_STEP_SUMMARY
+          echo "## History Squash Summary" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$SHOULD_SQUASH" == "true" ]; then
+            echo "✅ Successfully squashed gh-pages history" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Previous commits: $COMMIT_COUNT" >> "$GITHUB_STEP_SUMMARY"
+            echo "- New commits: 1" >> "$GITHUB_STEP_SUMMARY"
+            echo "- All content preserved" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "ℹ️ Squash skipped" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.check.outputs.commit_count }}" != "" ]; then
-              echo "- Current commits: ${{ steps.check.outputs.commit_count }}" >> $GITHUB_STEP_SUMMARY
-              echo "- Threshold: 10 commits" >> $GITHUB_STEP_SUMMARY
+            echo "ℹ️ Squash skipped" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$COMMIT_COUNT" != "" ]; then
+              echo "- Current commits: $COMMIT_COUNT" >> "$GITHUB_STEP_SUMMARY"
+              echo "- Threshold: 10 commits" >> "$GITHUB_STEP_SUMMARY"
             fi
           fi

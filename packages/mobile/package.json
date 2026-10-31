@@ -27,12 +27,12 @@
     "android": "expo run:android",
     "prebuild": "expo prebuild",
     "lint": "eslint src --max-warnings 0",
-    "lint:fix": "eslint src --max-warnings 0 --fix",
+    "lint:fix": "eslint src --max-warnings 0 --fix --prune-suppressions",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json}\"",
     "knip": "knip",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "node ../../node_modules/typescript7/bin/tsc --noEmit"
   },
   "dependencies": {
     "@expo/dom-webview": "~58.0.2",
@@ -81,8 +81,10 @@
     "@types/jest": "^30.0.0",
     "eslint": "^10.13.0",
     "eslint-plugin-import-x": "^4.17.1",
-    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-jest": "^29.17.0",
+    "eslint-plugin-oxlint": "^1.89.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-native-a11y": "^3.5.1",
     "eslint-plugin-security": "^4.2.0",
     "eslint-plugin-sonarjs": "^4.2.2",
     "jest": "^30.5.2",

@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import { anyOfType, arrayContaining, objectContaining } from '@/test/matchers'
+
 import {
   ASSIGNMENTS_STALE_TIME_MS,
   COMPENSATIONS_STALE_TIME_MS,
@@ -105,33 +107,33 @@ describe('prefetchAllTabData', () => {
     vi.mocked(api.getAssociationSettings).mockResolvedValue({})
     vi.mocked(api.getActiveSeason).mockResolvedValue({})
 
-    const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery')
+    const prefetchSpy = vi.spyOn(queryClient, 'query')
 
     await prefetchAllTabData(queryClient, 'occupation-456', api)
 
-    // Verify prefetchQuery was called 5 times
+    // Verify query was called 5 times (one per tab/setting)
     expect(prefetchSpy).toHaveBeenCalledTimes(5)
 
     // Check that occupation ID is included in query keys
     const calls = prefetchSpy.mock.calls
     expect(calls[0]![0]).toMatchObject({
-      queryKey: expect.arrayContaining(['occupation-456']),
+      queryKey: arrayContaining(['occupation-456']),
       staleTime: ASSIGNMENTS_STALE_TIME_MS,
     })
     expect(calls[1]![0]).toMatchObject({
-      queryKey: expect.arrayContaining(['occupation-456']),
+      queryKey: arrayContaining(['occupation-456']),
       staleTime: COMPENSATIONS_STALE_TIME_MS,
     })
     expect(calls[2]![0]).toMatchObject({
-      queryKey: expect.arrayContaining(['occupation-456']),
+      queryKey: arrayContaining(['occupation-456']),
       staleTime: EXCHANGES_STALE_TIME_MS,
     })
     expect(calls[3]![0]).toMatchObject({
-      queryKey: expect.arrayContaining(['occupation-456']),
+      queryKey: arrayContaining(['occupation-456']),
       staleTime: SETTINGS_STALE_TIME_MS,
     })
     expect(calls[4]![0]).toMatchObject({
-      queryKey: expect.arrayContaining(['occupation-456']),
+      queryKey: arrayContaining(['occupation-456']),
       staleTime: SEASON_STALE_TIME_MS,
     })
   })
@@ -202,17 +204,17 @@ describe('prefetchAllTabData', () => {
       expect.objectContaining({
         offset: 0,
         limit: 100,
-        propertyFilters: expect.arrayContaining([
-          expect.objectContaining({
+        propertyFilters: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
-            dateRange: expect.objectContaining({
-              from: expect.any(String),
-              to: expect.any(String),
+            dateRange: objectContaining({
+              from: anyOfType<string>(String),
+              to: anyOfType<string>(String),
             }),
           }),
         ]),
-        propertyOrderings: expect.arrayContaining([
-          expect.objectContaining({
+        propertyOrderings: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
             descending: false,
           }),
@@ -247,8 +249,8 @@ describe('prefetchAllTabData', () => {
         offset: 0,
         limit: 100,
         propertyFilters: [],
-        propertyOrderings: expect.arrayContaining([
-          expect.objectContaining({
+        propertyOrderings: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
             descending: true,
           }),
@@ -282,17 +284,17 @@ describe('prefetchAllTabData', () => {
       expect.objectContaining({
         offset: 0,
         limit: 100,
-        propertyFilters: expect.arrayContaining([
-          expect.objectContaining({
+        propertyFilters: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
-            dateRange: expect.objectContaining({
-              from: expect.any(String),
-              to: expect.any(String),
+            dateRange: objectContaining({
+              from: anyOfType<string>(String),
+              to: anyOfType<string>(String),
             }),
           }),
         ]),
-        propertyOrderings: expect.arrayContaining([
-          expect.objectContaining({
+        propertyOrderings: arrayContaining([
+          objectContaining({
             propertyName: 'refereeGame.game.startingDateTime',
             descending: false,
           }),

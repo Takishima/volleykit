@@ -18,7 +18,7 @@ describe('buildFormData', () => {
     it('should handle empty object', () => {
       const params = buildFormData({})
 
-      expect([...params.entries()]).toHaveLength(0)
+      expect(params.toString()).toBe('')
     })
 
     it('should convert numbers to strings', () => {
@@ -103,7 +103,7 @@ describe('buildFormData', () => {
       const params = buildFormData(data)
 
       // Empty array produces no params
-      expect([...params.entries()]).toHaveLength(0)
+      expect(params.toString()).toBe('')
     })
 
     it('should handle array of objects', () => {

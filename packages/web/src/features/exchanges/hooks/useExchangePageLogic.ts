@@ -195,7 +195,7 @@ export function useExchangePageLogic() {
       try {
         await handleTakeOver(takeOverModal.exchange)
       } catch {
-        refetch()
+        void refetch()
       }
     }
   }, [takeOverModal.exchange, handleTakeOver, applyOptimisticRemoval, refetch])
@@ -206,7 +206,7 @@ export function useExchangePageLogic() {
       try {
         await handleRemoveFromExchange(removeFromExchangeModal.exchange)
       } catch {
-        refetch()
+        void refetch()
       }
     }
   }, [removeFromExchangeModal.exchange, handleRemoveFromExchange, applyOptimisticRemoval, refetch])

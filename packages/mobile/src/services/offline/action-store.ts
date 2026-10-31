@@ -74,8 +74,11 @@ async function getAllActions(): Promise<OfflineAction[]> {
       return []
     }
 
+    // Array.isArray narrows to any[]; treat entries as unknown until validated
+    const entries: unknown[] = parsed
+
     // Filter and validate each action
-    const validActions = parsed.filter((item) => {
+    const validActions = entries.filter((item): item is OfflineAction => {
       if (!isValidAction(item)) {
         console.warn('[action-store] Skipping invalid action:', item)
         return false
@@ -84,9 +87,9 @@ async function getAllActions(): Promise<OfflineAction[]> {
     })
 
     // If we filtered out any invalid actions, save the cleaned list
-    if (validActions.length !== parsed.length) {
+    if (validActions.length !== entries.length) {
       console.info(
-        `[action-store] Cleaned ${parsed.length - validActions.length} invalid actions from storage`
+        `[action-store] Cleaned ${entries.length - validActions.length} invalid actions from storage`
       )
       await saveAllActions(validActions)
     }
@@ -172,7 +175,7 @@ export async function getAction(id: string): Promise<OfflineAction | null> {
 export async function updateActionStatus(
   id: string,
   status: ActionStatus,
-  error?: string
+  errorMessage?: string
 ): Promise<boolean> {
   try {
     const actions = await getAllActions()
@@ -184,10 +187,11 @@ export async function updateActionStatus(
     }
 
     const action = actions[index]
+    if (!action) return false
     actions[index] = {
       ...action,
       status,
-      error: error ?? action.error,
+      error: errorMessage ?? action.error,
       retryCount: status === 'syncing' ? action.retryCount + 1 : action.retryCount,
     }
 

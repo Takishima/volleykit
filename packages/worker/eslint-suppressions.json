@@ -1,0 +1,52 @@
+{
+  "src/handlers/health.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/handlers/ical.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/handlers/ocr.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/handlers/ojp.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/handlers/proxy.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/index.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/middleware.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/utils/auth-detection.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/utils/auth-lockout.ts": {
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
+  "src/utils/session.ts": {
+    "max-lines-per-function": {
+      "count": 1
+    }
+  }
+}

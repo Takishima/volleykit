@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 
+import { anyOfType } from '@/test/matchers'
+
 import { server } from '@/test/msw/server'
 
 import {
@@ -364,7 +366,7 @@ describe('submitLoginCredentials', () => {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: expect.any(URLSearchParams),
+        body: anyOfType<URLSearchParams>(URLSearchParams),
       })
 
       const callArgs = mockFetch.mock.calls[0]?.[1] as { body: URLSearchParams } | undefined

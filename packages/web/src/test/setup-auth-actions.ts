@@ -14,7 +14,7 @@ registerAuthActions({
   performLogout: async () => {},
   performSessionCheck: async () => true,
   performCalendarLogin: async () => {},
-  filterRefereeOccupations: (occs) => occs.filter((o: { type: string }) => o.type === 'referee'),
+  filterRefereeOccupations: (occs) => occs.filter((o) => o.type === 'referee'),
   hasMultipleAssociations: () => false,
   sessionCheckGracePeriodMs: 5_000,
 })

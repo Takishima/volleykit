@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { AuthState } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
+
 import type { PersonSearchResponse } from '@/api/client'
 
 import { parseSearchInput, useScorerSearch } from './useScorerSearch'
@@ -16,7 +19,9 @@ vi.mock('@/api/client', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 function createWrapper() {

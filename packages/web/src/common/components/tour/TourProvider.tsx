@@ -52,7 +52,9 @@ export function TourProvider({ children }: TourProviderProps) {
   const isSwipeStep = hasAutoSwipe
   // Auto-swipe is completed only if it was completed for the current tour and step
   const isAutoSwipeCompleted =
-    autoSwipeCompletedFor?.tour === activeTour && autoSwipeCompletedFor?.step === currentStep
+    autoSwipeCompletedFor !== null &&
+    autoSwipeCompletedFor.tour === activeTour &&
+    autoSwipeCompletedFor.step === currentStep
   const isAutoSwipeActive = hasAutoSwipe && !isAutoSwipeCompleted
 
   // Handle step completion

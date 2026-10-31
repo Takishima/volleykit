@@ -6,6 +6,13 @@ import { Modal } from './Modal'
 import { ModalFooter } from './ModalFooter'
 import { ModalHeader } from './ModalHeader'
 
+/** The decorative overlay behind the dialog; clicking it dismisses the modal */
+function getBackdrop(container: HTMLElement): HTMLElement {
+  const backdrop = container.querySelector<HTMLElement>('.fixed.inset-0 > [aria-hidden="true"]')
+  if (!backdrop) throw new Error('Modal backdrop not rendered')
+  return backdrop
+}
+
 describe('Modal', () => {
   it('should not render when closed', () => {
     const onClose = vi.fn()
@@ -73,11 +80,8 @@ describe('Modal', () => {
       </Modal>
     )
 
-    const backdrop = container.querySelector('.fixed.inset-0.bg-black') as HTMLElement
-    if (backdrop) {
-      fireEvent.click(backdrop)
-      expect(onClose).toHaveBeenCalledOnce()
-    }
+    fireEvent.click(getBackdrop(container))
+    expect(onClose).toHaveBeenCalledOnce()
   })
 
   it('should not call onClose when backdrop is clicked and closeOnBackdrop is false', () => {
@@ -89,11 +93,8 @@ describe('Modal', () => {
       </Modal>
     )
 
-    const backdrop = container.querySelector('.fixed.inset-0.bg-black') as HTMLElement
-    if (backdrop) {
-      fireEvent.click(backdrop)
-      expect(onClose).not.toHaveBeenCalled()
-    }
+    fireEvent.click(getBackdrop(container))
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('should not call onClose when dialog content is clicked', () => {
@@ -123,11 +124,8 @@ describe('Modal', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(onClose).not.toHaveBeenCalled()
 
-    const backdrop = container.querySelector('.fixed.inset-0.bg-black') as HTMLElement
-    if (backdrop) {
-      fireEvent.click(backdrop)
-      expect(onClose).not.toHaveBeenCalled()
-    }
+    fireEvent.click(getBackdrop(container))
+    expect(onClose).not.toHaveBeenCalled()
   })
 
   it('should apply correct size class', () => {

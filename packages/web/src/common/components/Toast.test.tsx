@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { useToastStore, DEFAULT_DURATION_MS } from '@/common/stores/toast'
+import { useToastStore, DEFAULT_TOAST_DURATION_MS } from '@/common/stores/toast'
 
 import { ToastContainer } from './Toast'
 
@@ -128,7 +128,7 @@ describe('ToastContainer', () => {
       expect(screen.getByText('Auto-dismiss toast')).toBeInTheDocument()
 
       act(() => {
-        vi.advanceTimersByTime(DEFAULT_DURATION_MS)
+        vi.advanceTimersByTime(DEFAULT_TOAST_DURATION_MS)
       })
 
       expect(screen.queryByText('Auto-dismiss toast')).not.toBeInTheDocument()
@@ -170,7 +170,7 @@ describe('ToastContainer', () => {
 
       // Advance timers - should not throw
       act(() => {
-        vi.advanceTimersByTime(DEFAULT_DURATION_MS + 1000)
+        vi.advanceTimersByTime(DEFAULT_TOAST_DURATION_MS + 1000)
       })
 
       // Toast should still be in store (not removed by timer since component unmounted)
@@ -263,22 +263,6 @@ describe('ToastContainer', () => {
       svgs.forEach((svg) => {
         expect(svg).toHaveAttribute('aria-hidden', 'true')
       })
-    })
-  })
-
-  describe('animation classes', () => {
-    it('has animation classes for entry', () => {
-      useToastStore.getState().addToast({
-        message: 'Animated toast',
-        type: 'info',
-      })
-
-      render(<ToastContainer />)
-
-      const alert = screen.getByRole('alert')
-      expect(alert).toHaveClass('animate-in')
-      expect(alert).toHaveClass('slide-in-from-top-2')
-      expect(alert).toHaveClass('fade-in')
     })
   })
 

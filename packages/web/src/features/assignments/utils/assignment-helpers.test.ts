@@ -35,7 +35,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       const result = getTeamNames(assignment as Assignment)
       expect(result).toEqual({ homeTeam: 'Team A', awayTeam: 'Team B' })
@@ -48,7 +48,7 @@ describe('assignment-helpers', () => {
             encounter: {},
           },
         },
-      } as Assignment
+      }
 
       const result = getTeamNames(assignment as Assignment)
       expect(result).toEqual({ homeTeam: 'TBD', awayTeam: 'TBD' })
@@ -57,14 +57,14 @@ describe('assignment-helpers', () => {
     it('should return TBD for missing game data', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {},
-      } as Assignment
+      }
 
       const result = getTeamNames(assignment as Assignment)
       expect(result).toEqual({ homeTeam: 'TBD', awayTeam: 'TBD' })
     })
 
     it('should return TBD for missing refereeGame', () => {
-      const assignment: Partial<Assignment> = {} as Assignment
+      const assignment: Partial<Assignment> = {}
 
       const result = getTeamNames(assignment as Assignment)
       expect(result).toEqual({ homeTeam: 'TBD', awayTeam: 'TBD' })
@@ -218,7 +218,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(true)
     })
@@ -232,7 +232,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
     })
@@ -244,7 +244,7 @@ describe('assignment-helpers', () => {
             scoresheet: {},
           },
         },
-      } as Assignment
+      }
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
     })
@@ -254,7 +254,7 @@ describe('assignment-helpers', () => {
         refereeGame: {
           game: {},
         },
-      } as Assignment
+      }
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
     })
@@ -262,13 +262,13 @@ describe('assignment-helpers', () => {
     it('should return false when game is missing', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {},
-      } as Assignment
+      }
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
     })
 
     it('should return false when refereeGame is missing', () => {
-      const assignment: Partial<Assignment> = {} as Assignment
+      const assignment: Partial<Assignment> = {}
 
       expect(isGameAlreadyValidated(assignment as Assignment)).toBe(false)
     })
@@ -288,7 +288,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isFromCalendarMode(assignment as Assignment)).toBe(false)
     })
@@ -302,7 +302,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
     })
@@ -314,7 +314,7 @@ describe('assignment-helpers', () => {
             group: {},
           },
         },
-      } as Assignment
+      }
 
       expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
     })
@@ -324,7 +324,7 @@ describe('assignment-helpers', () => {
         refereeGame: {
           game: {},
         },
-      } as Assignment
+      }
 
       expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
     })
@@ -332,13 +332,13 @@ describe('assignment-helpers', () => {
     it('should return true when game is undefined', () => {
       const assignment: Partial<Assignment> = {
         refereeGame: {},
-      } as Assignment
+      }
 
       expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
     })
 
     it('should return true when refereeGame is undefined', () => {
-      const assignment: Partial<Assignment> = {} as Assignment
+      const assignment: Partial<Assignment> = {}
 
       expect(isFromCalendarMode(assignment as Assignment)).toBe(true)
     })
@@ -352,7 +352,7 @@ describe('assignment-helpers', () => {
         refereeGame: {
           game: {},
         },
-      } as Assignment
+      }
 
       expect(isGameReportEligible(assignment as Assignment)).toBe(false)
     })
@@ -371,7 +371,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isGameReportEligible(assignment as Assignment)).toBe(true)
     })
@@ -390,7 +390,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isGameReportEligible(assignment as Assignment)).toBe(true)
     })
@@ -409,7 +409,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isGameReportEligible(assignment as Assignment)).toBe(false)
     })
@@ -428,7 +428,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       expect(isGameReportEligible(assignment as Assignment)).toBe(false)
     })
@@ -441,7 +441,7 @@ describe('assignment-helpers', () => {
         refereeGame: {
           game: {},
         },
-      } as Assignment
+      }
 
       it('should return false for confirm action', () => {
         expect(isActionAvailable(calendarAssignment as Assignment, 'confirm')).toBe(false)
@@ -470,7 +470,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       const nonEligibleApiAssignment: Partial<Assignment> = {
         refereePosition: 'head-one',
@@ -485,7 +485,7 @@ describe('assignment-helpers', () => {
             },
           },
         },
-      } as Assignment
+      }
 
       it('should return true for confirm action', () => {
         expect(isActionAvailable(apiAssignment as Assignment, 'confirm')).toBe(true)

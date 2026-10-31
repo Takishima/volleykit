@@ -28,6 +28,8 @@ export interface ErrorBoundaryProps {
 export interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null
+  /** The resetKey the current state belongs to; a different prop value resets the boundary */
+  resetKey?: string | number
 }
 
 /**
@@ -37,14 +39,25 @@ export interface ErrorBoundaryState {
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)
-    this.state = { hasError: false, error: null }
+    this.state = { hasError: false, error: null, resetKey: props.resetKey }
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+  /** Reset error state when resetKey changes (derived state, no extra render pass). */
+  static getDerivedStateFromProps(
+    props: ErrorBoundaryProps,
+    state: ErrorBoundaryState
+  ): Partial<ErrorBoundaryState> | null {
+    if (props.resetKey !== state.resetKey) {
+      return { hasError: false, error: null, resetKey: props.resetKey }
+    }
+    return null
+  }
+
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error to console
     console.error('ErrorBoundary caught an error:', error, errorInfo)
 
@@ -52,27 +65,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.props.onError?.(error, errorInfo)
   }
 
-  componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    // Reset error state if resetKey changes
-    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
-      this.setState({ hasError: false, error: null })
-    }
-  }
-
   handleReset = (): void => {
     this.setState({ hasError: false, error: null })
   }
 
-  render(): ReactNode {
-    if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback
-      }
+  override render(): ReactNode {
+    const { hasError, error } = this.state
+    const errorContent: ReactNode = this.props.fallback ?? (
+      <ErrorScreen error={error} onRetry={this.handleReset} type="application" />
+    )
 
-      return <ErrorScreen error={this.state.error} onRetry={this.handleReset} type="application" />
-    }
-
-    return this.props.children
+    return hasError ? errorContent : this.props.children
   }
 }
 

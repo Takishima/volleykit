@@ -37,6 +37,39 @@ import type { DepartureReminderSettings, BufferTimeOption } from '../types/depar
 
 type Props = RootStackScreenProps<'DepartureReminderSettings'>
 
+type TranslateFunction = ReturnType<typeof useTranslation>['t']
+type TranslationKey = Parameters<TranslateFunction>[0]
+
+function alertPermissionDenied(t: TranslateFunction, messageKey: TranslationKey): void {
+  Alert.alert(t('common.error'), t(messageKey), [{ text: t('common.close') }])
+}
+
+/**
+ * Request foreground location, background location and notification
+ * permissions in sequence. Alerts the user about the first one denied.
+ */
+async function requestDeparturePermissions(t: TranslateFunction): Promise<boolean> {
+  const foreground = await location.requestForegroundPermissions()
+  if (foreground !== 'granted') {
+    alertPermissionDenied(t, 'settings.departure.permissionDenied')
+    return false
+  }
+
+  const background = await location.requestBackgroundPermissions()
+  if (background !== 'granted') {
+    alertPermissionDenied(t, 'settings.departure.backgroundLocationRequired')
+    return false
+  }
+
+  const notificationGranted = await notifications.requestPermissions()
+  if (!notificationGranted) {
+    alertPermissionDenied(t, 'settings.departure.notificationRequired')
+    return false
+  }
+
+  return true
+}
+
 export function DepartureReminderSettingsScreen(_props: Props) {
   const { t } = useTranslation()
   const { storage } = useStorage()
@@ -60,45 +93,15 @@ export function DepartureReminderSettingsScreen(_props: Props) {
       }
     }
 
-    loadData()
+    void loadData()
   }, [storage])
 
   // Request permissions when enabling
-  const requestPermissions = useCallback(async (): Promise<boolean> => {
+  const requestPermissions = useCallback((): Promise<boolean> => {
     setIsRequestingPermissions(true)
-
-    try {
-      // Request foreground location
-      const foreground = await location.requestForegroundPermissions()
-      if (foreground !== 'granted') {
-        Alert.alert(t('common.error'), t('settings.departure.permissionDenied'), [
-          { text: t('common.close') },
-        ])
-        return false
-      }
-
-      // Request background location
-      const background = await location.requestBackgroundPermissions()
-      if (background !== 'granted') {
-        Alert.alert(t('common.error'), t('settings.departure.backgroundLocationRequired'), [
-          { text: t('common.close') },
-        ])
-        return false
-      }
-
-      // Request notification permission
-      const notificationGranted = await notifications.requestPermissions()
-      if (!notificationGranted) {
-        Alert.alert(t('common.error'), t('settings.departure.notificationRequired'), [
-          { text: t('common.close') },
-        ])
-        return false
-      }
-
-      return true
-    } finally {
+    return requestDeparturePermissions(t).finally(() => {
       setIsRequestingPermissions(false)
-    }
+    })
   }, [t])
 
   // Handle enable toggle

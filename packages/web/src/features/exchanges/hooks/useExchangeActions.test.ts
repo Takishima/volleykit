@@ -4,16 +4,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import type { GameExchange } from '@/api/client'
 import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
 import * as exchangeHooks from './useExchanges'
 import * as authStore from '@/common/stores/auth'
 import * as settingsStore from '@/common/stores/settings'
 import { toast } from '@/common/stores/toast'
+import { createMockExchange } from '@/test/exchange-factory'
+import { createOfflineMutationResult } from '@/test/mutation-mock'
 
 import { useExchangeActions } from './useExchangeActions'
-
-import type { UseMutationResult } from '@tanstack/react-query'
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -51,36 +50,15 @@ vi.mock('@/i18n', () => ({
   setLocaleImmediate: vi.fn(),
 }))
 
-function createMockExchange(): GameExchange {
-  return {
-    __identity: 'test-exchange-1',
-    status: 'open',
-    refereePosition: 'head-one',
-    refereeGame: {
-      activeRefereeConvocationFirstHeadReferee: {
-        __identity: 'test-convocation-1',
-      },
-      game: {
-        startingDateTime: '2025-12-15T18:00:00Z',
-        encounter: {
-          teamHome: { name: 'Team A' },
-          teamAway: { name: 'Team B' },
-        },
-        hall: {
-          name: 'Main Arena',
-        },
-      },
-    },
-  } as GameExchange
-}
-
 const mockExchange = createMockExchange()
 
 const MOCK_ASYNC_OPERATION_DELAY_MS = 100
 
 describe('useExchangeActions', () => {
-  const mockApplyMutate = vi.fn()
-  const mockRemoveOwnMutate = vi.fn()
+  const mockApplyMutate =
+    vi.fn<ReturnType<typeof exchangeHooks.useApplyForExchange>['mutateAsync']>()
+  const mockRemoveOwnMutate =
+    vi.fn<ReturnType<typeof exchangeHooks.useRemoveOwnExchange>['mutateAsync']>()
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -97,13 +75,13 @@ describe('useExchangeActions', () => {
       >)
     )
 
-    vi.mocked(exchangeHooks.useApplyForExchange).mockReturnValue({
-      mutateAsync: mockApplyMutate,
-    } as unknown as UseMutationResult<void, Error, string>)
+    vi.mocked(exchangeHooks.useApplyForExchange).mockReturnValue(
+      createOfflineMutationResult({ mutateAsync: mockApplyMutate })
+    )
 
-    vi.mocked(exchangeHooks.useRemoveOwnExchange).mockReturnValue({
-      mutateAsync: mockRemoveOwnMutate,
-    } as unknown as UseMutationResult<void, Error, string>)
+    vi.mocked(exchangeHooks.useRemoveOwnExchange).mockReturnValue(
+      createOfflineMutationResult({ mutateAsync: mockRemoveOwnMutate })
+    )
   })
 
   afterEach(() => {
@@ -186,17 +164,23 @@ describe('useExchangeActions', () => {
       result.current.takeOverModal.open(mockExchange)
     })
 
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')
+    const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
     act(() => {
       result.current.takeOverModal.close()
     })
+    const cleanupCall = setTimeoutSpy.mock.calls.findIndex(
+      ([, delay]) => delay === MODAL_CLEANUP_DELAY
+    )
+    const cleanupTimer: unknown = setTimeoutSpy.mock.results[cleanupCall]?.value
+    expect(cleanupTimer).toBeDefined()
 
-    // Unmount before timeout completes
+    // Unmounting before the timeout completes clears the pending cleanup timer
     unmount()
 
-    // Should not throw or cause memory leak
-    act(() => {
-      vi.advanceTimersByTime(MODAL_CLEANUP_DELAY)
-    })
+    expect(clearTimeoutSpy).toHaveBeenCalledWith(cleanupTimer)
+    setTimeoutSpy.mockRestore()
+    clearTimeoutSpy.mockRestore()
   })
 
   it('should clear previous timeout when closing multiple times', () => {
@@ -233,7 +217,7 @@ describe('useExchangeActions', () => {
 
   it('should handle take over action successfully', async () => {
     vi.useRealTimers()
-    mockApplyMutate.mockResolvedValue(undefined)
+    mockApplyMutate.mockResolvedValue(null)
 
     const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 
@@ -290,10 +274,13 @@ describe('useExchangeActions', () => {
 
   it('should handle remove from exchange when convocation ID is missing', async () => {
     vi.useRealTimers()
-    const exchangeWithoutConvocation = {
-      ...mockExchange,
-      refereePosition: undefined,
-    } as GameExchange
+    // The convocation for the exchange's position is not populated
+    const exchangeWithoutConvocation = createMockExchange({
+      refereeGame: {
+        ...mockExchange.refereeGame,
+        activeRefereeConvocationFirstHeadReferee: undefined,
+      },
+    })
 
     const { result } = renderHook(() => useExchangeActions(), { wrapper: createWrapper() })
 

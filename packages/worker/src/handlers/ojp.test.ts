@@ -119,7 +119,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OJP service not configured')
@@ -142,7 +142,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(413)
     expect(body.error).toBe('Request body too large')
@@ -168,7 +168,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('Too many requests')
@@ -209,15 +209,13 @@ describe('Integration: OJP Endpoint', () => {
 
     // Verify the upstream request included the API key
     const fetchMock = vi.mocked(globalThis.fetch)
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.opentransportdata.swiss/ojp20',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Authorization: 'Bearer test-ojp-key',
-        }),
-      })
-    )
+    expect(fetchMock).toHaveBeenCalledOnce()
+    const [upstreamUrl, upstreamInit] = fetchMock.mock.calls[0] ?? []
+    expect(upstreamUrl).toBe('https://api.opentransportdata.swiss/ojp20')
+    expect(upstreamInit).toMatchObject({
+      method: 'POST',
+      headers: { Authorization: 'Bearer test-ojp-key' },
+    })
 
     vi.unstubAllGlobals()
   })
@@ -238,7 +236,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(503)
     expect(body.error).toBe('OJP service authentication failed')
@@ -262,7 +260,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(429)
     expect(body.error).toBe('OJP service rate limit exceeded')
@@ -286,7 +284,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(502)
     expect(body.error).toBe('OJP request failed')
@@ -310,7 +308,7 @@ describe('Integration: OJP Endpoint', () => {
     })
 
     const response = await worker.fetch(request, mockEnv)
-    const body = (await response.json()) as JsonBody
+    const body = await response.json<JsonBody>()
 
     expect(response.status).toBe(500)
     expect(body.error).toBe('Internal server error during OJP request')

@@ -45,6 +45,9 @@ on:
 # - E2E uses pre-built Playwright Docker image (no browser install overhead)
 #
 # =============================================================================
+permissions:
+  contents: read
+
 jobs:
   # Setup job - generates API types once, shared by all downstream jobs
   # This is the CRITICAL PATH for lint, knip, test, and build jobs
@@ -58,17 +61,19 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Generate API cache key
         id: api-cache-key
-        run: echo "key=api-types-v2-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+        run: echo "key=api-types-v2-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> "$GITHUB_OUTPUT"
       - name: Cache generated API types
         id: api-cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             packages/shared/src/api/schema.ts
@@ -80,7 +85,7 @@ jobs:
       # Both paths are needed so upload-artifact preserves the packages/ directory
       # structure (LCA). Web schema.ts is a thin re-export, not generated.
       - name: Upload API types
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: api-types
           path: |
@@ -93,9 +98,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
       - name: Check token sync
@@ -109,7 +116,9 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -122,17 +131,20 @@ jobs:
           # (GHSA-xxxx@3.): it then applies only while every finding of that
           # advisory resolves to a version starting with the prefix, so a
           # regression on another line still fails the gate.
-          # - GHSA-86w9-cpqp-85rv (node-forge, via expo > @expo/cli) and
-          #   GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
-          #   have no patched release: the advisories list every published version
-          #   as vulnerable (latest node-forge 1.4.0, braces 3.0.3). Drop each entry
-          #   once a fixed version ships and expo picks it up.
+          # - GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
+          #   has no patched release: the advisory lists every published version
+          #   as vulnerable (latest braces 3.0.3). Drop once a fixed version ships
+          #   and expo picks it up.
+          # - node-forge (via expo > @expo/cli) and follow-redirects are held at
+          #   their patched lines by `pnpm.overrides` in the root package.json
+          #   rather than ignored here; remove the overrides once expo depends on
+          #   the fixed versions itself.
           # - GHSA-mrhx-c7xc-m3w5 (zod array-parse OOM, via expo > @expo/cli > zod 3.25.76)
           #   is fixed only on the 4.x line (4.6.6), which every workspace already
           #   uses; no patched 3.x release exists. @expo/cli only parses local
           #   config at build time. Scoped to 3.x so a direct zod 4 below 4.6.6
           #   still fails. Drop once @expo/cli moves to zod 4.
-          IGNORED_ADVISORIES="GHSA-86w9-cpqp-85rv GHSA-vfj7-8cjw-p6xm GHSA-mrhx-c7xc-m3w5@3."
+          IGNORED_ADVISORIES="GHSA-vfj7-8cjw-p6xm GHSA-mrhx-c7xc-m3w5@3."
           # pnpm audit emits the npm v6 report shape: advisories keyed by id, each
           # carrying github_advisory_id, module_name and the dependency paths.
           # pnpm audit exits non-zero whenever it finds something, so the exit code
@@ -197,27 +209,22 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Download API types
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: api-types
           path: packages
-      # Cache ESLint results (ESLint handles per-file invalidation internally)
-      # Key based on ESLint config, TypeScript config, and plugins
-      - name: Cache ESLint
-        uses: actions/cache@v6
-        with:
-          path: packages/web/.eslintcache
-          key: eslint-${{ runner.os }}-${{ hashFiles('packages/web/eslint.config.js', 'packages/web/tsconfig.json', 'pnpm-lock.yaml') }}
-          restore-keys: |
-            eslint-${{ runner.os }}-
+      # No ESLint result cache: the type-aware rules depend on types from
+      # other files, which ESLint's per-file cache cannot see change.
       - name: Lint
-        run: pnpm run lint --cache --cache-location .eslintcache
+        run: pnpm run lint
   # Dead code detection - needs API types from setup
   knip:
     name: Dead Code Check
@@ -225,7 +232,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -237,7 +246,7 @@ jobs:
       - name: Ensure every workspace has its dependencies
         run: pnpm install --frozen-lockfile
       - name: Download API types
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: api-types
           path: packages
@@ -268,8 +277,9 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # Full history needed for --changed to compare against base branch
           fetch-depth: 0
       - name: Setup Node.js with dependencies
@@ -277,24 +287,27 @@ jobs:
         with:
           working-directory: packages/web
       - name: Download API types
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: api-types
           path: packages
       # Cache Vite/Vitest transform cache (Vitest stores cache in .vite/vitest)
       # Key based on tooling config - source file changes don't invalidate transforms
       - name: Cache Vite
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/web/node_modules/.vite
           key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
           restore-keys: |
             vite-${{ runner.os }}-
       - name: Run tests
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ]; then
             # PRs: only run tests affected by changes since base branch
-            pnpm test --changed origin/${{ github.base_ref }}
+            pnpm test --changed "origin/$BASE_REF"
           else
             # main branch: run all tests
             pnpm test
@@ -309,20 +322,22 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Download API types
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: api-types
           path: packages
       # Cache Vite pre-bundled dependencies (shared key with test job)
       # Key based on dependencies and config - source changes don't affect dep pre-bundling
       - name: Cache Vite
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: packages/web/node_modules/.vite
           key: vite-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'packages/web/vite.config.ts', 'packages/web/tsconfig.json') }}
@@ -331,7 +346,7 @@ jobs:
       - name: Build
         run: pnpm run build
       - name: Upload build artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: web-app-dist
           path: packages/web/dist
@@ -346,13 +361,15 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-app-dist
           path: packages/web/dist
@@ -382,20 +399,24 @@ jobs:
       HOME: /root
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-app-dist
           path: packages/web/dist
       - name: Run E2E tests
-        run: pnpm exec playwright test --project=${{ matrix.browser }} --retries=2
+        env:
+          BROWSER: ${{ matrix.browser }}
+        run: pnpm exec playwright test --project="$BROWSER" --retries=2
       - name: Upload test results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.browser }}
@@ -411,18 +432,20 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/web
       - name: Download build artifact
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: web-app-dist
           path: packages/web/dist
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v12
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
         with:
           uploadArtifacts: true
           configPath: ./packages/web/lighthouserc.json
@@ -434,17 +457,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-      - name: Install changeset CLI
-        run: pnpm add -g @changesets/cli
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      # Pinned to the version in pnpm-lock.yaml. Installed globally because this
+      # job never runs pnpm install, so there is no lockfile-backed install to use.
+      - name: Install changeset CLI # zizmor: ignore[adhoc-packages] version pinned to the lockfile's
+        run: pnpm add -g @changesets/cli@3.0.3
       - name: Check for changesets
         id: changeset_check
         run: |
@@ -459,8 +485,10 @@ jobs:
             echo "Found $CHANGESET_COUNT changeset(s)"
           fi
       - name: Summary
+        env:
+          HAS_CHANGESET: ${{ steps.changeset_check.outputs.has_changeset }}
         run: |
-          if [ "${{ steps.changeset_check.outputs.has_changeset }}" = "true" ]; then
+          if [ "$HAS_CHANGESET" = "true" ]; then
             echo "## Changeset Found" >> "$GITHUB_STEP_SUMMARY"
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "This PR includes changelog entries." >> "$GITHUB_STEP_SUMMARY"

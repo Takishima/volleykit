@@ -4,13 +4,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type { AuthState } from '@/common/stores/auth'
+import type { SettingsState } from '@/common/stores/settings/types'
+import { partialMock } from '@/test/partial-mock'
+
 import type { GameExchange } from '@/api/client'
 import type { TravelTimeResult, Coordinates } from '@/common/services/transport'
 
 import { useTravelTimeFilter } from './useTravelTimeFilter'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyFunction = (...args: any[]) => any
 
 // Mock dependencies
 vi.mock('@/common/services/transport', () => ({
@@ -28,21 +29,25 @@ vi.mock('@/common/services/transport', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector: AnyFunction) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 vi.mock('@/common/stores/settings', () => ({
-  useSettingsStore: vi.fn((selector: AnyFunction) =>
-    selector({
-      homeLocation: null,
-      transportEnabled: false,
-      transportEnabledByAssociation: {},
-      travelTimeFilter: {
-        enabled: false,
-        maxTravelTimeMinutes: 60,
-        arrivalBufferByAssociation: {},
-      },
-    })
+  useSettingsStore: vi.fn((selector: (state: SettingsState) => unknown) =>
+    selector(
+      partialMock<SettingsState>({
+        homeLocation: null,
+        transportEnabled: false,
+        transportEnabledByAssociation: {},
+        travelTimeFilter: {
+          enabled: false,
+          maxTravelTimeMinutes: 60,
+          arrivalBufferByAssociation: {},
+        },
+      })
+    )
   ),
   getDefaultArrivalBuffer: vi.fn(() => 30),
 }))
@@ -54,7 +59,12 @@ vi.mock('@/common/hooks/useActiveAssociation', () => ({
 vi.mock('@/api/queryKeys', () => ({
   queryKeys: {
     travelTime: {
-      hall: vi.fn((hallId, homeHash, dayType) => ['travelTime', hallId, homeHash, dayType]),
+      hall: vi.fn((hallId: string, homeHash: string, dayType: string) => [
+        'travelTime',
+        hallId,
+        homeHash,
+        dayType,
+      ]),
     },
   },
 }))
@@ -139,22 +149,24 @@ describe('useTravelTimeFilter', () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
       const { isOjpConfigured } = await import('@/common/services/transport')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: {
-            latitude: 47.3769,
-            longitude: 8.5417,
-            label: 'Zürich',
-            source: 'geocoded',
-          },
-          transportEnabled: true,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: false,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: {
+              latitude: 47.3769,
+              longitude: 8.5417,
+              label: 'Zürich',
+              source: 'geocoded',
+            },
+            transportEnabled: true,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: false,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       vi.mocked(isOjpConfigured).mockReturnValue(true)
@@ -189,8 +201,8 @@ describe('useTravelTimeFilter', () => {
       const { useAuthStore } = await import('@/common/stores/auth')
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'demo' })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(partialMock<AuthState>({ dataSource: 'demo' }))
       )
 
       const mockResult: TravelTimeResult = {
@@ -256,26 +268,28 @@ describe('useTravelTimeFilter', () => {
       const { useAuthStore } = await import('@/common/stores/auth')
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'demo' })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(partialMock<AuthState>({ dataSource: 'demo' }))
       )
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: {
-            latitude: 47.3769,
-            longitude: 8.5417,
-            label: 'Zürich',
-            source: 'geocoded',
-          },
-          transportEnabled: true,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: true,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: {
+              latitude: 47.3769,
+              longitude: 8.5417,
+              label: 'Zürich',
+              source: 'geocoded',
+            },
+            transportEnabled: true,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: true,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       // Different travel times for different halls
@@ -343,22 +357,24 @@ describe('useTravelTimeFilter', () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: {
-            latitude: 47.3769,
-            longitude: 8.5417,
-            label: 'Zürich',
-            source: 'geocoded',
-          },
-          transportEnabled: true,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: false, // Filtering disabled
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: {
+              latitude: 47.3769,
+              longitude: 8.5417,
+              label: 'Zürich',
+              source: 'geocoded',
+            },
+            transportEnabled: true,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: false, // Filtering disabled
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       vi.mocked(getOrFetchTravelTime).mockReset()
@@ -388,17 +404,19 @@ describe('useTravelTimeFilter', () => {
     it('returns true for exchanges under limit', async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: null,
-          transportEnabled: false,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: true,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: null,
+            transportEnabled: false,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: true,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       const mockExchange = createMockExchange('hall-1')
@@ -409,6 +427,7 @@ describe('useTravelTimeFilter', () => {
       const underLimit = {
         item: mockExchange,
         travelTimeMinutes: 30,
+        travelMode: undefined,
         isLoading: false,
         isError: false,
       }
@@ -419,17 +438,19 @@ describe('useTravelTimeFilter', () => {
     it('returns false for exchanges over limit', async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: null,
-          transportEnabled: false,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: true,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: null,
+            transportEnabled: false,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: true,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       const mockExchange = createMockExchange('hall-1')
@@ -440,6 +461,7 @@ describe('useTravelTimeFilter', () => {
       const overLimit = {
         item: mockExchange,
         travelTimeMinutes: 90,
+        travelMode: undefined,
         isLoading: false,
         isError: false,
       }
@@ -450,17 +472,19 @@ describe('useTravelTimeFilter', () => {
     it('returns true for exchanges with null travel time', async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: null,
-          transportEnabled: false,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: true,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: null,
+            transportEnabled: false,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: true,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       const mockExchange = createMockExchange('hall-1')
@@ -471,6 +495,7 @@ describe('useTravelTimeFilter', () => {
       const noTravelTime = {
         item: mockExchange,
         travelTimeMinutes: null,
+        travelMode: undefined,
         isLoading: false,
         isError: false,
       }
@@ -489,24 +514,26 @@ describe('useTravelTimeFilter', () => {
       vi.mocked(useActiveAssociationCode).mockReturnValue('SPECIAL')
       vi.mocked(isOjpConfigured).mockReturnValue(true)
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: {
-            latitude: 47.3769,
-            longitude: 8.5417,
-            label: 'Zürich',
-            source: 'geocoded',
-          },
-          transportEnabled: false, // Global disabled
-          transportEnabledByAssociation: {
-            SPECIAL: true, // But enabled for this association
-          },
-          travelTimeFilter: {
-            enabled: false,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {},
-          },
-        })
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: {
+              latitude: 47.3769,
+              longitude: 8.5417,
+              label: 'Zürich',
+              source: 'geocoded',
+            },
+            transportEnabled: false, // Global disabled
+            transportEnabledByAssociation: {
+              SPECIAL: true, // But enabled for this association
+            },
+            travelTimeFilter: {
+              enabled: false,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {},
+            },
+          })
+        )
       )
 
       const exchanges = [createMockExchange('hall-1', { lat: 46.948, lon: 7.447 })]
@@ -526,28 +553,30 @@ describe('useTravelTimeFilter', () => {
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
 
       vi.mocked(useActiveAssociationCode).mockReturnValue('SPECIAL')
-      vi.mocked(useAuthStore).mockImplementation((selector: AnyFunction) =>
-        selector({ dataSource: 'demo' })
+      vi.mocked(useAuthStore).mockImplementation((selector) =>
+        selector(partialMock<AuthState>({ dataSource: 'demo' }))
       )
 
-      vi.mocked(useSettingsStore).mockImplementation((selector: AnyFunction) =>
-        selector({
-          homeLocation: {
-            latitude: 47.3769,
-            longitude: 8.5417,
-            label: 'Zürich',
-            source: 'geocoded',
-          },
-          transportEnabled: true,
-          transportEnabledByAssociation: {},
-          travelTimeFilter: {
-            enabled: false,
-            maxTravelTimeMinutes: 60,
-            arrivalBufferByAssociation: {
-              SPECIAL: 45, // Custom buffer for this association
+      vi.mocked(useSettingsStore).mockImplementation((selector) =>
+        selector(
+          partialMock<SettingsState>({
+            homeLocation: {
+              latitude: 47.3769,
+              longitude: 8.5417,
+              label: 'Zürich',
+              source: 'geocoded',
             },
-          },
-        })
+            transportEnabled: true,
+            transportEnabledByAssociation: {},
+            travelTimeFilter: {
+              enabled: false,
+              maxTravelTimeMinutes: 60,
+              arrivalBufferByAssociation: {
+                SPECIAL: 45, // Custom buffer for this association
+              },
+            },
+          })
+        )
       )
 
       vi.mocked(getOrFetchTravelTime).mockResolvedValue({

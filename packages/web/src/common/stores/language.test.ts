@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { getLocale } from '@/i18n'
+import { readPersistedState } from '@/test/persisted-state'
 
 import { useLanguageStore } from './language'
+
+type LanguageState = ReturnType<typeof useLanguageStore.getState>
 
 describe('Language Store', () => {
   beforeEach(() => {
@@ -39,13 +42,8 @@ describe('Language Store', () => {
     changeLocale('fr')
 
     // Check that localStorage was updated
-    const stored = localStorage.getItem('volleykit-language')
-    expect(stored).toBeTruthy()
-
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      expect(parsed.state.locale).toBe('fr')
-    }
+    const persisted = readPersistedState<Pick<LanguageState, 'locale'>>('volleykit-language')
+    expect(persisted.locale).toBe('fr')
   })
 
   it('updates i18n locale when changeLocale is called', () => {

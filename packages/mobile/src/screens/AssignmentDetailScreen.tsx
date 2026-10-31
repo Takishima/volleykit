@@ -140,7 +140,9 @@ export function AssignmentDetailScreen({ route }: Props) {
   const handleOpenMaps = () => {
     if (display.latitude && display.longitude) {
       const url = `https://maps.google.com/?q=${display.latitude},${display.longitude}`
-      Linking.openURL(url)
+      Linking.openURL(url).catch((openError: unknown) => {
+        console.warn('[AssignmentDetailScreen] Failed to open maps:', openError)
+      })
     }
   }
 
@@ -224,8 +226,8 @@ export function AssignmentDetailScreen({ route }: Props) {
               <Feather name="users" size={18} color={COLORS.purple600} />
               <View className="ml-3 flex-1">
                 <Text className="text-purple-700">{t('assignments.doubleConvocation')}</Text>
-                {display.doubleConvocationParts.map((part, index) => (
-                  <Text key={`${index}-${part}`} className="text-purple-600 text-sm mt-1">
+                {display.doubleConvocationParts.map((part) => (
+                  <Text key={part} className="text-purple-600 text-sm mt-1">
                     {part}
                   </Text>
                 ))}

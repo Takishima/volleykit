@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
+import { ensureError } from '@volleykit/shared/utils'
 
 import { api, getApiClient, type CompensationRecord, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -190,11 +191,11 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
           setWasQueued(true)
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err))
-        log.error('Failed to update assignment compensation:', error)
+        const failure = ensureError(err)
+        log.error('Failed to update assignment compensation:', failure)
         setIsError(true)
-        setError(error)
-        throw error
+        setError(failure)
+        throw failure
       } finally {
         setIsPending(false)
       }
@@ -219,8 +220,8 @@ export function useUpdateAssignmentCompensation(): OfflineMutationResult<
         .then(() => {
           options?.onSuccess?.()
         })
-        .catch((err) => {
-          options?.onError?.(err)
+        .catch((err: unknown) => {
+          options?.onError?.(ensureError(err))
         })
     },
     [mutateAsync]

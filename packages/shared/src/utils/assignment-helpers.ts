@@ -87,7 +87,7 @@ export function getTeamNamesFromCompensation(compensation: CompensationRecord): 
  * Game reports are only available for NLA and NLB games
  * as they require official documentation for Swiss Volley.
  */
-const GAME_REPORT_ELIGIBLE_LEAGUES = ['NLA', 'NLB']
+const GAME_REPORT_ELIGIBLE_LEAGUES = new Set(['NLA', 'NLB'])
 
 /**
  * Checks if an assignment is eligible for game report generation.
@@ -112,8 +112,7 @@ export function isGameReportEligible(assignment: Assignment): boolean {
   }
 
   const leagueName = assignment.refereeGame?.game?.group?.phase?.league?.leagueCategory?.name
-  const isEligibleLeague =
-    leagueName !== undefined && GAME_REPORT_ELIGIBLE_LEAGUES.includes(leagueName)
+  const isEligibleLeague = leagueName !== undefined && GAME_REPORT_ELIGIBLE_LEAGUES.has(leagueName)
   const isFirstReferee = assignment.refereePosition === 'head-one'
   return isEligibleLeague && isFirstReferee
 }

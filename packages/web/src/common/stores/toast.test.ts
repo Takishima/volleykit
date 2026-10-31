@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
-import { useToastStore, toast, DEFAULT_DURATION_MS } from './toast'
+import { useToastStore, toast, DEFAULT_TOAST_DURATION_MS } from './toast'
 
 // Mock crypto.randomUUID
 vi.stubGlobal('crypto', {
@@ -161,7 +161,7 @@ describe('toast convenience functions', () => {
       toast.success('Test')
 
       const { toasts } = useToastStore.getState()
-      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS)
+      expect(toasts[0]!.duration).toBe(DEFAULT_TOAST_DURATION_MS)
     })
 
     it('accepts custom duration', () => {
@@ -193,7 +193,7 @@ describe('toast convenience functions', () => {
       toast.error('Test')
 
       const { toasts } = useToastStore.getState()
-      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS)
+      expect(toasts[0]!.duration).toBe(DEFAULT_TOAST_DURATION_MS)
     })
 
     it('accepts custom duration', () => {
@@ -224,7 +224,7 @@ describe('toast convenience functions', () => {
       toast.info('Test')
 
       const { toasts } = useToastStore.getState()
-      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS)
+      expect(toasts[0]!.duration).toBe(DEFAULT_TOAST_DURATION_MS)
     })
 
     it('accepts custom duration', () => {
@@ -255,7 +255,7 @@ describe('toast convenience functions', () => {
       toast.warning('Test')
 
       const { toasts } = useToastStore.getState()
-      expect(toasts[0]!.duration).toBe(DEFAULT_DURATION_MS)
+      expect(toasts[0]!.duration).toBe(DEFAULT_TOAST_DURATION_MS)
     })
 
     it('accepts custom duration', () => {

@@ -108,9 +108,9 @@ export function useAssignmentActions(): UseAssignmentActionsResult {
       if (isDemoMode) {
         addAssignmentToExchange(assignment.__identity)
         // Invalidate exchanges query so the new exchange appears immediately
-        queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
+        void queryClient.invalidateQueries({ queryKey: queryKeys.exchanges.lists() })
         // Also invalidate assignments since isOpenEntryInRefereeGameExchange changes
-        queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
+        void queryClient.invalidateQueries({ queryKey: queryKeys.assignments.lists() })
         log.debug('Demo mode: added assignment to exchange:', assignment.__identity)
         toast.success(t('exchange.addedToExchangeSuccess'))
         return

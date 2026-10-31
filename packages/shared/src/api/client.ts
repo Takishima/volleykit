@@ -289,7 +289,7 @@ export async function wrapApiCall<T>(fn: () => Promise<T>): Promise<ApiResult<T>
     return {
       data: null,
       error: createApiError(
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
         error instanceof Error ? error.message : 'Unknown error',
         undefined,
         error

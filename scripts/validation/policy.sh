@@ -86,6 +86,12 @@ FORMAT_ROOT=".prettierrc.json .prettierignore .editorconfig"
 # invalidation alone only matters once a check registers.
 SHELL_INPUTS="scripts .claude/hooks .claude/settings.json .github/workflows/ci-shell.yml package.json"
 
+# oxlint runs once over every TypeScript workspace package from the repo root
+# (one process, ~3s), so it is a root-level check like `tokens`, registered
+# when any of those packages is affected. The config file is an input so a
+# rule change re-runs it.
+OXLINT_INPUTS="packages/web packages/shared packages/mobile packages/worker .oxlintrc.json"
+
 # The design-token check compares the two generated files. Trigger and inputs
 # are the same constant so editing the generator both invalidates the cache
 # and registers the check.

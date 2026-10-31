@@ -36,7 +36,7 @@ export interface CompensationFormState {
   setApplyToSameHall: (value: boolean) => void
   otherCompensationsAtSameHall: CompensationRecord[]
   hallName: string | undefined
-  handleSubmit: (e: React.FormEvent) => void
+  handleSubmit: (e: React.SyntheticEvent<HTMLFormElement>) => void
 }
 
 /**
@@ -177,7 +177,7 @@ export function useCompensationForm({
   )
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: React.SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       setErrors({})
 

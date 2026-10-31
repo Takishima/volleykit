@@ -28,6 +28,9 @@ import {
 import { useAuthStore } from '@/common/stores/auth'
 import { useSettingsStore } from '@/common/stores/settings'
 import { MINUTES_PER_HOUR } from '@/common/utils/constants'
+import { createLogger } from '@/common/utils/logger'
+
+const log = createLogger('useTravelTime')
 
 interface UseTravelTimeOptions {
   /** Date for the journey (used to determine day type). Defaults to today. */
@@ -136,7 +139,9 @@ export function useTravelTime(
       removeCachedTravelTime(hallId, homeLocationHash, dayType, travelModeKey)
     }
     // Then invalidate TanStack Query cache to trigger refetch
-    queryClient.invalidateQueries({ queryKey })
+    queryClient
+      .invalidateQueries({ queryKey })
+      .catch((error: unknown) => log.warn('Failed to invalidate travel time query:', error))
   }, [queryClient, queryKey, hallId, homeLocationHash, dayType, travelModeKey])
 
   return {

@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
+import { readPersistedState } from '@/test/persisted-state'
+
 import { useTourStore, type TourId } from './tour'
 
 describe('useTourStore', () => {
@@ -284,15 +286,12 @@ describe('useTourStore', () => {
       })
 
       // Access the persisted state directly from localStorage
-      const persistedData = localStorage.getItem('volleykit-tour')
-      if (persistedData) {
-        const parsed = JSON.parse(persistedData)
-        expect(parsed.state).toHaveProperty('completedTours')
-        expect(parsed.state).toHaveProperty('dismissedTours')
-        // activeTour and currentStep should not be persisted
-        expect(parsed.state).not.toHaveProperty('activeTour')
-        expect(parsed.state).not.toHaveProperty('currentStep')
-      }
+      const persisted = readPersistedState<Record<string, unknown>>('volleykit-tour')
+      expect(persisted).toHaveProperty('completedTours')
+      expect(persisted).toHaveProperty('dismissedTours')
+      // activeTour and currentStep should not be persisted
+      expect(persisted).not.toHaveProperty('activeTour')
+      expect(persisted).not.toHaveProperty('currentStep')
     })
   })
 })

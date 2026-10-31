@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+import type { AuthState } from '@/common/stores/auth'
+import { partialMock } from '@/test/partial-mock'
+
 import type { ValidatedPersonSearchResult } from '@/api/validation'
 
 import { ScorerSearchPanel } from './ScorerSearchPanel'
@@ -52,7 +55,9 @@ vi.mock('@/features/validation/scorer/hooks/useScorerSearch', () => ({
 }))
 
 vi.mock('@/common/stores/auth', () => ({
-  useAuthStore: vi.fn((selector) => selector({ dataSource: 'api' })),
+  useAuthStore: vi.fn((selector: (state: AuthState) => unknown) =>
+    selector(partialMock<AuthState>({ dataSource: 'api' }))
+  ),
 }))
 
 function createWrapper() {
@@ -192,9 +197,9 @@ describe('ScorerSearchPanel', () => {
       wrapper: createWrapper(),
     })
 
-    const searchInput = screen.getByPlaceholderText(
+    const searchInput = screen.getByPlaceholderText<HTMLInputElement>(
       'Search scorer by name or ID...'
-    ) as HTMLInputElement
+    )
     fireEvent.change(searchInput, { target: { value: 'Müller' } })
 
     act(() => {

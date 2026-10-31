@@ -3,7 +3,7 @@ on:
   release:
     types: [published]
 permissions:
-  contents: write
+  contents: read
 # Prevent concurrent builds for the same release
 concurrency:
   group: release-build-android-${{ github.event.release.tag_name }}
@@ -17,8 +17,9 @@ jobs:
     steps:
       - name: Extract version from tag
         id: extract
+        env:
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          TAG="${{ github.event.release.tag_name }}"
           # Remove 'v' prefix if present
           VERSION="${TAG#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
@@ -41,18 +42,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Log build info (EAS build temporarily disabled)
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
         run: |
           echo "=================================================="
           echo "Android Release Build - EAS build temporarily disabled"
           echo "=================================================="
           echo ""
-          echo "Release tag: ${{ github.event.release.tag_name }}"
-          echo "Version: ${{ needs.prepare.outputs.version }}"
-          echo "Release URL: ${{ github.event.release.html_url }}"
+          echo "Release tag: $RELEASE_TAG"
+          echo "Version: $VERSION"
+          echo "Release URL: $RELEASE_URL"
           echo ""
           echo "TODO: Re-enable EAS build once Expo issues are fixed"
           echo "=================================================="
       - name: Summary
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           echo "## Android Release Build (Disabled)" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -60,5 +68,5 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
           echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Release Tag | \`${{ github.event.release.tag_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Version | \`${{ needs.prepare.outputs.version }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Release Tag | \`$RELEASE_TAG\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | \`$VERSION\` |" >> "$GITHUB_STEP_SUMMARY"

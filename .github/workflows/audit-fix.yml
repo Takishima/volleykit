@@ -30,6 +30,9 @@ on:
 concurrency:
   group: audit-fix
   cancel-in-progress: true
+permissions:
+  contents: read
+
 jobs:
   audit-fix:
     name: Audit & Fix
@@ -42,7 +45,9 @@ jobs:
       audit_summary: ${{ steps.audit-report.outputs.audit_summary }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Setup Node.js with dependencies
         uses: ./.github/actions/setup-node-deps
         with:
@@ -81,6 +86,8 @@ jobs:
       - name: Generate audit summary
         id: audit-report
         if: steps.detect-changes.outputs.has_fixes == 'true'
+        env:
+          FIXED_COUNT: ${{ steps.pre-audit.outputs.fixable }}
         run: |
           # Generate a human-readable summary of what was fixed
           LOCK_CHANGED=$(git diff --name-only pnpm-lock.yaml 2>/dev/null || true)
@@ -88,7 +95,6 @@ jobs:
           if [ -n "$LOCK_CHANGED" ]; then
             AUDIT_JSON=$(pnpm audit --audit-level high --prod --json 2>/dev/null || true)
             REMAINING=$(echo "$AUDIT_JSON" | jq -r '[.vulnerabilities | to_entries[]] | length' 2>/dev/null || echo "0")
-            FIXED_COUNT="${{ steps.pre-audit.outputs.fixable }}"
             PLURAL=$( [ "$FIXED_COUNT" = "1" ] && echo "vulnerability" || echo "vulnerabilities" )
             SUMMARY="**Monorepo:** fixed $FIXED_COUNT $PLURAL ($REMAINING remaining)"
           fi
@@ -108,7 +114,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Upload fixed files
         if: steps.detect-changes.outputs.has_fixes == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: audit-fix-packages
           path: |
@@ -129,9 +135,11 @@ jobs:
         working-directory: packages/web
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Download fixed packages
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: audit-fix-packages
           path: .
@@ -164,15 +172,15 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Checkout  # zizmor: ignore[artipacked] peter-evans/create-pull-request pushes the fix branch from this checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Download fixed packages
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: audit-fix-packages
           path: .
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
           commit-message: 'fix(deps): auto-fix audit vulnerabilities'

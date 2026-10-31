@@ -19,11 +19,7 @@ import {
   type TravelTimeResult,
 } from '@/common/services/transport'
 import { useAuthStore } from '@/common/stores/auth'
-import {
-  useSettingsStore,
-  type SbbDestinationType,
-  type UserLocation,
-} from '@/common/stores/settings'
+import { useSettingsStore, type UserLocation } from '@/common/stores/settings'
 import {
   generateSbbUrl,
   calculateArrivalTime,
@@ -157,7 +153,7 @@ export function useSbbUrl(options: UseSbbUrlOptions): UseSbbUrlResult {
   )
   const sbbDestinationType = useSettingsStore(
     (state) => state.travelTimeFilter.sbbDestinationType ?? 'address'
-  ) as SbbDestinationType
+  )
   const { travelMode, maxBikeDistanceKm } = useTravelModeSettings()
   const { useMock } = useTravelTimeSource()
 

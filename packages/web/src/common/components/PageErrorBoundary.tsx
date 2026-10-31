@@ -62,7 +62,10 @@ class PageErrorBoundaryClass extends Component<PageErrorBoundaryClassProps, Stat
     window.location.href = '/'
   }
 
-  override render() {
+  /**
+   * @returns the page error UI while in an error state, otherwise the children
+   */
+  override render(): ReactNode {
     if (this.state.hasError) {
       const { translations } = this.props
       const isNetworkError = this.state.errorType === 'network'

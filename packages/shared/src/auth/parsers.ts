@@ -178,7 +178,7 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
       const decodedJson = decodeHtmlEntities(scriptMatch[1])
       const parsed = JSON.parse(decodedJson) as unknown
       if (looksLikeActiveParty(parsed)) {
-        return parsed as ActiveParty
+        return parsed
       }
     }
 
@@ -195,7 +195,7 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
         const parsed = JSON.parse(decodedJson) as unknown
 
         if (looksLikeActiveParty(parsed)) {
-          return parsed as ActiveParty
+          return parsed
         }
       } catch {
         // Continue to next match
@@ -214,7 +214,7 @@ export function extractActivePartyFromHtml(html: string): ActiveParty | null {
         const parsed = JSON.parse(decodedJson) as unknown
 
         if (looksLikeActiveParty(parsed)) {
-          return parsed as ActiveParty
+          return parsed
         }
       } catch {
         // Continue to next match

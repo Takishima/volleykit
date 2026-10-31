@@ -8,16 +8,16 @@ import { useDemoStore } from '@/common/stores/demo'
 
 // Create hoisted mocks to avoid initialization order issues
 const { mockAuthStore, mockSettingsStore } = vi.hoisted(() => {
-  const mockAuthStore = Object.assign(vi.fn(), {
+  const authStore = Object.assign(vi.fn(), {
     getState: vi.fn(() => ({ dataSource: 'api' })),
     subscribe: vi.fn(() => () => {}), // Returns unsubscribe function
   })
 
-  const mockSettingsStore = Object.assign(vi.fn(), {
+  const settingsStore = Object.assign(vi.fn(), {
     getState: vi.fn(() => ({ _setCurrentMode: vi.fn() })),
   })
 
-  return { mockAuthStore, mockSettingsStore }
+  return { mockAuthStore: authStore, mockSettingsStore: settingsStore }
 })
 
 vi.mock('@/common/stores/auth', () => ({
@@ -38,7 +38,7 @@ vi.mock('@/common/stores/settings', () => ({
 // PersistQueryClientProvider requires IndexedDB persistence which doesn't work in happy-dom.
 vi.mock('@tanstack/react-query-persist-client', async () => {
   const actual = await vi.importActual('@tanstack/react-query-persist-client')
-  const { QueryClientProvider } =
+  const { QueryClientProvider: ActualQueryClientProvider } =
     await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query')
   return {
     ...actual,
@@ -49,7 +49,7 @@ vi.mock('@tanstack/react-query-persist-client', async () => {
       client: unknown
       children: React.ReactNode
     }) => {
-      return QueryClientProvider({ client, children } as never)
+      return ActualQueryClientProvider({ client, children } as never)
     },
   }
 })
@@ -224,7 +224,7 @@ describe('calculateRetryDelay', () => {
       // Should work with or without error parameter
       expect(calculateRetryDelay(0)).toBe(1000)
       expect(calculateRetryDelay(0, new Error('test'))).toBe(1000)
-      expect(calculateRetryDelay(1, undefined)).toBe(2000)
+      expect(calculateRetryDelay(1)).toBe(2000)
     } finally {
       Math.random = originalRandom
     }
@@ -286,7 +286,7 @@ describe('QueryErrorHandler', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       dataSource: 'api',
-    } as ReturnType<typeof useAuthStore>)
+    })
 
     // Create a query that will fail with 406
     const testQuery = {
@@ -301,7 +301,7 @@ describe('QueryErrorHandler', () => {
     )
 
     // Trigger the query
-    queryClient.fetchQuery(testQuery).catch(() => {
+    queryClient.query(testQuery).catch(() => {
       // Expected to fail
     })
 
@@ -316,7 +316,7 @@ describe('QueryErrorHandler', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       dataSource: 'api',
-    } as ReturnType<typeof useAuthStore>)
+    })
 
     await waitFor(() => {
       expect(isAuthError(new Error('403 Forbidden'))).toBe(true)
@@ -327,7 +327,7 @@ describe('QueryErrorHandler', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       dataSource: 'demo',
-    } as ReturnType<typeof useAuthStore>)
+    })
 
     // Even with auth error, should not redirect in demo mode
     expect(isAuthError(new Error('401 Unauthorized'))).toBe(true)
@@ -338,7 +338,7 @@ describe('QueryErrorHandler', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       dataSource: 'api',
-    } as ReturnType<typeof useAuthStore>)
+    })
 
     // Verify mutation errors are also auth errors
     expect(isAuthError(new Error('403 Forbidden'))).toBe(true)
@@ -351,7 +351,7 @@ describe('QueryErrorHandler', () => {
     vi.mocked(useAuthStore).mockReturnValue({
       logout: mockLogout,
       dataSource: 'api',
-    } as ReturnType<typeof useAuthStore>)
+    })
 
     // Error classification should still work
     expect(isAuthError(new Error('401 Unauthorized'))).toBe(true)

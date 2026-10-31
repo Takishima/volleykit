@@ -9,9 +9,11 @@ interface Props {
   type: 'info' | 'warning' | 'tip'
   /** Optional title for the box */
   title?: string
+  /** Translation key for the title (rendered as data-i18n for client-side retranslation) */
+  titleKey?: string
 }
 
-const { type, title } = Astro.props
+const { type, title, titleKey } = Astro.props
 
 // Styles and icons for each type
 const typeConfig = {
@@ -62,14 +64,12 @@ const displayTitle = title ?? config.defaultTitle
     {/* Content */}
     <div class="flex-1">
       {/* Title */}
-      <p class:list={['mb-1 font-semibold', config.titleClass]}>
+      <p class:list={['mb-1 font-semibold', config.titleClass]} data-i18n={titleKey}>
         {displayTitle}
       </p>
 
       {/* Slot content */}
-      <div
-        class="text-sm text-text-secondary dark:text-text-secondary-dark [&>p]:mb-2 [&>p:last-child]:mb-0"
-      >
+      <div class="text-sm text-text-secondary dark:text-text-secondary-dark [&>p]:mb-2 [&>p:last-child]:mb-0">
         <slot />
       </div>
     </div>

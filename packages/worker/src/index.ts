@@ -36,9 +36,7 @@ function validateEnv(env: Env): void {
   if (!env.TARGET_HOST || env.TARGET_HOST.trim() === '') {
     throw new Error('TARGET_HOST environment variable is required')
   }
-  try {
-    new URL(env.TARGET_HOST)
-  } catch {
+  if (!URL.canParse(env.TARGET_HOST)) {
     throw new Error('TARGET_HOST must be a valid URL')
   }
 }

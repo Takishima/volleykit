@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 
+import { createLogger } from '@/common/utils/logger'
+
 export interface GeocodedLocation {
   /** Unique identifier from Nominatim */
   placeId: number
@@ -35,6 +37,8 @@ const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/search'
 const DEFAULT_COUNTRY_CODE = 'ch'
 const DEFAULT_LIMIT = 5
 const MIN_QUERY_LENGTH = 3
+
+const log = createLogger('useGeocode')
 
 /**
  * Hook for geocoding addresses using the OpenStreetMap Nominatim API.
@@ -84,7 +88,7 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
   // AbortController for cancelling pending requests
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  const search = useCallback(
+  const runSearch = useCallback(
     async (query: string) => {
       // Skip empty or too short queries
       if (query.trim().length < MIN_QUERY_LENGTH) {
@@ -119,7 +123,7 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
           throw new Error(`HTTP ${response.status}`)
         }
 
-        const data: NominatimResult[] = await response.json()
+        const data = (await response.json()) as NominatimResult[]
 
         // AbortController prevents this from running if aborted
         setState({
@@ -147,6 +151,14 @@ export function useGeocode(options: UseGeocodeOptions = {}): UseGeocodeResult {
       }
     },
     [countryCode, limit]
+  )
+
+  // runSearch reports failures through state; the public search() returns void.
+  const search = useCallback(
+    (query: string) => {
+      runSearch(query).catch((error: unknown) => log.error('Geocoding failed:', error))
+    },
+    [runSearch]
   )
 
   const clear = useCallback(() => {

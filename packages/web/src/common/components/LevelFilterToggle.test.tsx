@@ -31,8 +31,7 @@ describe('LevelFilterToggle', () => {
     const toggle = screen.getByRole('switch')
     fireEvent.click(toggle)
 
-    expect(onChange).toHaveBeenCalledOnce()
-    expect(onChange).toHaveBeenCalledWith(true)
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(true)
   })
 
   it('should call onChange with false when clicking checked toggle', () => {
@@ -43,8 +42,7 @@ describe('LevelFilterToggle', () => {
     const toggle = screen.getByRole('switch')
     fireEvent.click(toggle)
 
-    expect(onChange).toHaveBeenCalledOnce()
-    expect(onChange).toHaveBeenCalledWith(false)
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(false)
   })
 
   it('should display user level when provided and checked', () => {

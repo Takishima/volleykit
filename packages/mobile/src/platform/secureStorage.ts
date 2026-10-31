@@ -17,11 +17,12 @@ const PASSWORD_KEY = 'volleykit_password'
 
 /**
  * Secure storage options for expo-secure-store
- * - keychainAccessible: Always allow access (no additional biometric on each read)
+ * - keychainAccessible: Accessible once the device has been unlocked after boot, including
+ *   while locked afterwards (no additional biometric on each read). `ALWAYS` is deprecated.
  * - requireAuthentication: We handle biometric separately for UX control
  */
 const SECURE_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
-  keychainAccessible: SecureStore.ALWAYS,
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
 }
 
 /**

@@ -90,11 +90,11 @@ function ExchangeCardComponent({
     const submitter = exchange.submittedByPerson
     const submitterFullName = submitter ? `${submitter.firstName} ${submitter.lastName}` : null
 
-    return ROLE_CONFIG.filter(({ field }) => refereeGame?.[field]).map(({ field, labelKey }) => ({
-      labelKey,
-      name: refereeGame![field]!,
-      isSubmitter: refereeGame![field] === submitterFullName,
-    }))
+    return ROLE_CONFIG.flatMap(({ field, labelKey }) => {
+      const name = refereeGame?.[field]
+      if (!name) return []
+      return [{ labelKey, name, isSubmitter: name === submitterFullName }]
+    })
   }, [exchange.refereeGame, exchange.submittedByPerson])
 
   const homeTeam = game?.encounter?.teamHome?.name || t('common.tbd')

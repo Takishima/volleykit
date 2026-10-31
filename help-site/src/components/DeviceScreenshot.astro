@@ -90,28 +90,62 @@ const defaultDevice = firstExisting?.device ?? devices[0]
     role="tablist"
     aria-label="Device type selector"
   >
-    {
-      deviceStatus.map(({ device, display, index, exists }) => (
-        <button
-          type="button"
-          role="tab"
-          id={`${componentId}-tab-${device}`}
-          aria-selected={device === defaultDevice ? 'true' : 'false'}
-          aria-controls={`${componentId}-panel-${device}`}
-          tabindex={device === defaultDevice ? 0 : -1}
-          data-device={device}
-          data-component-id={componentId}
-          data-index={index}
-          data-exists={exists ? 'true' : 'false'}
-          class:list={[
-            'device-tab flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-            device === defaultDevice
-              ? 'bg-surface-default text-text-primary shadow-sm dark:bg-surface-default-dark dark:text-text-primary-dark'
-              : 'text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark',
-          ]}
+    {deviceStatus.map(({ device, display, index, exists }) => (
+      <button
+        type="button"
+        role="tab"
+        id={`${componentId}-tab-${device}`}
+        aria-selected={device === defaultDevice ? 'true' : 'false'}
+        aria-controls={`${componentId}-panel-${device}`}
+        tabindex={device === defaultDevice ? 0 : -1}
+        data-device={device}
+        data-component-id={componentId}
+        data-index={index}
+        data-exists={exists ? 'true' : 'false'}
+        class:list={[
+          'device-tab flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          device === defaultDevice
+            ? 'bg-surface-card text-text-primary shadow-sm dark:bg-surface-card-dark dark:text-text-primary-dark'
+            : 'text-text-muted hover:text-text-secondary dark:text-text-muted-dark dark:hover:text-text-secondary-dark',
+        ]}
+      >
+        <svg
+          class="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
         >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={display.icon} />
+        </svg>
+        <span>{display.label}</span>
+      </button>
+    ))}
+  </div>
+
+  {/* Device Panels */}
+  {deviceStatus.map(({ device, display, filename, imagePath, exists }) => (
+    <div
+      id={`${componentId}-panel-${device}`}
+      role="tabpanel"
+      aria-labelledby={`${componentId}-tab-${device}`}
+      data-device={device}
+      data-component-id={componentId}
+      class:list={['device-panel', device !== defaultDevice && 'hidden']}
+    >
+      {exists ? (
+        <img
+          src={imagePath}
+          alt={`${alt} (${display.label})`}
+          class="mx-auto max-w-full rounded-lg border border-border-default shadow-md dark:border-border-default-dark"
+          loading="lazy"
+          {...(altKey ? { 'data-i18n-alt': altKey, 'data-alt-suffix': ` (${display.label})` } : {})}
+        />
+      ) : (
+        <div class="mx-auto max-w-2xl rounded-lg border-2 border-dashed border-border-strong bg-surface-subtle p-8 text-center dark:border-border-strong-dark dark:bg-surface-subtle-dark">
+          {/* Device icon */}
           <svg
-            class="h-4 w-4"
+            class="mx-auto mb-4 h-12 w-12 text-text-muted dark:text-text-muted-dark"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -120,72 +154,28 @@ const defaultDevice = firstExisting?.device ?? devices[0]
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
-              stroke-width="2"
+              stroke-width="1.5"
               d={display.icon}
             />
           </svg>
-          <span>{display.label}</span>
-        </button>
-      ))
-    }
-  </div>
 
-  {/* Device Panels */}
-  {
-    deviceStatus.map(({ device, display, filename, imagePath, exists }) => (
-      <div
-        id={`${componentId}-panel-${device}`}
-        role="tabpanel"
-        aria-labelledby={`${componentId}-tab-${device}`}
-        data-device={device}
-        data-component-id={componentId}
-        class:list={['device-panel', device !== defaultDevice && 'hidden']}
-      >
-        {exists ? (
-          <img
-            src={imagePath}
-            alt={`${alt} (${display.label})`}
-            class="mx-auto max-w-full rounded-lg border border-border-default shadow-md dark:border-border-default-dark"
-            loading="lazy"
-            {...(altKey
-              ? { 'data-i18n-alt': altKey, 'data-alt-suffix': ` (${display.label})` }
-              : {})}
-          />
-        ) : (
-          <div class="mx-auto max-w-2xl rounded-lg border-2 border-dashed border-border-strong bg-surface-subtle p-8 text-center dark:border-border-strong-dark dark:bg-surface-subtle-dark">
-            {/* Device icon */}
-            <svg
-              class="mx-auto mb-4 h-12 w-12 text-text-muted dark:text-text-muted-dark"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="1.5"
-                d={display.icon}
-              />
-            </svg>
+          {/* Alt text as label */}
+          <p class="mb-2 font-medium text-text-secondary dark:text-text-secondary-dark">
+            {alt} ({display.label})
+          </p>
 
-            {/* Alt text as label */}
-            <p class="mb-2 font-medium text-text-secondary dark:text-text-secondary-dark">
-              {alt} ({display.label})
-            </p>
+          <p class="text-sm text-text-muted dark:text-text-muted-dark">
+            Screenshot placeholder - {display.label.toLowerCase()} view
+          </p>
 
-            <p class="text-sm text-text-muted dark:text-text-muted-dark">
-              Screenshot placeholder - {display.label.toLowerCase()} view
-            </p>
-
-            {/*
+          {/*
               Hidden instructions for Claude Code.
               SECURITY NOTE: set:html is safe here because all interpolated values (id, device,
               alt, display.label, filename, instructions) are build-time component props from
               the developer, not runtime user input. The output is also inside an HTML comment.
             */}
-            <Fragment
-              set:html={`
+          <Fragment
+            set:html={`
                 <!--
                 CLAUDE-CODE-SCREENSHOT-INSTRUCTIONS
                 ID: ${id}
@@ -195,24 +185,21 @@ const defaultDevice = firstExisting?.device ?? devices[0]
                 INSTRUCTIONS: ${instructions} Capture this as a ${display.label.toLowerCase()} view${device === 'phone' ? ' (mobile viewport, ~375px width)' : device === 'tablet' ? ' (tablet viewport, ~768px width)' : ' (desktop viewport, ~1280px width)'}.
                 -->
               `}
-            />
-          </div>
-        )}
-      </div>
-    ))
-  }
+          />
+        </div>
+      )}
+    </div>
+  ))}
 
   {/* Caption */}
-  {
-    caption && (
-      <figcaption
-        class="mt-3 text-center text-sm text-text-muted dark:text-text-muted-dark"
-        {...(captionKey ? { 'data-i18n': captionKey } : {})}
-      >
-        {caption}
-      </figcaption>
-    )
-  }
+  {caption && (
+    <figcaption
+      class="mt-3 text-center text-sm text-text-muted dark:text-text-muted-dark"
+      {...(captionKey ? { 'data-i18n': captionKey } : {})}
+    >
+      {caption}
+    </figcaption>
+  )}
 </figure>
 
 <script>
@@ -290,8 +277,8 @@ const defaultDevice = firstExisting?.device ?? devices[0]
             'dark:hover:text-text-secondary-dark'
           )
           siblingTab.classList.add(
-            'bg-surface-default',
-            'dark:bg-surface-default-dark',
+            'bg-surface-card',
+            'dark:bg-surface-card-dark',
             'text-text-primary',
             'dark:text-text-primary-dark',
             'shadow-sm'
@@ -304,8 +291,8 @@ const defaultDevice = firstExisting?.device ?? devices[0]
             'dark:hover:text-text-secondary-dark'
           )
           siblingTab.classList.remove(
-            'bg-surface-default',
-            'dark:bg-surface-default-dark',
+            'bg-surface-card',
+            'dark:bg-surface-card-dark',
             'text-text-primary',
             'dark:text-text-primary-dark',
             'shadow-sm'

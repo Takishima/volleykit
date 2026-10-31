@@ -31,6 +31,9 @@ vi.mock('@/common/hooks/useTravelTime', () => ({
   },
 }))
 
+/** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
+const CUSTOM_CLASS = 'custom-class'
+
 describe('TravelTimeBadge', () => {
   describe('loading state', () => {
     it('shows loading indicator when isLoading is true', () => {
@@ -162,10 +165,10 @@ describe('TravelTimeBadge', () => {
 
     it('applies custom className', () => {
       const { container } = render(
-        <TravelTimeBadge durationMinutes={30} className="custom-class" />
+        <TravelTimeBadge durationMinutes={30} className={CUSTOM_CLASS} />
       )
 
-      const badge = container.querySelector('.custom-class')
+      const badge = container.querySelector(`.${CUSTOM_CLASS}`)
       expect(badge).toBeInTheDocument()
     })
 

@@ -5,7 +5,7 @@
  * All error responses use JSON format with security and CORS headers.
  */
 
-import { corsHeaders, securityHeaders } from '../middleware'
+import { corsHeaders, securityHeaders } from './headers'
 
 /**
  * Create a standardized JSON error response.

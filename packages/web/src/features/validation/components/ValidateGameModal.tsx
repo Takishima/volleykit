@@ -335,7 +335,9 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
             <div className="mt-2 flex gap-3">
               <button
                 type="button"
-                onClick={() => wizard.handleFinish()}
+                onClick={() => {
+                  void wizard.handleFinish()
+                }}
                 className="text-sm font-medium text-danger-600 dark:text-danger-400 hover:text-danger-700 dark:hover:text-danger-300"
               >
                 {t('common.retry')}
@@ -437,7 +439,9 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
 
       <UnsavedChangesDialog
         isOpen={wizard.showUnsavedDialog}
-        onSaveAndClose={wizard.handleSaveAndClose}
+        onSaveAndClose={() => {
+          void wizard.handleSaveAndClose()
+        }}
         onDiscard={wizard.handleDiscardAndClose}
         onCancel={wizard.handleCancelClose}
         isSaving={wizard.isSaving}
@@ -449,7 +453,9 @@ function ValidateGameModalComponent({ assignment, isOpen, onClose }: ValidateGam
         homeTeamName={homeTeam}
         awayTeamName={awayTeam}
         onGoBack={wizard.handleRosterWarningGoBack}
-        onProceedAnyway={wizard.handleRosterWarningProceed}
+        onProceedAnyway={() => {
+          void wizard.handleRosterWarningProceed()
+        }}
         isProceedingAnyway={wizard.isFinalizing}
       />
 

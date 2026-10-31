@@ -391,7 +391,7 @@ describe('fetchAllAssignmentPages', () => {
       .mockResolvedValueOnce({ items: page('a', 100), totalItemsCount: 250 })
       .mockResolvedValueOnce({
         items: [],
-        droppedItems: Array(100).fill({ index: 0, issues: [] }),
+        droppedItems: Array.from({ length: 100 }, () => ({ index: 0, issues: [] })),
         totalItemsCount: 250,
       } as never)
       .mockResolvedValueOnce({ items: page('c', 50), totalItemsCount: 250 })
