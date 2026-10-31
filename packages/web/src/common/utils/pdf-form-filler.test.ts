@@ -15,13 +15,13 @@ import {
   buildReportFilename,
   fillNonConformantReport,
   getChecklistSections,
-  signatureBoxFor,
   type SportsHallReportData,
   type LeagueCategory,
   type Language,
   type NonConformantSelections,
 } from './pdf-form-filler'
 import { getPdfChecklistSections, getSignatureNameFields } from './pdf-field-mappings'
+import { signatureBoxFor } from './pdf-signature-block'
 
 // Close MSW server for this file since we use manual fetch mocking in downloadPdf tests
 beforeAll(() => {
