@@ -5,6 +5,7 @@
  * New code should import directly from the specific module:
  *   - pdf-report-data.ts  — Assignment data extraction, filename building
  *   - pdf-field-mappings.ts — PDF field names, checklist sections, positions
+ *   - pdf-signature-block.ts — Signature image embedding and signer name sizing
  *   - pdf-download.ts — Browser download trigger
  */
 
@@ -12,19 +13,15 @@ import { logger } from '@/common/utils/logger'
 
 import { downloadPdf } from './pdf-download'
 import {
-  ALL_SIGNATURE_POSITIONS,
   COMMENT_FIELD_FONT_SIZE,
   RADIO_NOT_OK_OPTION,
   RADIO_OK_OPTION,
-  SIGNATURE_POSITIONS,
   type FieldMapping,
   getFieldMapping,
   getPdfChecklistSections,
   getSignatureNameFields,
   getWizardFieldMapping,
-  type AllSignaturePositions,
   type PdfChecklistSection,
-  type SignaturePosition,
 } from './pdf-field-mappings'
 import {
   buildReportFilename,
@@ -32,6 +29,12 @@ import {
   type LeagueCategory,
   type SportsHallReportData,
 } from './pdf-report-data'
+import {
+  embedAllSignatures,
+  embedSignature,
+  fitSignatureNameFonts,
+  type NonConformantSignatures,
+} from './pdf-signature-block'
 
 import type { PDFDocument, PDFForm } from 'pdf-lib'
 
@@ -41,6 +44,7 @@ import type { PDFDocument, PDFForm } from 'pdf-lib'
 
 export { downloadPdf } from './pdf-download'
 export { getChecklistSections } from './pdf-field-mappings'
+export type { NonConformantSignatures } from './pdf-signature-block'
 export {
   buildReportFilename,
   extractSportsHallReportData,
@@ -62,14 +66,6 @@ export interface JerseyAdvertisingOptions {
 
 /** Which sub-items are flagged as not-OK, keyed by section ID then sub-item ID. */
 export type NonConformantSelections = Record<string, Set<string>>
-
-/** Signature data for the non-conformant workflow (up to 4 signers). */
-export interface NonConformantSignatures {
-  firstReferee?: string
-  secondReferee?: string
-  homeTeamCoach?: { name: string; signature: string }
-  awayTeamCoach?: { name: string; signature: string }
-}
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -93,6 +89,10 @@ function trySetTextField(form: PDFForm, fieldName: string, value: string | undef
  * native form-field rendering.  `setFontSize(0)` tells pdf-lib to scale each
  * field's text to fit its bounding box — the same behaviour browsers use for
  * un-flattened form fields.
+ *
+ * The signature-block name fields are deliberately excluded: they are much
+ * taller than the header cells, so auto-sizing would inflate the names to
+ * ~20pt. They are handled by `fitSignatureNameFonts` instead.
  */
 function autoSizeHeaderFields(form: PDFForm, mapping: FieldMapping): void {
   const headerFields = [
@@ -102,8 +102,6 @@ function autoSizeHeaderFields(form: PDFForm, mapping: FieldMapping): void {
     mapping.hallName,
     mapping.location,
     mapping.date,
-    mapping.firstRefereeName,
-    mapping.secondRefereeName,
   ]
   for (const fieldName of headerFields) {
     try {
@@ -178,143 +176,6 @@ async function loadPdfForm(
   const pdfDoc = await PDFDocument.load(pdfBytes)
   const form = pdfDoc.getForm()
   return { pdfDoc, form }
-}
-
-// ---------------------------------------------------------------------------
-// Signature embedding
-// ---------------------------------------------------------------------------
-
-const SIGNATURE_CROP_PADDING = 10
-const SIGNATURE_EMBED_PADDING_PT = 3
-const RGBA_CHANNELS = 4
-const ALPHA_CHANNEL_OFFSET = 3
-
-function dataUrlToBytes(dataUrl: string): Uint8Array {
-  const base64 = dataUrl.split(',')[1]
-  if (!base64) throw new Error('Invalid data URL')
-  const binaryString = atob(base64)
-  const bytes = new Uint8Array(binaryString.length)
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i)
-  }
-  return bytes
-}
-
-async function cropSignatureDataUrl(dataUrl: string): Promise<string> {
-  const img = new Image()
-  await new Promise<void>((resolve, reject) => {
-    img.addEventListener('load', () => resolve(), { once: true })
-    img.addEventListener('error', () => reject(new Error('Failed to load signature image')), {
-      once: true,
-    })
-    img.src = dataUrl
-  })
-
-  const canvas = document.createElement('canvas')
-  canvas.width = img.width
-  canvas.height = img.height
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return dataUrl
-
-  ctx.drawImage(img, 0, 0)
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-  const { data, width, height } = imageData
-
-  let minX = width
-  let minY = height
-  let maxX = 0
-  let maxY = 0
-
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const alpha = data[(y * width + x) * RGBA_CHANNELS + ALPHA_CHANNEL_OFFSET] ?? 0
-      if (alpha > 0) {
-        if (x < minX) minX = x
-        if (x > maxX) maxX = x
-        if (y < minY) minY = y
-        if (y > maxY) maxY = y
-      }
-    }
-  }
-
-  if (maxX < minX || maxY < minY) return dataUrl
-
-  const cropX = Math.max(0, minX - SIGNATURE_CROP_PADDING)
-  const cropY = Math.max(0, minY - SIGNATURE_CROP_PADDING)
-  const cropW = Math.min(width - cropX, maxX - minX + 1 + SIGNATURE_CROP_PADDING * 2)
-  const cropH = Math.min(height - cropY, maxY - minY + 1 + SIGNATURE_CROP_PADDING * 2)
-
-  const croppedCanvas = document.createElement('canvas')
-  croppedCanvas.width = cropW
-  croppedCanvas.height = cropH
-  const croppedCtx = croppedCanvas.getContext('2d')
-  if (!croppedCtx) return dataUrl
-
-  croppedCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH)
-  return croppedCanvas.toDataURL('image/png')
-}
-
-async function embedSignatureAtPosition(
-  pdfDoc: PDFDocument,
-  signatureDataUrl: string,
-  pos: SignaturePosition
-): Promise<void> {
-  const croppedDataUrl = await cropSignatureDataUrl(signatureDataUrl)
-  const signatureBytes = dataUrlToBytes(croppedDataUrl)
-  const signatureImage = await pdfDoc.embedPng(signatureBytes)
-
-  const page = pdfDoc.getPage(0)
-
-  const padding = SIGNATURE_EMBED_PADDING_PT
-  const maxWidth = pos.width - padding * 2
-  const maxHeight = pos.height - padding * 2
-  const aspectRatio = signatureImage.width / signatureImage.height
-  let drawWidth = maxWidth
-  let drawHeight = drawWidth / aspectRatio
-  if (drawHeight > maxHeight) {
-    drawHeight = maxHeight
-    drawWidth = drawHeight * aspectRatio
-  }
-
-  const xOffset = pos.x + padding + (maxWidth - drawWidth) / 2
-  const yOffset = pos.y + padding + (maxHeight - drawHeight) / 2
-
-  page.drawImage(signatureImage, {
-    x: xOffset,
-    y: yOffset,
-    width: drawWidth,
-    height: drawHeight,
-  })
-}
-
-async function embedSignature(
-  pdfDoc: PDFDocument,
-  signatureDataUrl: string,
-  leagueCategory: LeagueCategory
-): Promise<void> {
-  await embedSignatureAtPosition(pdfDoc, signatureDataUrl, SIGNATURE_POSITIONS[leagueCategory])
-}
-
-async function embedAllSignatures(
-  pdfDoc: PDFDocument,
-  positions: AllSignaturePositions,
-  signatures: NonConformantSignatures
-): Promise<void> {
-  const entries: Array<[string | undefined, SignaturePosition]> = [
-    [signatures.firstReferee, positions.firstReferee],
-    [signatures.secondReferee, positions.secondReferee],
-    [signatures.homeTeamCoach?.signature, positions.homeTeam],
-    [signatures.awayTeamCoach?.signature, positions.awayTeam],
-  ]
-
-  for (const [dataUrl, position] of entries) {
-    if (!dataUrl) continue
-    try {
-      await embedSignatureAtPosition(pdfDoc, dataUrl, position)
-    } catch (error) {
-      logger.warn('Could not embed signature:', error)
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -438,6 +299,7 @@ export async function fillSportsHallReportWizard(
   const { pdfDoc, form } = await loadPdfForm(leagueCategory, language)
   const mapping = getFieldMapping(leagueCategory)
   const wizardMapping = getWizardFieldMapping(leagueCategory)
+  const signatureNameFields = getSignatureNameFields(leagueCategory)
 
   fillBaseGameInfo(form, data, mapping)
 
@@ -453,13 +315,14 @@ export async function fillSportsHallReportWizard(
   // Embed first referee signature if provided
   if (signatureDataUrl) {
     try {
-      await embedSignature(pdfDoc, signatureDataUrl, leagueCategory)
+      await embedSignature(pdfDoc, form, signatureDataUrl, signatureNameFields)
     } catch (error) {
       logger.warn('Could not embed signature in PDF:', error)
     }
   }
 
   autoSizeHeaderFields(form, mapping)
+  fitSignatureNameFonts(form, signatureNameFields)
   form.flatten()
   return pdfDoc.save()
 }
@@ -522,9 +385,13 @@ export async function fillNonConformantReport(
   }
 
   if (signatures) {
-    await embedAllSignatures(pdfDoc, ALL_SIGNATURE_POSITIONS[leagueCategory], signatures)
+    await embedAllSignatures(pdfDoc, form, signatureNameFields, signatures)
   }
 
+  // Runs regardless of `flatten` so the unflattened preview shows the names at
+  // the size the final PDF will use. Header auto-sizing is left to the viewer
+  // in the preview (see autoSizeHeaderFields) and only forced when flattening.
+  fitSignatureNameFonts(form, signatureNameFields)
   if (options.flatten !== false) {
     autoSizeHeaderFields(form, mapping)
     form.flatten()

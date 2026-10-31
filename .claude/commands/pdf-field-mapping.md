@@ -1,16 +1,21 @@
 # PDF Sports Hall Report Field Mapping
 
-Re-establish checkbox/radio field mappings and signature field positions for the sports hall report PDFs when SwissVolley updates the templates.
+Re-establish checkbox/radio field mappings and verify the signature layout for the sports hall report PDFs when SwissVolley updates the templates.
 
 ## Context
 
-The sports hall report PDFs (NLA and NLB) contain radio groups for each checklist item (conformant/non-conformant) and signature areas. When SwissVolley updates the PDFs, field names or positions may change. This command systematically identifies every field mapping.
+The sports hall report PDFs (NLA and NLB, each in de and fr) contain radio groups for each checklist item (conformant/non-conformant), name text fields and signature cells. When SwissVolley updates the PDFs, field names may change. This command systematically identifies every field mapping.
+
+Signature boxes are **not** hardcoded: they are derived at fill time from the widget rectangle of the signer's name field (same table row). Step 3 only verifies that this derivation still holds for new templates.
 
 ## PDF Templates
 
-- **NLA**: `packages/web/public/assets/pdf/sports-hall-report-nla-de.pdf`
-- **NLB**: `packages/web/public/assets/pdf/sports-hall-report-de.pdf`
-- **Code**: `packages/web/src/shared/utils/pdf-form-filler.ts`
+- **NLA**: `packages/web/public/assets/pdf/sports-hall-report-nla-{de,fr}.pdf`
+- **NLB**: `packages/web/public/assets/pdf/sports-hall-report-{de,fr}.pdf`
+- **Field names / sections**: `packages/web/src/common/utils/pdf-field-mappings.ts`
+- **Filling / signature embedding**: `packages/web/src/common/utils/pdf-form-filler.ts`
+
+The de and fr templates share field names but differ in table geometry, so run every step on both languages.
 
 ## Prerequisites
 
@@ -152,86 +157,73 @@ await getRadioPositions('packages/web/public/assets/pdf/sports-hall-report-de.pd
 
 **Key insight**: Gaps of ~15-16 units between consecutive fields = same section. Gaps of ~18-19+ units = section break. Use this to confirm section boundaries.
 
-## Step 3: Determine Signature Field Positions and Sizes
+## Step 3: Verify the Signature Row Derivation
 
-Signatures are embedded as PNG images at specific coordinates. To find the correct positions:
+`signatureBoxFor(form, nameField)` in `pdf-form-filler.ts` computes each signature box as:
+
+- `x` = name field right edge + `SIGNATURE_GAP_PT` (clears the "Unterschrift:"/"Signature:" label at the top-left of the cell)
+- `y`, `height` = the name field's widget rectangle (same table row)
+- `width` = `SIGNATURE_WIDTH_PT` (stays clear of "Nur falls notwendig"/"Uniquement si nécessaire" in the team rows)
+
+Both constants live in `pdf-field-mappings.ts`. The name fields are `Text19`–`Text22` (NLA) and `Text23`–`Text26` (NLB), declared in `NLA_SIGNATURE_NAME_FIELDS` / `NLB_SIGNATURE_NAME_FIELDS`.
+
+For a new template, confirm three things:
+
+1. The name field names are unchanged (Step 1 output), and each one sits in the row of the signer it is mapped to (first referee, second referee, home team, away team, top to bottom).
+2. The signature cell is still to the right of the name field on the same row.
+3. The gap and width still clear the labels. Render a filled copy with debug outlines:
 
 ```javascript
 // scripts/pdf-signature-area.mjs
 import { readFileSync, writeFileSync } from 'fs'
 import { PDFDocument, rgb } from 'pdf-lib'
 
-async function markSignatureArea(pdfPath, outputPath, label) {
-  const bytes = readFileSync(pdfPath)
-  const doc = await PDFDocument.load(bytes)
-  const page = doc.getPage(0)
-  const { height: pageHeight } = page.getSize()
-
-  console.log(`\n=== ${label} ===`)
-  console.log(`Page size: ${page.getSize().width} x ${pageHeight}`)
-
-  // Draw colored rectangles at candidate signature positions
-  // Adjust these based on where signatures should appear
-  const candidates = [
-    { label: '1st ref', x: 340, y: 100, w: 130, h: 24, color: rgb(1, 0, 0) },
-    { label: '2nd ref', x: 340, y: 76, w: 130, h: 18, color: rgb(0, 1, 0) },
-    { label: 'home', x: 340, y: 55, w: 130, h: 18, color: rgb(0, 0, 1) },
-    { label: 'away', x: 340, y: 34, w: 130, h: 18, color: rgb(1, 0, 1) },
-  ]
-
-  for (const c of candidates) {
-    page.drawRectangle({
-      x: c.x,
-      y: c.y,
-      width: c.w,
-      height: c.h,
-      borderColor: c.color,
-      borderWidth: 2,
-      opacity: 0.3,
-      color: c.color,
-    })
-    console.log(`  ${c.label}: x=${c.x} y=${c.y} w=${c.w} h=${c.h}`)
-  }
-
-  const out = await doc.save()
-  writeFileSync(outputPath, out)
-  console.log(`→ ${outputPath}`)
+const GAP = 46 // SIGNATURE_GAP_PT
+const WIDTH = 100 // SIGNATURE_WIDTH_PT
+const NAME_FIELDS = {
+  nla: ['Text19', 'Text20', 'Text21', 'Text22'],
+  nlb: ['Text23', 'Text24', 'Text25', 'Text26'],
 }
 
-await markSignatureArea(
-  'packages/web/public/assets/pdf/sports-hall-report-nla-de.pdf',
-  '/tmp/sig-nla.pdf',
-  'NLA'
-)
-await markSignatureArea(
-  'packages/web/public/assets/pdf/sports-hall-report-de.pdf',
-  '/tmp/sig-nlb.pdf',
-  'NLB'
-)
+for (const variant of ['nla-de', 'nla-fr', 'de', 'fr']) {
+  const doc = await PDFDocument.load(
+    readFileSync(`packages/web/public/assets/pdf/sports-hall-report-${variant}.pdf`)
+  )
+  const form = doc.getForm()
+  const page = doc.getPage(0)
+  for (const name of NAME_FIELDS[variant.startsWith('nla') ? 'nla' : 'nlb']) {
+    const r = form.getTextField(name).acroField.getWidgets()[0].getRectangle()
+    page.drawRectangle({
+      x: r.x + r.width + GAP,
+      y: r.y,
+      width: WIDTH,
+      height: r.height,
+      borderColor: rgb(1, 0, 0),
+      borderWidth: 0.5,
+    })
+  }
+  writeFileSync(`/tmp/sig-${variant}.pdf`, await doc.save())
+}
 ```
-
-Render and visually verify the signature rectangles align with the expected signature area at the bottom of the PDF:
 
 ```bash
-pdftoppm -png -r 300 /tmp/sig-nla.pdf /tmp/sig-nla
-pdftoppm -png -r 300 /tmp/sig-nlb.pdf /tmp/sig-nlb
+node scripts/pdf-signature-area.mjs
+for v in nla-de nla-fr de fr; do pdftoppm -png -r 110 /tmp/sig-$v.pdf /tmp/sig-$v; done
 ```
 
-Adjust coordinates until the colored rectangles align perfectly with the signature area on the PDF. The signature boxes should:
+Read the PNGs. Each red box must sit inside its "Unterschrift"/"Signature" cell, right of the label and left of "Nur falls notwendig"/"Uniquement si nécessaire". If a box overlaps a label, adjust `SIGNATURE_GAP_PT` / `SIGNATURE_WIDTH_PT`; if a box is on the wrong row, fix the name field mapping.
 
-- Not overlap each other
-- Fit within the designated signature area at the bottom of the page
-- The 1st referee box should be the topmost and tallest (height: 24)
-- Subsequent boxes (2nd ref, home, away) should be smaller (height: 18)
+The tests in `pdf-form-filler.test.ts` ("signature block layout") load all four templates and assert the row alignment, so they fail automatically if a template drops or renames a name field.
 
 ## Step 4: Update the Code
 
-After establishing all mappings, update `packages/web/src/shared/utils/pdf-form-filler.ts`:
+After establishing all mappings, update `packages/web/src/common/utils/pdf-field-mappings.ts`:
 
-1. **`NLA_WIZARD_FIELDS`** / **`NLB_WIZARD_FIELDS`** — Update `allPointsInOrderCheckbox` and advertising field names
-2. **`NLA_CHECKLIST_SECTIONS`** / **`NLB_CHECKLIST_SECTIONS`** — Update every `radioField` value and ensure correct sub-item count per section
-3. **`SIGNATURE_POSITIONS`** — Happy path (1st referee only) positions for NLA/NLB
-4. **`ALL_SIGNATURE_POSITIONS`** — Non-conformant (4 signers) positions, where 1st ref y must match happy path
+1. **`NLA_FIELD_MAPPING`** / **`NLB_FIELD_MAPPING`** — header field names (game number, teams, hall, date, referee names)
+2. **`NLA_WIZARD_FIELDS`** / **`NLB_WIZARD_FIELDS`** — `allPointsInOrderCheckbox` and advertising radio names
+3. **`NLA_CHECKLIST_SECTIONS`** / **`NLB_CHECKLIST_SECTIONS`** — every `radioField` value and the sub-item count per section
+4. **`NLA_SIGNATURE_NAME_FIELDS`** / **`NLB_SIGNATURE_NAME_FIELDS`** — name fields per signer (drive the signature boxes)
+5. **`SIGNATURE_GAP_PT`** / **`SIGNATURE_WIDTH_PT`** — only if Step 3 showed an overlap
 
 Also update translations if sections/sub-items changed:
 
@@ -240,18 +232,14 @@ Also update translations if sections/sub-items changed:
 
 ## Step 5: Validate
 
-Run lint, knip, and build to verify:
-
 ```bash
-cd packages/web
-pnpm run lint
-pnpm run knip
-pnpm run build
+scripts/validate.sh
 ```
 
 ## Important Notes
 
 - PDF coordinate system: y=0 is at the BOTTOM of the page, higher y = higher on page
+- Signature boxes must be read from the form **before** `form.flatten()` — flattening removes the fields
 - Radio groups use `Auswahl3` (OK/conformant) and `Auswahl4` (not-OK/non-conformant)
 - NLA radio fields use mixed naming: plain numbers (`'19'`, `'20'`) and `Gruppe` prefix (`'Gruppe424'`)
 - NLB radio fields also use mixed naming: `Gruppe` prefix for early fields, plain numbers for later ones

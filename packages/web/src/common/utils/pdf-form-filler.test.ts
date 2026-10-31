@@ -20,7 +20,8 @@ import {
   type Language,
   type NonConformantSelections,
 } from './pdf-form-filler'
-import { getPdfChecklistSections } from './pdf-field-mappings'
+import { getPdfChecklistSections, getSignatureNameFields } from './pdf-field-mappings'
+import { signatureBoxFor } from './pdf-signature-block'
 
 // Close MSW server for this file since we use manual fetch mocking in downloadPdf tests
 beforeAll(() => {
@@ -858,5 +859,111 @@ describe('pdf-form-filler', () => {
         })
       }
     }
+  })
+
+  describe('signature block layout', () => {
+    const PDF_DIR = resolve(__dirname, '../../../public/assets/pdf')
+    const leagueCategories: LeagueCategory[] = ['NLA', 'NLB']
+    const languages: Language[] = ['de', 'fr']
+
+    function loadTemplateBytes(leagueCategory: LeagueCategory, language: Language): Uint8Array {
+      const categoryPath = leagueCategory === 'NLA' ? 'nla-' : ''
+      return new Uint8Array(
+        readFileSync(resolve(PDF_DIR, `sports-hall-report-${categoryPath}${language}.pdf`))
+      )
+    }
+
+    /** Parses the font size out of a default appearance string such as "/Helv 12 Tf 0 g". */
+    function getFontSize(defaultAppearance: string | undefined): number {
+      const tokens = (defaultAppearance ?? '').split(' ')
+      const tfIndex = tokens.indexOf('Tf')
+      return tfIndex > 0 ? Number(tokens[tfIndex - 1]) : NaN
+    }
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    for (const leagueCategory of leagueCategories) {
+      for (const language of languages) {
+        describe(`${leagueCategory} ${language}`, () => {
+          it('places each signature box in the row of its name field', async () => {
+            const { PDFDocument } = await import('pdf-lib')
+            const doc = await PDFDocument.load(loadTemplateBytes(leagueCategory, language))
+            const form = doc.getForm()
+            const { width: pageWidth } = doc.getPage(0).getSize()
+            const nameFields = getSignatureNameFields(leagueCategory)
+            const signers = ['firstReferee', 'secondReferee', 'homeTeam', 'awayTeam'] as const
+
+            const boxes = signers.map((signer) => {
+              const nameField = nameFields[signer]
+              const rect = form.getTextField(nameField).acroField.getWidgets()[0]!.getRectangle()
+              const box = signatureBoxFor(form, nameField)
+              expect(box.y).toBeCloseTo(rect.y, 3)
+              expect(box.y + box.height).toBeCloseTo(rect.y + rect.height, 3)
+              expect(box.x).toBeGreaterThan(rect.x + rect.width)
+              expect(box.x + box.width).toBeLessThan(pageWidth)
+              return box
+            })
+
+            // Rows run top-to-bottom without overlapping
+            for (let i = 1; i < boxes.length; i++) {
+              expect(boxes[i - 1]!.y).toBeGreaterThanOrEqual(boxes[i]!.y + boxes[i]!.height - 1)
+            }
+          })
+
+          it('keeps referee names at the template font size and shrinks only overlong names', async () => {
+            vi.stubGlobal(
+              'fetch',
+              vi.fn().mockResolvedValue({
+                ok: true,
+                arrayBuffer: () =>
+                  Promise.resolve(loadTemplateBytes(leagueCategory, language).buffer),
+              })
+            )
+            const pdfBytes = await fillNonConformantReport({
+              data: {
+                gameNumber: '999999',
+                homeTeam: 'VBC Test Home',
+                awayTeam: 'VBC Test Away',
+                gender: 'm',
+                hallName: 'Testhalle',
+                location: 'Teststadt',
+                date: '15.12.2025',
+                firstRefereeName: 'Max Mustermann',
+                secondRefereeName: 'Maximilian-Alexander von Hohenzollern-Sigmaringen',
+              },
+              leagueCategory,
+              language,
+              nonConformantSubItems: {},
+              sectionComments: {},
+              flatten: false,
+            })
+
+            const { PDFDocument } = await import('pdf-lib')
+            const form = (await PDFDocument.load(pdfBytes)).getForm()
+            const nameFields = getSignatureNameFields(leagueCategory)
+            const first = form
+              .getTextField(nameFields.firstReferee)
+              .acroField.getDefaultAppearance()
+            const second = form
+              .getTextField(nameFields.secondReferee)
+              .acroField.getDefaultAppearance()
+            expect(getFontSize(first)).toBe(12)
+            expect(getFontSize(second)).toBeLessThan(12)
+            expect(getFontSize(second)).toBeGreaterThan(0)
+          })
+        })
+      }
+    }
+
+    it('puts the NLB-de first-referee signature in the top row (regression)', async () => {
+      const { PDFDocument } = await import('pdf-lib')
+      const doc = await PDFDocument.load(loadTemplateBytes('NLB', 'de'))
+      const box = signatureBoxFor(doc.getForm(), getSignatureNameFields('NLB').firstReferee)
+      // Row 1 of the German NLB template starts at y≈205; the old hardcoded
+      // y=157 drew the signature inside the Heimmannschaft row.
+      expect(box.y).toBeGreaterThanOrEqual(205)
+    })
   })
 })

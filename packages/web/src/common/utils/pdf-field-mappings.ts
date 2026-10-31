@@ -121,32 +121,20 @@ export interface SignaturePosition {
   height: number
 }
 
-export interface AllSignaturePositions {
-  firstReferee: SignaturePosition
-  secondReferee: SignaturePosition
-  homeTeam: SignaturePosition
-  awayTeam: SignaturePosition
-}
+/**
+ * Signature boxes are derived at fill time from the name field in the same
+ * table row (see `signatureBoxFor` in pdf-form-filler.ts), because row heights
+ * and offsets differ between the NLA/NLB and de/fr templates.
+ */
 
-export const SIGNATURE_POSITIONS: Record<LeagueCategory, SignaturePosition> = {
-  NLA: { x: 340, y: 104, width: 130, height: 24 },
-  NLB: { x: 340, y: 157, width: 130, height: 24 },
-}
-
-export const ALL_SIGNATURE_POSITIONS: Record<LeagueCategory, AllSignaturePositions> = {
-  NLA: {
-    firstReferee: { x: 340, y: 104, width: 130, height: 24 },
-    secondReferee: { x: 340, y: 83, width: 130, height: 18 },
-    homeTeam: { x: 340, y: 62, width: 130, height: 18 },
-    awayTeam: { x: 340, y: 41, width: 130, height: 18 },
-  },
-  NLB: {
-    firstReferee: { x: 340, y: 157, width: 130, height: 24 },
-    secondReferee: { x: 340, y: 129, width: 130, height: 18 },
-    homeTeam: { x: 340, y: 101, width: 130, height: 18 },
-    awayTeam: { x: 340, y: 73, width: 130, height: 18 },
-  },
-}
+/**
+ * Gap between the name field's right edge and the signature box. The cell
+ * border is ~2pt further right; the rest clears the "Unterschrift:" /
+ * "Signature:" label printed at the top-left of the cell.
+ */
+export const SIGNATURE_GAP_PT = 46
+/** Signature box width — stays clear of "Nur falls notwendig"/"Uniquement si nécessaire" in the team rows. */
+export const SIGNATURE_WIDTH_PT = 100
 
 // ---------------------------------------------------------------------------
 // Checklist UI model (section/sub-item structure without PDF field names)
