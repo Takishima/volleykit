@@ -38,6 +38,10 @@ jobs:
         with:
           shellcheck: true
           pyflakes: false
+        env:
+          # Same floor as scripts/shellcheck.sh: style/info findings in `run:`
+          # scripts do not fail the gate, warnings and errors do.
+          SHELLCHECK_OPTS: --severity=warning
 
       # Workflow security audit. Without advanced-security the step fails the
       # job on findings instead of uploading SARIF, so contents: read is enough.

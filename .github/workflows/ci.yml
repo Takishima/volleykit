@@ -70,7 +70,7 @@ jobs:
           working-directory: packages/web
       - name: Generate API cache key
         id: api-cache-key
-        run: echo "key=api-types-v2-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
+        run: echo "key=api-types-v2-${{ hashFiles('docs/api/volleymanager-openapi.yaml', 'pnpm-lock.yaml') }}" >> "$GITHUB_OUTPUT"
       - name: Cache generated API types
         id: api-cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -131,17 +131,20 @@ jobs:
           # (GHSA-xxxx@3.): it then applies only while every finding of that
           # advisory resolves to a version starting with the prefix, so a
           # regression on another line still fails the gate.
-          # - GHSA-86w9-cpqp-85rv (node-forge, via expo > @expo/cli) and
-          #   GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
-          #   have no patched release: the advisories list every published version
-          #   as vulnerable (latest node-forge 1.4.0, braces 3.0.3). Drop each entry
-          #   once a fixed version ships and expo picks it up.
+          # - GHSA-vfj7-8cjw-p6xm (braces ReDoS, via expo > @expo/metro > micromatch)
+          #   has no patched release: the advisory lists every published version
+          #   as vulnerable (latest braces 3.0.3). Drop once a fixed version ships
+          #   and expo picks it up.
+          # - node-forge (via expo > @expo/cli) and follow-redirects are held at
+          #   their patched lines by `pnpm.overrides` in the root package.json
+          #   rather than ignored here; remove the overrides once expo depends on
+          #   the fixed versions itself.
           # - GHSA-mrhx-c7xc-m3w5 (zod array-parse OOM, via expo > @expo/cli > zod 3.25.76)
           #   is fixed only on the 4.x line (4.6.6), which every workspace already
           #   uses; no patched 3.x release exists. @expo/cli only parses local
           #   config at build time. Scoped to 3.x so a direct zod 4 below 4.6.6
           #   still fails. Drop once @expo/cli moves to zod 4.
-          IGNORED_ADVISORIES="GHSA-86w9-cpqp-85rv GHSA-vfj7-8cjw-p6xm GHSA-mrhx-c7xc-m3w5@3."
+          IGNORED_ADVISORIES="GHSA-vfj7-8cjw-p6xm GHSA-mrhx-c7xc-m3w5@3."
           # pnpm audit emits the npm v6 report shape: advisories keyed by id, each
           # carrying github_advisory_id, module_name and the dependency paths.
           # pnpm audit exits non-zero whenever it finds something, so the exit code

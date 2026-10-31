@@ -175,7 +175,7 @@ jobs:
 
           # Collect release notes from all package CHANGELOGs
           # Each package may have different changes for the same version
-          > /tmp/release_notes.md
+          : > /tmp/release_notes.md
 
           # Define packages and their changelog paths
           declare -A PACKAGES=(
