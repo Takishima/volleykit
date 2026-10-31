@@ -63,3 +63,12 @@ jobs:
           node-version: '22'
       - name: Monorepo manifest check
         run: pnpm dlx sherif@1.13.0
+
+      # oxlint is the fast first pass over every TypeScript package; the
+      # package ESLint configs switch off the rules it owns, so it has to run
+      # in CI too, not only in the local gate. Only the root devDependencies
+      # are needed (oxlint is a self-contained binary).
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile --filter volleykit --ignore-scripts
+      - name: oxlint
+        run: pnpm run lint:oxlint

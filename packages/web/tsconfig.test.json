@@ -14,8 +14,7 @@
     "src/**/*.d.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
-    "src/test/**/*",
-    "e2e/**/*.ts"
+    "src/test/**/*"
   ],
   "exclude": []
 }

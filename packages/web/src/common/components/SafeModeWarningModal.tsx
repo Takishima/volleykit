@@ -1,11 +1,12 @@
 import { useCallback, useRef } from 'react'
 
+import { runUnlessInProgress } from '@volleykit/shared/utils'
+
 import { Button } from '@/common/components/Button'
 import { Modal } from '@/common/components/Modal'
 import { ModalFooter } from '@/common/components/ModalFooter'
 import { ModalHeader } from '@/common/components/ModalHeader'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { runUnlessInProgress } from '@/common/utils/reentrancy-guard'
 
 const MODAL_TITLE_ID = 'safe-mode-warning-title'
 

@@ -8,12 +8,16 @@ on:
       - 'packages/shared/styles/**'
       - '.github/workflows/ci-help-site.yml'
       - '.github/actions/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
   pull_request:
     paths:
       - 'help-site/**'
       - 'packages/shared/styles/**'
       - '.github/workflows/ci-help-site.yml'
       - '.github/actions/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
 
 permissions:
   contents: read
@@ -42,8 +46,11 @@ jobs:
       - name: Check for dead code
         if: ${{ !cancelled() }}
         run: pnpm run knip
+  # deploy-web.yml builds the help site on main; this job only proves a PR
+  # still builds.
   build:
     name: Build
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     defaults:
       run:

@@ -3,7 +3,7 @@ import { isValidElement } from 'react'
 import { describe, it, expect, vi } from 'vitest'
 
 import type { GameExchange } from '@/api/client'
-import { createConvocationRef, createMockExchange } from '@/test/exchange-factory'
+import { createMockExchange } from '@/test/exchange-factory'
 
 import {
   createExchangeActions,
@@ -142,7 +142,7 @@ describe('getConvocationIdFromExchange', () => {
     const exchange = createMockExchange({
       refereePosition: 'head-one',
       refereeGame: {
-        activeRefereeConvocationFirstHeadReferee: createConvocationRef('convocation-123'),
+        activeRefereeConvocationFirstHeadReferee: { __identity: 'convocation-123' },
       },
     })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-123')
@@ -152,7 +152,7 @@ describe('getConvocationIdFromExchange', () => {
     const exchange = createMockExchange({
       refereePosition: 'head-two',
       refereeGame: {
-        activeRefereeConvocationSecondHeadReferee: createConvocationRef('convocation-456'),
+        activeRefereeConvocationSecondHeadReferee: { __identity: 'convocation-456' },
       },
     })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-456')
@@ -162,7 +162,7 @@ describe('getConvocationIdFromExchange', () => {
     const exchange = createMockExchange({
       refereePosition: 'linesman-one',
       refereeGame: {
-        activeRefereeConvocationFirstLinesman: createConvocationRef('convocation-789'),
+        activeRefereeConvocationFirstLinesman: { __identity: 'convocation-789' },
       },
     })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-789')
@@ -172,7 +172,7 @@ describe('getConvocationIdFromExchange', () => {
     const exchange = createMockExchange({
       refereePosition: 'linesman-two',
       refereeGame: {
-        activeRefereeConvocationSecondLinesman: createConvocationRef('convocation-abc'),
+        activeRefereeConvocationSecondLinesman: { __identity: 'convocation-abc' },
       },
     })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-abc')
@@ -182,7 +182,7 @@ describe('getConvocationIdFromExchange', () => {
     const exchange = createMockExchange({
       refereePosition: 'standby-head',
       refereeGame: {
-        activeRefereeConvocationStandbyHeadReferee: createConvocationRef('convocation-def'),
+        activeRefereeConvocationStandbyHeadReferee: { __identity: 'convocation-def' },
       },
     })
     expect(getConvocationIdFromExchange(exchange)).toBe('convocation-def')

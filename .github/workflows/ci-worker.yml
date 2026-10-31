@@ -6,11 +6,15 @@ on:
       - 'packages/worker/**'
       - '.github/workflows/ci-worker.yml'
       - '.github/actions/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
   pull_request:
     paths:
       - 'packages/worker/**'
       - '.github/workflows/ci-worker.yml'
       - '.github/actions/**'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
 permissions:
   contents: read
 
@@ -30,17 +34,10 @@ jobs:
         uses: ./.github/actions/setup-node-deps
         with:
           working-directory: packages/worker
-      # Cache ESLint results per branch
-      - name: Cache ESLint
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: packages/worker/.eslintcache
-          key: packages/worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('packages/worker/src/**/*.ts') }}
-          restore-keys: |
-            packages/worker-eslint-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-            packages/worker-eslint-${{ runner.os }}-
+      # No ESLint result cache: the type-aware rules depend on types from
+      # other files, which ESLint's per-file cache cannot see change.
       - name: Lint
-        run: pnpm run lint --cache --cache-location .eslintcache
+        run: pnpm run lint
       - name: TypeScript Check
         if: ${{ !cancelled() }}
         run: pnpm run typecheck

@@ -88,7 +88,9 @@ Not every check is package-scoped: `format`, `tokens`, `oxlint` and the
 from the package table. `oxlint` is a single root-level run over every
 TypeScript package (`.oxlintrc.json`); it is the fast first pass, and
 `eslint-plugin-oxlint` switches off the ESLint rules it already covers so the
-two never disagree.
+two never disagree. CI runs the same pass in `ci-shell.yml` (no path filter),
+and the React hooks rules stay with ESLint only, because the compiler
+diagnostics live there.
 
 | Package   | format¹ | lint | knip | typecheck  | test | build |
 | --------- | ------- | ---- | ---- | ---------- | ---- | ----- |

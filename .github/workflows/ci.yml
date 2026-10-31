@@ -221,17 +221,10 @@ jobs:
         with:
           name: api-types
           path: packages
-      # Cache ESLint results (ESLint handles per-file invalidation internally)
-      # Key based on ESLint config, TypeScript config, and plugins
-      - name: Cache ESLint
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: packages/web/.eslintcache
-          key: eslint-${{ runner.os }}-${{ hashFiles('packages/web/eslint.config.js', 'packages/web/tsconfig.json', 'pnpm-lock.yaml') }}
-          restore-keys: |
-            eslint-${{ runner.os }}-
+      # No ESLint result cache: the type-aware rules depend on types from
+      # other files, which ESLint's per-file cache cannot see change.
       - name: Lint
-        run: pnpm run lint --cache --cache-location .eslintcache
+        run: pnpm run lint
   # Dead code detection - needs API types from setup
   knip:
     name: Dead Code Check

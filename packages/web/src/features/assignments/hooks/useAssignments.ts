@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
-import { startOfDay, endOfDay, subDays, isWithinInterval } from 'date-fns'
+import { useTodayKey } from '@volleykit/shared/hooks'
+import { startOfDay, endOfDay, parseISO, subDays, isWithinInterval } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
@@ -225,23 +226,24 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   } = useAssociationSettings()
   const { data: season, isSuccess: seasonSuccess, isError: seasonError } = useActiveSeason()
 
-  // Read the current date once, on mount, so renders stay pure.
-  const [now] = useState(() => new Date())
+  // Day granularity is enough for the window bounds; the key rolls over after midnight.
+  const todayKey = useTodayKey()
 
   // Memoize date calculations to prevent query key changes on every render.
-  // Only recalculate when season data actually changes.
+  // Only recalculate when season data or the day actually changes.
   const { fromDate, toDate } = useMemo(() => {
+    const today = parseISO(todayKey)
     const seasonStart = parseDateOrFallback(
       season?.seasonStartDate,
-      subDays(now, DEFAULT_DATE_RANGE_DAYS)
+      subDays(today, DEFAULT_DATE_RANGE_DAYS)
     )
-    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, now)
+    const seasonEnd = parseDateOrFallback(season?.seasonEndDate, today)
 
     return {
       fromDate: startOfDay(seasonStart).toISOString(),
-      toDate: endOfDay(now < seasonEnd ? now : seasonEnd).toISOString(),
+      toDate: endOfDay(today < seasonEnd ? today : seasonEnd).toISOString(),
     }
-  }, [season?.seasonStartDate, season?.seasonEndDate, now])
+  }, [season?.seasonStartDate, season?.seasonEndDate, todayKey])
 
   const deadlineHours =
     settings?.hoursAfterGameStartForRefereeToEditGameList ?? DEFAULT_VALIDATION_DEADLINE_HOURS

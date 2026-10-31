@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 
+import { useCurrentMinute } from '@volleykit/shared/hooks'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { Assignment } from '@/api/client'
@@ -84,18 +85,18 @@ function useCalendarDisplayItems(
   calendarData: CalendarAssignment[] | undefined,
   filterByAssociation: (items: CalendarAssignment[]) => CalendarAssignment[]
 ) {
-  // Read the current date once, on mount, so renders stay pure.
-  const [now] = useState(() => new Date())
+  // Stable within a minute, so the split is only recomputed once a minute has passed.
+  const minute = useCurrentMinute()
 
   const calendarUpcoming = useMemo(() => {
     if (!isCalendarMode || !calendarData) return []
-    return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) >= now))
-  }, [isCalendarMode, calendarData, filterByAssociation, now])
+    return filterByAssociation(calendarData.filter((a) => Date.parse(a.startTime) >= minute))
+  }, [isCalendarMode, calendarData, filterByAssociation, minute])
 
   const calendarPast = useMemo(() => {
     if (!isCalendarMode || !calendarData) return []
-    return filterByAssociation(calendarData.filter((a) => new Date(a.startTime) < now))
-  }, [isCalendarMode, calendarData, filterByAssociation, now])
+    return filterByAssociation(calendarData.filter((a) => Date.parse(a.startTime) < minute))
+  }, [isCalendarMode, calendarData, filterByAssociation, minute])
 
   return { calendarUpcoming, calendarPast }
 }

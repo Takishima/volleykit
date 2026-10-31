@@ -34,11 +34,16 @@ export function canRemoveExchange(exchange: GameExchange, userId: string | undef
   return isExchangeOwner(exchange, userId)
 }
 
+type RefereeGameForExchange = NonNullable<GameExchange['refereeGame']>
+
+/** The `activeRefereeConvocation*` fields of a referee game, one per position. */
+type ConvocationField = Extract<keyof RefereeGameForExchange, `activeRefereeConvocation${string}`>
+
 /**
  * Maps referee position codes to their corresponding convocation field names.
  * Used to extract the convocation ID needed for deleteFromRefereeGameExchange.
  */
-const POSITION_TO_CONVOCATION_FIELD: Record<string, string> = {
+const POSITION_TO_CONVOCATION_FIELD: Partial<Record<string, ConvocationField>> = {
   'head-one': 'activeRefereeConvocationFirstHeadReferee',
   'head-two': 'activeRefereeConvocationSecondHeadReferee',
   'linesman-one': 'activeRefereeConvocationFirstLinesman',
@@ -66,16 +71,7 @@ export function getConvocationIdFromExchange(exchange: GameExchange): string | u
   const convocationField = POSITION_TO_CONVOCATION_FIELD[position]
   if (!convocationField) return undefined
 
-  // Access the convocation object from refereeGame using the mapped field name
-  const refereeGame = exchange.refereeGame
-  if (!refereeGame) return undefined
-
-  // TypeScript doesn't know about the dynamic field, so we use type assertion
-  const convocation = (refereeGame as Record<string, { __identity?: string } | undefined>)[
-    convocationField
-  ]
-
-  return convocation?.__identity
+  return exchange.refereeGame?.[convocationField]?.__identity
 }
 
 export interface ExchangeActionConfig {

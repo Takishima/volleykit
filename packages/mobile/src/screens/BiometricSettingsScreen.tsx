@@ -10,6 +10,7 @@ import { View, Text, ScrollView, Switch, Alert } from 'react-native'
 
 import { useStorage } from '@volleykit/shared/adapters'
 import { useTranslation } from '@volleykit/shared/i18n'
+import type { BiometricType } from '@volleykit/shared/types'
 
 import { COLORS, BIOMETRIC_ENABLED_KEY } from '../constants'
 import { biometrics, getBiometricTypeName } from '../platform/biometrics'
@@ -24,9 +25,7 @@ export function BiometricSettingsScreen({ navigation: _navigation }: Props) {
 
   const [isAvailable, setIsAvailable] = useState(false)
   const [isEnabled, setIsEnabled] = useState(false)
-  const [biometricType, setBiometricType] = useState<'faceId' | 'touchId' | 'fingerprint' | null>(
-    null
-  )
+  const [biometricType, setBiometricType] = useState<BiometricType>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasCredentials, setHasCredentials] = useState(false)
 

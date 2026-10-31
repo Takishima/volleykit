@@ -66,6 +66,13 @@ export function formatDateTime(isoString?: string): string {
   }
 }
 
+const DATE_KEY_FORMAT = 'yyyy-MM-dd'
+
+/** Formats a date as a YYYY-MM-DD key in local time. */
+export function formatDateKey(date: Date): string {
+  return format(date, DATE_KEY_FORMAT)
+}
+
 /**
  * Formats an ISO date string with a custom format string.
  */

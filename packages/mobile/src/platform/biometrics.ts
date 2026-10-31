@@ -9,10 +9,7 @@ import { Platform } from 'react-native'
 
 import * as LocalAuthentication from 'expo-local-authentication'
 
-import type { BiometricAdapter } from '@volleykit/shared/types'
-
-/** Biometric hardware type reported by the platform, or null when unavailable. */
-export type BiometricType = 'faceId' | 'touchId' | 'fingerprint' | null
+import type { BiometricAdapter, BiometricType } from '@volleykit/shared/types'
 
 /**
  * Map LocalAuthentication authentication type to our BiometricType

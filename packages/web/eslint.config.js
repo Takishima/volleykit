@@ -406,8 +406,9 @@ export default tseslint.config(
   // oxlint (root .oxlintrc.json) runs first as the fast pass; switch off every
   // ESLint rule it already enforces so the two cannot disagree. Must stay last.
   ...(await oxlint.buildFromConfigFile('../../.oxlintrc.json')),
-  // Keep the React Compiler diagnostics on the ESLint side: oxlint's react
-  // plugin covers rules-of-hooks/exhaustive-deps but not the compiler rules.
+  // ESLint owns every react-hooks rule: the compiler diagnostics exist only
+  // here, and rules-of-hooks/exhaustive-deps are switched off in .oxlintrc.json
+  // so each rule has exactly one implementation reporting it.
   {
     files: ['**/*.{ts,tsx}'],
     rules: { ...reactHooks.configs.recommended.rules },

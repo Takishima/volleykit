@@ -41,7 +41,9 @@
       {
         "allow": ["**/*.css"]
       }
-    ]
+    ],
+    "react/rules-of-hooks": "off",
+    "react/exhaustive-deps": "off"
   },
   "ignorePatterns": [
     "**/dist/**",
@@ -64,6 +66,13 @@
       ],
       "rules": {
         "react/no-array-index-key": "off"
+      }
+    },
+    {
+      "files": ["packages/worker/**"],
+      "env": {
+        "browser": false,
+        "worker": true
       }
     }
   ]

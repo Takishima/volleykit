@@ -3373,6 +3373,9 @@ components:
       description: Reference to a referee convocation with person details
       nullable: true
       properties:
+        __identity:
+          type: string
+          format: uuid
         indoorAssociationReferee:
           type: object
           properties:

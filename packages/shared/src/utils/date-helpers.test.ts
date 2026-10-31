@@ -13,6 +13,7 @@ import {
   HOURS_PER_DAY,
   formatDateTime,
   formatDate,
+  formatDateKey,
   formatDOB,
   isDateInPast,
   isDateToday,
@@ -99,6 +100,16 @@ describe('formatDate', () => {
 
   it('should handle ISO datetime strings', () => {
     expect(formatDate('2025-01-15T14:30:00Z')).toBe('15.01.2025')
+  })
+})
+
+describe('formatDateKey', () => {
+  it('pads month and day', () => {
+    expect(formatDateKey(new Date(2026, 0, 5))).toBe('2026-01-05')
+  })
+
+  it('uses the local date, not UTC', () => {
+    expect(formatDateKey(new Date(2026, 9, 25, 23, 59))).toBe('2026-10-25')
   })
 })
 
