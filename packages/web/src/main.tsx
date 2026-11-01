@@ -12,16 +12,12 @@ import { registerAppAuthActions } from './features/auth/register-auth-actions'
 // to feature-specific login/logout/session logic.
 registerAppAuthActions()
 
-// Initialize encrypted session token from storage before rendering
-// This ensures the token is available for any API requests during app startup
-initSessionToken()
-  .catch(() => {
-    // Ignore initialization errors - app will work without persisted session
-  })
-  .finally(() => {
-    createRoot(document.getElementById('root')!).render(
-      <StrictMode>
-        <App />
-      </StrictMode>
-    )
-  })
+// Initialize encrypted session token from storage before rendering so the
+// token is available for API requests during app startup. It never rejects.
+void initSessionToken().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  )
+})

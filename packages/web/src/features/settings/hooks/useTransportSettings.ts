@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
-import { useTravelTimeAvailable } from '@/common/hooks/useTravelTime'
+import { useTravelTimeAvailable } from '@/common/hooks/useTravelTimeSource'
 import {
   clearTravelTimeCache,
   getTravelTimeCacheStats,

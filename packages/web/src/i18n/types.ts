@@ -292,10 +292,6 @@ export interface Translations {
     exchange: string
     settings: string
   }
-  notifications: {
-    gameReminder: string
-    gameReminderBody: string
-  }
   settings: {
     title: string
     profile: string
@@ -303,27 +299,6 @@ export interface Translations {
     language: string
     preferences: {
       title: string
-    }
-    notifications: {
-      title: string
-      description: string
-      notSupported: string
-      permissionDenied: string
-      enableNotifications: string
-      requesting: string
-      gameReminders: string
-      gameRemindersDescription: string
-      usingBrowser: string
-      usingInApp: string
-      browserDeniedUsingInApp: string
-      reminderTimes: string
-      reminderTimesHint: string
-      foregroundNote: string
-      reminderTime: {
-        '1h': string
-        '2h': string
-        '1d': string
-      }
     }
     locationTravel: {
       title: string

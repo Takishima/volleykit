@@ -9,7 +9,7 @@
 
 import type { AttributeValue } from '@/common/types/active-party'
 
-import type { AuthState, Occupation } from './auth'
+import type { AuthState } from './auth'
 
 /** Reads the current auth store state */
 type GetAuthState = () => AuthState
@@ -36,7 +36,6 @@ export interface AuthActions {
     signal?: AbortSignal
   ) => Promise<boolean>
   performCalendarLogin: (code: string, set: SetAuthState) => Promise<void>
-  filterRefereeOccupations: (occupations: Occupation[]) => Occupation[]
   hasMultipleAssociations: (attributeValues: AttributeValue[] | null | undefined) => boolean
   sessionCheckGracePeriodMs: number
 }

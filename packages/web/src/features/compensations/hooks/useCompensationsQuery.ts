@@ -82,17 +82,3 @@ export function useCompensations(paidFilter?: boolean) {
     },
   })
 }
-
-/**
- * Convenience hook for paid compensations.
- */
-export function usePaidCompensations() {
-  return useCompensations(true)
-}
-
-/**
- * Convenience hook for unpaid compensations.
- */
-export function useUnpaidCompensations() {
-  return useCompensations(false)
-}

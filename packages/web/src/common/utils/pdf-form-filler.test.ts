@@ -6,21 +6,25 @@ import { server } from '@/test/msw/server'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 
+import { downloadPdf } from './pdf-download'
+import {
+  getChecklistSections,
+  getPdfChecklistSections,
+  getSignatureNameFields,
+} from './pdf-field-mappings'
+import {
+  fillSportsHallReportForm,
+  fillNonConformantReport,
+  type NonConformantSelections,
+} from './pdf-form-filler'
 import {
   extractSportsHallReportData,
   getLeagueCategoryFromAssignment,
-  mapAppLocaleToPdfLanguage,
-  downloadPdf,
-  fillSportsHallReportForm,
   buildReportFilename,
-  fillNonConformantReport,
-  getChecklistSections,
   type SportsHallReportData,
   type LeagueCategory,
   type Language,
-  type NonConformantSelections,
-} from './pdf-form-filler'
-import { getPdfChecklistSections, getSignatureNameFields } from './pdf-field-mappings'
+} from './pdf-report-data'
 import { signatureBoxFor } from './pdf-signature-block'
 
 // Close MSW server for this file since we use manual fetch mocking in downloadPdf tests
@@ -270,28 +274,6 @@ describe('pdf-form-filler', () => {
       }
 
       expect(getLeagueCategoryFromAssignment(assignment)).toBeNull()
-    })
-  })
-
-  describe('mapAppLocaleToPdfLanguage', () => {
-    it('returns de for German locale', () => {
-      expect(mapAppLocaleToPdfLanguage('de')).toBe('de')
-    })
-
-    it('returns fr for French locale', () => {
-      expect(mapAppLocaleToPdfLanguage('fr')).toBe('fr')
-    })
-
-    it('returns fr for Italian locale', () => {
-      expect(mapAppLocaleToPdfLanguage('it')).toBe('fr')
-    })
-
-    it('returns de for English locale (fallback)', () => {
-      expect(mapAppLocaleToPdfLanguage('en')).toBe('de')
-    })
-
-    it('returns de for unknown locale (fallback)', () => {
-      expect(mapAppLocaleToPdfLanguage('es')).toBe('de')
     })
   })
 

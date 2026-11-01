@@ -5,7 +5,7 @@
  * parsing from tab-separated parts. Used by both electronic and OCR-aware parsers.
  */
 
-import type { ParsedPlayer, ParsedOfficial, ParsedTeam, OfficialRole } from '../../types'
+import type { ParsedPlayer, ParsedOfficial, OfficialRole } from '../../types'
 
 // =============================================================================
 // Constants
@@ -526,22 +526,4 @@ export function parseOfficialFromParts(
     displayName: parsed.displayName,
     rawName: name,
   }
-}
-
-// =============================================================================
-// Utility Exports
-// =============================================================================
-
-/**
- * Get all players for a team
- */
-export function getAllPlayers(team: ParsedTeam): ParsedPlayer[] {
-  return team.players
-}
-
-/**
- * Get all officials for a team
- */
-export function getAllOfficials(team: ParsedTeam): ParsedOfficial[] {
-  return team.officials
 }

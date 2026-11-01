@@ -12,10 +12,7 @@ import { useSettingsStore } from '@/common/stores/settings'
 import { calculateCarDistanceKm } from '@/common/utils/distance'
 import { extractCoordinates } from '@/common/utils/geo-location'
 import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
-import {
-  hasMinimumGapFromAssignments,
-  DEFAULT_SAME_LOCATION_DISTANCE_KM,
-} from '@/features/assignments/utils/conflict-detection'
+import { hasMinimumGapFromAssignments } from '@/features/assignments/utils/conflict-detection'
 
 import type { ExchangeStatus } from './useExchanges'
 
@@ -210,7 +207,6 @@ export function useExchangeFilters({
         return hasMinimumGapFromAssignments(gameStartTime, calendarAssignments, {
           minGapMinutes: gameGapFilter.minGapMinutes,
           venueCoordinates,
-          sameLocationDistanceKm: DEFAULT_SAME_LOCATION_DISTANCE_KM,
         })
       })
     }

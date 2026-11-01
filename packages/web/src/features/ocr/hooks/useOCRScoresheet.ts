@@ -10,7 +10,7 @@
 import { useState, useCallback, useRef } from 'react'
 
 import { OCRFactory } from '../services/ocr-factory'
-import { parseGameSheetWithOCR } from '../utils/player-list-parser'
+import { parseGameSheetWithOCR } from '../utils/player-list-parser/ocr-aware-parser'
 
 import type {
   OCRProgress,

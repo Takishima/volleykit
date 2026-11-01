@@ -288,8 +288,3 @@ export function parseGameSheet(ocrText: string): ParsedGameSheet {
 
   return { teamA: state.teamA, teamB: state.teamB, warnings }
 }
-
-/**
- * Alias for parseGameSheet (electronic format)
- */
-export const parseElectronicSheet = parseGameSheet

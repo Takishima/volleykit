@@ -3,7 +3,7 @@
  *
  * This hook fetches all assignments from the iCal calendar feed and
  * detects conflicts - assignments that are scheduled too close together
- * (less than 1 hour apart by default).
+ * (less than 1 hour apart) at venues that are not within walking distance.
  *
  * The calendar is particularly useful for conflict detection because:
  * - It contains ALL assignments across ALL associations
@@ -23,19 +23,13 @@ import { generateDemoCalendarAssignments } from '@/common/stores/demo-generators
 import {
   detectConflicts,
   createSmartConflictEvaluator,
+  DEFAULT_CONFLICT_THRESHOLD_MINUTES,
   type ConflictMap,
   type AssignmentConflict,
-  type ConflictEvaluator,
 } from '@/features/assignments/utils/conflict-detection'
 
 // Re-export types for convenience
-export type { ConflictMap, AssignmentConflict, ConflictEvaluator }
-
-/** Default conflict threshold in minutes */
-const DEFAULT_CONFLICT_THRESHOLD_MINUTES = 60
-
-/** Default distance threshold for "same location" venues in km */
-const DEFAULT_SAME_LOCATION_DISTANCE_KM = 5
+export type { ConflictMap, AssignmentConflict }
 
 /** Stale time configuration for calendar conflicts (background data) */
 const STALE_TIME_MINUTES = 5
@@ -46,30 +40,10 @@ const CALENDAR_CONFLICTS_STALE_TIME_MS = STALE_TIME_MINUTES * MS_PER_MINUTE
 const EMPTY_CONFLICT_MAP: ConflictMap = new Map()
 
 /**
- * Default conflict evaluator based on time gap.
- * Returns true if assignments are less than threshold minutes apart.
+ * Module-level evaluator: considers both time gap AND venue distance with the
+ * default thresholds. Built once so the conflict memo below stays stable.
  */
-export function createTimeGapEvaluator(thresholdMinutes: number): ConflictEvaluator {
-  return (a: CalendarAssignment, b: CalendarAssignment) => {
-    const aStart = new Date(a.startTime).getTime()
-    const aEnd = new Date(a.endTime).getTime()
-    const bStart = new Date(b.startTime).getTime()
-    const bEnd = new Date(b.endTime).getTime()
-
-    const msPerMinute = 60000
-    const thresholdMs = thresholdMinutes * msPerMinute
-
-    // Gap from a end to b start
-    const gapAToB = bStart - aEnd
-    // Gap from b end to a start
-    const gapBToA = aStart - bEnd
-
-    // Effective gap is the maximum of these (handles ordering)
-    const effectiveGap = Math.max(gapAToB, gapBToA)
-
-    return effectiveGap < thresholdMs
-  }
-}
+const SMART_CONFLICT_EVALUATOR = createSmartConflictEvaluator()
 
 /**
  * Result of the calendar conflicts query.
@@ -90,31 +64,6 @@ export interface CalendarConflictsResult {
 }
 
 /**
- * Options for the useCalendarConflicts hook.
- */
-export interface UseCalendarConflictsOptions {
-  /** Minimum gap required between assignments in minutes (default: 60) */
-  thresholdMinutes?: number
-  /**
-   * Maximum distance in km for venues to be considered "same location" (default: 5).
-   * Games at nearby venues don't trigger conflict warnings since no travel is needed.
-   */
-  sameLocationDistanceKm?: number
-  /**
-   * Enable smart conflict detection that considers venue distance (default: true).
-   * When enabled, games at nearby venues (within sameLocationDistanceKm) won't
-   * be flagged as conflicts even with small time gaps.
-   */
-  useSmartConflictDetection?: boolean
-  /**
-   * Custom evaluator function to determine if two assignments conflict.
-   * When provided, overrides both default time-based and smart evaluation.
-   * Can be used for custom conflict detection logic.
-   */
-  evaluator?: ConflictEvaluator
-}
-
-/**
  * Hook that fetches calendar assignments and detects conflicts.
  *
  * This hook uses the calendar code stored in the auth store. The code
@@ -125,52 +74,18 @@ export interface UseCalendarConflictsOptions {
  * In API mode, this fetches the calendar in the background to detect
  * conflicts with assignments from other associations.
  *
- * @param options - Configuration options including threshold and custom evaluator
  * @returns Conflict detection result with map and loading state
  *
  * @example
  * ```tsx
- * // Basic usage with default threshold
  * function AssignmentCard({ assignment }) {
  *   const { conflicts } = useCalendarConflicts();
  *   const assignmentConflicts = conflicts.get(assignment.gameId);
  *   // ...
  * }
- *
- * // With custom evaluator (e.g., location-based)
- * function AssignmentsPage() {
- *   const myEvaluator = (a, b) => {
- *     const timeConflict = createTimeGapEvaluator(60)(a, b);
- *     const sameLocation = a.hallId === b.hallId;
- *     return timeConflict && !sameLocation; // Only conflict if different venues
- *   };
- *   const { conflicts } = useCalendarConflicts({ evaluator: myEvaluator });
- *   // ...
- * }
  * ```
  */
-export function useCalendarConflicts(
-  options: UseCalendarConflictsOptions | number = {}
-): CalendarConflictsResult {
-  // Support legacy signature: useCalendarConflicts(60)
-  const resolvedOptions: UseCalendarConflictsOptions =
-    typeof options === 'number' ? { thresholdMinutes: options } : options
-
-  const {
-    thresholdMinutes = DEFAULT_CONFLICT_THRESHOLD_MINUTES,
-    sameLocationDistanceKm = DEFAULT_SAME_LOCATION_DISTANCE_KM,
-    useSmartConflictDetection = true,
-    evaluator: customEvaluator,
-  } = resolvedOptions
-
-  // Use smart evaluator by default (considers both time AND distance)
-  // Custom evaluator takes precedence if provided
-  const evaluator = customEvaluator
-    ? customEvaluator
-    : useSmartConflictDetection
-      ? createSmartConflictEvaluator({ thresholdMinutes, sameLocationDistanceKm })
-      : undefined
-
+export function useCalendarConflicts(): CalendarConflictsResult {
   const calendarCode = useAuthStore((state) => state.calendarCode)
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated')
   const isDemoMode = useAuthStore((state) => state.dataSource === 'demo')
@@ -196,8 +111,8 @@ export function useCalendarConflicts(
     if (!query.data || query.data.length === 0) {
       return EMPTY_CONFLICT_MAP
     }
-    return detectConflicts(query.data, thresholdMinutes, evaluator)
-  }, [query.data, thresholdMinutes, evaluator])
+    return detectConflicts(query.data, DEFAULT_CONFLICT_THRESHOLD_MINUTES, SMART_CONFLICT_EVALUATOR)
+  }, [query.data])
 
   return {
     conflicts,
@@ -220,15 +135,13 @@ export function useCalendarConflicts(
  */
 export function useAssignmentConflicts(assignmentId: string | undefined): {
   conflicts: AssignmentConflict[]
-  isLoading: boolean
-  hasCalendarCode: boolean
 } {
-  const { conflicts: conflictMap, isLoading, hasCalendarCode } = useCalendarConflicts()
+  const { conflicts: conflictMap } = useCalendarConflicts()
 
   const conflicts = useMemo(() => {
     if (!assignmentId) return []
     return conflictMap.get(assignmentId) ?? []
   }, [conflictMap, assignmentId])
 
-  return { conflicts, isLoading, hasCalendarCode }
+  return { conflicts }
 }

@@ -160,26 +160,6 @@ export function setCachedTravelTime(
 }
 
 /**
- * Remove a specific travel time from the cache.
- *
- * @param hallId Sports hall ID
- * @param homeLocationHash Hashed home location coordinates
- * @param dayType Day type (weekday/saturday/sunday)
- * @param travelModeKey Travel-mode key segment (see getTravelModeKey)
- */
-export function removeCachedTravelTime(
-  hallId: string,
-  homeLocationHash: string,
-  dayType: DayType,
-  travelModeKey: string
-): void {
-  const cache = loadCache()
-  const key = buildCacheKey(hallId, homeLocationHash, dayType, travelModeKey)
-  delete cache.entries[key]
-  saveCache(cache)
-}
-
-/**
  * Clear all cached travel times.
  */
 export function clearTravelTimeCache(): void {

@@ -48,14 +48,6 @@ async function loadDateLocale(locale: string): Promise<DateFnsLocale> {
 }
 
 /**
- * Get the date-fns locale matching the given i18n locale synchronously.
- * Returns the cached locale if available, otherwise falls back to English.
- */
-export function getDateLocale(locale: string): DateFnsLocale {
-  return localeCache.get(locale) ?? enUS
-}
-
-/**
  * Hook that provides the current date-fns locale based on user's language setting.
  * Handles async loading of locale data.
  */
@@ -84,12 +76,8 @@ export function useDateLocale(): DateFnsLocale {
  */
 export function safeParseISO(dateString: string | undefined | null): Date | null {
   if (!dateString) return null
-  try {
-    const date = parseISO(dateString)
-    return isValid(date) ? date : null
-  } catch {
-    return null
-  }
+  const date = parseISO(dateString)
+  return isValid(date) ? date : null
 }
 
 interface FormattedDate {
@@ -118,21 +106,7 @@ export function useDateFormat(
   dateString: string | undefined | null,
   formatPattern = 'EEE, d. MMM'
 ): FormattedDate {
-  const currentLocale = useLanguageStore((state) => state.locale)
-  const [locale, setLocale] = useState<DateFnsLocale>(() => localeCache.get(currentLocale) ?? enUS)
-  const requestIdRef = useRef(0)
-
-  useEffect(() => {
-    const requestId = ++requestIdRef.current
-
-    loadDateLocale(currentLocale)
-      .then((loadedLocale) => {
-        if (requestId === requestIdRef.current) {
-          setLocale(loadedLocale)
-        }
-      })
-      .catch((error: unknown) => log.error('Failed to apply date locale:', error))
-  }, [currentLocale])
+  const locale = useDateLocale()
 
   return useMemo(() => {
     const date = safeParseISO(dateString)

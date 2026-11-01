@@ -18,7 +18,6 @@ import {
   performApiSessionCheck,
   SESSION_CHECK_GRACE_PERIOD_MS,
 } from '@/features/auth/utils/api-auth-flow'
-import { filterRefereeOccupations } from '@/features/auth/utils/parseOccupations'
 
 /** Registers the real auth implementations with the auth store. */
 export function registerAppAuthActions(): void {
@@ -27,7 +26,6 @@ export function registerAppAuthActions(): void {
     performLogout: performApiLogout,
     performSessionCheck: performApiSessionCheck,
     performCalendarLogin,
-    filterRefereeOccupations,
     hasMultipleAssociations,
     sessionCheckGracePeriodMs: SESSION_CHECK_GRACE_PERIOD_MS,
   })

@@ -3,17 +3,15 @@
  *
  * Split into:
  * - types.ts: Type definitions, constants, and defaults
- * - migrations.ts: Persistence migration functions (v1→v10)
+ * - migrations.ts: Persistence migration functions
  * - store.ts: Zustand store implementation
  */
 
 // Re-export everything from types
 // (travel-mode types/constants live in @/common/services/transport)
-export type { UserLocation, DistanceFilter, SbbDestinationType, ModeSettings } from './types'
+export type { UserLocation, DistanceFilter, SbbDestinationType } from './types'
 
 export {
-  DEFAULT_ARRIVAL_BUFFER_SV_MINUTES,
-  DEFAULT_ARRIVAL_BUFFER_REGIONAL_MINUTES,
   MIN_ARRIVAL_BUFFER_MINUTES,
   MAX_ARRIVAL_BUFFER_MINUTES,
   getDefaultArrivalBuffer,

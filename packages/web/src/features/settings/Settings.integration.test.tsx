@@ -13,8 +13,8 @@ import {
   DEMO_HOME_LOCATION,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-  type ModeSettings,
 } from '@/common/stores/settings'
+import type { ModeSettings } from '@/common/stores/settings/types'
 import { useToastStore } from '@/common/stores/toast'
 
 import { SettingsPage } from './SettingsPage'
@@ -56,7 +56,6 @@ describe('Settings Integration', () => {
       calendarCode: null,
       eligibleAttributeValues: null,
       groupedEligibleAttributeValues: null,
-      eligibleRoles: null,
       _checkSessionPromise: null,
       _lastAuthTimestamp: null,
     })
@@ -382,11 +381,6 @@ describe('Settings Integration', () => {
           maxBikeDistanceKm: DEFAULT_MAX_BIKE_DISTANCE_KM,
         },
         levelFilterEnabled: false,
-        notificationSettings: {
-          enabled: false,
-          reminderTimes: ['1h'],
-          deliveryPreference: 'native',
-        },
         gameGapFilter: { enabled: false, minGapMinutes: 120 },
         hideOwnExchangesByAssociation: {},
         hideNotTakeableExchangesByAssociation: {},
@@ -583,26 +577,6 @@ describe('Settings Integration', () => {
       // Verify changes
       expect(useSettingsStore.getState().gameGapFilter.enabled).toBe(true)
       expect(useSettingsStore.getState().gameGapFilter.minGapMinutes).toBe(180)
-    })
-  })
-
-  describe('notification settings', () => {
-    it('notification settings work correctly', () => {
-      // Default state
-      expect(useSettingsStore.getState().notificationSettings.enabled).toBe(false)
-      expect(useSettingsStore.getState().notificationSettings.deliveryPreference).toBe('native')
-
-      // Enable notifications
-      useSettingsStore.getState().setNotificationsEnabled(true)
-      expect(useSettingsStore.getState().notificationSettings.enabled).toBe(true)
-
-      // Set reminder times
-      useSettingsStore.getState().setNotificationReminderTimes(['1h', '1d'])
-      expect(useSettingsStore.getState().notificationSettings.reminderTimes).toEqual(['1h', '1d'])
-
-      // Set delivery preference
-      useSettingsStore.getState().setNotificationDeliveryPreference('in-app')
-      expect(useSettingsStore.getState().notificationSettings.deliveryPreference).toBe('in-app')
     })
   })
 

@@ -2,24 +2,20 @@ import { renderHook } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import type { Assignment } from '@/api/client'
-import type { BadgeService } from '@/common/services/badge/types'
+import type { badgeService } from '@/common/services/badge/badge-service'
 
 import { useDailyGameBadge, countTodaysGames } from './useDailyGameBadge'
 
 // Mock the badge service
-const mockSetBadge = vi.fn<BadgeService['setBadge']>().mockResolvedValue({ success: true })
-const mockClearBadge = vi.fn<BadgeService['clearBadge']>().mockResolvedValue({ success: true })
-const mockIsSupported = vi.fn<BadgeService['isSupported']>(() => true)
+const mockSetBadge = vi.fn<typeof badgeService.setBadge>().mockResolvedValue({ success: true })
+const mockClearBadge = vi.fn<typeof badgeService.clearBadge>().mockResolvedValue({ success: true })
+const mockIsSupported = vi.fn<typeof badgeService.isSupported>(() => true)
 
-vi.mock('@/common/services/badge', () => ({
+vi.mock('@/common/services/badge/badge-service', () => ({
   badgeService: {
     isSupported: () => mockIsSupported(),
     setBadge: (count: number) => mockSetBadge(count),
     clearBadge: () => mockClearBadge(),
-  },
-  badgeOperations: {
-    resetCache: vi.fn(),
-    getLastBadgeCount: vi.fn(() => null),
   },
 }))
 

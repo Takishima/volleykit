@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 
-import { parseICalFeed, extractAssignment, parseCalendarFeed } from './parser'
+import { extractAssignment } from './assignment-mapper'
+import { parseICalFeed } from './ical-tokenizer'
+import { parseCalendarFeed } from './parser'
 
 import type { ICalEvent } from './types'
 

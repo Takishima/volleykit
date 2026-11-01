@@ -12,9 +12,7 @@ import { useAuthStore } from '@/common/stores/auth'
 import type { MutationCallbacks, OfflineMutationResult } from '@/common/types/mutation'
 import { createLogger } from '@/common/utils/logger'
 
-// Import and re-export CompensationUpdateData from shared for backward compatibility
 import type { CompensationUpdateData } from '@volleykit/shared/offline'
-export type { CompensationUpdateData }
 
 // Re-export useUpdateAssignmentCompensation from its own module
 export { useUpdateAssignmentCompensation } from './useUpdateAssignmentCompensation'

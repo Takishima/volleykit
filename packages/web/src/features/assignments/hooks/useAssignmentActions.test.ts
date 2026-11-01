@@ -12,7 +12,7 @@ import * as settingsStore from '@/common/stores/settings'
 import { toast } from '@/common/stores/toast'
 
 import { useAssignmentActions } from './useAssignmentActions'
-import { MODAL_CLEANUP_DELAY } from '../utils/assignment-helpers'
+import { MODAL_CLEANUP_DELAY } from '@volleykit/shared/utils'
 
 function createTestQueryClient() {
   return new QueryClient({

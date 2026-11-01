@@ -10,7 +10,7 @@ import * as authStore from '@/common/stores/auth'
 import { toast } from '@/common/stores/toast'
 
 import { useCompensationActions } from './useCompensationActions'
-import * as compensationActionsModule from '../utils/compensation-actions'
+import * as compensationPdfModule from '../utils/compensation-pdf'
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -25,7 +25,7 @@ function createWrapper() {
 }
 
 vi.mock('@/common/stores/auth')
-// Auto-mock settings store - still needed indirectly by useSafeMutation's internal useSafeModeGuard
+// Auto-mock settings store - read by useSafeMutation's safe mode check
 vi.mock('@/common/stores/settings')
 vi.mock('@/common/stores/toast', () => ({
   toast: {
@@ -181,7 +181,7 @@ describe('useCompensationActions', () => {
 
   it('should handle PDF generation success', async () => {
     const downloadSpy = vi
-      .spyOn(compensationActionsModule, 'downloadCompensationPDF')
+      .spyOn(compensationPdfModule, 'downloadCompensationPDF')
       .mockResolvedValue(undefined)
 
     const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
@@ -194,7 +194,7 @@ describe('useCompensationActions', () => {
   })
 
   it('should handle PDF generation error', async () => {
-    vi.spyOn(compensationActionsModule, 'downloadCompensationPDF').mockRejectedValue(
+    vi.spyOn(compensationPdfModule, 'downloadCompensationPDF').mockRejectedValue(
       new Error('Network error')
     )
 
@@ -213,7 +213,7 @@ describe('useCompensationActions', () => {
       resolveDownload = resolve
     })
 
-    vi.spyOn(compensationActionsModule, 'downloadCompensationPDF').mockReturnValue(downloadPromise)
+    vi.spyOn(compensationPdfModule, 'downloadCompensationPDF').mockReturnValue(downloadPromise)
 
     const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })
 
@@ -229,7 +229,7 @@ describe('useCompensationActions', () => {
     await Promise.all([promise1, promise2])
 
     // Should only call download once
-    expect(compensationActionsModule.downloadCompensationPDF).toHaveBeenCalledTimes(1)
+    expect(compensationPdfModule.downloadCompensationPDF).toHaveBeenCalledTimes(1)
   })
 
   describe('demo mode guards', () => {
@@ -241,7 +241,7 @@ describe('useCompensationActions', () => {
 
     it('should not download PDF in demo mode', async () => {
       const downloadSpy = vi
-        .spyOn(compensationActionsModule, 'downloadCompensationPDF')
+        .spyOn(compensationPdfModule, 'downloadCompensationPDF')
         .mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useCompensationActions(), { wrapper: createWrapper() })

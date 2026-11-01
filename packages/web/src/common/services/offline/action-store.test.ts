@@ -45,7 +45,6 @@ const {
   updateActionStatus,
   markActionSyncing,
   markActionFailed,
-  resetActionForRetry,
   deleteAction,
   clearAllActions,
 } = await import('./action-store')
@@ -172,18 +171,6 @@ describe('action-store', () => {
       const stored = actionStore.get(action!.id)!
       expect(stored.status).toBe('failed')
       expect(stored.error).toBe('Network error')
-    })
-  })
-
-  describe('resetActionForRetry', () => {
-    it('resets status to pending', async () => {
-      const action = await createAction('addToExchange', { convocationId: 'conv-1' })
-      await markActionFailed(action!.id, 'error')
-
-      await resetActionForRetry(action!.id)
-
-      const stored = actionStore.get(action!.id)!
-      expect(stored.status).toBe('pending')
     })
   })
 

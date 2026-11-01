@@ -1,11 +1,11 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import type { TravelTimeResult } from '@/common/services/transport'
 import type {
   getOrFetchTravelTime,
   GetOrFetchTravelTimeParams,
-  TravelTimeResult,
-} from '@/common/services/transport'
+} from '@/common/services/transport/travel-time-fetcher'
 import type { generateSbbUrl, openSbbUrl, SbbUrlParams } from '@/common/utils/sbb-url'
 import { partialMock } from '@/test/partial-mock'
 

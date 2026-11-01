@@ -1,4 +1,3 @@
-import type { NotificationPreference, ReminderTime } from '@/common/services/notifications'
 import {
   DEFAULT_TRAVEL_MODE,
   DEFAULT_MAX_BIKE_DISTANCE_KM,
@@ -120,30 +119,6 @@ export const DEFAULT_ARRIVAL_BUFFER_MINUTES = 30
 export const DEFAULT_MIN_GAME_GAP_MINUTES = 120
 
 /**
- * Notification settings for game reminders.
- */
-export interface NotificationSettings {
-  /** Whether notifications are enabled */
-  enabled: boolean
-  /** Selected reminder times before games */
-  reminderTimes: ReminderTime[]
-  /**
-   * Delivery preference for notifications.
-   * - 'native': Prefer browser notifications, fall back to in-app
-   * - 'in-app': Always use in-app notifications only
-   * - 'both': Show both native and in-app notifications
-   */
-  deliveryPreference: NotificationPreference
-}
-
-/** Default notification settings */
-export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
-  enabled: false,
-  reminderTimes: ['1h'],
-  deliveryPreference: 'native',
-}
-
-/**
  * Mode-specific settings that are stored separately for each data source.
  * This prevents demo mode settings from affecting real API mode and vice versa.
  */
@@ -156,8 +131,6 @@ export interface ModeSettings {
   transportEnabledByAssociation: Record<string, boolean>
   travelTimeFilter: TravelTimeFilter
   levelFilterEnabled: boolean
-  /** Notification settings for game reminders */
-  notificationSettings: NotificationSettings
   /** Game gap filter settings for exchanges */
   gameGapFilter: GameGapFilter
   /** Per-association "hide own exchanges" setting (association code -> enabled) */
@@ -191,7 +164,6 @@ export const DEFAULT_MODE_SETTINGS: ModeSettings = {
     maxBikeDistanceKm: DEFAULT_MAX_BIKE_DISTANCE_KM,
   },
   levelFilterEnabled: false,
-  notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
   gameGapFilter: {
     enabled: false,
     minGapMinutes: DEFAULT_MIN_GAME_GAP_MINUTES,
@@ -255,7 +227,6 @@ export interface SettingsState {
   transportEnabledByAssociation: Record<string, boolean>
   travelTimeFilter: TravelTimeFilter
   levelFilterEnabled: boolean
-  notificationSettings: NotificationSettings
   gameGapFilter: GameGapFilter
   hideOwnExchangesByAssociation: Record<string, boolean>
   hideNotTakeableExchangesByAssociation: Record<string, boolean>
@@ -286,10 +257,6 @@ export interface SettingsState {
   setTravelMode: (mode: TravelMode) => void
   setMaxBikeDistanceKm: (km: number) => void
   setLevelFilterEnabled: (enabled: boolean) => void
-  // Notification settings
-  setNotificationsEnabled: (enabled: boolean) => void
-  setNotificationReminderTimes: (times: ReminderTime[]) => void
-  setNotificationDeliveryPreference: (preference: NotificationPreference) => void
   // Game gap filter settings
   setGameGapFilterEnabled: (enabled: boolean) => void
   setMinGameGapMinutes: (minutes: number) => void

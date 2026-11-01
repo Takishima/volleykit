@@ -4,14 +4,9 @@ import type { CalendarAssignment } from '@/common/services/calendar/ical/types'
 
 import {
   detectConflicts,
-  getConflictsForAssignment,
-  hasConflicts,
   parseGap,
-  calculateMinGapToAssignments,
   hasMinimumGapFromAssignments,
   createSmartConflictEvaluator,
-  calculateVenueDistance,
-  areVenuesClose,
 } from './conflict-detection'
 
 // Helper to create a test assignment
@@ -195,50 +190,6 @@ describe('conflict-detection', () => {
     })
   })
 
-  describe('getConflictsForAssignment', () => {
-    it('should return empty array for non-existent assignment', () => {
-      const conflicts = detectConflicts([])
-      const result = getConflictsForAssignment('nonexistent', conflicts)
-      expect(result).toEqual([])
-    })
-
-    it('should return conflicts for existing assignment', () => {
-      const assignments = [
-        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z'),
-        createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z'),
-      ]
-      const conflictMap = detectConflicts(assignments)
-      const result = getConflictsForAssignment('1', conflictMap)
-
-      expect(result.length).toBe(1)
-      expect(result[0]?.conflictingAssignmentId).toBe('2')
-    })
-  })
-
-  describe('hasConflicts', () => {
-    it('should return false for assignment without conflicts', () => {
-      const assignments = [
-        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z'),
-        createAssignment('2', '2024-01-15T15:00:00Z', '2024-01-15T17:00:00Z'),
-      ]
-      const conflictMap = detectConflicts(assignments)
-
-      expect(hasConflicts('1', conflictMap)).toBe(false)
-      expect(hasConflicts('2', conflictMap)).toBe(false)
-    })
-
-    it('should return true for assignment with conflicts', () => {
-      const assignments = [
-        createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z'),
-        createAssignment('2', '2024-01-15T12:30:00Z', '2024-01-15T14:30:00Z'),
-      ]
-      const conflictMap = detectConflicts(assignments)
-
-      expect(hasConflicts('1', conflictMap)).toBe(true)
-      expect(hasConflicts('2', conflictMap)).toBe(true)
-    })
-  })
-
   describe('parseGap', () => {
     it('should parse positive gap in minutes only', () => {
       const result = parseGap(30)
@@ -281,108 +232,42 @@ describe('conflict-detection', () => {
     })
   })
 
-  describe('calculateMinGapToAssignments', () => {
-    it('should return null when no assignments', () => {
-      const result = calculateMinGapToAssignments('2024-01-15T14:00:00Z', [])
-      expect(result).toBeNull()
-    })
-
-    it('should return null when game time is undefined', () => {
-      const assignments = [createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')]
-      const result = calculateMinGapToAssignments(undefined, assignments)
-      expect(result).toBeNull()
-    })
-
-    it('should return null when game time is invalid', () => {
-      const assignments = [createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')]
-      const result = calculateMinGapToAssignments('invalid-date', assignments)
-      expect(result).toBeNull()
-    })
-
-    it('should calculate positive gap when game is after assignment', () => {
-      const assignments = [createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')]
-      // Game starts at 14:00, assignment ends at 12:00 -> 2 hour gap
-      const result = calculateMinGapToAssignments('2024-01-15T14:00:00Z', assignments)
-      expect(result).toBe(120) // 2 hours = 120 minutes
-    })
-
-    it('should calculate positive gap when game is before assignment', () => {
-      const assignments = [createAssignment('1', '2024-01-15T14:00:00Z', '2024-01-15T16:00:00Z')]
-      // Game starts at 10:00, ends at ~11:30 (90 min default), assignment starts at 14:00
-      // Gap = 14:00 - 11:30 = 2.5 hours = 150 minutes
-      const result = calculateMinGapToAssignments('2024-01-15T10:00:00Z', assignments)
-      expect(result).toBe(150) // 2.5 hours
-    })
-
-    it('should calculate negative gap when games overlap', () => {
-      const assignments = [createAssignment('1', '2024-01-15T12:00:00Z', '2024-01-15T14:00:00Z')]
-      // Game starts at 13:00, assignment ends at 14:00
-      // With 90 min game duration, game would end at 14:30
-      // Gap from game end (14:30) to assignment start (12:00) = -2.5 hours
-      // Gap from assignment end (14:00) to game start (13:00) = -1 hour
-      // Effective gap = max(-150, -60) = -60 minutes (overlap)
-      const result = calculateMinGapToAssignments('2024-01-15T13:00:00Z', assignments)
-      expect(result).toBeLessThan(0) // Overlap = negative
-    })
-
-    it('should return minimum gap when multiple assignments', () => {
-      const assignments = [
-        createAssignment('1', '2024-01-15T09:00:00Z', '2024-01-15T11:00:00Z'), // 3 hour gap after
-        createAssignment('2', '2024-01-15T15:00:00Z', '2024-01-15T17:00:00Z'), // 0.5 hour gap before (with 90 min game)
-      ]
-      // Game at 14:00-15:30 (90 min)
-      // Gap to assignment 1: game start (14:00) - assignment end (11:00) = 3 hours = 180 min
-      // Gap to assignment 2: assignment start (15:00) - game end (15:30) = -30 min
-      const result = calculateMinGapToAssignments('2024-01-15T14:00:00Z', assignments)
-      expect(result).toBe(-30) // Minimum gap (overlap with assignment 2)
-    })
-
-    it('should skip assignments with invalid times', () => {
-      const validAssignment = createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')
-      const invalidAssignment: CalendarAssignment = {
-        ...validAssignment,
-        gameId: '2',
-        startTime: 'invalid',
-        endTime: 'invalid',
-      }
-      const result = calculateMinGapToAssignments('2024-01-15T14:00:00Z', [
-        validAssignment,
-        invalidAssignment,
-      ])
-      expect(result).toBe(120) // Only considers valid assignment
-    })
-  })
-
   describe('hasMinimumGapFromAssignments', () => {
     it('should return true when no assignments', () => {
-      const result = hasMinimumGapFromAssignments('2024-01-15T14:00:00Z', [], 60)
+      const result = hasMinimumGapFromAssignments('2024-01-15T14:00:00Z', [], { minGapMinutes: 60 })
       expect(result).toBe(true)
     })
 
     it('should return true when game time is undefined', () => {
       const assignments = [createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')]
-      const result = hasMinimumGapFromAssignments(undefined, assignments, 60)
+      const result = hasMinimumGapFromAssignments(undefined, assignments, { minGapMinutes: 60 })
       expect(result).toBe(true)
     })
 
     it('should return true when gap is sufficient', () => {
       const assignments = [createAssignment('1', '2024-01-15T10:00:00Z', '2024-01-15T12:00:00Z')]
       // Game at 14:00, 2 hour gap after assignment
-      const result = hasMinimumGapFromAssignments('2024-01-15T14:00:00Z', assignments, 60)
+      const result = hasMinimumGapFromAssignments('2024-01-15T14:00:00Z', assignments, {
+        minGapMinutes: 60,
+      })
       expect(result).toBe(true) // 120 min gap >= 60 min threshold
     })
 
     it('should return false when gap is insufficient', () => {
       const assignments = [createAssignment('1', '2024-01-15T12:00:00Z', '2024-01-15T14:00:00Z')]
       // Game at 14:30, only 30 min gap after assignment
-      const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, 60)
+      const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
+        minGapMinutes: 60,
+      })
       expect(result).toBe(false) // 30 min gap < 60 min threshold
     })
 
     it('should return false when games overlap', () => {
       const assignments = [createAssignment('1', '2024-01-15T14:00:00Z', '2024-01-15T16:00:00Z')]
       // Game at 15:00 overlaps with assignment
-      const result = hasMinimumGapFromAssignments('2024-01-15T15:00:00Z', assignments, 60)
+      const result = hasMinimumGapFromAssignments('2024-01-15T15:00:00Z', assignments, {
+        minGapMinutes: 60,
+      })
       expect(result).toBe(false) // Negative gap (overlap) < 60 min
     })
 
@@ -394,11 +279,15 @@ describe('conflict-detection', () => {
       // Game at 12:00-13:30 (90 min)
       // Gap to assignment 1: 12:00 - 11:00 = 60 min
       // Gap to assignment 2: 14:30 - 13:30 = 60 min
-      const result = hasMinimumGapFromAssignments('2024-01-15T12:00:00Z', assignments, 60)
+      const result = hasMinimumGapFromAssignments('2024-01-15T12:00:00Z', assignments, {
+        minGapMinutes: 60,
+      })
       expect(result).toBe(true)
 
       // With higher threshold
-      const result2 = hasMinimumGapFromAssignments('2024-01-15T12:00:00Z', assignments, 90)
+      const result2 = hasMinimumGapFromAssignments('2024-01-15T12:00:00Z', assignments, {
+        minGapMinutes: 90,
+      })
       expect(result2).toBe(false)
     })
 
@@ -411,7 +300,6 @@ describe('conflict-detection', () => {
       const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
         minGapMinutes: 60,
         venueCoordinates: ZURICH_NEARBY_COORDS, // Very close to Zurich
-        sameLocationDistanceKm: 5,
       })
       expect(result).toBe(true) // No conflict because venues are close
     })
@@ -425,7 +313,6 @@ describe('conflict-detection', () => {
       const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
         minGapMinutes: 60,
         venueCoordinates: BERN_COORDS, // ~95 km from Zurich
-        sameLocationDistanceKm: 5,
       })
       expect(result).toBe(false) // Conflict because venues are far
     })
@@ -438,7 +325,6 @@ describe('conflict-detection', () => {
       const result = hasMinimumGapFromAssignments('2024-01-15T14:30:00Z', assignments, {
         minGapMinutes: 60,
         venueCoordinates: ZURICH_COORDS,
-        sameLocationDistanceKm: 5,
       })
       expect(result).toBe(false) // Still conflicts - can't determine distance
     })
@@ -592,71 +478,6 @@ describe('conflict-detection', () => {
       // Far venues should create conflicts
       const conflicts = detectConflicts(assignments, 60, evaluator)
       expect(conflicts.size).toBe(2)
-    })
-  })
-
-  describe('calculateVenueDistance', () => {
-    it('should return null when first coordinates are null', () => {
-      const result = calculateVenueDistance(null, ZURICH_COORDS)
-      expect(result).toBeNull()
-    })
-
-    it('should return null when second coordinates are null', () => {
-      const result = calculateVenueDistance(ZURICH_COORDS, null)
-      expect(result).toBeNull()
-    })
-
-    it('should return null when both coordinates are null', () => {
-      const result = calculateVenueDistance(null, null)
-      expect(result).toBeNull()
-    })
-
-    it('should calculate distance between Zurich and Bern', () => {
-      const result = calculateVenueDistance(ZURICH_COORDS, BERN_COORDS)
-      expect(result).not.toBeNull()
-      // Should be approximately 95 km
-      expect(result).toBeGreaterThan(90)
-      expect(result).toBeLessThan(100)
-    })
-
-    it('should calculate very small distance for nearby venues', () => {
-      const result = calculateVenueDistance(ZURICH_COORDS, ZURICH_NEARBY_COORDS)
-      expect(result).not.toBeNull()
-      // Should be less than 1 km
-      expect(result).toBeLessThan(1)
-    })
-  })
-
-  describe('areVenuesClose', () => {
-    it('should return false when first coordinates are null', () => {
-      const result = areVenuesClose(null, ZURICH_COORDS)
-      expect(result).toBe(false)
-    })
-
-    it('should return false when second coordinates are null', () => {
-      const result = areVenuesClose(ZURICH_COORDS, null)
-      expect(result).toBe(false)
-    })
-
-    it('should return true for nearby venues within default threshold', () => {
-      // Default is 5 km
-      const result = areVenuesClose(ZURICH_COORDS, ZURICH_NEARBY_COORDS)
-      expect(result).toBe(true)
-    })
-
-    it('should return false for far venues', () => {
-      const result = areVenuesClose(ZURICH_COORDS, BERN_COORDS)
-      expect(result).toBe(false)
-    })
-
-    it('should use custom threshold', () => {
-      // With 0.1 km threshold, ~0.5 km apart should be false
-      const result = areVenuesClose(ZURICH_COORDS, ZURICH_NEARBY_COORDS, 0.1)
-      expect(result).toBe(false)
-
-      // With 100 km threshold, even Zurich-Bern should be true
-      const result2 = areVenuesClose(ZURICH_COORDS, BERN_COORDS, 100)
-      expect(result2).toBe(true)
     })
   })
 })

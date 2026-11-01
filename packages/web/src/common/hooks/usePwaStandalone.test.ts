@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { usePwaStandalone, isPwaStandalone } from './usePwaStandalone'
+import { usePwaStandalone } from './usePwaStandalone'
 
 describe('usePwaStandalone', () => {
   let matchMediaMock: ReturnType<typeof vi.fn>
@@ -148,43 +148,5 @@ describe('usePwaStandalone', () => {
 
       expect(result.current).toBe(true)
     })
-  })
-})
-
-describe('isPwaStandalone (non-hook version)', () => {
-  beforeEach(() => {
-    Object.defineProperty(window.navigator, 'standalone', {
-      value: undefined,
-      writable: true,
-      configurable: true,
-    })
-
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: false,
-      media: query,
-    }))
-  })
-
-  it('returns true when navigator.standalone is true', () => {
-    Object.defineProperty(window.navigator, 'standalone', {
-      value: true,
-      writable: true,
-      configurable: true,
-    })
-
-    expect(isPwaStandalone()).toBe(true)
-  })
-
-  it('returns true when display-mode: standalone matches', () => {
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: query === '(display-mode: standalone)',
-      media: query,
-    }))
-
-    expect(isPwaStandalone()).toBe(true)
-  })
-
-  it('returns false in regular browser', () => {
-    expect(isPwaStandalone()).toBe(false)
   })
 })

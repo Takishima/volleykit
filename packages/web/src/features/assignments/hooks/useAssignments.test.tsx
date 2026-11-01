@@ -15,12 +15,10 @@ import type { Assignment } from '@/api/client'
 import {
   useAssignments,
   useUpcomingAssignments,
-  usePastAssignments,
   useValidationClosedAssignments,
-  useAssignmentDetails,
-  useCalendarAssignments,
-  getDateRangeForPeriod,
 } from './useAssignments'
+import { useCalendarAssignments } from './useCalendarAssignments'
+import { getDateRangeForPeriod } from '../utils/date-range'
 
 // Mock dependencies
 vi.mock('@/api/client', () => ({
@@ -391,48 +389,6 @@ describe('useUpcomingAssignments', () => {
   })
 })
 
-describe('usePastAssignments', () => {
-  beforeEach(async () => {
-    vi.clearAllMocks()
-    // Reset to non-demo mode for API tests
-    const { useAuthStore } = await import('@/common/stores/auth')
-    vi.mocked(useAuthStore).mockImplementation((selector) =>
-      selector(partialMock<AuthState>({ dataSource: 'api' }))
-    )
-  })
-
-  it('is a convenience wrapper for useAssignments with past period', async () => {
-    const mockSearchAssignments = vi.fn().mockResolvedValue({
-      items: [],
-      totalItemsCount: 0,
-    })
-
-    const { getApiClient } = await import('@/api/client')
-    vi.mocked(getApiClient).mockReturnValue({
-      searchAssignments: mockSearchAssignments,
-      getAssignmentDetails: vi.fn(),
-    } as unknown as ReturnType<typeof getApiClient>)
-
-    const { result } = renderHook(() => usePastAssignments(), {
-      wrapper: createWrapper(),
-    })
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true)
-    })
-
-    expect(mockSearchAssignments).toHaveBeenCalledWith(
-      expect.objectContaining({
-        propertyOrderings: arrayContaining([
-          objectContaining({
-            descending: true,
-          }),
-        ]),
-      })
-    )
-  })
-})
-
 describe('useValidationClosedAssignments', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -465,68 +421,6 @@ describe('useValidationClosedAssignments', () => {
 
   // Note: Tests requiring fake timers and complex mock coordination have been removed
   // as they are fragile in vitest. The behavior is tested through E2E tests.
-})
-
-describe('useAssignmentDetails', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  it('fetches assignment details when ID is provided', async () => {
-    const mockGetDetails = vi.fn().mockResolvedValue(createMockAssignment())
-
-    const { getApiClient } = await import('@/api/client')
-    vi.mocked(getApiClient).mockReturnValue({
-      searchAssignments: vi.fn(),
-      getAssignmentDetails: mockGetDetails,
-    } as unknown as ReturnType<typeof getApiClient>)
-
-    const { result } = renderHook(() => useAssignmentDetails('assignment-1'), {
-      wrapper: createWrapper(),
-    })
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true)
-    })
-
-    expect(mockGetDetails).toHaveBeenCalledWith(
-      'assignment-1',
-      expect.arrayContaining([
-        'refereeGame.game.encounter.teamHome',
-        'refereeGame.game.encounter.teamAway',
-        'refereeGame.game.hall',
-        'refereeGame.game.hall.primaryPostalAddress',
-      ])
-    )
-  })
-
-  it('does not fetch when ID is null', async () => {
-    const mockGetDetails = vi.fn()
-
-    const { getApiClient } = await import('@/api/client')
-    vi.mocked(getApiClient).mockReturnValue({
-      searchAssignments: vi.fn(),
-      getAssignmentDetails: mockGetDetails,
-    } as unknown as ReturnType<typeof getApiClient>)
-
-    const { result } = renderHook(() => useAssignmentDetails(null), {
-      wrapper: createWrapper(),
-    })
-
-    // Wait a tick to ensure query would have been called if enabled
-    await new Promise((r) => setTimeout(r, 10))
-
-    expect(result.current.isPending).toBe(true)
-    expect(mockGetDetails).not.toHaveBeenCalled()
-  })
-
-  it('uses empty string in query key when ID is null', async () => {
-    const { result } = renderHook(() => useAssignmentDetails(null), {
-      wrapper: createWrapper(),
-    })
-
-    expect(result.current.isPending).toBe(true)
-  })
 })
 
 describe('useCalendarAssignments', () => {

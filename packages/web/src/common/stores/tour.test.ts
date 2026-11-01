@@ -61,18 +61,6 @@ describe('useTourStore', () => {
     })
   })
 
-  describe('goToStep', () => {
-    it('sets currentStep to specified value', () => {
-      useTourStore.getState().startTour('assignments')
-
-      useTourStore.getState().goToStep(5)
-      expect(useTourStore.getState().currentStep).toBe(5)
-
-      useTourStore.getState().goToStep(0)
-      expect(useTourStore.getState().currentStep).toBe(0)
-    })
-  })
-
   describe('completeTour', () => {
     it('clears activeTour and resets currentStep', () => {
       useTourStore.setState({ activeTour: 'assignments', currentStep: 3 })
@@ -163,24 +151,6 @@ describe('useTourStore', () => {
     })
   })
 
-  describe('exitTour', () => {
-    it('clears activeTour without affecting completed/dismissed lists', () => {
-      useTourStore.setState({
-        activeTour: 'settings',
-        currentStep: 1,
-        completedTours: ['assignments'],
-        dismissedTours: ['exchange'],
-      })
-
-      useTourStore.getState().exitTour()
-
-      expect(useTourStore.getState().activeTour).toBeNull()
-      expect(useTourStore.getState().currentStep).toBe(0)
-      expect(useTourStore.getState().completedTours).toEqual(['assignments'])
-      expect(useTourStore.getState().dismissedTours).toEqual(['exchange'])
-    })
-  })
-
   describe('resetAllTours', () => {
     it('clears all tour state', () => {
       useTourStore.setState({
@@ -226,24 +196,6 @@ describe('useTourStore', () => {
       useTourStore.setState({ activeTour: 'assignments' })
 
       expect(useTourStore.getState().shouldShowTour('assignments')).toBe(true)
-    })
-  })
-
-  describe('isTourActive', () => {
-    it('returns true when the specified tour is active', () => {
-      useTourStore.setState({ activeTour: 'exchange' })
-
-      expect(useTourStore.getState().isTourActive('exchange')).toBe(true)
-    })
-
-    it('returns false when a different tour is active', () => {
-      useTourStore.setState({ activeTour: 'assignments' })
-
-      expect(useTourStore.getState().isTourActive('exchange')).toBe(false)
-    })
-
-    it('returns false when no tour is active', () => {
-      expect(useTourStore.getState().isTourActive('exchange')).toBe(false)
     })
   })
 

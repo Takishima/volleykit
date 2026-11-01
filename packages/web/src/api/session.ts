@@ -11,7 +11,6 @@
 
 import { invalidateServerAssociation } from './association-guard'
 import {
-  setCsrfToken as setToken,
   clearCsrfToken,
   getSessionToken,
   setSessionToken,
@@ -33,9 +32,7 @@ const SESSION_TOKEN_HEADER = 'X-Session-Token'
 export const CAPTURE_SESSION_TOKEN_HEADER = 'X-Capture-Session-Token'
 
 // CSRF token management
-export function setCsrfToken(token: string | null) {
-  setToken(token)
-}
+export { setCsrfToken } from './form-serialization'
 
 /**
  * Capture session token from response headers.

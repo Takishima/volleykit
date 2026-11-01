@@ -10,5 +10,3 @@ export type {
   ActionType,
   ActionPayload,
 } from '@volleykit/shared/offline'
-
-export { MAX_RETRY_COUNT } from '@volleykit/shared/offline'

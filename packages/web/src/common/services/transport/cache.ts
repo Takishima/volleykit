@@ -90,26 +90,3 @@ export function getTravelModeKey(travelMode: TravelMode, maxBikeDistanceKm: numb
   }
   return 'publicTransport'
 }
-
-/**
- * Get a unique ID for a sports hall from API data.
- * Falls back to coordinate-based hash if no ID is available.
- *
- * @param hallId Optional hall ID from API
- * @param hallCoords Hall coordinates as fallback
- * @returns Unique identifier for the hall
- */
-export function getHallCacheKey(
-  hallId: string | undefined,
-  hallCoords: Coordinates | null
-): string | null {
-  if (hallId) {
-    return hallId
-  }
-
-  if (hallCoords) {
-    return `coords:${hashLocation(hallCoords)}`
-  }
-
-  return null
-}

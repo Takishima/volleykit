@@ -67,14 +67,12 @@ import {
   performApiSessionCheck,
   SESSION_CHECK_GRACE_PERIOD_MS,
 } from '@/features/auth/utils/api-auth-flow'
-import { filterRefereeOccupations } from '@/features/auth/utils/parseOccupations'
 
 registerAuthActions({
   performLogin: performApiLogin,
   performLogout: performApiLogout,
   performSessionCheck: performApiSessionCheck,
   performCalendarLogin,
-  filterRefereeOccupations,
   hasMultipleAssociations,
   sessionCheckGracePeriodMs: SESSION_CHECK_GRACE_PERIOD_MS,
 })
@@ -1144,9 +1142,6 @@ describe('useAuthStore', () => {
         { __identity: 'attr-2', roleIdentifier: 'Referee', type: 'AbstractAssociation' },
       ]
       const existingEligibleValues = [{ __identity: 'attr-3', roleIdentifier: 'Referee' }]
-      const existingEligibleRoles = {
-        'Indoorvolleyball.RefAdmin:Referee': { identifier: 'Indoorvolleyball.RefAdmin:Referee' },
-      }
       useAuthStore.setState({
         status: 'authenticated',
         user: {
@@ -1157,7 +1152,6 @@ describe('useAuthStore', () => {
         },
         groupedEligibleAttributeValues: existingGroupedValues,
         eligibleAttributeValues: existingEligibleValues,
-        eligibleRoles: existingEligibleRoles,
       })
 
       // Mock dashboard response WITHOUT activeParty data (just CSRF token)
@@ -1173,7 +1167,6 @@ describe('useAuthStore', () => {
       // groupedEligibleAttributeValues should be preserved, not set to null
       expect(state.groupedEligibleAttributeValues).toEqual(existingGroupedValues)
       expect(state.eligibleAttributeValues).toEqual(existingEligibleValues)
-      expect(state.eligibleRoles).toEqual(existingEligibleRoles)
     })
 
     it('resets stale activeOccupationId when session check returns different occupations', async () => {
@@ -1491,50 +1484,6 @@ describe('useAuthStore', () => {
       // since validation is done by LoginPage before calling this
       await useAuthStore.getState().loginWithCalendar('ABC123')
       expect(useAuthStore.getState().status).toBe('authenticated')
-    })
-  })
-
-  describe('logoutCalendar', () => {
-    it('clears calendar mode and resets state', async () => {
-      // Set up calendar mode
-      await useAuthStore.getState().loginWithCalendar('ABC123')
-
-      // Logout from calendar
-      await useAuthStore.getState().logoutCalendar()
-
-      const state = useAuthStore.getState()
-      expect(state.status).toBe('idle')
-      expect(state.dataSource).toBe('api')
-      expect(state.calendarCode).toBeNull()
-      expect(state.user).toBeNull()
-    })
-  })
-
-  describe('getAuthMode', () => {
-    it("returns 'none' when not authenticated", () => {
-      expect(useAuthStore.getState().getAuthMode()).toBe('none')
-    })
-
-    it("returns 'full' for API authentication", () => {
-      useAuthStore.setState({
-        status: 'authenticated',
-        dataSource: 'api',
-        user: { id: '1', firstName: 'Test', lastName: 'User', occupations: [] },
-      })
-
-      expect(useAuthStore.getState().getAuthMode()).toBe('full')
-    })
-
-    it("returns 'demo' for demo mode", () => {
-      useAuthStore.getState().setDemoAuthenticated()
-
-      expect(useAuthStore.getState().getAuthMode()).toBe('demo')
-    })
-
-    it("returns 'calendar' for calendar mode", async () => {
-      await useAuthStore.getState().loginWithCalendar('ABC123')
-
-      expect(useAuthStore.getState().getAuthMode()).toBe('calendar')
     })
   })
 

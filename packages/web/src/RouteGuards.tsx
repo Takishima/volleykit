@@ -12,16 +12,10 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { ErrorBoundary } from '@/common/components/ErrorBoundary'
 import { LoadingState } from '@/common/components/LoadingSpinner'
-import { features } from '@/common/config/features'
-// features.offline — Cache warming for offline support (delete this import when removing offline feature)
-import { useCacheWarming } from '@/common/hooks/useCacheWarming'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import { logger } from '@/common/utils/logger'
-
-// features.offline — Cache warming no-op when offline is disabled
-const useOfflineCacheWarming: () => void = features.offline ? useCacheWarming : () => {}
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { status, checkSession, dataSource } = useAuthStore(
@@ -40,9 +34,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   )
   const { t } = useTranslation()
   const isDemoMode = dataSource === 'demo'
-
-  // Warm cache with critical data after login for offline support (features.offline)
-  useOfflineCacheWarming()
 
   // Only verify session for API mode - demo and calendar modes don't need server verification
   const shouldVerifySession = status === 'authenticated' && dataSource === 'api'

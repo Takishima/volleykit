@@ -182,24 +182,6 @@ export interface PlayerComparisonResult {
   confidence: number
 }
 
-/**
- * Result of comparing OCR results against a full team roster
- */
-export interface TeamComparisonResult {
-  /** OCR team name */
-  ocrTeamName: string
-  /** Reference team name */
-  rosterTeamName: string
-  /** Individual player comparison results */
-  playerResults: PlayerComparisonResult[]
-  /** Summary counts */
-  counts: {
-    matched: number
-    ocrOnly: number
-    rosterOnly: number
-  }
-}
-
 // =============================================================================
 // Hook Types
 // =============================================================================

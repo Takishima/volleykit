@@ -1,16 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
+import { useSettingsStore, type UserLocation, getDefaultArrivalBuffer } from './settings'
 import {
-  useSettingsStore,
-  type UserLocation,
-  type ModeSettings,
   DEFAULT_ARRIVAL_BUFFER_SV_MINUTES,
   DEFAULT_ARRIVAL_BUFFER_REGIONAL_MINUTES,
-  getDefaultArrivalBuffer,
-} from './settings'
+  type ModeSettings,
+  type SettingsState,
+} from './settings/types'
 
 import type { DataSource } from './auth'
-import type { SettingsState } from './settings/types'
 import { readPersistedState } from '@/test/persisted-state'
 
 /** Default mode settings for tests */
@@ -32,11 +30,6 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     maxBikeDistanceKm: 15,
   },
   levelFilterEnabled: false,
-  notificationSettings: {
-    enabled: false,
-    reminderTimes: ['1h'],
-    deliveryPreference: 'native',
-  },
   gameGapFilter: {
     enabled: false,
     minGapMinutes: 120,
@@ -66,7 +59,6 @@ function resetStore(mode: DataSource = 'api') {
     transportEnabledByAssociation: { ...DEFAULT_MODE_SETTINGS.transportEnabledByAssociation },
     travelTimeFilter: { ...DEFAULT_MODE_SETTINGS.travelTimeFilter },
     levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
-    notificationSettings: { ...DEFAULT_MODE_SETTINGS.notificationSettings },
   })
 }
 
@@ -736,11 +728,6 @@ describe('useSettingsStore', () => {
                 sbbDestinationType: 'station',
               },
               levelFilterEnabled: false,
-              notificationSettings: {
-                enabled: false,
-                reminderTimes: ['1h'],
-                deliveryPreference: 'native',
-              },
               gameGapFilter: { enabled: false, minGapMinutes: 120 },
               hideOwnExchangesByAssociation: {},
             },
@@ -812,61 +799,6 @@ describe('useSettingsStore', () => {
 
       const { levelFilterEnabled } = useSettingsStore.getState()
       expect(levelFilterEnabled).toBe(false)
-    })
-  })
-
-  describe('notification settings', () => {
-    beforeEach(() => {
-      resetStore()
-    })
-
-    it('should have notifications disabled by default', () => {
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.enabled).toBe(false)
-    })
-
-    it('should allow enabling notifications', () => {
-      const { setNotificationsEnabled } = useSettingsStore.getState()
-
-      setNotificationsEnabled(true)
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.enabled).toBe(true)
-    })
-
-    it('should set notification reminder times', () => {
-      const { setNotificationReminderTimes } = useSettingsStore.getState()
-
-      setNotificationReminderTimes(['1h', '2h', '1d'])
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h', '1d'])
-    })
-
-    it('should set notification delivery preference', () => {
-      const { setNotificationDeliveryPreference } = useSettingsStore.getState()
-
-      setNotificationDeliveryPreference('in-app')
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.deliveryPreference).toBe('in-app')
-    })
-
-    it('should preserve other settings when updating one field', () => {
-      const {
-        setNotificationsEnabled,
-        setNotificationReminderTimes,
-        setNotificationDeliveryPreference,
-      } = useSettingsStore.getState()
-
-      setNotificationsEnabled(true)
-      setNotificationReminderTimes(['1h', '2h'])
-      setNotificationDeliveryPreference('both')
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.enabled).toBe(true)
-      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h'])
-      expect(notificationSettings.deliveryPreference).toBe('both')
     })
   })
 

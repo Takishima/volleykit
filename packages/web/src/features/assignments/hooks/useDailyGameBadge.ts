@@ -13,7 +13,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { isToday } from 'date-fns'
 
 import type { Assignment } from '@/api/client'
-import { badgeService } from '@/common/services/badge'
+import { badgeService } from '@/common/services/badge/badge-service'
 
 /**
  * Count the number of active games scheduled for today

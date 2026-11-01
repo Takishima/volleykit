@@ -91,7 +91,6 @@ function createStore(persistedActiveOccupationId: string | null) {
     csrfToken: null,
     eligibleAttributeValues: null,
     groupedEligibleAttributeValues: null,
-    eligibleRoles: null,
   } as unknown as AuthState
   const set = vi.fn()
   return { get: () => state, set }

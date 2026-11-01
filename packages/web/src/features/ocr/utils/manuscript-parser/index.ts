@@ -17,19 +17,10 @@
  */
 
 import { parseSequentialSheet } from './sequential'
-import { isSwissTabularFormat, parseSwissTabularSheet } from './swiss-tabular'
+import { parseSwissTabularSheet } from './swiss-tabular'
+import { isSwissTabularFormat } from './table-detection'
 
 import type { ParsedGameSheet, ParsedTeam } from '../../types'
-
-// Re-export everything that consumers need
-export { correctDigits, correctLetters, extractShirtNumber } from './ocr-corrections'
-export { normalizeName, parsePlayerName, parseOfficialName } from './name-parsing'
-export {
-  splitConcatenatedNames,
-  splitConcatenatedDates,
-  splitConcatenatedNumbers,
-} from './concatenated-data'
-export { isSwissTabularFormat, extractSwissTeamNames } from './swiss-tabular'
 
 /**
  * Parse manuscript (handwritten) scoresheet OCR text

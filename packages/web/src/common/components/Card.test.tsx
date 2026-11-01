@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 
-import { Card, CardHeader, CardContent, CardFooter } from './Card'
+import { Card, CardHeader, CardContent } from './Card'
 
 /** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
 const CUSTOM_CLASS = 'custom-class'
@@ -52,25 +52,16 @@ describe('CardContent', () => {
   })
 })
 
-describe('CardFooter', () => {
-  it('renders children', () => {
-    render(<CardFooter>Footer</CardFooter>)
-    expect(screen.getByText('Footer')).toBeInTheDocument()
-  })
-})
-
 describe('Card composition', () => {
   it('renders all parts together', () => {
     render(
       <Card>
         <CardHeader>Header</CardHeader>
         <CardContent>Content</CardContent>
-        <CardFooter>Footer</CardFooter>
       </Card>
     )
 
     expect(screen.getByText('Header')).toBeInTheDocument()
     expect(screen.getByText('Content')).toBeInTheDocument()
-    expect(screen.getByText('Footer')).toBeInTheDocument()
   })
 })

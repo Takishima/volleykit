@@ -95,18 +95,3 @@ export function CardContent({ children, className = '', 'data-tour': dataTour }:
     </div>
   )
 }
-
-interface CardFooterProps {
-  children: ReactNode
-  className?: string
-}
-
-export function CardFooter({ children, className = '' }: CardFooterProps) {
-  return (
-    <div
-      className={`px-4 py-3 border-t border-border-subtle dark:border-border-subtle-dark ${className}`}
-    >
-      {children}
-    </div>
-  )
-}

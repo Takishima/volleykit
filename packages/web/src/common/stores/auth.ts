@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 import { clearSession } from '@/api/session'
-import type { AttributeValue, RoleDefinition } from '@/common/types/active-party'
+import type { AttributeValue } from '@/common/types/active-party'
 import { logger } from '@/common/utils/logger'
 
 import { getAuthActions } from './auth-actions-registry'
@@ -17,7 +17,7 @@ import { useDemoStore } from './demo'
 import { useSettingsStore, DEMO_HOME_LOCATION } from './settings'
 
 // Re-export types so existing consumers still work
-export type { AttributeValue, RoleDefinition } from '@/common/types/active-party'
+export type { AttributeValue } from '@/common/types/active-party'
 
 /**
  * Callback function to clear the React Query cache.
@@ -83,7 +83,6 @@ export interface AuthState {
   eligibleAttributeValues: AttributeValue[] | null
   /** All associations the user belongs to, grouped by role - use this for multi-association detection */
   groupedEligibleAttributeValues: AttributeValue[] | null
-  eligibleRoles: Record<string, RoleDefinition> | null
 
   login: (username: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
@@ -96,8 +95,6 @@ export interface AuthState {
   clearStaleSession: () => void
   isCalendarMode: () => boolean
   loginWithCalendar: (code: string) => Promise<void>
-  logoutCalendar: () => Promise<void>
-  getAuthMode: () => 'full' | 'calendar' | 'demo' | 'none'
 }
 
 /**
@@ -112,6 +109,19 @@ export const CALENDAR_ASSOCIATION = 'CAL'
  * Defined here to avoid importing from features/.
  */
 export const NO_REFEREE_ROLE_ERROR_KEY = 'auth.noRefereeRole'
+
+/** Reject `promise` early with an AbortError when `signal` aborts. */
+function withAbortSignal<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
+    signal.addEventListener('abort', onAbort, { once: true })
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => signal.removeEventListener('abort', onAbort))
+  })
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -129,7 +139,6 @@ export const useAuthStore = create<AuthState>()(
       _lastAuthTimestamp: null,
       eligibleAttributeValues: null,
       groupedEligibleAttributeValues: null,
-      eligibleRoles: null,
 
       login: async (username: string, password: string): Promise<boolean> => {
         set({ status: 'loading', error: null, lockedUntil: null })
@@ -177,7 +186,6 @@ export const useAuthStore = create<AuthState>()(
           calendarCode: null,
           eligibleAttributeValues: null,
           groupedEligibleAttributeValues: null,
-          eligibleRoles: null,
           _lastAuthTimestamp: null,
           // Note: activeOccupationId intentionally NOT cleared - see comment above
         })
@@ -205,19 +213,7 @@ export const useAuthStore = create<AuthState>()(
 
         const existingPromise = get()._checkSessionPromise
         if (existingPromise) {
-          // If caller provided a signal, wrap the promise to handle abortion
-          if (signal) {
-            return new Promise<boolean>((resolve, reject) => {
-              const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
-              signal.addEventListener('abort', onAbort, { once: true })
-
-              existingPromise
-                .then(resolve)
-                .catch(reject)
-                .finally(() => signal.removeEventListener('abort', onAbort))
-            })
-          }
-          return existingPromise
+          return withAbortSignal(existingPromise, signal)
         }
 
         const promise = (async () => {
@@ -230,20 +226,7 @@ export const useAuthStore = create<AuthState>()(
 
         set({ _checkSessionPromise: promise })
 
-        // If caller provided a signal, wrap the promise to handle abortion
-        if (signal) {
-          return new Promise<boolean>((resolve, reject) => {
-            const onAbort = () => reject(new DOMException('Aborted', 'AbortError'))
-            signal.addEventListener('abort', onAbort, { once: true })
-
-            promise
-              .then(resolve)
-              .catch(reject)
-              .finally(() => signal.removeEventListener('abort', onAbort))
-          })
-        }
-
-        return promise
+        return withAbortSignal(promise, signal)
       },
 
       setUser: (user: UserProfile | null) => {
@@ -251,15 +234,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setDemoAuthenticated: () => {
-        const rawDemoOccupations: Occupation[] = [
+        const demoOccupations: Occupation[] = [
           { id: 'demo-referee-sv', type: 'referee', associationCode: 'SV' },
           { id: 'demo-referee-svrba', type: 'referee', associationCode: 'SVRBA' },
           { id: 'demo-referee-svrz', type: 'referee', associationCode: 'SVRZ' },
-          { id: 'demo-player', type: 'player', clubName: 'VBC Demo' },
         ]
-
-        // Filter inline for demo mode to avoid requiring auth actions registration
-        const demoOccupations = rawDemoOccupations.filter((occ) => occ.type === 'referee')
 
         set({
           status: 'authenticated',
@@ -306,25 +285,6 @@ export const useAuthStore = create<AuthState>()(
       loginWithCalendar: async (code: string): Promise<void> => {
         const actions = getAuthActions()
         await actions.performCalendarLogin(code, set)
-      },
-
-      logoutCalendar: async () => {
-        await get().logout()
-      },
-
-      getAuthMode: () => {
-        const state = get()
-        if (state.status !== 'authenticated') {
-          return 'none'
-        }
-        switch (state.dataSource) {
-          case 'demo':
-            return 'demo'
-          case 'calendar':
-            return 'calendar'
-          case 'api':
-            return 'full'
-        }
       },
     }),
     {

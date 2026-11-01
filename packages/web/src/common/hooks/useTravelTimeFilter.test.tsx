@@ -507,8 +507,7 @@ describe('useTravelTimeFilter', () => {
   describe('association-specific settings', () => {
     it('uses per-association transport enabled setting', async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
-      const { useActiveAssociationCode } =
-        await import('@/features/auth/hooks/useActiveAssociation')
+      const { useActiveAssociationCode } = await import('@/common/hooks/useActiveAssociation')
       const { isOjpConfigured } = await import('@/common/services/transport')
 
       vi.mocked(useActiveAssociationCode).mockReturnValue('SPECIAL')
@@ -547,8 +546,7 @@ describe('useTravelTimeFilter', () => {
 
     it('uses per-association arrival buffer', async () => {
       const { useSettingsStore } = await import('@/common/stores/settings')
-      const { useActiveAssociationCode } =
-        await import('@/features/auth/hooks/useActiveAssociation')
+      const { useActiveAssociationCode } = await import('@/common/hooks/useActiveAssociation')
       const { useAuthStore } = await import('@/common/stores/auth')
       const { getOrFetchTravelTime } = await import('@/common/services/transport')
 

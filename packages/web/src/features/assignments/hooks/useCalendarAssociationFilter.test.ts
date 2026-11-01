@@ -2,9 +2,9 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import type { CalendarAssignment } from '@/common/services/calendar/calendar-api'
-import { useCalendarFilterStore } from '@/common/stores/calendar-filter'
+import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/common/stores/calendar-filter'
 
-import { useCalendarAssociationFilter, ALL_ASSOCIATIONS } from './useCalendarAssociationFilter'
+import { useCalendarAssociationFilter } from './useCalendarAssociationFilter'
 
 function createMockCalendarAssignment(
   overrides: Partial<CalendarAssignment> = {}

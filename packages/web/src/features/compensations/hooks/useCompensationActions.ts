@@ -8,7 +8,7 @@ import { useAuthStore } from '@/common/stores/auth'
 import { toast } from '@/common/stores/toast'
 
 import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
-import { downloadCompensationPDF } from '../utils/compensation-actions'
+import { downloadCompensationPDF } from '../utils/compensation-pdf'
 
 interface UseCompensationActionsResult {
   editCompensationModal: {

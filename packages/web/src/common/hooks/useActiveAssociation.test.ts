@@ -45,7 +45,6 @@ describe('useActiveAssociationCode', () => {
         _checkSessionPromise: null,
         eligibleAttributeValues: null,
         groupedEligibleAttributeValues: null,
-        eligibleRoles: null,
       })
     })
   })

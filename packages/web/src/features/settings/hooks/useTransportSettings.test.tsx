@@ -25,7 +25,7 @@ vi.mock('@/common/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: vi.fn(),
 }))
 
-vi.mock('@/common/hooks/useTravelTime', () => ({
+vi.mock('@/common/hooks/useTravelTimeSource', () => ({
   useTravelTimeAvailable: vi.fn(),
 }))
 
@@ -57,12 +57,12 @@ async function getSettingsStore() {
 }
 
 async function getActiveAssociation() {
-  const { useActiveAssociationCode } = await import('@/features/auth/hooks/useActiveAssociation')
+  const { useActiveAssociationCode } = await import('@/common/hooks/useActiveAssociation')
   return useActiveAssociationCode
 }
 
 async function getTravelTimeAvailable() {
-  const { useTravelTimeAvailable } = await import('@/common/hooks/useTravelTime')
+  const { useTravelTimeAvailable } = await import('@/common/hooks/useTravelTimeSource')
   return useTravelTimeAvailable
 }
 

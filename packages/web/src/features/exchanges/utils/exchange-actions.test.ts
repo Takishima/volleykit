@@ -8,8 +8,6 @@ import { createMockExchange } from '@/test/exchange-factory'
 import {
   createExchangeActions,
   resolveSwipeConfig,
-  isExchangeOwner,
-  canRemoveExchange,
   getConvocationIdFromExchange,
 } from './exchange-actions'
 
@@ -82,40 +80,6 @@ describe('createExchangeActions', () => {
     expect(actions.removeFromExchange.shortLabel).toBe('Remove')
     expect(actions.removeFromExchange.color).toBe('bg-danger-500')
     expect(isValidElement(actions.removeFromExchange.icon)).toBe(true)
-  })
-})
-
-describe('isExchangeOwner', () => {
-  it('returns false when userId is undefined', () => {
-    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
-    expect(isExchangeOwner(exchange, undefined)).toBe(false)
-  })
-
-  it('returns false when submittedByPerson does not match userId', () => {
-    const exchange = { submittedByPerson: { __identity: 'other-user' } } as GameExchange
-    expect(isExchangeOwner(exchange, 'user-1')).toBe(false)
-  })
-
-  it('returns true when submittedByPerson matches userId', () => {
-    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
-    expect(isExchangeOwner(exchange, 'user-1')).toBe(true)
-  })
-})
-
-describe('canRemoveExchange', () => {
-  it('returns false when userId is undefined', () => {
-    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
-    expect(canRemoveExchange(exchange, undefined)).toBe(false)
-  })
-
-  it('returns false when user is not the owner', () => {
-    const exchange = { submittedByPerson: { __identity: 'other-user' } } as GameExchange
-    expect(canRemoveExchange(exchange, 'user-1')).toBe(false)
-  })
-
-  it('returns true when user is the owner', () => {
-    const exchange = { submittedByPerson: { __identity: 'user-1' } } as GameExchange
-    expect(canRemoveExchange(exchange, 'user-1')).toBe(true)
   })
 })
 

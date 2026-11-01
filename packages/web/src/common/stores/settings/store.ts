@@ -1,15 +1,10 @@
 import { create } from 'zustand'
 import { persist, subscribeWithSelector } from 'zustand/middleware'
 
-import type { NotificationPreference, ReminderTime } from '@/common/services/notifications'
 import type { TravelMode } from '@/common/services/transport/types'
 
 import { runMigrations } from './migrations'
-import {
-  DEFAULT_MODE_SETTINGS,
-  DEFAULT_NOTIFICATION_SETTINGS,
-  getDefaultArrivalBuffer,
-} from './types'
+import { DEFAULT_MODE_SETTINGS, getDefaultArrivalBuffer } from './types'
 
 import type { DataSource } from '../auth'
 import type {
@@ -59,7 +54,6 @@ function syncFromMode(
     transportEnabledByAssociation: modeSettings.transportEnabledByAssociation,
     travelTimeFilter: modeSettings.travelTimeFilter,
     levelFilterEnabled: modeSettings.levelFilterEnabled,
-    notificationSettings: modeSettings.notificationSettings,
     gameGapFilter: modeSettings.gameGapFilter,
     hideOwnExchangesByAssociation: modeSettings.hideOwnExchangesByAssociation,
     hideNotTakeableExchangesByAssociation: modeSettings.hideNotTakeableExchangesByAssociation,
@@ -93,7 +87,6 @@ export const useSettingsStore = create<SettingsState>()(
         transportEnabledByAssociation: DEFAULT_MODE_SETTINGS.transportEnabledByAssociation,
         travelTimeFilter: DEFAULT_MODE_SETTINGS.travelTimeFilter,
         levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
-        notificationSettings: DEFAULT_MODE_SETTINGS.notificationSettings,
         gameGapFilter: DEFAULT_MODE_SETTINGS.gameGapFilter,
         hideOwnExchangesByAssociation: DEFAULT_MODE_SETTINGS.hideOwnExchangesByAssociation,
         hideNotTakeableExchangesByAssociation:
@@ -321,33 +314,6 @@ export const useSettingsStore = create<SettingsState>()(
           set((state) => updateModeAndTopLevel(state, () => ({ levelFilterEnabled: enabled })))
         },
 
-        setNotificationsEnabled: (enabled: boolean) => {
-          set((state) =>
-            updateModeAndTopLevel(state, (current) => ({
-              notificationSettings: { ...current.notificationSettings, enabled },
-            }))
-          )
-        },
-
-        setNotificationReminderTimes: (times: ReminderTime[]) => {
-          set((state) =>
-            updateModeAndTopLevel(state, (current) => ({
-              notificationSettings: { ...current.notificationSettings, reminderTimes: times },
-            }))
-          )
-        },
-
-        setNotificationDeliveryPreference: (preference: NotificationPreference) => {
-          set((state) =>
-            updateModeAndTopLevel(state, (current) => ({
-              notificationSettings: {
-                ...current.notificationSettings,
-                deliveryPreference: preference,
-              },
-            }))
-          )
-        },
-
         setGameGapFilterEnabled: (enabled: boolean) => {
           set((state) =>
             updateModeAndTopLevel(state, (current) => ({
@@ -476,10 +442,6 @@ export const useSettingsStore = create<SettingsState>()(
                   levelFilterEnabled:
                     persistedModeSettings.levelFilterEnabled ??
                     DEFAULT_MODE_SETTINGS.levelFilterEnabled,
-                  notificationSettings: {
-                    ...DEFAULT_NOTIFICATION_SETTINGS,
-                    ...persistedModeSettings.notificationSettings,
-                  },
                   gameGapFilter: {
                     ...DEFAULT_MODE_SETTINGS.gameGapFilter,
                     ...persistedModeSettings.gameGapFilter,

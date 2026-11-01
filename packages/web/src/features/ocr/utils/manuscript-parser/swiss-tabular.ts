@@ -37,10 +37,6 @@ export {
   isEndMarker,
 } from './table-detection'
 
-// Used by index.ts
-export { isSwissTabularFormat } from './table-detection'
-export { extractSwissTeamNames } from './team-name-extraction'
-
 // =============================================================================
 // Line Processing Helpers
 // =============================================================================

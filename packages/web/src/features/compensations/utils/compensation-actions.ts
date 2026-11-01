@@ -9,9 +9,6 @@ import {
   isCompensationLocked,
 } from './compensation-helpers'
 
-// Re-export for cross-feature access
-export { isAssignmentCompensationEditable } from './compensation-helpers'
-
 /**
  * Checks if a compensation record can be edited.
  *
@@ -94,6 +91,3 @@ export function createCompensationActions(
     },
   }
 }
-
-// Re-export PDF download from dedicated module for backwards compatibility
-export { downloadCompensationPDF } from './compensation-pdf'

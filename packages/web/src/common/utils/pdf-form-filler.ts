@@ -1,8 +1,7 @@
 /**
  * PDF form filler — core PDF manipulation logic.
  *
- * Re-exports types and functions from split modules for backward compatibility.
- * New code should import directly from the specific module:
+ * Helpers live in split modules; import them directly from there:
  *   - pdf-report-data.ts  — Assignment data extraction, filename building
  *   - pdf-field-mappings.ts — PDF field names, checklist sections, positions
  *   - pdf-signature-block.ts — Signature image embedding and signer name sizing
@@ -39,21 +38,11 @@ import {
 import type { PDFDocument, PDFForm } from 'pdf-lib'
 
 // ---------------------------------------------------------------------------
-// Re-exports for backward compatibility
+// Type re-exports for consumers of the report flow
 // ---------------------------------------------------------------------------
 
-export { downloadPdf } from './pdf-download'
-export { getChecklistSections } from './pdf-field-mappings'
 export type { NonConformantSignatures } from './pdf-signature-block'
-export {
-  buildReportFilename,
-  extractSportsHallReportData,
-  getLeagueCategoryFromAssignment,
-  mapAppLocaleToPdfLanguage,
-  type Language,
-  type LeagueCategory,
-  type SportsHallReportData,
-} from './pdf-report-data'
+export type { Language, LeagueCategory, SportsHallReportData } from './pdf-report-data'
 
 // ---------------------------------------------------------------------------
 // Shared types

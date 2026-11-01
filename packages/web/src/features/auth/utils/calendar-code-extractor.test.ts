@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import {
-  extractCalendarCodeFromHtml,
-  isValidCalendarCode,
-  getCalendarUrl,
-} from './calendar-code-extractor'
+import { extractCalendarCodeFromHtml } from './calendar-code-extractor'
 
 describe('calendar-code-extractor', () => {
   describe('extractCalendarCodeFromHtml', () => {
@@ -87,42 +83,6 @@ describe('calendar-code-extractor', () => {
     it('should not extract codes with special characters', () => {
       const html = '/iCal/referee/ABC-12'
       expect(extractCalendarCodeFromHtml(html)).toBeNull()
-    })
-  })
-
-  describe('isValidCalendarCode', () => {
-    it('should return true for valid 6-character alphanumeric code', () => {
-      expect(isValidCalendarCode('ABC123')).toBe(true)
-      expect(isValidCalendarCode('abcdef')).toBe(true)
-      expect(isValidCalendarCode('ABCDEF')).toBe(true)
-      expect(isValidCalendarCode('123456')).toBe(true)
-    })
-
-    it('should return false for codes that are too short', () => {
-      expect(isValidCalendarCode('ABC12')).toBe(false)
-      expect(isValidCalendarCode('')).toBe(false)
-    })
-
-    it('should return false for codes that are too long', () => {
-      expect(isValidCalendarCode('ABC1234')).toBe(false)
-    })
-
-    it('should return false for codes with special characters', () => {
-      expect(isValidCalendarCode('ABC-12')).toBe(false)
-      expect(isValidCalendarCode('ABC_12')).toBe(false)
-      expect(isValidCalendarCode('ABC.12')).toBe(false)
-    })
-  })
-
-  describe('getCalendarUrl', () => {
-    it('should construct URL with given code', () => {
-      const url = getCalendarUrl('ABC123', '')
-      expect(url).toBe('/iCal/referee/ABC123')
-    })
-
-    it('should prepend proxy URL when provided', () => {
-      const url = getCalendarUrl('ABC123', 'https://proxy.example.com')
-      expect(url).toBe('https://proxy.example.com/iCal/referee/ABC123')
     })
   })
 })

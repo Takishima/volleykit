@@ -49,20 +49,6 @@ export function assignmentListOptions(
   })
 }
 
-export function assignmentDetailOptions(apiClient: ApiClient, assignmentId: string) {
-  return queryOptions({
-    queryKey: queryKeys.assignments.detail(assignmentId),
-    queryFn: () =>
-      apiClient.getAssignmentDetails(assignmentId, [
-        'refereeGame.game.encounter.teamHome',
-        'refereeGame.game.encounter.teamAway',
-        'refereeGame.game.hall',
-        'refereeGame.game.hall.primaryPostalAddress',
-      ]),
-    staleTime: ASSIGNMENTS_STALE_TIME_MS * 2,
-  })
-}
-
 // ── Compensations ────────────────────────────────────────────────────
 
 export function compensationListOptions(

@@ -4,7 +4,7 @@ import type { Assignment } from '@/api/client'
 import { isAssignmentCompensationEditable } from '@/features/compensations/utils/compensation-helpers'
 
 import { TOUR_DUMMY_ASSIGNMENT } from './assignments'
-import { isGameReportEligible, isValidationEligible } from './utils/assignment-helpers'
+import { isGameReportEligible, isValidationEligible } from '@volleykit/shared/utils'
 
 describe('TOUR_DUMMY_ASSIGNMENT', () => {
   // Cast for eligibility checks which expect Assignment type

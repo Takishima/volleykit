@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { formatTravelTime } from './format-travel-time'
+import { formatTravelTime, formatTravelTimeCompact } from './format-travel-time'
 
 const units = { minutesUnit: 'min', hoursUnit: 'h' }
 
@@ -40,5 +40,31 @@ describe('formatTravelTime', () => {
     const germanUnits = { minutesUnit: ' Min.', hoursUnit: ' Std.' }
     expect(formatTravelTime(30, germanUnits)).toBe('30 Min.')
     expect(formatTravelTime(90, germanUnits)).toBe('1 Std. 30 Min.')
+  })
+})
+
+describe('formatTravelTimeCompact', () => {
+  it('formats minutes less than 60', () => {
+    expect(formatTravelTimeCompact(15)).toBe("15'")
+    expect(formatTravelTimeCompact(45)).toBe("45'")
+    expect(formatTravelTimeCompact(59)).toBe("59'")
+  })
+
+  it('formats exact hours', () => {
+    expect(formatTravelTimeCompact(60)).toBe('1h')
+    expect(formatTravelTimeCompact(120)).toBe('2h')
+    expect(formatTravelTimeCompact(180)).toBe('3h')
+  })
+
+  it('formats hours and minutes', () => {
+    expect(formatTravelTimeCompact(75)).toBe("1h15'")
+    expect(formatTravelTimeCompact(90)).toBe("1h30'")
+    expect(formatTravelTimeCompact(145)).toBe("2h25'")
+  })
+
+  it('handles edge cases', () => {
+    expect(formatTravelTimeCompact(0)).toBe("0'")
+    expect(formatTravelTimeCompact(1)).toBe("1'")
+    expect(formatTravelTimeCompact(61)).toBe("1h1'")
   })
 })

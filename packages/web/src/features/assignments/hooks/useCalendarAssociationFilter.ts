@@ -15,9 +15,6 @@ import { useShallow } from 'zustand/react/shallow'
 import type { CalendarAssignment } from '@/common/services/calendar/calendar-api'
 import { useCalendarFilterStore, ALL_ASSOCIATIONS } from '@/common/stores/calendar-filter'
 
-// Re-export for backward compatibility
-export { ALL_ASSOCIATIONS } from '@/common/stores/calendar-filter'
-
 export interface UseCalendarAssociationFilterResult {
   /** List of unique associations found in calendar data */
   associations: string[]
