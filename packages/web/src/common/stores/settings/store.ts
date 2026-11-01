@@ -4,6 +4,11 @@ import { persist, subscribeWithSelector } from 'zustand/middleware'
 import type { TravelMode } from '@/common/services/transport/types'
 
 import { runMigrations } from './migrations'
+import {
+  resolveDistanceFilter,
+  resolveMaxTravelTimeMinutes,
+  resolveTransportEnabled,
+} from './per-association'
 import { DEFAULT_MODE_SETTINGS, getDefaultArrivalBuffer } from './types'
 
 import type { DataSource } from '../auth'
@@ -174,11 +179,11 @@ export const useSettingsStore = create<SettingsState>()(
 
         getDistanceFilterForAssociation: (associationCode: string | undefined) => {
           const state = get()
-          const filterMap = state.distanceFilterByAssociation ?? {}
-          if (associationCode && filterMap[associationCode] !== undefined) {
-            return filterMap[associationCode]
-          }
-          return state.distanceFilter
+          return resolveDistanceFilter(
+            state.distanceFilter,
+            state.distanceFilterByAssociation,
+            associationCode
+          )
         },
 
         setTransportEnabled: (enabled: boolean) => {
@@ -198,11 +203,11 @@ export const useSettingsStore = create<SettingsState>()(
 
         isTransportEnabledForAssociation: (associationCode: string | undefined) => {
           const state = get()
-          const enabledMap = state.transportEnabledByAssociation ?? {}
-          if (associationCode && enabledMap[associationCode] !== undefined) {
-            return enabledMap[associationCode]
-          }
-          return state.transportEnabled
+          return resolveTransportEnabled(
+            state.transportEnabled,
+            state.transportEnabledByAssociation,
+            associationCode
+          )
         },
 
         setTravelTimeFilterEnabled: (enabled: boolean) => {
@@ -235,14 +240,8 @@ export const useSettingsStore = create<SettingsState>()(
           )
         },
 
-        getMaxTravelTimeForAssociation: (associationCode: string | undefined) => {
-          const state = get()
-          const timeMap = state.travelTimeFilter.maxTravelTimeByAssociation ?? {}
-          if (associationCode && timeMap[associationCode] !== undefined) {
-            return timeMap[associationCode]
-          }
-          return state.travelTimeFilter.maxTravelTimeMinutes
-        },
+        getMaxTravelTimeForAssociation: (associationCode: string | undefined) =>
+          resolveMaxTravelTimeMinutes(get().travelTimeFilter, associationCode),
 
         setArrivalBufferMinutes: (minutes: number) => {
           set((state) =>

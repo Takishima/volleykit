@@ -17,6 +17,10 @@ import { features } from '@/common/config/features'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { useSettingsStore } from '@/common/stores/settings'
+import {
+  resolveDistanceFilter,
+  resolveMaxTravelTimeMinutes,
+} from '@/common/stores/settings/per-association'
 import { formatTravelTime, MINUTES_PER_HOUR } from '@/common/utils/format-travel-time'
 
 /** Distance presets for the slider (in kilometers) */
@@ -203,23 +207,12 @@ function ExchangeFilterMenuComponent({
     }))
   )
 
-  // Get per-association distance filter
-  const currentDistanceFilter = useMemo(() => {
-    const filterMap = distanceFilterByAssociation ?? {}
-    if (associationCode && filterMap[associationCode] !== undefined) {
-      return filterMap[associationCode]
-    }
-    return distanceFilter
-  }, [associationCode, distanceFilterByAssociation, distanceFilter])
-
-  // Get per-association max travel time
-  const currentMaxTravelTime = useMemo(() => {
-    const timeMap = travelTimeFilter.maxTravelTimeByAssociation ?? {}
-    if (associationCode && timeMap[associationCode] !== undefined) {
-      return timeMap[associationCode]
-    }
-    return travelTimeFilter.maxTravelTimeMinutes
-  }, [associationCode, travelTimeFilter])
+  const currentDistanceFilter = resolveDistanceFilter(
+    distanceFilter,
+    distanceFilterByAssociation,
+    associationCode
+  )
+  const currentMaxTravelTime = resolveMaxTravelTimeMinutes(travelTimeFilter, associationCode)
 
   const handleDistanceChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

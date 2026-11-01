@@ -5,10 +5,15 @@ import { useShallow } from 'zustand/react/shallow'
 
 import type { GameExchange } from '@/api/client'
 import { features } from '@/common/config/features'
+import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTravelTimeFilter } from '@/common/hooks/useTravelTimeFilter'
 import type { TravelMode } from '@/common/services/transport'
 import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
+import {
+  resolveDistanceFilter,
+  resolveMaxTravelTimeMinutes,
+} from '@/common/stores/settings/per-association'
 import { calculateCarDistanceKm } from '@/common/utils/distance'
 import { extractCoordinates } from '@/common/utils/geo-location'
 import { useCalendarConflicts } from '@/features/assignments/hooks/useCalendarConflicts'
@@ -52,16 +57,32 @@ export function useExchangeFilters({
       userRefereeLevelGradationValue: state.userRefereeLevelGradationValue,
     }))
   )
-  const { homeLocation, distanceFilter, travelTimeFilter, levelFilterEnabled, gameGapFilter } =
-    useSettingsStore(
-      useShallow((state) => ({
-        homeLocation: state.homeLocation,
-        distanceFilter: state.distanceFilter,
-        travelTimeFilter: state.travelTimeFilter,
-        levelFilterEnabled: state.levelFilterEnabled,
-        gameGapFilter: state.gameGapFilter,
-      }))
-    )
+  const {
+    homeLocation,
+    distanceFilter,
+    distanceFilterByAssociation,
+    travelTimeFilter,
+    levelFilterEnabled,
+    gameGapFilter,
+  } = useSettingsStore(
+    useShallow((state) => ({
+      homeLocation: state.homeLocation,
+      distanceFilter: state.distanceFilter,
+      distanceFilterByAssociation: state.distanceFilterByAssociation,
+      travelTimeFilter: state.travelTimeFilter,
+      levelFilterEnabled: state.levelFilterEnabled,
+      gameGapFilter: state.gameGapFilter,
+    }))
+  )
+
+  // The filter menu edits per-association thresholds, so filter with the same ones.
+  const associationCode = useActiveAssociationCode()
+  const { maxDistanceKm } = resolveDistanceFilter(
+    distanceFilter,
+    distanceFilterByAssociation,
+    associationCode
+  )
+  const maxTravelTimeMinutes = resolveMaxTravelTimeMinutes(travelTimeFilter, associationCode)
 
   // Get calendar assignments for game gap filtering
   const { assignments: calendarAssignments, hasCalendarCode } = useCalendarConflicts()
@@ -172,7 +193,7 @@ export function useExchangeFilters({
       result = result.filter(({ carDistanceKm }) => {
         // If no distance available, include the exchange (conservative)
         if (carDistanceKm === null) return true
-        return carDistanceKm <= distanceFilter.maxDistanceKm
+        return carDistanceKm <= maxDistanceKm
       })
     }
 
@@ -187,7 +208,7 @@ export function useExchangeFilters({
         const travelTimeData = travelTimeMap.get(exchange.__identity)
         // If no travel time available, include the exchange (conservative)
         if (travelTimeData?.minutes === null || travelTimeData?.minutes === undefined) return true
-        return travelTimeData.minutes <= travelTimeFilter.maxTravelTimeMinutes
+        return travelTimeData.minutes <= maxTravelTimeMinutes
       })
     }
 
@@ -228,10 +249,10 @@ export function useExchangeFilters({
     isDemoMode,
     userRefereeLevelGradationValue,
     distanceFilter.enabled,
-    distanceFilter.maxDistanceKm,
+    maxDistanceKm,
     homeLocation,
     travelTimeFilter.enabled,
-    travelTimeFilter.maxTravelTimeMinutes,
+    maxTravelTimeMinutes,
     isTravelTimeAvailable,
     travelTimeMap,
     hideOwnExchanges,
