@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.35.0
+
+### Minor Changes
+
+- [#1199](https://github.com/Takishima/volleykit/pull/1199) [`3ee5f39`](https://github.com/Takishima/volleykit/commit/3ee5f395c92d5efe30a6e99eb1d391d9a9ea96e9) Thanks [@Takishima](https://github.com/Takishima)! - Exchange tab: entries the association does not let you take over are no longer silently dropped. A new "Hide not takeable" filter (on by default) controls whether they appear, and when shown they render dimmed with a "Not takeable" badge and no take-over action.
+
+### Patch Changes
+
+- [#1206](https://github.com/Takishima/volleykit/pull/1206) [`f3a5420`](https://github.com/Takishima/volleykit/commit/f3a542058bac721c27ea063c6690c0bceb9fe3e0) Thanks [@Takishima](https://github.com/Takishima)! - Fixed the signature block of the sports hall report PDF: signatures are now placed in the row of the matching signer (the first referee's signature landed in the home-team row) and referee names keep the template's 12pt size instead of being inflated to fill the cell.
+
+- [#1204](https://github.com/Takishima/volleykit/pull/1204) [`1dffd0c`](https://github.com/Takishima/volleykit/commit/1dffd0c5b5ff329471655ffc8a02cff99bed025b) Thanks [@Takishima](https://github.com/Takishima)! - Tightened static analysis across the monorepo: type-aware ESLint rules, test files
+  now type-checked, oxlint pre-pass, stricter TypeScript flags, the native
+  TypeScript 7 compiler for typecheck and build, dead-code and lint
+  coverage for the worker and help site, and pinned, least-privilege GitHub workflows.
+- Updated dependencies [[`1dffd0c`](https://github.com/Takishima/volleykit/commit/1dffd0c5b5ff329471655ffc8a02cff99bed025b)]:
+  - @volleykit/shared@1.35.0
+
 ## 1.34.1
 
 ### Patch Changes

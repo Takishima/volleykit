@@ -1,5 +1,16 @@
 # @volleykit/mobile
 
+## 1.35.0
+
+### Patch Changes
+
+- [#1204](https://github.com/Takishima/volleykit/pull/1204) [`1dffd0c`](https://github.com/Takishima/volleykit/commit/1dffd0c5b5ff329471655ffc8a02cff99bed025b) Thanks [@Takishima](https://github.com/Takishima)! - Tightened static analysis across the monorepo: type-aware ESLint rules, test files
+  now type-checked, oxlint pre-pass, stricter TypeScript flags, the native
+  TypeScript 7 compiler for typecheck and build, dead-code and lint
+  coverage for the worker and help site, and pinned, least-privilege GitHub workflows.
+- Updated dependencies [[`1dffd0c`](https://github.com/Takishima/volleykit/commit/1dffd0c5b5ff329471655ffc8a02cff99bed025b)]:
+  - @volleykit/shared@1.35.0
+
 ## 1.34.0
 
 ### Patch Changes
