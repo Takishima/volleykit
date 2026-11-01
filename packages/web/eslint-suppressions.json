@@ -24,11 +24,6 @@
       "count": 1
     }
   },
-  "src/api/form-serialization.ts": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
   "src/api/mock-api.ts": {
     "max-lines-per-function": {
       "count": 3
@@ -1200,11 +1195,6 @@
     }
   },
   "src/features/validation/utils/wizard-steps.ts": {
-    "max-lines-per-function": {
-      "count": 1
-    }
-  },
-  "src/hooks/useAuthSync.ts": {
     "max-lines-per-function": {
       "count": 1
     }

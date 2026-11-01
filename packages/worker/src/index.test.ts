@@ -2059,6 +2059,37 @@ describe('Auth Lockout', () => {
     it('returns false for 200 without session cookie', () => {
       expect(isSuccessfulLoginResponse(mockResponse(200))).toBe(false)
     })
+
+    it('returns false when the body shows the error snackbar even with a session cookie', () => {
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(200, { 'Set-Cookie': 'Neos_Session=abc123; Path=/' }),
+          '<v-snackbar color="error">Authentifizierung fehlgeschlagen!</v-snackbar>'
+        )
+      ).toBe(false)
+    })
+
+    it('returns false when the login form is served again with a session cookie', () => {
+      const loginHtml = '<form><input name="username" /><input name="password" />login</form>'
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(302, {
+            Location: 'https://volleymanager.volleyball.ch/',
+            'Set-Cookie': 'Neos_Session=abc123; Path=/',
+          }),
+          loginHtml
+        )
+      ).toBe(false)
+    })
+
+    it('ignores a dashboard body without failure markers', () => {
+      expect(
+        isSuccessfulLoginResponse(
+          mockResponse(200, { 'Set-Cookie': 'Neos_Session=abc123; Path=/' }),
+          '<html data-csrf-token="x">Dashboard</html>'
+        )
+      ).toBe(true)
+    })
   })
 })
 
@@ -3483,27 +3514,12 @@ describe('iOS Safari Authentication Workaround', () => {
     vi.unstubAllGlobals()
   })
 
-  it('rewrites GET /login with credentials to POST auth endpoint', async () => {
+  it('refuses GET /login with credentials in the query string', async () => {
     const { default: worker } = await import('./index')
     const mockEnv = createMockEnv()
 
-    let capturedMethod: string | null = null
-    let capturedUrl: string | null = null
-    const mockResponse = new Response(null, {
-      status: 302,
-      headers: {
-        Location: 'https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard',
-      },
-    })
-
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockImplementation((req: Request) => {
-        capturedMethod = req.method
-        capturedUrl = req.url
-        return Promise.resolve(mockResponse)
-      })
-    )
+    const upstreamFetch = vi.fn()
+    vi.stubGlobal('fetch', upstreamFetch)
 
     const request = new Request(
       'https://proxy.example.com/login?username=testuser&password=testpass',
@@ -3515,10 +3531,10 @@ describe('iOS Safari Authentication Workaround', () => {
       }
     )
 
-    await worker.fetch(request, mockEnv)
+    const response = await worker.fetch(request, mockEnv)
 
-    expect(capturedMethod).toBe('POST')
-    expect(capturedUrl).toContain('/sportmanager.security/authentication/authenticate')
+    expect(response.status).toBe(400)
+    expect(upstreamFetch).not.toHaveBeenCalled()
 
     vi.unstubAllGlobals()
   })

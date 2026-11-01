@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import { buildFormData, setCsrfToken, getCsrfToken, clearCsrfToken } from './form-serialization'
 
@@ -476,5 +476,79 @@ describe('form-serialization', () => {
       expect(result.get('empty')).toBe('')
       expect(result.get('special')).toBe('special <chars> & "quotes"')
     })
+  })
+})
+
+describe('session token persistence', () => {
+  const STORAGE_KEY = 'volleykit-session-token'
+
+  async function loadModules(cryptoAvailable: boolean) {
+    vi.resetModules()
+    vi.doMock('./session-crypto', () => ({
+      isSecureStorageAvailable: () => cryptoAvailable,
+      encryptToken: vi.fn(async (plaintext: string) => `enc:${plaintext}`),
+      decryptToken: vi.fn(async (stored: string) =>
+        stored.startsWith('enc:') ? stored.slice('enc:'.length) : null
+      ),
+      clearEncryptionKey: vi.fn(async () => {}),
+    }))
+    return import('./form-serialization')
+  }
+
+  beforeEach(() => {
+    localStorage.clear()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.doUnmock('./session-crypto')
+    vi.restoreAllMocks()
+    localStorage.clear()
+  })
+
+  it('persists only the encrypted token', async () => {
+    const { setSessionToken, getSessionToken } = await loadModules(true)
+
+    setSessionToken('secret')
+    await vi.waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBe('enc:secret'))
+    expect(getSessionToken()).toBe('secret')
+  })
+
+  it('keeps the token in memory only when Web Crypto is unavailable', async () => {
+    const { setSessionToken, getSessionToken } = await loadModules(false)
+
+    setSessionToken('secret')
+
+    expect(getSessionToken()).toBe('secret')
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('restores a token that decrypts', async () => {
+    localStorage.setItem(STORAGE_KEY, 'enc:restored')
+    const { initSessionToken, getSessionToken } = await loadModules(true)
+
+    await initSessionToken()
+
+    expect(getSessionToken()).toBe('restored')
+  })
+
+  it('drops a stored value that does not decrypt instead of using it as plaintext', async () => {
+    localStorage.setItem(STORAGE_KEY, 'bGVnYWN5LXBsYWludGV4dA==')
+    const { initSessionToken, getSessionToken } = await loadModules(true)
+
+    await initSessionToken()
+
+    expect(getSessionToken()).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('drops a stored value when Web Crypto is unavailable', async () => {
+    localStorage.setItem(STORAGE_KEY, 'enc:whatever')
+    const { initSessionToken, getSessionToken } = await loadModules(false)
+
+    await initSessionToken()
+
+    expect(getSessionToken()).toBeNull()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
   })
 })

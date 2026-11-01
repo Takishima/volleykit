@@ -1,15 +1,32 @@
 import type { Env } from '../types'
-import { corsHeaders, securityHeaders, validateOriginAndPreflight } from '../middleware'
+import {
+  checkRateLimit,
+  corsHeaders,
+  securityHeaders,
+  validateOriginAndPreflight,
+} from '../middleware'
 import { HttpStatus } from '../utils'
 
+/** Retry-After duration (seconds) when the health endpoint is rate limited */
+const HEALTH_RATE_LIMIT_RETRY_SECONDS = 60
+
 /**
- * Handle /health - no authentication needed, no rate limiting.
+ * Handle /health - no authentication needed, but rate limited per IP because
+ * every call reaches the Mistral API.
  * Requires CORS headers for browser-based health checks (e.g., OCR availability check).
  * Verifies Mistral OCR API connectivity by calling /v1/models endpoint.
  */
 export async function handleHealth(request: Request, env: Env, _url: URL): Promise<Response> {
   const check = validateOriginAndPreflight(request, env)
   if (check.response) return check.response
+
+  const rateLimitResponse = await checkRateLimit(
+    env,
+    request,
+    check.origin,
+    HEALTH_RATE_LIMIT_RETRY_SECONDS
+  )
+  if (rateLimitResponse) return rateLimitResponse
 
   // Check Mistral API connectivity if API key is configured
   // Uses /v1/models endpoint as a lightweight health check (no token consumption)

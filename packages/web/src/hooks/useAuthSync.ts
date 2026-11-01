@@ -15,6 +15,7 @@ import { clearPersistedCache, clearAllActions } from '@/common/services/offline'
 import { useAuthStore, registerCacheCleanup } from '@/common/stores/auth'
 import { useSettingsStore } from '@/common/stores/settings'
 import { logger } from '@/common/utils/logger'
+import { clearApiResponseCaches } from '@/common/utils/sw-cache'
 import { queryClient } from '@/queryClientConfig'
 
 /** Drops every cached query; a failure must not block the auth transition. */
@@ -24,6 +25,25 @@ function resetQueryCache(transition: 'login' | 'logout'): void {
     .catch((err) => logger.warn(`Failed to reset query cache on ${transition}:`, err))
 }
 
+/**
+ * Clears every client-side cache that belongs to the signed-out user.
+ * Runs synchronously from the auth store before its state updates, so React
+ * re-renders never see the previous user's data.
+ */
+function clearCachesOnLogout(): void {
+  resetQueryCache('logout')
+  // Drop the service worker's cached API responses so the next user on this
+  // device cannot be served the previous user's data offline.
+  clearApiResponseCaches().catch((err) =>
+    logger.warn('Failed to clear service worker API caches:', err)
+  )
+  // features.offline — Also clear the persisted IndexedDB cache and action queue
+  if (features.offline) {
+    clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
+    clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
+  }
+}
+
 export function useAuthSync() {
   useEffect(() => {
     // Set initial mode from auth store
@@ -31,16 +51,7 @@ export function useAuthSync() {
     useSettingsStore.getState()._setCurrentMode(initialDataSource)
 
     // Register cache cleanup callback so auth store can clear cache during logout.
-    // This ensures cache is cleared synchronously before state updates,
-    // preventing any race conditions with React re-renders.
-    const unregisterCacheCleanup = registerCacheCleanup(() => {
-      resetQueryCache('logout')
-      // features.offline — Also clear the persisted IndexedDB cache and action queue
-      if (features.offline) {
-        clearPersistedCache().catch((err) => logger.warn('Failed to clear persisted cache:', err))
-        clearAllActions().catch((err) => logger.warn('Failed to clear action queue:', err))
-      }
-    })
+    const unregisterCacheCleanup = registerCacheCleanup(clearCachesOnLogout)
 
     // Track state to detect changes
     let previousDataSource = initialDataSource

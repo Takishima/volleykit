@@ -65,6 +65,35 @@ describe('Integration: /health endpoint origin validation', () => {
     expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
   })
 
+  it('returns 429 without calling Mistral when the per-IP rate limit is exceeded', async () => {
+    const { default: worker } = await import('../index')
+    const mockEnv = createMockEnv()
+    mockEnv.RATE_LIMITER.limit.mockResolvedValue({ success: false })
+
+    const originalFetch = globalThis.fetch
+    const mistralFetch = vi.fn()
+    globalThis.fetch = mistralFetch
+
+    try {
+      const request = new Request('https://proxy.example.com/health', {
+        headers: {
+          Origin: 'https://example.com',
+          'CF-Connecting-IP': '1.2.3.4',
+        },
+      })
+
+      const response = await worker.fetch(request, mockEnv)
+
+      expect(response.status).toBe(429)
+      expect(response.headers.get('Retry-After')).toBe('60')
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://example.com')
+      expect(mockEnv.RATE_LIMITER.limit).toHaveBeenCalledWith({ key: '1.2.3.4' })
+      expect(mistralFetch).not.toHaveBeenCalled()
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+
   it('returns 200 with Mistral status when API key is configured and API is healthy', async () => {
     const { default: worker } = await import('../index')
     const mockEnv = createMockEnv()

@@ -80,7 +80,12 @@ console.log('Login attempt:', { username, password: '[REDACTED]' })
 > Zustand auth store's `partialize`. This is intentional — it enables
 > state-changing requests to succeed after page reload. The token's value
 > is scoped to the user's session and rotated on login. The session token
-> itself is encrypted via Web Crypto AES-GCM before being stored.
+> itself is encrypted via Web Crypto AES-GCM before being stored; it is never
+> written in plaintext (no-crypto environments keep it in memory only).
+>
+> **Service worker caches:** Workbox only caches JSON API routes
+> (`CACHEABLE_API_PATHS` in `vite.config.ts`), never `/login` or dashboard
+> HTML, and `clearApiResponseCaches()` drops them on logout.
 
 ### Third-Party Dependencies
 
@@ -97,13 +102,14 @@ pnpm audit
 
 ## CORS & Network
 
-| Check              | What to look for                                 |
-| ------------------ | ------------------------------------------------ |
-| Fetch credentials  | Use `credentials: 'include'` only when needed    |
-| CORS headers       | Verify worker allows only expected origins       |
-| Redirect handling  | Validate redirect URLs against allowlist         |
-| Security headers   | HSTS, Permissions-Policy, COOP set by worker     |
-| API keys in client | Proxy through worker; never use `VITE_` for keys |
+| Check                   | What to look for                                                                                                                                |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fetch credentials       | Use `credentials: 'include'` only when needed                                                                                                   |
+| CORS headers            | Verify worker allows only expected origins                                                                                                      |
+| Redirect handling       | Validate redirect URLs against allowlist                                                                                                        |
+| Security headers        | HSTS, Permissions-Policy, COOP set by worker                                                                                                    |
+| Content-Security-Policy | Injected as `<meta>` at build time (`cspPlugin` in `vite.config.ts`); inline scripts are hashed, new remote hosts go in `STATIC_REMOTE_ORIGINS` |
+| API keys in client      | Proxy through worker; never use `VITE_` for keys                                                                                                |
 
 ## Files to Watch
 

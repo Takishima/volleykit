@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers -- Config file with build/cache values */
 /// <reference types="vitest" />
 import { execSync } from 'child_process'
+import { createHash } from 'crypto'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import path from 'path'
 
@@ -254,6 +255,103 @@ function versionFilePlugin(
 const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch'
 
 /**
+ * Remote origins the app talks to at runtime, independent of deployment config.
+ * Deployment-specific origins (proxy, fallbacks, OCR endpoint) are added from env.
+ */
+const STATIC_REMOTE_ORIGINS = [
+  VOLLEYMANAGER_API,
+  // Default OCR endpoint host (see features/ocr/services/ocr-factory.ts)
+  'https://volleykit-proxy.takishima.workers.dev',
+  // Geocoding (see common/utils/geo-location.ts)
+  'https://nominatim.openstreetmap.org',
+  'https://api3.geo.admin.ch',
+  // Direct OJP endpoint when no proxy is configured (see services/transport/ojp-client.ts)
+  'https://api.opentransportdata.swiss',
+]
+
+/** Matches inline <script> blocks (no src attribute) and captures their content. */
+const INLINE_SCRIPT_PATTERN = /<script(?![^>]*\ssrc=)[^>]*>([\s\S]*?)<\/script>/gi
+
+/**
+ * Collect the remote origins the Content-Security-Policy must allow.
+ * Env values may be full URLs (e.g. VITE_OCR_ENDPOINT ends in /ocr); only the origin is kept.
+ */
+function collectRemoteOrigins(envValues: Array<string | undefined>): string[] {
+  const origins = new Set(STATIC_REMOTE_ORIGINS)
+  for (const value of envValues) {
+    for (const candidate of (value ?? '').split(',')) {
+      const trimmed = candidate.trim()
+      if (trimmed && URL.canParse(trimmed)) {
+        origins.add(new URL(trimmed).origin)
+      }
+    }
+  }
+  return [...origins]
+}
+
+/** CSP source expressions ('sha256-…') for every non-empty inline script in the HTML. */
+function inlineScriptHashes(html: string): string[] {
+  const hashes: string[] = []
+  for (const match of html.matchAll(INLINE_SCRIPT_PATTERN)) {
+    const content = match[1] ?? ''
+    if (!content.trim()) continue
+    const digest = createHash('sha256').update(content, 'utf8').digest('base64')
+    hashes.push(`'sha256-${digest}'`)
+  }
+  return hashes
+}
+
+/**
+ * Build the Content-Security-Policy value for the app shell.
+ * - scripts: own bundle plus hashed inline bootstrap scripts (no 'unsafe-inline')
+ * - styles: 'unsafe-inline' is required for React inline style props
+ * - img/connect: own origin, the API proxy and the remote services above
+ * - object: blob: for the in-app PDF preview (<object data="blob:…">)
+ */
+function buildCspValue(remoteOrigins: string[], scriptHashes: string[]): string {
+  const remote = remoteOrigins.join(' ')
+  return [
+    "default-src 'self'",
+    ["script-src 'self'", ...scriptHashes].join(' '),
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: ${remote}`,
+    `connect-src 'self' ${remote}`,
+    "object-src 'self' blob:",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ')
+}
+
+/**
+ * Plugin that injects a Content-Security-Policy <meta> tag into the built index.html.
+ * GitHub Pages cannot send response headers, so the policy has to ship in the document.
+ * Runs in the 'post' phase so the hashes cover inline scripts injected by other plugins.
+ * Build-only: the dev server injects its own inline scripts (HMR, React preamble).
+ */
+function cspPlugin(remoteOrigins: string[]): Plugin {
+  return {
+    name: 'content-security-policy',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const csp = buildCspValue(remoteOrigins, inlineScriptHashes(html))
+        const metaTag = `<meta http-equiv="Content-Security-Policy" content="${csp}" />`
+        return html.replace('<meta charset="UTF-8" />', `<meta charset="UTF-8" />\n    ${metaTag}`)
+      },
+    },
+  }
+}
+
+/**
+ * API path prefixes whose JSON responses may be cached by the service worker for offline use.
+ * Deliberately excludes the HTML pages (/login, dashboard, authentication) so that session
+ * material and profile data are never kept in CacheStorage.
+ */
+const CACHEABLE_API_PATHS =
+  '(?:indoorvolleyball\\.refadmin|sportmanager\\.indoorvolleyball|sportmanager\\.core|sportmanager\\.resourcemanagement|sportmanager\\.notificationcenter|sportmanager\\.security\\/api|sportmanager\\.volleyball\\/api)\\/'
+
+/**
  * Creates proxy configuration for development server.
  * All paths are proxied to the VolleyManager API with CORS bypass.
  *
@@ -446,7 +544,10 @@ export default defineConfig(({ mode }) => {
             runtimeCaching: [
               {
                 // Cache direct API responses (development/direct access)
-                urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
+                urlPattern: new RegExp(
+                  `^https:\\/\\/volleymanager\\.volleyball\\.ch\\/(?:api\\/)?${CACHEABLE_API_PATHS}`,
+                  'i'
+                ),
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: 'api-cache',
@@ -463,7 +564,10 @@ export default defineConfig(({ mode }) => {
               {
                 // Cache CORS proxy responses (production)
                 // Uses same strategy as direct API for consistency
-                urlPattern: /^https:\/\/api\.volleykit\.ch\/.*/i,
+                urlPattern: new RegExp(
+                  `^https:\\/\\/api\\.volleykit\\.ch\\/${CACHEABLE_API_PATHS}`,
+                  'i'
+                ),
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: 'proxy-api-cache',
@@ -518,6 +622,13 @@ export default defineConfig(({ mode }) => {
           },
         }),
       spaFallbackPlugin(basePath),
+      cspPlugin(
+        collectRemoteOrigins([
+          process.env.VITE_API_PROXY_URL,
+          process.env.VITE_FALLBACK_PROXY_URLS,
+          process.env.VITE_OCR_ENDPOINT,
+        ])
+      ),
       // Generate version.json for PWA update detection (skip for PR previews)
       !isPrPreview &&
         versionFilePlugin(
