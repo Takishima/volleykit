@@ -26,6 +26,7 @@ web ──→ shared ←── mobile
 Shared package exposes: `/api`, `/stores`, `/hooks`, `/utils`, `/i18n`, `/types`, `/adapters`, `/offline`
 
 - Flag imports that bypass subpath exports (e.g., `@volleykit/shared/src/internal/...`)
+- Flag `@volleykit/shared` imports outside the declared subpath exports (deep paths into shared internals)
 
 ## Feature Module Structure (Must Flag)
 
