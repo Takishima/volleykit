@@ -12,7 +12,11 @@ import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import packageJson from './package.json' with { type: 'json' }
-import { STATIC_REMOTE_ORIGINS, VOLLEYMANAGER_ORIGIN } from './src/common/config/remote-origins'
+import {
+  DEFAULT_API_PROXY_ORIGIN,
+  STATIC_REMOTE_ORIGINS,
+  VOLLEYMANAGER_ORIGIN,
+} from './src/common/config/remote-origins'
 import {
   API_CACHE_NAME,
   PROXY_API_CACHE_NAME,
@@ -262,10 +266,6 @@ function versionFilePlugin(
   }
 }
 
-// Target API server for development proxy
-/** Production CORS proxy origin, used when VITE_API_PROXY_URL is not set at build time */
-const DEFAULT_API_PROXY_ORIGIN = 'https://api.volleykit.ch'
-
 /**
  * Plugin that injects a Content-Security-Policy <meta> tag into the built index.html.
  * GitHub Pages cannot send response headers, so the policy has to ship in the document.
@@ -326,8 +326,16 @@ export default defineConfig(({ mode }) => {
   // Get git hash for version tracking (used in PWA update detection)
   const gitHash = getGitHash()
 
-  // Proxy origin shared by the CSP allowlist and the service worker cache pattern
-  const apiProxyOrigin = process.env.VITE_API_PROXY_URL || DEFAULT_API_PROXY_ORIGIN
+  // Every proxy origin the client may talk to (primary plus failover fallbacks from
+  // proxy-resilience.ts), from the same env values the CSP allowlists, so responses
+  // keep being cached after a failover.
+  const apiProxyOrigins = collectRemoteOrigins(
+    [],
+    [
+      process.env.VITE_API_PROXY_URL || DEFAULT_API_PROXY_ORIGIN,
+      process.env.VITE_FALLBACK_PROXY_URLS,
+    ]
+  )
 
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
   if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
@@ -497,9 +505,9 @@ export default defineConfig(({ mode }) => {
                 },
               },
               {
-                // Cache CORS proxy responses (production)
+                // Cache CORS proxy responses (production), primary and fallback proxies alike
                 // Uses same strategy as direct API for consistency
-                urlPattern: buildCacheableApiUrlPattern(apiProxyOrigin),
+                urlPattern: buildCacheableApiUrlPattern(apiProxyOrigins),
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: PROXY_API_CACHE_NAME,

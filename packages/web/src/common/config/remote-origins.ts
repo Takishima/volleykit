@@ -16,6 +16,13 @@ export const VOLLEYMANAGER_ORIGIN = 'https://volleymanager.volleyball.ch'
 /** Default Cloudflare Worker host when VITE_OCR_ENDPOINT is not set */
 const DEFAULT_OCR_PROXY_ORIGIN = 'https://volleykit-proxy.takishima.workers.dev'
 
+/**
+ * Production CORS proxy origin, used by the service worker cache pattern when
+ * VITE_API_PROXY_URL is not set at build time. Not part of the CSP allowlist:
+ * the runtime only talks to the proxy named by VITE_API_PROXY_URL.
+ */
+export const DEFAULT_API_PROXY_ORIGIN = 'https://api.volleykit.ch'
+
 /** OpenStreetMap Nominatim geocoder */
 const NOMINATIM_ORIGIN = 'https://nominatim.openstreetmap.org'
 

@@ -65,6 +65,27 @@ describe('buildCacheableApiUrlPattern', () => {
     const pattern = buildCacheableApiUrlPattern(`${PROXY}/ocr`)
     expect(pattern.test(`${PROXY}${CACHEABLE_PATHS[0]}`)).toBe(true)
   })
+
+  describe('with several proxy origins', () => {
+    const FALLBACK = 'https://volleykit-proxy.takishima.workers.dev'
+    const multiPattern = buildCacheableApiUrlPattern([PROXY, FALLBACK, `${PROXY}/`])
+
+    it.each([PROXY, FALLBACK])('caches JSON API routes on %s', (origin) => {
+      expect(multiPattern.test(`${origin}${CACHEABLE_PATHS[0]}`)).toBe(true)
+    })
+
+    it.each([PROXY, FALLBACK])('still refuses session routes on %s', (origin) => {
+      expect(multiPattern.test(`${origin}${NON_CACHEABLE_PATHS[0]}`)).toBe(false)
+    })
+
+    it('does not match an origin outside the list', () => {
+      expect(multiPattern.test(`https://other.example${CACHEABLE_PATHS[0]}`)).toBe(false)
+    })
+
+    it('rejects an empty origin list', () => {
+      expect(() => buildCacheableApiUrlPattern([])).toThrow('at least one origin')
+    })
+  })
 })
 
 describe('cache names', () => {
