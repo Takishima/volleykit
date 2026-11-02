@@ -51,11 +51,12 @@ const CACHEABLE_API_PATH_PATTERN = `(?:${CACHEABLE_API_PACKAGES.map(escapeRegExp
 /**
  * Build the Workbox `urlPattern` for one API origin.
  *
- * @param originPattern - RegExp source for the origin, e.g. `https:\\/\\/api\\.volleykit\\.ch`
+ * @param originUrl - Origin URL, e.g. `https://api.volleykit.ch` (a path is ignored)
  * @param allowApiPrefix - Accept an optional `/api/` segment after the origin (direct access)
  */
-export function buildCacheableApiUrlPattern(originPattern: string, allowApiPrefix = false): RegExp {
+export function buildCacheableApiUrlPattern(originUrl: string, allowApiPrefix = false): RegExp {
+  const origin = escapeRegExp(new URL(originUrl).origin)
   const apiPrefix = allowApiPrefix ? '(?:api\\/)?' : ''
   // eslint-disable-next-line security/detect-non-literal-regexp -- assembled from build-time constants only, never from user input
-  return new RegExp(`^${originPattern}\\/${apiPrefix}${CACHEABLE_API_PATH_PATTERN}`, 'i')
+  return new RegExp(`^${origin}\\/${apiPrefix}${CACHEABLE_API_PATH_PATTERN}`, 'i')
 }

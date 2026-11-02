@@ -263,7 +263,8 @@ function versionFilePlugin(
 }
 
 // Target API server for development proxy
-const VOLLEYMANAGER_API = VOLLEYMANAGER_ORIGIN
+/** Production CORS proxy origin, used when VITE_API_PROXY_URL is not set at build time */
+const DEFAULT_API_PROXY_ORIGIN = 'https://api.volleykit.ch'
 
 /**
  * Plugin that injects a Content-Security-Policy <meta> tag into the built index.html.
@@ -298,7 +299,7 @@ function createDevProxy(paths: string[]): Record<string, object> {
   const proxyConfig: Record<string, object> = {}
   for (const proxyPath of paths) {
     proxyConfig[proxyPath] = {
-      target: VOLLEYMANAGER_API,
+      target: VOLLEYMANAGER_ORIGIN,
       changeOrigin: true,
       secure: true,
       cookieDomainRewrite: 'localhost',
@@ -324,6 +325,9 @@ function createDevProxy(paths: string[]): Record<string, object> {
 export default defineConfig(({ mode }) => {
   // Get git hash for version tracking (used in PWA update detection)
   const gitHash = getGitHash()
+
+  // Proxy origin shared by the CSP allowlist and the service worker cache pattern
+  const apiProxyOrigin = process.env.VITE_API_PROXY_URL || DEFAULT_API_PROXY_ORIGIN
 
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
   if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
@@ -478,10 +482,7 @@ export default defineConfig(({ mode }) => {
             runtimeCaching: [
               {
                 // Cache direct API responses (development/direct access)
-                urlPattern: buildCacheableApiUrlPattern(
-                  'https:\\/\\/volleymanager\\.volleyball\\.ch',
-                  true
-                ),
+                urlPattern: buildCacheableApiUrlPattern(VOLLEYMANAGER_ORIGIN, true),
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: API_CACHE_NAME,
@@ -498,7 +499,7 @@ export default defineConfig(({ mode }) => {
               {
                 // Cache CORS proxy responses (production)
                 // Uses same strategy as direct API for consistency
-                urlPattern: buildCacheableApiUrlPattern('https:\\/\\/api\\.volleykit\\.ch'),
+                urlPattern: buildCacheableApiUrlPattern(apiProxyOrigin),
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: PROXY_API_CACHE_NAME,
