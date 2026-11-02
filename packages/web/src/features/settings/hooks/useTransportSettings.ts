@@ -22,11 +22,10 @@ import {
   MAX_ARRIVAL_BUFFER_MINUTES,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-  type DistanceFilter,
   type SbbDestinationType,
 } from '@/common/stores/settings'
 import {
-  resolveDistanceFilter,
+  resolveMaxDistanceKm,
   resolveMaxTravelTimeMinutes,
   resolveTransportEnabled,
 } from '@/common/stores/settings/per-association'
@@ -97,7 +96,7 @@ export function useTransportSettings() {
     transportEnabledByAssociation,
     associationCode
   )
-  const currentDistanceFilter: DistanceFilter = resolveDistanceFilter(
+  const currentMaxDistanceKm = resolveMaxDistanceKm(
     distanceFilter ?? { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM },
     distanceFilterByAssociation,
     associationCode
@@ -116,7 +115,7 @@ export function useTransportSettings() {
 
   // Local state for immediate input feedback (debounced before persisting to store)
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer)
-  const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm)
+  const [localMaxDistance, setLocalMaxDistance] = useState(currentMaxDistanceKm)
   const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime)
   const [localMaxBikeDistance, setLocalMaxBikeDistance] = useState(maxBikeDistanceKm)
 
@@ -127,7 +126,7 @@ export function useTransportSettings() {
   if (prevAssociation !== associationCode) {
     setPrevAssociation(associationCode)
     setLocalArrivalBuffer(storeArrivalBuffer)
-    setLocalMaxDistance(currentDistanceFilter.maxDistanceKm)
+    setLocalMaxDistance(currentMaxDistanceKm)
     setLocalMaxTravelTime(currentMaxTravelTime)
   }
 

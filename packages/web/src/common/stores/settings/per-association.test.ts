@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 import {
-  resolveDistanceFilter,
+  resolveMaxDistanceKm,
   resolveMaxTravelTimeMinutes,
   resolveTransportEnabled,
 } from './per-association'
@@ -10,22 +10,18 @@ import { DEFAULT_MODE_SETTINGS } from './types'
 const GLOBAL_DISTANCE = { enabled: true, maxDistanceKm: 50 }
 const SV_DISTANCE = { enabled: true, maxDistanceKm: 20 }
 
-describe('resolveDistanceFilter', () => {
+describe('resolveMaxDistanceKm', () => {
   it('returns the association override when one exists', () => {
-    expect(resolveDistanceFilter(GLOBAL_DISTANCE, { SV: SV_DISTANCE }, 'SV')).toBe(SV_DISTANCE)
+    expect(resolveMaxDistanceKm(GLOBAL_DISTANCE, { SV: SV_DISTANCE }, 'SV')).toBe(20)
   })
 
-  it('falls back to the global filter for other associations', () => {
-    expect(resolveDistanceFilter(GLOBAL_DISTANCE, { SV: SV_DISTANCE }, 'SVRZ')).toBe(
-      GLOBAL_DISTANCE
-    )
+  it('falls back to the global limit for other associations', () => {
+    expect(resolveMaxDistanceKm(GLOBAL_DISTANCE, { SV: SV_DISTANCE }, 'SVRZ')).toBe(50)
   })
 
-  it('falls back to the global filter without an association or map', () => {
-    expect(resolveDistanceFilter(GLOBAL_DISTANCE, { SV: SV_DISTANCE }, undefined)).toBe(
-      GLOBAL_DISTANCE
-    )
-    expect(resolveDistanceFilter(GLOBAL_DISTANCE, undefined, 'SV')).toBe(GLOBAL_DISTANCE)
+  it('falls back to the global limit without an association or map', () => {
+    expect(resolveMaxDistanceKm(GLOBAL_DISTANCE, { SV: SV_DISTANCE }, undefined)).toBe(50)
+    expect(resolveMaxDistanceKm(GLOBAL_DISTANCE, undefined, 'SV')).toBe(50)
   })
 })
 

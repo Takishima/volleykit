@@ -9,7 +9,7 @@
 
 // Re-export everything from types
 // (travel-mode types/constants live in @/common/services/transport)
-export type { UserLocation, DistanceFilter, SbbDestinationType } from './types'
+export type { UserLocation, SbbDestinationType } from './types'
 
 export {
   MIN_ARRIVAL_BUFFER_MINUTES,

@@ -16,12 +16,17 @@ function overrideFor<T>(
   return associationCode ? byAssociation?.[associationCode] : undefined
 }
 
-export function resolveDistanceFilter(
+/**
+ * Only the distance limit is per association. The `enabled` flag stored on an
+ * override is a snapshot taken when it was created; the global
+ * `distanceFilter.enabled` is the one readers and the toggle use.
+ */
+export function resolveMaxDistanceKm(
   distanceFilter: DistanceFilter,
   byAssociation: Record<string, DistanceFilter> | undefined,
   associationCode: string | undefined
-): DistanceFilter {
-  return overrideFor(byAssociation, associationCode) ?? distanceFilter
+): number {
+  return (overrideFor(byAssociation, associationCode) ?? distanceFilter).maxDistanceKm
 }
 
 export function resolveMaxTravelTimeMinutes(

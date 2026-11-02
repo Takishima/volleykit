@@ -11,7 +11,7 @@ import type { TravelMode } from '@/common/services/transport'
 import { useDemoStore } from '@/common/stores/demo'
 import { useSettingsStore } from '@/common/stores/settings'
 import {
-  resolveDistanceFilter,
+  resolveMaxDistanceKm,
   resolveMaxTravelTimeMinutes,
 } from '@/common/stores/settings/per-association'
 import { calculateCarDistanceKm } from '@/common/utils/distance'
@@ -77,7 +77,7 @@ export function useExchangeFilters({
 
   // The filter menu edits per-association thresholds, so filter with the same ones.
   const associationCode = useActiveAssociationCode()
-  const { maxDistanceKm } = resolveDistanceFilter(
+  const maxDistanceKm = resolveMaxDistanceKm(
     distanceFilter,
     distanceFilterByAssociation,
     associationCode

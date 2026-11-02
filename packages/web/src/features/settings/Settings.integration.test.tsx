@@ -14,6 +14,10 @@ import {
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
 } from '@/common/stores/settings'
+import {
+  resolveMaxDistanceKm,
+  resolveMaxTravelTimeMinutes,
+} from '@/common/stores/settings/per-association'
 import type { ModeSettings } from '@/common/stores/settings/types'
 import { useToastStore } from '@/common/stores/toast'
 
@@ -293,11 +297,9 @@ describe('Settings Integration', () => {
       // Set max travel time for SV association
       useSettingsStore.getState().setMaxTravelTimeForAssociation('SV', customMinutes)
 
-      // Get travel time for SV - should return custom value
-      expect(useSettingsStore.getState().getMaxTravelTimeForAssociation('SV')).toBe(customMinutes)
-
-      // Get travel time for different association - should return default
-      expect(useSettingsStore.getState().getMaxTravelTimeForAssociation('SVRBA')).toBe(
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(resolveMaxTravelTimeMinutes(travelTimeFilter, 'SV')).toBe(customMinutes)
+      expect(resolveMaxTravelTimeMinutes(travelTimeFilter, 'SVRBA')).toBe(
         DEFAULT_MAX_TRAVEL_TIME_MINUTES
       )
     })
@@ -331,15 +333,13 @@ describe('Settings Integration', () => {
         maxDistanceKm: customDistance,
       })
 
-      // Get distance filter for SV - should return custom value
-      const svFilter = useSettingsStore.getState().getDistanceFilterForAssociation('SV')
-      expect(svFilter.enabled).toBe(true)
-      expect(svFilter.maxDistanceKm).toBe(customDistance)
-
-      // Get distance filter for different association - should return default
-      const otherFilter = useSettingsStore.getState().getDistanceFilterForAssociation('SVRBA')
-      expect(otherFilter.enabled).toBe(false)
-      expect(otherFilter.maxDistanceKm).toBe(DEFAULT_MAX_DISTANCE_KM)
+      const { distanceFilter, distanceFilterByAssociation } = useSettingsStore.getState()
+      expect(resolveMaxDistanceKm(distanceFilter, distanceFilterByAssociation, 'SV')).toBe(
+        customDistance
+      )
+      expect(resolveMaxDistanceKm(distanceFilter, distanceFilterByAssociation, 'SVRBA')).toBe(
+        DEFAULT_MAX_DISTANCE_KM
+      )
     })
 
     it('global distance filter is used when no per-association override exists', () => {
@@ -353,10 +353,9 @@ describe('Settings Integration', () => {
       useSettingsStore.getState().setDistanceFilterEnabled(true)
       useSettingsStore.getState().setMaxDistanceKm(75)
 
-      // Get filter for association without override - should fall back to global
-      const filter = useSettingsStore.getState().getDistanceFilterForAssociation('SV')
-      expect(filter.enabled).toBe(true)
-      expect(filter.maxDistanceKm).toBe(75)
+      const { distanceFilter, distanceFilterByAssociation } = useSettingsStore.getState()
+      expect(distanceFilter.enabled).toBe(true)
+      expect(resolveMaxDistanceKm(distanceFilter, distanceFilterByAssociation, 'SV')).toBe(75)
     })
   })
 

@@ -240,7 +240,6 @@ export interface SettingsState {
     associationCode: string,
     filter: Partial<DistanceFilter>
   ) => void
-  getDistanceFilterForAssociation: (associationCode: string | undefined) => DistanceFilter
   setTransportEnabled: (enabled: boolean) => void
   setTransportEnabledForAssociation: (associationCode: string, enabled: boolean) => void
   isTransportEnabledForAssociation: (associationCode: string | undefined) => boolean
@@ -248,7 +247,6 @@ export interface SettingsState {
   setMaxTravelTimeMinutes: (minutes: number) => void
   // Per-association max travel time setters/getters
   setMaxTravelTimeForAssociation: (associationCode: string, minutes: number) => void
-  getMaxTravelTimeForAssociation: (associationCode: string | undefined) => number
   setArrivalBufferMinutes: (minutes: number) => void
   setArrivalBufferForAssociation: (associationCode: string, minutes: number) => void
   getArrivalBufferForAssociation: (associationCode: string | undefined) => number

@@ -18,7 +18,7 @@ import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { useSettingsStore } from '@/common/stores/settings'
 import {
-  resolveDistanceFilter,
+  resolveMaxDistanceKm,
   resolveMaxTravelTimeMinutes,
 } from '@/common/stores/settings/per-association'
 import { formatTravelTime, MINUTES_PER_HOUR } from '@/common/utils/format-travel-time'
@@ -207,7 +207,7 @@ function ExchangeFilterMenuComponent({
     }))
   )
 
-  const currentDistanceFilter = resolveDistanceFilter(
+  const currentMaxDistanceKm = resolveMaxDistanceKm(
     distanceFilter,
     distanceFilterByAssociation,
     associationCode
@@ -341,11 +341,11 @@ function ExchangeFilterMenuComponent({
               label={t('exchange.filterByDistance')}
               enabled={distanceFilter.enabled}
               onToggle={() => setDistanceFilterEnabled(!distanceFilter.enabled)}
-              value={`≤${currentDistanceFilter.maxDistanceKm} km`}
+              value={`≤${currentMaxDistanceKm} km`}
             >
               <SliderControl
                 id="max-distance"
-                value={currentDistanceFilter.maxDistanceKm}
+                value={currentMaxDistanceKm}
                 min={DISTANCE_MIN}
                 max={DISTANCE_MAX}
                 step={5}

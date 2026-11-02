@@ -4,11 +4,7 @@ import { persist, subscribeWithSelector } from 'zustand/middleware'
 import type { TravelMode } from '@/common/services/transport/types'
 
 import { runMigrations } from './migrations'
-import {
-  resolveDistanceFilter,
-  resolveMaxTravelTimeMinutes,
-  resolveTransportEnabled,
-} from './per-association'
+import { resolveTransportEnabled } from './per-association'
 import { DEFAULT_MODE_SETTINGS, getDefaultArrivalBuffer } from './types'
 
 import type { DataSource } from '../auth'
@@ -177,15 +173,6 @@ export const useSettingsStore = create<SettingsState>()(
           )
         },
 
-        getDistanceFilterForAssociation: (associationCode: string | undefined) => {
-          const state = get()
-          return resolveDistanceFilter(
-            state.distanceFilter,
-            state.distanceFilterByAssociation,
-            associationCode
-          )
-        },
-
         setTransportEnabled: (enabled: boolean) => {
           set((state) => updateModeAndTopLevel(state, () => ({ transportEnabled: enabled })))
         },
@@ -239,9 +226,6 @@ export const useSettingsStore = create<SettingsState>()(
             }))
           )
         },
-
-        getMaxTravelTimeForAssociation: (associationCode: string | undefined) =>
-          resolveMaxTravelTimeMinutes(get().travelTimeFilter, associationCode),
 
         setArrivalBufferMinutes: (minutes: number) => {
           set((state) =>

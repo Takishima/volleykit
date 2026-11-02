@@ -17,8 +17,17 @@ vi.mock('@/common/stores/demo', () => ({
     selector({ userRefereeLevelGradationValue: null }),
 }))
 
+type TravelTimeEntry = { item: GameExchange; travelTimeMinutes: number | null }
+let travelTimes: TravelTimeEntry[] | null = null
 vi.mock('@/common/hooks/useTravelTimeFilter', () => ({
-  useTravelTimeFilter: () => ({ exchangesWithTravelTime: null, isAvailable: false }),
+  useTravelTimeFilter: () => ({
+    exchangesWithTravelTime: travelTimes?.map((e) => ({
+      ...e,
+      travelMode: 'publicTransport',
+      isLoading: false,
+    })),
+    isAvailable: travelTimes !== null,
+  }),
 }))
 
 vi.mock('@/features/assignments/hooks/useCalendarConflicts', () => ({
@@ -64,6 +73,7 @@ function renderFilters(data: GameExchange[]) {
 describe('useExchangeFilters per-association thresholds', () => {
   beforeEach(() => {
     mockActiveAssociation.mockReturnValue('SV')
+    travelTimes = null
     settingsState = {
       homeLocation: HOME,
       distanceFilter: { enabled: true, maxDistanceKm: 200 },
@@ -97,5 +107,37 @@ describe('useExchangeFilters per-association thresholds', () => {
     const { result } = renderFilters([exchangeAt('zurich', ZURICH_HALL)])
 
     expect(result.current.filteredData?.map((e) => e.exchange.__identity)).toEqual(['zurich'])
+  })
+
+  describe('travel time', () => {
+    beforeEach(() => {
+      settingsState.distanceFilter = { enabled: false, maxDistanceKm: 200 }
+      settingsState.travelTimeFilter = {
+        ...settingsState.travelTimeFilter!,
+        enabled: true,
+        maxTravelTimeMinutes: 120,
+        maxTravelTimeByAssociation: { SV: 60 },
+      }
+    })
+
+    it('filters with the active association override, not the global value', () => {
+      const exchange = exchangeAt('zurich', ZURICH_HALL)
+      travelTimes = [{ item: exchange, travelTimeMinutes: 90 }]
+
+      const { result } = renderFilters([exchange])
+
+      // 60 min override for SV hides the 90 min trip even though the global limit is 120 min
+      expect(result.current.filteredData).toEqual([])
+    })
+
+    it('falls back to the global value for associations without an override', () => {
+      mockActiveAssociation.mockReturnValue('SVRZ')
+      const exchange = exchangeAt('zurich', ZURICH_HALL)
+      travelTimes = [{ item: exchange, travelTimeMinutes: 90 }]
+
+      const { result } = renderFilters([exchange])
+
+      expect(result.current.filteredData?.map((e) => e.exchange.__identity)).toEqual(['zurich'])
+    })
   })
 })

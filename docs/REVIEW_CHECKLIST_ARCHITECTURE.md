@@ -26,7 +26,6 @@ web ──→ shared ←── mobile
 Shared package exposes: `/api`, `/stores`, `/hooks`, `/utils`, `/i18n`, `/types`, `/adapters`, `/offline`
 
 - Flag imports that bypass subpath exports (e.g., `@volleykit/shared/src/internal/...`)
-- Flag deep imports into internal modules not exposed via barrel files
 
 ## Feature Module Structure (Must Flag)
 
@@ -34,22 +33,21 @@ Shared package exposes: `/api`, `/stores`, `/hooks`, `/utils`, `/i18n`, `/types`
 
 ```
 packages/web/src/features/<feature>/
-├── index.ts              # Public API — explicit exports only
 ├── components/           # UI components
 ├── hooks/                # State + action hooks
 ├── api/                  # Only if custom API logic needed
 └── utils/                # Pure utility functions
 ```
 
-- Flag features missing `index.ts` barrel file
-- Flag `export *` in feature-level `index.ts` (must use explicit exports)
-- Flag components importing directly from another feature's internals instead of its `index.ts`
+- Features have no `index.ts` barrel. Consumers use deep file imports
+  (`@/features/<feature>/hooks/useX`), enforced by `src/test/feature-isolation.test.ts`.
+- Flag a new feature `index.ts`: barrels hide dead code from knip and defeat tree-shaking.
 
 ### Cross-Feature Dependencies
 
 - Features should communicate through shared state (Zustand stores) or shared hooks, not by importing each other's internals
-- Flag direct imports between features (e.g., `import { X } from '../other-feature/components/Y'`)
-- Acceptable: importing from another feature's public API (`index.ts`)
+- Flag relative imports between features (e.g., `import { X } from '../other-feature/components/Y'`)
+- Acceptable: a deep alias import of a hook, util or type (`@/features/other-feature/hooks/useX`)
 
 ## Separation of Concerns (Must Flag)
 

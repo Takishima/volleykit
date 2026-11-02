@@ -52,9 +52,7 @@ vi.mock('@/common/hooks/useActiveAssociation', () => ({
 vi.mock('@/common/hooks/useTravelTimeFilter', () => ({
   useTravelTimeFilter: () => ({
     exchangesWithTravelTime: null,
-    filteredExchanges: null,
     isLoading: false,
-    filterByTravelTime: () => true,
     isAvailable: false,
   }),
 }))
