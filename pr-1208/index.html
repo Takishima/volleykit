@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-ZcnKtK+ApFVxMs8PVRJhwvTwMxdWVYTefmdmVZz9h6w='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://volleymanager.volleyball.ch https://volleykit-proxy.takishima.workers.dev https://nominatim.openstreetmap.org https://api3.geo.admin.ch https://api.opentransportdata.swiss https://api.volleykit.ch https://volleykit-proxy.ngn-damien.workers.dev; connect-src 'self' https://volleymanager.volleyball.ch https://volleykit-proxy.takishima.workers.dev https://nominatim.openstreetmap.org https://api3.geo.admin.ch https://api.opentransportdata.swiss https://api.volleykit.ch https://volleykit-proxy.ngn-damien.workers.dev; object-src 'self' blob:; base-uri 'self'; form-action 'self'" />
+    <link rel="icon" href="/pr-1208/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/pr-1208/favicon.svg" sizes="any" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/pr-1208/apple-touch-icon-180x180.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#b2e600" />
+    <meta name="description" content="VolleyKit - Swiss Volleyball Referee Management PWA" />
+
+    <!-- Resource hints for faster API connections -->
+    <link rel="preconnect" href="https://volleymanager.volleyball.ch" crossorigin="use-credentials" />
+    <link rel="dns-prefetch" href="https://volleymanager.volleyball.ch" />
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="VolleyKit" />
+
+    <title>VolleyKit</title>
+  <script>
+    // GitHub Pages SPA redirect restoration
+    // If we were redirected from 404.html, restore the intended path
+    (function() {
+      const redirectPath = sessionStorage.getItem('redirectPath');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectPath');
+        history.replaceState(null, '', redirectPath);
+      }
+    })();
+  </script>
+    <script type="module" crossorigin src="/pr-1208/assets/index-CvC7S-9M.js"></script>
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-rolldown-runtime-XKyaHtl9.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-cropper-aT7P8Wjn.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-react-vendor-Dmim_dGP.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-normalizeDates-jRNjc1Yj.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-buildMatchPatternFn-Dp77wcrT.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-format-AxhT0mZv.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-date-helpers-CeOHQIav.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-validation-Bd-jlHk7.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-state-CHos1VX_.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-logger-BUxmblJC.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-auth-DDdJ97k6.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-preload-helper-B4fI10Cm.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-language-Dn3xi26w.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-constants-yuIBDmng.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-constants-CkJBj69P.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-client-D0jIzyx2.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-queryKeys-CUPGp7kA.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-router-Cz-GQ54K.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-useTranslation-DtpJUdRY.js">
+    <link rel="modulepreload" crossorigin href="/pr-1208/assets/chunk-icons-eSeRRAwR.js">
+    <link rel="stylesheet" crossorigin href="/pr-1208/assets/index-CORVQVhD.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
