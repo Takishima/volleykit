@@ -7,7 +7,9 @@
  * @see https://docs.mistral.ai/capabilities/document_ai/basic_ocr
  */
 
-import { DEFAULT_OCR_ENDPOINT } from '@/common/config/remote-origins'
+// Relative path on purpose: ocr-poc compiles this file too and maps `@/common/*`
+// to its own src/shared/, so the alias would not resolve there.
+import { DEFAULT_OCR_ENDPOINT } from '../../../common/config/remote-origins'
 
 import type { OCREngine, OCRResult, OCRLine, OCRWord, OnProgressCallback } from '../types'
 

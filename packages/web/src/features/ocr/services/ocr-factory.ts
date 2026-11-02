@@ -6,10 +6,12 @@
  * with StubOCR available as fallback for local development.
  */
 
-import { DEFAULT_OCR_ENDPOINT } from '@/common/config/remote-origins'
+// Relative path on purpose: ocr-poc compiles this file too and maps `@/common/*`
+// to its own src/shared/, so the alias would not resolve there.
 
 import { MistralOCR } from './mistral-ocr'
 import { StubOCR } from './stub-ocr'
+import { DEFAULT_OCR_ENDPOINT } from '../../../common/config/remote-origins'
 
 import type { OCREngine, OnProgressCallback } from '../types'
 
