@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 
+import { NOMINATIM_SEARCH_URL as NOMINATIM_API_URL } from '@/common/config/remote-origins'
 import { createLogger } from '@/common/utils/logger'
 
 export interface GeocodedLocation {
@@ -33,7 +34,6 @@ interface UseGeocodeOptions {
   limit?: number
 }
 
-const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/search'
 const DEFAULT_COUNTRY_CODE = 'ch'
 const DEFAULT_LIMIT = 5
 const MIN_QUERY_LENGTH = 3

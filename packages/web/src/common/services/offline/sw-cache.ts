@@ -1,13 +1,12 @@
 /**
- * Service worker runtime cache management.
+ * Service worker runtime cache purge.
  *
  * Workbox keeps API responses in CacheStorage for offline viewing (see the
- * `runtimeCaching` entries in vite.config.ts). Those caches belong to the
- * signed-in user, so they are dropped on logout.
+ * `runtimeCaching` entries in vite.config.ts, configured from sw-cache-config.ts).
+ * Those caches belong to the signed-in user, so they are dropped on logout.
  */
 
-/** Cache names declared in vite.config.ts `runtimeCaching`. Keep in sync. */
-export const API_RESPONSE_CACHE_NAMES = ['api-cache', 'proxy-api-cache'] as const
+import { API_RESPONSE_CACHE_NAMES } from './sw-cache-config'
 
 /**
  * Delete every service-worker runtime cache that holds API responses.

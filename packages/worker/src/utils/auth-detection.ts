@@ -114,7 +114,7 @@ export function isFailedLoginResponse(
  * the Vuetify error snackbar the upstream renders on rejected credentials,
  * or the login form itself being served again.
  */
-export function hasLoginFailureIndicators(responseBody?: string): boolean {
+function hasLoginFailureIndicators(responseBody?: string): boolean {
   if (!responseBody) {
     return false
   }

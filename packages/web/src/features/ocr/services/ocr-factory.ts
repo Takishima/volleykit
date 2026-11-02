@@ -6,6 +6,8 @@
  * with StubOCR available as fallback for local development.
  */
 
+import { DEFAULT_OCR_ENDPOINT } from '@/common/config/remote-origins'
+
 import { MistralOCR } from './mistral-ocr'
 import { StubOCR } from './stub-ocr'
 
@@ -20,8 +22,7 @@ const HEALTH_CHECK_TIMEOUT_MS = 3000
 
 /** OCR proxy endpoint - uses environment variable or default */
 const OCR_ENDPOINT =
-  (import.meta.env.VITE_OCR_ENDPOINT as string | undefined) ??
-  'https://volleykit-proxy.takishima.workers.dev/ocr'
+  (import.meta.env.VITE_OCR_ENDPOINT as string | undefined) ?? DEFAULT_OCR_ENDPOINT
 
 // =============================================================================
 // Health Check

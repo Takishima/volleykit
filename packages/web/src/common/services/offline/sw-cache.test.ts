@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 
-import { API_RESPONSE_CACHE_NAMES, clearApiResponseCaches } from './sw-cache'
+import { clearApiResponseCaches } from './sw-cache'
+import { API_RESPONSE_CACHE_NAMES } from './sw-cache-config'
 
 describe('clearApiResponseCaches', () => {
   afterEach(() => {

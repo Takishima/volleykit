@@ -11,11 +11,14 @@ import { useEffect } from 'react'
 
 import { features } from '@/common/config/features'
 // features.offline — IndexedDB persistence and action queue (delete these imports when removing offline feature)
-import { clearPersistedCache, clearAllActions } from '@/common/services/offline'
+import {
+  clearPersistedCache,
+  clearAllActions,
+  clearApiResponseCaches,
+} from '@/common/services/offline'
 import { useAuthStore, registerCacheCleanup } from '@/common/stores/auth'
 import { useSettingsStore } from '@/common/stores/settings'
 import { logger } from '@/common/utils/logger'
-import { clearApiResponseCaches } from '@/common/utils/sw-cache'
 import { queryClient } from '@/queryClientConfig'
 
 /** Drops every cached query; a failure must not block the auth transition. */
