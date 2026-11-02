@@ -8,6 +8,7 @@
  */
 
 import { getApiBaseUrl } from '@/api/constants'
+import { OJP_DIRECT_ENDPOINT } from '@/common/config/remote-origins'
 
 import { selectBestEbikeTrainTrip } from './ebike-trip-adapter'
 import {
@@ -59,7 +60,7 @@ function getOjpEndpoint(): string {
   if (getApiBaseUrl()) {
     return `${getApiBaseUrl()}/ojp`
   }
-  return 'https://api.opentransportdata.swiss/ojp20'
+  return OJP_DIRECT_ENDPOINT
 }
 
 /** Minimum delay between API requests (50 req/min = 1.2s to be safe) */

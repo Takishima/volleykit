@@ -42,6 +42,14 @@ not in localStorage. We never store passwords or authentication tokens locally.
 | Modified demo compensations | Persist demo mode changes | Until reset or logout |
 | Modified demo exchanges     | Persist demo mode changes | Until reset or logout |
 
+### Offline API Cache (service worker CacheStorage)
+
+| Data                                   | Purpose                        | Retention                       |
+| -------------------------------------- | ------------------------------ | ------------------------------- |
+| JSON responses of assignment/API calls | Show recent data while offline | 7 days, auto-expires; on logout |
+
+**Note**: Only JSON API routes are cached. Login and dashboard pages are never stored, and the caches are deleted when you log out.
+
 ## How to Clear Your Data
 
 ### In the App

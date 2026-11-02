@@ -12,7 +12,19 @@ import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import packageJson from './package.json' with { type: 'json' }
+import { STATIC_REMOTE_ORIGINS, VOLLEYMANAGER_ORIGIN } from './src/common/config/remote-origins'
+import {
+  API_CACHE_NAME,
+  PROXY_API_CACHE_NAME,
+  buildCacheableApiUrlPattern,
+} from './src/common/services/offline/sw-cache-config'
 import { normalizeBasePath } from './src/common/utils/basePath'
+import {
+  buildCspValue,
+  collectRemoteOrigins,
+  injectCspMeta,
+  inlineScriptHashes,
+} from './src/common/utils/csp'
 import { HOOK_TIMEOUT_MS, TEST_TIMEOUT_MS } from './src/test/timeouts'
 
 // Plugin to exclude Zod v4 locale files from the bundle.
@@ -251,7 +263,28 @@ function versionFilePlugin(
 }
 
 // Target API server for development proxy
-const VOLLEYMANAGER_API = 'https://volleymanager.volleyball.ch'
+/** Production CORS proxy origin, used when VITE_API_PROXY_URL is not set at build time */
+const DEFAULT_API_PROXY_ORIGIN = 'https://api.volleykit.ch'
+
+/**
+ * Plugin that injects a Content-Security-Policy <meta> tag into the built index.html.
+ * GitHub Pages cannot send response headers, so the policy has to ship in the document.
+ * Runs in the 'post' phase so the hashes cover inline scripts injected by other plugins.
+ * Build-only: the dev server injects its own inline scripts (HMR, React preamble).
+ */
+function cspPlugin(remoteOrigins: string[]): Plugin {
+  return {
+    name: 'content-security-policy',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      async handler(html) {
+        const csp = buildCspValue(remoteOrigins, await inlineScriptHashes(html))
+        return injectCspMeta(html, csp)
+      },
+    },
+  }
+}
 
 /**
  * Creates proxy configuration for development server.
@@ -266,7 +299,7 @@ function createDevProxy(paths: string[]): Record<string, object> {
   const proxyConfig: Record<string, object> = {}
   for (const proxyPath of paths) {
     proxyConfig[proxyPath] = {
-      target: VOLLEYMANAGER_API,
+      target: VOLLEYMANAGER_ORIGIN,
       changeOrigin: true,
       secure: true,
       cookieDomainRewrite: 'localhost',
@@ -292,6 +325,9 @@ function createDevProxy(paths: string[]): Record<string, object> {
 export default defineConfig(({ mode }) => {
   // Get git hash for version tracking (used in PWA update detection)
   const gitHash = getGitHash()
+
+  // Proxy origin shared by the CSP allowlist and the service worker cache pattern
+  const apiProxyOrigin = process.env.VITE_API_PROXY_URL || DEFAULT_API_PROXY_ORIGIN
 
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
   if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
@@ -446,10 +482,10 @@ export default defineConfig(({ mode }) => {
             runtimeCaching: [
               {
                 // Cache direct API responses (development/direct access)
-                urlPattern: /^https:\/\/volleymanager\.volleyball\.ch\/.*/i,
+                urlPattern: buildCacheableApiUrlPattern(VOLLEYMANAGER_ORIGIN, true),
                 handler: 'NetworkFirst',
                 options: {
-                  cacheName: 'api-cache',
+                  cacheName: API_CACHE_NAME,
                   networkTimeoutSeconds: 3,
                   expiration: {
                     maxEntries: 500,
@@ -463,10 +499,10 @@ export default defineConfig(({ mode }) => {
               {
                 // Cache CORS proxy responses (production)
                 // Uses same strategy as direct API for consistency
-                urlPattern: /^https:\/\/api\.volleykit\.ch\/.*/i,
+                urlPattern: buildCacheableApiUrlPattern(apiProxyOrigin),
                 handler: 'NetworkFirst',
                 options: {
-                  cacheName: 'proxy-api-cache',
+                  cacheName: PROXY_API_CACHE_NAME,
                   networkTimeoutSeconds: 3,
                   expiration: {
                     maxEntries: 500,
@@ -518,6 +554,13 @@ export default defineConfig(({ mode }) => {
           },
         }),
       spaFallbackPlugin(basePath),
+      cspPlugin(
+        collectRemoteOrigins(STATIC_REMOTE_ORIGINS, [
+          process.env.VITE_API_PROXY_URL,
+          process.env.VITE_FALLBACK_PROXY_URLS,
+          process.env.VITE_OCR_ENDPOINT,
+        ])
+      ),
       // Generate version.json for PWA update detection (skip for PR previews)
       !isPrPreview &&
         versionFilePlugin(

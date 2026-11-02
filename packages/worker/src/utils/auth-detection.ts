@@ -106,24 +106,28 @@ export function isFailedLoginResponse(
     return true
   }
 
-  // Check response body for error indicators
-  if (responseBody) {
-    const lowerBody = responseBody.toLowerCase()
-    // Look for error indicators in the HTML
-    if (lowerBody.includes('color="error"') || lowerBody.includes('color: "error"')) {
-      return true
-    }
-    // Check if we got a login form back (means credentials were rejected)
-    if (
-      lowerBody.includes('name="username"') &&
-      lowerBody.includes('name="password"') &&
-      lowerBody.includes('login')
-    ) {
-      return true
-    }
+  return hasLoginFailureIndicators(responseBody)
+}
+
+/**
+ * Check whether a response body carries explicit login-failure markers:
+ * the Vuetify error snackbar the upstream renders on rejected credentials,
+ * or the login form itself being served again.
+ */
+function hasLoginFailureIndicators(responseBody?: string): boolean {
+  if (!responseBody) {
+    return false
   }
 
-  return false
+  const lowerBody = responseBody.toLowerCase()
+  if (lowerBody.includes('color="error"') || lowerBody.includes('color: "error"')) {
+    return true
+  }
+  return (
+    lowerBody.includes('name="username"') &&
+    lowerBody.includes('name="password"') &&
+    lowerBody.includes('login')
+  )
 }
 
 /**
@@ -133,11 +137,22 @@ export function isFailedLoginResponse(
  * Logic: A 3xx redirect from auth that does NOT go back to login/auth pages
  * is considered successful. This is more robust than looking for specific
  * dashboard paths since the upstream server may redirect to various paths.
+ *
+ * A body with explicit failure markers (error snackbar, login form) is never
+ * a success, even when the upstream re-issues the session cookie on that
+ * response. Otherwise a rejected password would clear the auth lockout.
  */
-export function isSuccessfulLoginResponse(response: {
-  status: number
-  headers: { get: (name: string) => string | null }
-}): boolean {
+export function isSuccessfulLoginResponse(
+  response: {
+    status: number
+    headers: { get: (name: string) => string | null }
+  },
+  responseBody?: string
+): boolean {
+  if (hasLoginFailureIndicators(responseBody)) {
+    return false
+  }
+
   // Check for session cookies - if present, login succeeded regardless of redirect target
   // This is the most reliable indicator as the server sets session cookies on successful auth
   const setCookie = response.headers.get('Set-Cookie')

@@ -14,6 +14,9 @@ export { getMetadata, setMetadata } from './indexed-db'
 
 export { persistOptions, clearPersistedCache } from './query-persister'
 
+// Service worker runtime caches (purged on logout)
+export { clearApiResponseCaches } from './sw-cache'
+
 // Action queue for offline mutations
 export type { OfflineAction, ActionType, ActionPayload, ActionStatus } from './action-types'
 export { MAX_RETRY_COUNT } from './action-types'

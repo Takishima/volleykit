@@ -7,14 +7,15 @@
  * @see https://docs.mistral.ai/capabilities/document_ai/basic_ocr
  */
 
+// Relative path on purpose: ocr-poc compiles this file too and maps `@/common/*`
+// to its own src/shared/, so the alias would not resolve there.
+import { DEFAULT_OCR_ENDPOINT } from '../../../common/config/remote-origins'
+
 import type { OCREngine, OCRResult, OCRLine, OCRWord, OnProgressCallback } from '../types'
 
 // =============================================================================
 // Configuration
 // =============================================================================
-
-/** Default OCR proxy endpoint - used if endpoint not provided */
-const DEFAULT_OCR_ENDPOINT = 'https://volleykit-proxy.takishima.workers.dev/ocr'
 
 /**
  * Mistral OCR doesn't provide per-word confidence scores,

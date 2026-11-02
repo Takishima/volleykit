@@ -1,5 +1,9 @@
 import { useState, useCallback, useRef } from 'react'
 
+import {
+  GEOADMIN_SEARCH_URL as GEOADMIN_API_URL,
+  NOMINATIM_SEARCH_URL as NOMINATIM_API_URL,
+} from '@/common/config/remote-origins'
 import { createLogger } from '@/common/utils/logger'
 
 /**
@@ -54,8 +58,6 @@ interface UseCombinedGeocodeOptions {
   limit?: number
 }
 
-const GEOADMIN_API_URL = 'https://api3.geo.admin.ch/rest/services/api/SearchServer'
-const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/search'
 const DEFAULT_LIMIT = 5
 const MIN_QUERY_LENGTH = 3
 const MAX_API_RESULTS = 50 // Maximum results supported by geo.admin.ch API

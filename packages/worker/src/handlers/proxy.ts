@@ -88,13 +88,10 @@ export async function handleProxy(
   // This is critical for backslash (%5c) encoding required by TYPO3 Neos/Flow
   let rawPathAndSearch = extractRawPathAndSearch(request.url)
 
-  // iOS Safari workaround: Detect requests to /login with auth credentials
-  // iOS Safari can trigger form submission with incorrect method (GET instead of POST)
-  // or send to wrong endpoint. This rewrites such requests to the correct auth endpoint.
+  // iOS Safari workaround: Detect POST requests to /login with auth credentials
+  // sent to the wrong endpoint, and rewrite them to the correct auth endpoint.
   let requestBody: string | null = null
-  let methodOverride: string | null = null
-  if (url.pathname === '/login' && (request.method === 'POST' || request.method === 'GET')) {
-    // Check for auth credentials in body (POST) or query params (GET)
+  if (url.pathname === '/login') {
     if (
       request.method === 'POST' &&
       request.headers.get('Content-Type')?.includes('application/x-www-form-urlencoded')
@@ -108,16 +105,14 @@ export async function handleProxy(
         rawPathAndSearch = AUTH_ENDPOINT
         requestBody = transformAuthFormData(requestBody)
       }
-    } else if (request.method === 'GET' && url.search) {
-      // iOS Safari bug: form may submit as GET with credentials in query string
-      // or with postData attached to GET (invalid HTTP, but Safari does it)
-      const queryBody = url.search.slice(1) // Remove leading '?'
-      if (hasAuthCredentials(queryBody)) {
-        // Convert GET to POST and rewrite to correct auth endpoint (iOS Safari workaround)
-        rawPathAndSearch = AUTH_ENDPOINT
-        requestBody = transformAuthFormData(queryBody)
-        methodOverride = 'POST'
-      }
+    } else if (request.method === 'GET' && hasAuthCredentials(url.search.slice(1))) {
+      // Credentials in a query string end up in request logs and browser history.
+      // The app only ever POSTs them, so refuse instead of forwarding.
+      return errorResponse(
+        HttpStatus.BAD_REQUEST,
+        'Bad Request: Credentials must be sent in a POST body',
+        origin
+      )
     }
   }
 
@@ -130,18 +125,12 @@ export async function handleProxy(
 
   // Forward the request
   // If we already read the body for iOS workaround detection, use it directly
-  // methodOverride is used when converting GET to POST for iOS auth workaround
   const proxyRequest = new Request(targetUrl.toString(), {
-    method: methodOverride ?? request.method,
+    method: request.method,
     headers: request.headers,
     body: requestBody ?? request.body,
     redirect: 'manual', // Handle redirects manually to preserve cookies
   })
-
-  // If we're overriding to POST, ensure Content-Type is set
-  if (methodOverride === 'POST' && requestBody) {
-    proxyRequest.headers.set('Content-Type', 'application/x-www-form-urlencoded')
-  }
 
   // Remove headers that shouldn't be forwarded
   proxyRequest.headers.delete('Host')
@@ -207,7 +196,7 @@ export async function handleProxy(
         // If we can't read the body, continue without it
       }
 
-      const isSuccess = isSuccessfulLoginResponse(response)
+      const isSuccess = isSuccessfulLoginResponse(response, responseBodyForCheck)
       const isFailed = isFailedLoginResponse(response, responseBodyForCheck)
 
       if (isSuccess) {

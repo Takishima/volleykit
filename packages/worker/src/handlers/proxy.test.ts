@@ -303,7 +303,7 @@ describe('Integration: proxy handler', () => {
       expect(fetchedRequest.url).toContain('authentication')
     })
 
-    it('converts GET /login with auth credentials to POST', async () => {
+    it('rejects GET /login with credentials in the query string without forwarding', async () => {
       const { default: worker } = await import('../index')
       const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
       vi.stubGlobal('fetch', mockFetch)
@@ -311,11 +311,103 @@ describe('Integration: proxy handler', () => {
       const mockEnv = createMockEnv()
       const request = createRequest('/login?username=user&password=pass')
 
+      const response = await worker.fetch(request, mockEnv)
+
+      expect(response.status).toBe(400)
+      expect(mockFetch).not.toHaveBeenCalled()
+      const body = await response.json<JsonBody>()
+      expect(body.error).toContain('POST body')
+    })
+
+    it('still proxies a plain GET /login page load', async () => {
+      const { default: worker } = await import('../index')
+      const mockFetch = vi.fn().mockResolvedValue(createUpstreamResponse('OK', { status: 200 }))
+      vi.stubGlobal('fetch', mockFetch)
+
+      const mockEnv = createMockEnv()
+      const request = createRequest('/login?lang=de')
+
+      const response = await worker.fetch(request, mockEnv)
+
+      expect(response.status).toBe(200)
+      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
+      expect(fetchedRequest.method).toBe('GET')
+      expect(fetchedRequest.url).toBe('https://volleymanager.volleyball.ch/login?lang=de')
+    })
+  })
+
+  describe('auth lockout bookkeeping', () => {
+    const FAILED_LOGIN_HTML =
+      '<html><v-snackbar color="error">Authentifizierung fehlgeschlagen!</v-snackbar></html>'
+
+    function createLockoutKv() {
+      return {
+        get: vi.fn().mockResolvedValue(null),
+        put: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      }
+    }
+
+    it('records a failed attempt when the 200 error page re-issues the session cookie', async () => {
+      const { default: worker } = await import('../index')
+      const mockFetch = vi.fn().mockResolvedValue(
+        createUpstreamResponse(FAILED_LOGIN_HTML, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+            'Set-Cookie': 'Neos_Flow_Session=rotated; Path=/; HttpOnly',
+          },
+          cookies: ['Neos_Flow_Session=rotated; Path=/; HttpOnly'],
+        })
+      )
+      vi.stubGlobal('fetch', mockFetch)
+
+      const lockoutKv = createLockoutKv()
+      const mockEnv = createMockEnv({ AUTH_LOCKOUT: lockoutKv })
+      const request = createRequest('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'CF-Connecting-IP': '1.2.3.4',
+        },
+        body: AUTH_BODY,
+      })
+
       await worker.fetch(request, mockEnv)
 
-      const fetchedRequest = mockFetch.mock.calls[0]?.[0] as Request
-      expect(fetchedRequest.method).toBe('POST')
-      expect(fetchedRequest.headers.get('Content-Type')).toBe('application/x-www-form-urlencoded')
+      expect(lockoutKv.put).toHaveBeenCalledTimes(1)
+      expect(lockoutKv.delete).not.toHaveBeenCalled()
+    })
+
+    it('clears the lockout on a redirect with a session cookie and no error markers', async () => {
+      const { default: worker } = await import('../index')
+      const mockFetch = vi.fn().mockResolvedValue(
+        createUpstreamResponse(null, {
+          status: 303,
+          headers: {
+            Location: 'https://volleymanager.volleyball.ch/sportmanager.volleyball/main/dashboard',
+            'Set-Cookie': 'Neos_Flow_Session=fresh; Path=/; HttpOnly',
+          },
+          cookies: ['Neos_Flow_Session=fresh; Path=/; HttpOnly'],
+        })
+      )
+      vi.stubGlobal('fetch', mockFetch)
+
+      const lockoutKv = createLockoutKv()
+      const mockEnv = createMockEnv({ AUTH_LOCKOUT: lockoutKv })
+      const request = createRequest('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'CF-Connecting-IP': '1.2.3.4',
+        },
+        body: AUTH_BODY,
+      })
+
+      await worker.fetch(request, mockEnv)
+
+      expect(lockoutKv.delete).toHaveBeenCalledTimes(1)
+      expect(lockoutKv.put).not.toHaveBeenCalled()
     })
   })
 

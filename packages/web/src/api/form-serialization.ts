@@ -31,7 +31,8 @@ export function clearCsrfToken() {
  * Security: Token is encrypted using Web Crypto API before storage.
  * - Encryption key is stored in IndexedDB as a non-extractable CryptoKey
  * - Encrypted token is stored in localStorage
- * - Falls back to plaintext if Web Crypto is unavailable
+ * - Without Web Crypto (or when encryption fails) the token is kept in memory only
+ *   and never written to localStorage in plaintext
  */
 import {
   encryptToken,
@@ -54,59 +55,57 @@ let sessionTokenCache: string | null | undefined = undefined
  */
 let pendingKeyClear: Promise<void> | null = null
 
+/** Remove the persisted token; tolerates environments without localStorage. */
+function removeStoredSessionToken(): void {
+  try {
+    localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY)
+  } catch {
+    // localStorage may not be available
+  }
+}
+
 /**
  * Set the session token (encrypts and stores asynchronously).
  * The in-memory cache is updated immediately for sync access.
  *
  * If an encryption key clear is in progress (from logout), we wait for it
  * to complete before encrypting the new token to prevent race conditions.
+ *
+ * The token is only ever persisted encrypted. When Web Crypto is unavailable
+ * or encryption fails, it stays in memory for this page load and the user
+ * logs in again after a reload (cookies still cover non-iOS browsers).
  */
 export function setSessionToken(token: string | null): void {
   sessionTokenCache = token
 
   if (!token) {
-    // Clear storage synchronously
-    try {
-      localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY)
-    } catch {
-      // localStorage may not be available
-    }
+    removeStoredSessionToken()
     return
   }
 
-  // Encrypt and store asynchronously
-  if (isSecureStorageAvailable()) {
-    // Wait for any pending key clear to complete before encrypting
-    const encryptAndStore = async () => {
-      if (pendingKeyClear) {
-        await pendingKeyClear
-      }
-      const encrypted = await encryptToken(token)
-      try {
-        localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, encrypted)
-      } catch {
-        // localStorage may not be available
-      }
-    }
+  if (!isSecureStorageAvailable()) {
+    console.warn('[session-token] Web Crypto not available, keeping session token in memory only')
+    removeStoredSessionToken()
+    return
+  }
 
-    encryptAndStore().catch(() => {
-      // Fallback to plaintext on encryption failure
-      console.warn('[session-token] Encryption failed, falling back to plaintext storage')
-      try {
-        localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token)
-      } catch {
-        // localStorage may not be available
-      }
-    })
-  } else {
-    // Fallback to plaintext storage
-    console.warn('[session-token] Web Crypto not available, using plaintext storage')
+  // Wait for any pending key clear to complete before encrypting
+  const encryptAndStore = async () => {
+    if (pendingKeyClear) {
+      await pendingKeyClear
+    }
+    const encrypted = await encryptToken(token)
     try {
-      localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token)
+      localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, encrypted)
     } catch {
       // localStorage may not be available
     }
   }
+
+  encryptAndStore().catch(() => {
+    console.warn('[session-token] Encryption failed, keeping session token in memory only')
+    removeStoredSessionToken()
+  })
 }
 
 /**
@@ -133,24 +132,12 @@ export async function initSessionToken(): Promise<void> {
       return
     }
 
-    if (isSecureStorageAvailable()) {
-      // Try to decrypt
-      const decrypted = await decryptToken(stored)
-      if (decrypted !== null) {
-        sessionTokenCache = decrypted
-      } else {
-        // Decryption failed - token may be plaintext (migration) or corrupted
-        // Try using as-is if it looks like a valid token (base64)
-        if (/^[A-Za-z0-9+/=]+$/.test(stored)) {
-          sessionTokenCache = stored
-        } else {
-          sessionTokenCache = null
-          localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY)
-        }
-      }
-    } else {
-      // No crypto available, use plaintext
-      sessionTokenCache = stored
+    // Only an encrypted token is ever accepted from storage. Anything that does
+    // not decrypt (no crypto, cleared key, legacy plaintext, tampering) is dropped.
+    const decrypted = isSecureStorageAvailable() ? await decryptToken(stored) : null
+    sessionTokenCache = decrypted
+    if (decrypted === null) {
+      removeStoredSessionToken()
     }
   } catch {
     sessionTokenCache = null
@@ -164,11 +151,7 @@ export async function initSessionToken(): Promise<void> {
  */
 export function clearSessionToken(): void {
   sessionTokenCache = null
-  try {
-    localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY)
-  } catch {
-    // localStorage may not be available
-  }
+  removeStoredSessionToken()
   // Clear encryption key asynchronously and track the operation
   // This prevents race conditions when encrypting a new token immediately after logout
   pendingKeyClear = clearEncryptionKey()
