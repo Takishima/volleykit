@@ -1,5 +1,5 @@
 import { useTranslation } from '@/common/hooks/useTranslation'
-import type { ParsedGameSheet } from '@/features/ocr'
+import type { ParsedGameSheet } from '@/features/ocr/types'
 
 interface RawTeamDataProps {
   team: ParsedGameSheet['teamA']

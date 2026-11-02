@@ -8,11 +8,11 @@
  */
 
 import { useDemoStore } from '@/common/stores/demo'
-import type { DemoState } from '@/common/stores/demo/types'
-import { BYTES_PER_KB } from '@/common/utils/constants'
+import type { DemoState, ValidatedGameData } from '@/common/stores/demo/types'
+import type { DemoAssociationCode } from '@/common/stores/demo-generators/shared'
 
-import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
-import { scoreNameMatch } from './search-utils'
+import { assertUploadableFile, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
+import { scoreNameMatch, normalizeForComparison } from './search-utils'
 import {
   assignmentsResponseSchema,
   compensationsResponseSchema,
@@ -63,18 +63,42 @@ interface DemoConvocationCompensation {
   correctionReason?: string | null
 }
 
+const DEMO_ASSOCIATION_CODES: readonly DemoAssociationCode[] = ['SV', 'SVRBA', 'SVRZ']
+
+function isDemoAssociationCode(code: string): code is DemoAssociationCode {
+  return (DEMO_ASSOCIATION_CODES as readonly string[]).includes(code)
+}
+
+/** Scorer person details from the demo scorer list (birthday null → undefined). */
+function findScorerPerson(store: DemoState, scorerPersonId: string) {
+  const scorer = store.scorers.find((s) => s.__identity === scorerPersonId)
+  return {
+    __identity: scorerPersonId,
+    displayName: scorer?.displayName ?? 'Unknown Scorer',
+    birthday: scorer?.birthday ?? undefined,
+  }
+}
+
 /**
- * Normalize a string for accent-insensitive comparison.
- * Converts to lowercase, decomposes accented characters (NFD normalization),
- * then removes diacritical marks.
- * @example normalizeForSearch("Müller") // returns "muller"
- * @example normalizeForSearch("José") // returns "jose"
+ * Closed nomination-list stub for a validated game whose lists were never
+ * stored, so `isValidated` still detects the game as fully validated.
  */
-function normalizeForSearch(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+function closedNominationListStub(
+  gameId: string,
+  side: 'home' | 'away',
+  team: { __identity?: string; name?: string } | undefined,
+  validatedData: ValidatedGameData | undefined
+) {
+  if (!validatedData) return undefined
+  return {
+    __identity: `nom-${side}-${gameId}`,
+    game: { __identity: gameId },
+    team: team ? { __identity: team.__identity, displayName: team.name } : undefined,
+    closed: true,
+    closedAt: validatedData.validatedAt,
+    closedBy: 'referee',
+    isClosedForTeam: true,
+  }
 }
 
 /**
@@ -265,10 +289,6 @@ function processSearchRequest<T>(
   return { items: paginated, total }
 }
 
-/**
- * Mock API implementation that mirrors the real API interface.
- * Uses demo store data and applies the same filtering/sorting logic.
- */
 /**
  * Returns the assignment with `scoresheet.closedAt` set from its validated
  * game record, or the assignment itself when the game was not validated.
@@ -514,14 +534,14 @@ export const mockApi = {
       }
 
       // Use accent-insensitive matching (e.g., "muller" matches "Müller")
-      const scorerFirstName = normalizeForSearch(scorer.firstName ?? '')
-      const scorerLastName = normalizeForSearch(scorer.lastName ?? '')
+      const scorerFirstName = normalizeForComparison(scorer.firstName ?? '')
+      const scorerLastName = normalizeForComparison(scorer.lastName ?? '')
       const scorerYear = scorer.birthday ? new Date(scorer.birthday).getFullYear().toString() : ''
 
       if (firstName && lastName) {
         // Two terms: match in either order (e.g., "Bühler Renee" or "Renee Bühler")
-        const normFirst = normalizeForSearch(firstName)
-        const normLast = normalizeForSearch(lastName)
+        const normFirst = normalizeForComparison(firstName)
+        const normLast = normalizeForComparison(lastName)
         const originalOrder =
           scorerFirstName.includes(normFirst) && scorerLastName.includes(normLast)
         const swappedOrder =
@@ -531,12 +551,12 @@ export const mockApi = {
         }
       } else if (isSingleTermSearch && lastName) {
         // Single term: match against either firstName or lastName
-        const searchTerm = normalizeForSearch(lastName)
+        const searchTerm = normalizeForComparison(lastName)
         if (!scorerFirstName.includes(searchTerm) && !scorerLastName.includes(searchTerm)) {
           return false
         }
       } else if (firstName) {
-        if (!scorerFirstName.includes(normalizeForSearch(firstName))) {
+        if (!scorerFirstName.includes(normalizeForComparison(firstName))) {
           return false
         }
       }
@@ -588,32 +608,18 @@ export const mockApi = {
     // For validated games without stored nomination lists, return closed stubs
     // so that isValidated correctly detects the game as fully validated.
     const encounter = assignment?.refereeGame?.game?.encounter
-    const homeNomFallback = validatedData
-      ? {
-          __identity: `nom-home-${gameId}`,
-          game: { __identity: gameId },
-          team: encounter?.teamHome
-            ? { __identity: encounter.teamHome.__identity, displayName: encounter.teamHome.name }
-            : undefined,
-          closed: true,
-          closedAt: validatedData.validatedAt,
-          closedBy: 'referee',
-          isClosedForTeam: true,
-        }
-      : undefined
-    const awayNomFallback = validatedData
-      ? {
-          __identity: `nom-away-${gameId}`,
-          game: { __identity: gameId },
-          team: encounter?.teamAway
-            ? { __identity: encounter.teamAway.__identity, displayName: encounter.teamAway.name }
-            : undefined,
-          closed: true,
-          closedAt: validatedData.validatedAt,
-          closedBy: 'referee',
-          isClosedForTeam: true,
-        }
-      : undefined
+    const homeNomFallback = closedNominationListStub(
+      gameId,
+      'home',
+      encounter?.teamHome,
+      validatedData
+    )
+    const awayNomFallback = closedNominationListStub(
+      gameId,
+      'away',
+      encounter?.teamAway,
+      validatedData
+    )
 
     const gameDetails = {
       __identity: gameId,
@@ -722,18 +728,8 @@ export const mockApi = {
 
     const store = useDemoStore.getState()
 
-    // Find the scorer's info from the scorers list
-    const scorer = store.scorers.find((s) => s.__identity === scorerPersonId)
-    const scorerDisplayName = scorer?.displayName ?? 'Unknown Scorer'
-    // Convert null to undefined for type compatibility
-    const scorerBirthday = scorer?.birthday ?? undefined
-
     // Persist pending scorer selection to demo store
-    store.setPendingScorer(gameId, {
-      __identity: scorerPersonId,
-      displayName: scorerDisplayName,
-      birthday: scorerBirthday,
-    })
+    store.setPendingScorer(gameId, findScorerPerson(store, scorerPersonId))
 
     // In demo mode, return a mock updated scoresheet
     return {
@@ -771,19 +767,9 @@ export const mockApi = {
 
     const store = useDemoStore.getState()
 
-    // Find the scorer's info from the scorers list
-    const scorer = store.scorers.find((s) => s.__identity === scorerPersonId)
-    const scorerDisplayName = scorer?.displayName ?? 'Unknown Scorer'
-    // Convert null to undefined for type compatibility
-    const scorerBirthday = scorer?.birthday ?? undefined
-
     // Mark the game as validated in the store
     store.markGameValidated(gameId, {
-      scorer: {
-        __identity: scorerPersonId,
-        displayName: scorerDisplayName,
-        birthday: scorerBirthday,
-      },
+      scorer: findScorerPerson(store, scorerPersonId),
       scoresheetFileId: fileResourceId,
     })
 
@@ -804,18 +790,7 @@ export const mockApi = {
   },
 
   async uploadResource(file: File): Promise<FileResource[]> {
-    // Validate file type
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error(
-        `Invalid file type: ${file.type || 'unknown'}. Only JPEG, PNG, or PDF files are allowed.`
-      )
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (BYTES_PER_KB * BYTES_PER_KB)).toFixed(1)
-      throw new Error(`File too large: ${sizeMB} MB. Maximum size is 10 MB.`)
-    }
+    assertUploadableFile(file)
 
     await delay(MOCK_MUTATION_DELAY_MS)
 
@@ -850,12 +825,8 @@ export const mockApi = {
     const occupation = user?.occupations?.find((o) => o.id === attributeValueId)
 
     if (occupation?.associationCode) {
-      const validCodes = ['SV', 'SVRBA', 'SVRZ'] as const
-      type DemoCode = (typeof validCodes)[number]
-
-      if (validCodes.includes(occupation.associationCode as DemoCode)) {
-        const store = useDemoStore.getState()
-        store.setActiveAssociation(occupation.associationCode as DemoCode)
+      if (isDemoAssociationCode(occupation.associationCode)) {
+        useDemoStore.getState().setActiveAssociation(occupation.associationCode)
       }
     }
   },

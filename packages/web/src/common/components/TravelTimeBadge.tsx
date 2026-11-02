@@ -3,8 +3,8 @@ import { memo } from 'react'
 import { Badge } from '@/common/components/Badge'
 import { Bike, TrainFront } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { formatTravelTime } from '@/common/hooks/useTravelTime'
 import type { TravelMode } from '@/common/services/transport'
+import { formatTravelTimeCompact } from '@/common/utils/format-travel-time'
 
 interface TravelTimeBadgeProps {
   /** Travel time in minutes */
@@ -53,7 +53,7 @@ function TravelTimeBadgeComponent({
       <span className="flex items-center gap-1">
         {showBikeIcon && <Bike className="w-3 h-3" aria-hidden="true" />}
         <TrainFront className="w-3 h-3" aria-hidden="true" />
-        <span>{formatTravelTime(durationMinutes)}</span>
+        <span>{formatTravelTimeCompact(durationMinutes)}</span>
       </span>
     </Badge>
   )

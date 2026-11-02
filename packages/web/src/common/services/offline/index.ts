@@ -1,24 +1,14 @@
 /**
  * Offline services module.
  *
- * Provides IndexedDB-based storage for:
- * - TanStack Query cache persistence
- * - Offline data viewing
- * - Offline mutation queue
+ * Provides IndexedDB-based storage for TanStack Query cache persistence and
+ * the offline mutation queue. Only what the app shell needs is exported here;
+ * feature code imports the submodules directly.
  */
-
-// Only export what's currently used.
-// Additional utilities (closeDB, clearAllData, getStorageSize, getPersistedCacheSize)
-// are available in the submodules for future features.
-export { getMetadata, setMetadata } from './indexed-db'
 
 export { persistOptions, clearPersistedCache } from './query-persister'
 
 // Service worker runtime caches (purged on logout)
 export { clearApiResponseCaches } from './sw-cache'
 
-// Action queue for offline mutations
-export type { OfflineAction, ActionType, ActionPayload, ActionStatus } from './action-types'
-export { MAX_RETRY_COUNT } from './action-types'
-export { createAction, getPendingActions, deleteAction, clearAllActions } from './action-store'
-export { syncPendingActions, type SyncResult } from './action-sync'
+export { clearAllActions } from './action-store'

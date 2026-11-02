@@ -1,14 +1,12 @@
 import { describe, it, expect } from 'vitest'
 
+import { parseGameSheet } from './player-list-parser/electronic-parser'
+import { parseGameSheetWithOCR } from './player-list-parser/ocr-aware-parser'
 import {
-  parseGameSheet,
-  parseGameSheetWithOCR,
   parsePlayerName,
   parseOfficialName,
   normalizeName,
-  getAllPlayers,
-  getAllOfficials,
-} from './player-list-parser'
+} from './player-list-parser/parsing-helpers'
 
 import type { OCRResult, OCRLine, OCRWord } from '../types'
 
@@ -143,34 +141,6 @@ AC\tAssistant One\tAC\tAssistant Two`
     const result = parseGameSheet(ocrText)
     expect(result.teamA.officials).toHaveLength(2)
     expect(result.teamA.officials[1]!.role).toBe('AC')
-  })
-})
-
-describe('getAllPlayers', () => {
-  it('returns all players from a team', () => {
-    const ocrText = `Team A\tTeam B
-N.\tName of the player\tLicense\tN.\tName of the player\tLicense
-1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK
-2\tPLAYER THREE\tOK\t2\tPLAYER FOUR\tOK`
-
-    const result = parseGameSheet(ocrText)
-    const players = getAllPlayers(result.teamA)
-    expect(players).toHaveLength(2)
-  })
-})
-
-describe('getAllOfficials', () => {
-  it('returns all officials from a team', () => {
-    const ocrText = `Team A\tTeam B
-N.\tName of the player\tLicense\tN.\tName of the player\tLicense
-1\tPLAYER ONE\tOK\t1\tPLAYER TWO\tOK
-OFFICIAL MEMBERS
-C\tHead Coach\tC\tOther Coach
-AC\tAssistant\tAC\tOther Assistant`
-
-    const result = parseGameSheet(ocrText)
-    const officials = getAllOfficials(result.teamA)
-    expect(officials).toHaveLength(2)
   })
 })
 

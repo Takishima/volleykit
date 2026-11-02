@@ -630,9 +630,7 @@ Each web-app feature follows this directory structure:
 
 ```
 packages/web/src/features/<feature>/
-├── index.ts              # Public API — explicit exports only (no export *)
 ├── components/
-│   ├── index.ts          # Internal barrel for components within the feature
 │   └── *.tsx             # UI components
 ├── hooks/
 │   ├── use<Feature>.ts   # Main state hook (state derivation + setters)
@@ -643,6 +641,11 @@ packages/web/src/features/<feature>/
 └── utils/
     └── *.ts              # Pure utility functions
 ```
+
+Features have **no `index.ts` barrel**. Consumers import the file they need
+directly (`@/features/exchanges/hooks/useExchanges`). This keeps bundles
+tree-shakeable, keeps `knip` honest about dead code, and is enforced by
+`src/test/feature-isolation.test.ts`.
 
 ### Separation of Concerns in Hooks
 
@@ -668,21 +671,6 @@ export function useValidationActions({ gameId, state, gameDetails }) {
   return { saveProgress, finalizeValidation, isSaving, isFinalizing }
 }
 ```
-
-### Barrel File Exports
-
-Feature barrel files (`index.ts`) use **explicit exports only** — never `export *`:
-
-```typescript
-// Good — explicit public API
-export { ValidateGameModal } from './components/ValidateGameModal'
-export { useValidateGameWizard } from './hooks/useValidateGameWizard'
-
-// Bad — leaks internal components as public API
-export * from './components'
-```
-
-Internal component barrels (`components/index.ts`) may use explicit re-exports for convenience within the feature, but these are not exposed at the feature boundary.
 
 ### Hook Extraction Guidelines
 

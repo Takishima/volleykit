@@ -1,6 +1,6 @@
 import { CheckCircle } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import type { ParsedGameSheet, OCRResult, PlayerComparisonResult } from '@/features/ocr'
+import type { ParsedGameSheet, OCRResult, PlayerComparisonResult } from '@/features/ocr/types'
 
 import { RawOcrDataPanel } from './RawOcrDataPanel'
 import { CollapsibleSection } from '../../components/CollapsibleSection'

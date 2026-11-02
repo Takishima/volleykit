@@ -20,15 +20,12 @@ interface TourState {
   startTour: (tourId: TourId) => void
   nextStep: () => void
   previousStep: () => void
-  goToStep: (step: number) => void
   completeTour: () => void
   dismissTour: () => void
-  exitTour: () => void
   resetAllTours: () => void
 
   // Query helpers
   shouldShowTour: (tourId: TourId) => boolean
-  isTourActive: (tourId: TourId) => boolean
   getTourStatus: (tourId: TourId) => 'completed' | 'dismissed' | 'not_started'
 }
 
@@ -59,10 +56,6 @@ export const useTourStore = create<TourState>()(
         }))
       },
 
-      goToStep: (step: number) => {
-        set({ currentStep: step })
-      },
-
       completeTour: () => {
         const { activeTour, completedTours, dismissedTours } = get()
         if (!activeTour) return
@@ -91,13 +84,6 @@ export const useTourStore = create<TourState>()(
         })
       },
 
-      exitTour: () => {
-        set({
-          activeTour: null,
-          currentStep: 0,
-        })
-      },
-
       resetAllTours: () => {
         set({
           completedTours: [],
@@ -114,10 +100,6 @@ export const useTourStore = create<TourState>()(
         if (dismissedTours.includes(tourId)) return false
         if (activeTour !== null && activeTour !== tourId) return false
         return true
-      },
-
-      isTourActive: (tourId: TourId) => {
-        return get().activeTour === tourId
       },
 
       getTourStatus: (tourId: TourId) => {

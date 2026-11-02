@@ -1,23 +1,18 @@
 import { useCallback } from 'react'
 
 import { useQueryClient } from '@tanstack/react-query'
+import { getTeamNames, isGameReportEligible, isGameAlreadyValidated } from '@volleykit/shared/utils'
 
 import type { Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
 import { useModalState } from '@/common/hooks/useModalState'
-import { useSafeModeGuard } from '@/common/hooks/useSafeModeGuard'
 import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
 import { useDemoStore } from '@/common/stores/demo'
 import { useLanguageStore } from '@/common/stores/language'
 import { toast } from '@/common/stores/toast'
 import { createLogger } from '@/common/utils/logger'
 import { useAddToExchange } from '@/features/exchanges/hooks/useExchanges'
-
-import {
-  getTeamNames,
-  isGameReportEligible,
-  isGameAlreadyValidated,
-} from '../utils/assignment-helpers'
 
 const log = createLogger('useAssignmentActions')
 
@@ -54,7 +49,7 @@ interface UseAssignmentActionsResult {
 export function useAssignmentActions(): UseAssignmentActionsResult {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-  const { isDemoMode } = useSafeModeGuard()
+  const isDemoMode = useAuthStore((state) => state.dataSource === 'demo')
   const locale = useLanguageStore((state) => state.locale)
   const addAssignmentToExchange = useDemoStore((state) => state.addAssignmentToExchange)
   const addToExchangeMutation = useAddToExchange()

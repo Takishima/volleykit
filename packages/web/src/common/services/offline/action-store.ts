@@ -122,13 +122,6 @@ export async function markActionFailed(id: string, error: string): Promise<boole
 }
 
 /**
- * Reset a failed action back to pending for retry.
- */
-export async function resetActionForRetry(id: string): Promise<boolean> {
-  return updateActionStatus(id, 'pending')
-}
-
-/**
  * Delete an action from the queue.
  * Called after successful sync or when user dismisses a failed action.
  */

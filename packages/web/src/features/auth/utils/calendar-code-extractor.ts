@@ -9,7 +9,6 @@
  * to fetch ALL assignments across ALL associations the referee belongs to.
  */
 
-import { getApiBaseUrl } from '@/api/constants'
 import { logger } from '@/common/utils/logger'
 
 /** Calendar codes are exactly 6 alphanumeric characters */
@@ -91,26 +90,4 @@ export function extractCalendarCodeFromHtml(html: string): string | null {
   }
 
   return null
-}
-
-/**
- * Validates a calendar code format.
- *
- * @param code - The code to validate
- * @returns true if the code matches the expected format
- */
-export function isValidCalendarCode(code: string): boolean {
-  return CALENDAR_CODE_PATTERN.test(code)
-}
-
-/**
- * Constructs the iCal URL for a given calendar code.
- *
- * @param code - The 6-character calendar code
- * @param proxyUrl - Optional proxy URL prefix (defaults to env variable)
- * @returns The full iCal URL
- */
-export function getCalendarUrl(code: string, proxyUrl?: string): string {
-  const baseUrl = proxyUrl ?? getApiBaseUrl()
-  return `${baseUrl}/iCal/referee/${code}`
 }

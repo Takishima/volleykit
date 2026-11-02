@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-import { badgeService, badgeOperations } from './badge-service'
+import { badgeService } from './badge-service'
 
 describe('badgeService', () => {
   const mockSetAppBadge = vi.fn().mockResolvedValue(undefined)
   const mockClearAppBadge = vi.fn().mockResolvedValue(undefined)
 
   beforeEach(() => {
-    // Reset mocks and cache before each test
     vi.clearAllMocks()
-    badgeOperations.resetCache()
   })
 
   afterEach(() => {
@@ -109,51 +107,6 @@ describe('badgeService', () => {
 
       expect(result.success).toBe(true)
       expect(mockClearAppBadge).toHaveBeenCalled()
-    })
-  })
-
-  describe('badgeOperations', () => {
-    beforeEach(() => {
-      Object.defineProperty(navigator, 'setAppBadge', {
-        value: mockSetAppBadge,
-        configurable: true,
-      })
-      Object.defineProperty(navigator, 'clearAppBadge', {
-        value: mockClearAppBadge,
-        configurable: true,
-      })
-    })
-
-    it('setBadgeWithOptions skips update when skipIfUnchanged is true and count matches', async () => {
-      // First call sets the badge
-      await badgeOperations.setBadgeWithOptions(5)
-      expect(mockSetAppBadge).toHaveBeenCalledTimes(1)
-
-      // Second call with same count and skipIfUnchanged should skip
-      await badgeOperations.setBadgeWithOptions(5, { skipIfUnchanged: true })
-      expect(mockSetAppBadge).toHaveBeenCalledTimes(1) // Still 1
-
-      // Third call with different count should update
-      await badgeOperations.setBadgeWithOptions(10, { skipIfUnchanged: true })
-      expect(mockSetAppBadge).toHaveBeenCalledTimes(2)
-    })
-
-    it('getLastBadgeCount returns the last set count', async () => {
-      expect(badgeOperations.getLastBadgeCount()).toBeNull()
-
-      await badgeService.setBadge(3)
-      expect(badgeOperations.getLastBadgeCount()).toBe(3)
-
-      await badgeService.setBadge(7)
-      expect(badgeOperations.getLastBadgeCount()).toBe(7)
-    })
-
-    it('resetCache clears the last badge count', async () => {
-      await badgeService.setBadge(5)
-      expect(badgeOperations.getLastBadgeCount()).toBe(5)
-
-      badgeOperations.resetCache()
-      expect(badgeOperations.getLastBadgeCount()).toBeNull()
     })
   })
 })

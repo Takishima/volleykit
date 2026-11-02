@@ -1,16 +1,14 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
+import { useSettingsStore, type UserLocation, getDefaultArrivalBuffer } from './settings'
 import {
-  useSettingsStore,
-  type UserLocation,
-  type ModeSettings,
   DEFAULT_ARRIVAL_BUFFER_SV_MINUTES,
   DEFAULT_ARRIVAL_BUFFER_REGIONAL_MINUTES,
-  getDefaultArrivalBuffer,
-} from './settings'
+  type ModeSettings,
+  type SettingsState,
+} from './settings/types'
 
 import type { DataSource } from './auth'
-import type { SettingsState } from './settings/types'
 import { readPersistedState } from '@/test/persisted-state'
 
 /** Default mode settings for tests */
@@ -32,11 +30,6 @@ const DEFAULT_MODE_SETTINGS: ModeSettings = {
     maxBikeDistanceKm: 15,
   },
   levelFilterEnabled: false,
-  notificationSettings: {
-    enabled: false,
-    reminderTimes: ['1h'],
-    deliveryPreference: 'native',
-  },
   gameGapFilter: {
     enabled: false,
     minGapMinutes: 120,
@@ -66,7 +59,6 @@ function resetStore(mode: DataSource = 'api') {
     transportEnabledByAssociation: { ...DEFAULT_MODE_SETTINGS.transportEnabledByAssociation },
     travelTimeFilter: { ...DEFAULT_MODE_SETTINGS.travelTimeFilter },
     levelFilterEnabled: DEFAULT_MODE_SETTINGS.levelFilterEnabled,
-    notificationSettings: { ...DEFAULT_MODE_SETTINGS.notificationSettings },
   })
 }
 
@@ -539,60 +531,38 @@ describe('useSettingsStore', () => {
       resetStore()
     })
 
-    it('should fall back to global distanceFilter when no per-association setting exists', () => {
-      const { getDistanceFilterForAssociation, setDistanceFilterEnabled, setMaxDistanceKm } =
-        useSettingsStore.getState()
+    it('should store per-association overrides without touching the global filter', () => {
+      const { setDistanceFilterForAssociation, setMaxDistanceKm } = useSettingsStore.getState()
 
-      setDistanceFilterEnabled(true)
       setMaxDistanceKm(40)
-
-      const filter = getDistanceFilterForAssociation('SV')
-      expect(filter.enabled).toBe(true)
-      expect(filter.maxDistanceKm).toBe(40)
-    })
-
-    it('should use per-association setting when available', () => {
-      const { getDistanceFilterForAssociation, setDistanceFilterForAssociation } =
-        useSettingsStore.getState()
-
       setDistanceFilterForAssociation('SV', { enabled: true, maxDistanceKm: 100 })
 
-      const filter = getDistanceFilterForAssociation('SV')
-      expect(filter.enabled).toBe(true)
-      expect(filter.maxDistanceKm).toBe(100)
-    })
-
-    it('should handle undefined association code', () => {
-      const { getDistanceFilterForAssociation, setDistanceFilterEnabled } =
-        useSettingsStore.getState()
-
-      setDistanceFilterEnabled(true)
-
-      const filter = getDistanceFilterForAssociation(undefined)
-      expect(filter.enabled).toBe(true)
+      const { distanceFilter, distanceFilterByAssociation } = useSettingsStore.getState()
+      expect(distanceFilter.maxDistanceKm).toBe(40)
+      expect(distanceFilterByAssociation.SV).toEqual({ enabled: true, maxDistanceKm: 100 })
     })
 
     it('should preserve settings for other associations', () => {
-      const { getDistanceFilterForAssociation, setDistanceFilterForAssociation } =
-        useSettingsStore.getState()
+      const { setDistanceFilterForAssociation } = useSettingsStore.getState()
 
       setDistanceFilterForAssociation('SV', { maxDistanceKm: 80 })
       setDistanceFilterForAssociation('SVRBA', { maxDistanceKm: 60 })
 
-      expect(getDistanceFilterForAssociation('SV').maxDistanceKm).toBe(80)
-      expect(getDistanceFilterForAssociation('SVRBA').maxDistanceKm).toBe(60)
+      const { distanceFilterByAssociation } = useSettingsStore.getState()
+      expect(distanceFilterByAssociation.SV?.maxDistanceKm).toBe(80)
+      expect(distanceFilterByAssociation.SVRBA?.maxDistanceKm).toBe(60)
     })
 
     it('should merge partial filter updates', () => {
-      const { getDistanceFilterForAssociation, setDistanceFilterForAssociation } =
-        useSettingsStore.getState()
+      const { setDistanceFilterForAssociation } = useSettingsStore.getState()
 
       setDistanceFilterForAssociation('SV', { enabled: true })
       setDistanceFilterForAssociation('SV', { maxDistanceKm: 75 })
 
-      const filter = getDistanceFilterForAssociation('SV')
-      expect(filter.enabled).toBe(true)
-      expect(filter.maxDistanceKm).toBe(75)
+      expect(useSettingsStore.getState().distanceFilterByAssociation.SV).toEqual({
+        enabled: true,
+        maxDistanceKm: 75,
+      })
     })
   })
 
@@ -601,43 +571,28 @@ describe('useSettingsStore', () => {
       resetStore()
     })
 
-    it('should fall back to global maxTravelTimeMinutes when no per-association setting exists', () => {
-      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } =
+    it('should store per-association overrides without touching the global value', () => {
+      const { setMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } =
         useSettingsStore.getState()
 
       setMaxTravelTimeMinutes(90)
-
-      expect(getMaxTravelTimeForAssociation('SV')).toBe(90)
-      expect(getMaxTravelTimeForAssociation('SVRBA')).toBe(90)
-    })
-
-    it('should use per-association setting when available', () => {
-      const { getMaxTravelTimeForAssociation, setMaxTravelTimeForAssociation } =
-        useSettingsStore.getState()
-
       setMaxTravelTimeForAssociation('SV', 150)
 
-      expect(getMaxTravelTimeForAssociation('SV')).toBe(150)
-    })
-
-    it('should handle undefined association code', () => {
-      const { getMaxTravelTimeForAssociation, setMaxTravelTimeMinutes } =
-        useSettingsStore.getState()
-
-      setMaxTravelTimeMinutes(60)
-
-      expect(getMaxTravelTimeForAssociation(undefined)).toBe(60)
+      const { travelTimeFilter } = useSettingsStore.getState()
+      expect(travelTimeFilter.maxTravelTimeMinutes).toBe(90)
+      expect(travelTimeFilter.maxTravelTimeByAssociation).toEqual({ SV: 150 })
     })
 
     it('should preserve settings for other associations', () => {
-      const { getMaxTravelTimeForAssociation, setMaxTravelTimeForAssociation } =
-        useSettingsStore.getState()
+      const { setMaxTravelTimeForAssociation } = useSettingsStore.getState()
 
       setMaxTravelTimeForAssociation('SV', 180)
       setMaxTravelTimeForAssociation('SVRBA', 90)
 
-      expect(getMaxTravelTimeForAssociation('SV')).toBe(180)
-      expect(getMaxTravelTimeForAssociation('SVRBA')).toBe(90)
+      expect(useSettingsStore.getState().travelTimeFilter.maxTravelTimeByAssociation).toEqual({
+        SV: 180,
+        SVRBA: 90,
+      })
     })
   })
 
@@ -736,11 +691,6 @@ describe('useSettingsStore', () => {
                 sbbDestinationType: 'station',
               },
               levelFilterEnabled: false,
-              notificationSettings: {
-                enabled: false,
-                reminderTimes: ['1h'],
-                deliveryPreference: 'native',
-              },
               gameGapFilter: { enabled: false, minGapMinutes: 120 },
               hideOwnExchangesByAssociation: {},
             },
@@ -812,61 +762,6 @@ describe('useSettingsStore', () => {
 
       const { levelFilterEnabled } = useSettingsStore.getState()
       expect(levelFilterEnabled).toBe(false)
-    })
-  })
-
-  describe('notification settings', () => {
-    beforeEach(() => {
-      resetStore()
-    })
-
-    it('should have notifications disabled by default', () => {
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.enabled).toBe(false)
-    })
-
-    it('should allow enabling notifications', () => {
-      const { setNotificationsEnabled } = useSettingsStore.getState()
-
-      setNotificationsEnabled(true)
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.enabled).toBe(true)
-    })
-
-    it('should set notification reminder times', () => {
-      const { setNotificationReminderTimes } = useSettingsStore.getState()
-
-      setNotificationReminderTimes(['1h', '2h', '1d'])
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h', '1d'])
-    })
-
-    it('should set notification delivery preference', () => {
-      const { setNotificationDeliveryPreference } = useSettingsStore.getState()
-
-      setNotificationDeliveryPreference('in-app')
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.deliveryPreference).toBe('in-app')
-    })
-
-    it('should preserve other settings when updating one field', () => {
-      const {
-        setNotificationsEnabled,
-        setNotificationReminderTimes,
-        setNotificationDeliveryPreference,
-      } = useSettingsStore.getState()
-
-      setNotificationsEnabled(true)
-      setNotificationReminderTimes(['1h', '2h'])
-      setNotificationDeliveryPreference('both')
-
-      const { notificationSettings } = useSettingsStore.getState()
-      expect(notificationSettings.enabled).toBe(true)
-      expect(notificationSettings.reminderTimes).toEqual(['1h', '2h'])
-      expect(notificationSettings.deliveryPreference).toBe('both')
     })
   })
 

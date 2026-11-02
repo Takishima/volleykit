@@ -22,9 +22,6 @@ interface CalendarFilterState {
 
   /** Set the list of available associations */
   setAssociations: (associations: string[]) => void
-
-  /** Reset filter to show all associations */
-  resetFilter: () => void
 }
 
 export const useCalendarFilterStore = create<CalendarFilterState>((set) => ({
@@ -34,6 +31,4 @@ export const useCalendarFilterStore = create<CalendarFilterState>((set) => ({
   setSelectedAssociation: (association) => set({ selectedAssociation: association }),
 
   setAssociations: (associations) => set({ associations }),
-
-  resetFilter: () => set({ selectedAssociation: ALL_ASSOCIATIONS }),
 }))

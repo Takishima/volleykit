@@ -8,6 +8,11 @@
  *
  * Run these tests before deploying to catch mock/API mismatches early.
  */
+import {
+  compensationRecordSchema,
+  gameExchangeSchema,
+  personSearchResultSchema,
+} from '@volleykit/shared/api'
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
@@ -15,9 +20,6 @@ import { useDemoStore, DEMO_USER_PERSON_IDENTITY } from '@/common/stores/demo'
 import { mockApi } from './mock-api'
 import {
   assignmentSchema,
-  compensationRecordSchema,
-  gameExchangeSchema,
-  personSearchResultSchema,
   assignmentsResponseSchema,
   compensationsResponseSchema,
   exchangesResponseSchema,

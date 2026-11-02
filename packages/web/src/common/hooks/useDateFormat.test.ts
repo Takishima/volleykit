@@ -1,10 +1,9 @@
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { enUS } from 'date-fns/locale/en-US'
 import { describe, it, expect, beforeEach } from 'vitest'
 
 import { useLanguageStore } from '@/common/stores/language'
 
-import { useDateFormat, getDateLocale, safeParseISO } from './useDateFormat'
+import { useDateFormat, safeParseISO } from './useDateFormat'
 
 // Pattern for validating HH:mm time format (e.g., "14:30", "09:15")
 const TIME_FORMAT_PATTERN = /^\d{2}:\d{2}$/
@@ -108,18 +107,6 @@ describe('useDateFormat', () => {
       expect(result.current.isToday).toBe(false)
       expect(result.current.isTomorrow).toBe(false)
     })
-  })
-})
-
-describe('getDateLocale', () => {
-  it('returns enUS as fallback for unknown locale', () => {
-    const locale = getDateLocale('unknown')
-    expect(locale).toBe(enUS)
-  })
-
-  it('returns cached locale if available', () => {
-    const locale = getDateLocale('en')
-    expect(locale).toBe(enUS)
   })
 })
 

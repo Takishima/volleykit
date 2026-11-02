@@ -54,11 +54,3 @@ export function usePwaStandalone(): boolean {
 
   return isStandalone
 }
-
-/**
- * Non-hook version for use in non-React contexts or initial render.
- * Prefer usePwaStandalone() hook in components.
- */
-export function isPwaStandalone(): boolean {
-  return checkStandalone()
-}

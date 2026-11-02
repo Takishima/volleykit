@@ -13,12 +13,7 @@
 
 import Fuse, { type IFuseOptions } from 'fuse.js'
 
-import type {
-  ParsedPlayer,
-  PlayerComparisonResult,
-  TeamComparisonResult,
-  ComparisonStatus,
-} from '../types'
+import type { ParsedPlayer, PlayerComparisonResult, ComparisonStatus } from '../types'
 
 // =============================================================================
 // Configuration
@@ -128,41 +123,22 @@ function buildRosterPlayerCache(
   const cache = new Map<string, RosterPlayerCache>()
 
   for (const player of rosterPlayers) {
-    const fullName = [player.firstName ?? '', player.lastName ?? '']
-      .filter((p) => p && p.trim())
-      .join(' ')
+    const fullName = buildFullName(player.firstName ?? '', player.lastName ?? '')
 
-    // For word-order-independent matching (uses extractNameWords logic)
-    const fullNameNormalized = normalizeForComparisonInternal(fullName)
-    const fullNameWords = fullNameNormalized
-      ? fullNameNormalized.split(' ').filter((w) => w.length >= 2 || NOBILITY_PARTICLES.has(w))
-      : []
-    const fullNameFuse =
-      fullNameWords.length > 0 ? new Fuse(fullNameWords, FUSE_WORD_OPTIONS) : null
+    // For word-order-independent matching
+    const fullNameWords = extractNameWords(fullName)
 
-    // For structured matching (lastName)
-    const lastNameNormalized = normalizeForComparisonInternal(player.lastName ?? '')
-    const lastNameWords = lastNameNormalized
-      ? lastNameNormalized.split(' ').filter((w) => w.length > 1)
-      : []
-    const lastNameFuse =
-      lastNameWords.length > 0 ? new Fuse(lastNameWords, FUSE_WORD_OPTIONS) : null
-
-    // For structured matching (firstName)
-    const firstNameNormalized = normalizeForComparisonInternal(player.firstName ?? '')
-    const firstNameWords = firstNameNormalized
-      ? firstNameNormalized.split(' ').filter((w) => w.length > 1)
-      : []
-    const firstNameFuse =
-      firstNameWords.length > 0 ? new Fuse(firstNameWords, FUSE_WORD_OPTIONS) : null
+    // For structured matching (lastName / firstName)
+    const lastNameWords = extractComparableWords(normalizeForComparison(player.lastName ?? ''))
+    const firstNameWords = extractComparableWords(normalizeForComparison(player.firstName ?? ''))
 
     cache.set(player.id, {
       fullNameWords,
-      fullNameFuse,
+      fullNameFuse: buildWordFuse(fullNameWords),
       lastNameWords,
-      lastNameFuse,
+      lastNameFuse: buildWordFuse(lastNameWords),
       firstNameWords,
-      firstNameFuse,
+      firstNameFuse: buildWordFuse(firstNameWords),
     })
   }
 
@@ -174,9 +150,9 @@ function buildRosterPlayerCache(
 // =============================================================================
 
 /**
- * Internal normalize function (used by cache building before export is defined)
+ * Normalize a string for comparison (lowercase, remove accents, trim)
  */
-function normalizeForComparisonInternal(str: string): string {
+export function normalizeForComparison(str: string): string {
   if (!str) {
     return ''
   }
@@ -190,10 +166,18 @@ function normalizeForComparisonInternal(str: string): string {
 }
 
 /**
- * Normalize a string for comparison (lowercase, remove accents, trim)
+ * Split an already-normalized name into the words worth comparing
+ * (drops single-character fragments such as initials).
  */
-export function normalizeForComparison(str: string): string {
-  return normalizeForComparisonInternal(str)
+function extractComparableWords(normalized: string): string[] {
+  return normalized.split(' ').filter((w) => w.length > 1)
+}
+
+/**
+ * Build a Fuse instance over a word list, or null when there is nothing to search.
+ */
+function buildWordFuse(words: string[]): Fuse<string> | null {
+  return words.length > 0 ? new Fuse(words, FUSE_WORD_OPTIONS) : null
 }
 
 /**
@@ -225,43 +209,8 @@ function extractNameWords(name: string): string[] {
  * - Partial matches with configurable threshold
  */
 export function calculateWordOrderIndependentSimilarity(name1: string, name2: string): number {
-  const words1 = extractNameWords(name1)
   const words2 = extractNameWords(name2)
-
-  if (words1.length === 0 || words2.length === 0) {
-    return 0
-  }
-
-  // Create Fuse instance for searching words2
-  const fuse = new Fuse(words2, FUSE_WORD_OPTIONS)
-
-  // Count matching words using Fuse.js for comparison
-  let matchScore = 0
-  const usedIndices = new Set<number>()
-
-  for (const w1 of words1) {
-    const results = fuse.search(w1)
-
-    // Find best unused match
-    for (const result of results) {
-      const idx = result.refIndex
-      if (usedIndices.has(idx)) continue
-
-      // Fuse.js score: 0 = perfect match, 1 = no match
-      // Convert to 0-1 where 1 is perfect
-      const similarity = 1 - (result.score ?? 1)
-
-      if (similarity > 0) {
-        matchScore += similarity
-        usedIndices.add(idx)
-        break
-      }
-    }
-  }
-
-  // Calculate similarity based on matched words vs total unique words
-  const totalUniqueWords = Math.max(words1.length, words2.length)
-  return Math.round((matchScore / totalUniqueWords) * WORD_ORDER_INDEPENDENT_SCORE)
+  return calculateWordOrderIndependentSimilarityWithCache(name1, words2, buildWordFuse(words2))
 }
 
 /**
@@ -273,58 +222,9 @@ export function calculateWordOrderIndependentSimilarity(name1: string, name2: st
  * - Minor typos and OCR errors
  */
 export function calculateNameSimilarity(name1: string, name2: string): number {
-  const n1 = normalizeForComparison(name1)
   const n2 = normalizeForComparison(name2)
-
-  if (!n1 || !n2) {
-    return 0
-  }
-  if (n1 === n2) {
-    return MAX_CONFIDENCE
-  }
-
-  // Check if one contains the other (fast path, no Fuse needed)
-  if (n1.includes(n2) || n2.includes(n1)) {
-    const shorter = n1.length < n2.length ? n1 : n2
-    const longer = n1.length >= n2.length ? n1 : n2
-    return Math.round((shorter.length / longer.length) * CONTAINED_MATCH_SCORE)
-  }
-
-  // Check word-by-word overlap using Fuse.js
-  const words1 = n1.split(' ').filter((w) => w.length > 1)
-  const words2 = n2.split(' ').filter((w) => w.length > 1)
-
-  if (words2.length === 0) {
-    return 0
-  }
-
-  const wordFuse = new Fuse(words2, FUSE_WORD_OPTIONS)
-  let matchingScore = 0
-  const usedIndices = new Set<number>()
-
-  for (const w1 of words1) {
-    const results = wordFuse.search(w1)
-
-    // Find best unused match to avoid double-counting
-    for (const result of results) {
-      const idx = result.refIndex
-      if (usedIndices.has(idx)) continue
-
-      const similarity = 1 - (result.score ?? 1)
-      if (similarity > MIN_WORD_MATCH_SIMILARITY) {
-        matchingScore += similarity
-        usedIndices.add(idx)
-        break
-      }
-    }
-  }
-
-  const totalWords = Math.max(words1.length, words2.length)
-  if (totalWords === 0) {
-    return 0
-  }
-
-  return Math.round((matchingScore / totalWords) * WORD_OVERLAP_MATCH_SCORE)
+  const words2 = extractComparableWords(n2)
+  return calculateNameSimilarityWithCache(name1, n2, words2, buildWordFuse(words2))
 }
 
 /**
@@ -392,7 +292,7 @@ function calculateNameSimilarityWithCache(
   }
 
   // Check word-by-word overlap using cached Fuse
-  const words1 = n1.split(' ').filter((w) => w.length > 1)
+  const words1 = extractComparableWords(n1)
 
   if (cachedWords2.length === 0 || !cachedFuse) {
     return 0
@@ -479,8 +379,8 @@ function findBestPlayerMatch(
 
     if (playerCache) {
       // Optimized path: use pre-built Fuse instances
-      const lastNameNormalized = normalizeForComparisonInternal(rosterPlayer.lastName ?? '')
-      const firstNameNormalized = normalizeForComparisonInternal(rosterPlayer.firstName ?? '')
+      const lastNameNormalized = normalizeForComparison(rosterPlayer.lastName ?? '')
+      const firstNameNormalized = normalizeForComparison(rosterPlayer.firstName ?? '')
 
       const lastNameSim = calculateNameSimilarityWithCache(
         ocrPlayer.lastName,
@@ -608,40 +508,4 @@ export function compareRosters(
   results.sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
 
   return results
-}
-
-/**
- * Compare both teams and return full comparison result
- */
-export function compareTeamRosters(
-  ocrTeamName: string,
-  ocrPlayers: ParsedPlayer[],
-  rosterTeamName: string,
-  rosterPlayers: RosterPlayerForComparison[]
-): TeamComparisonResult {
-  const playerResults = compareRosters(ocrPlayers, rosterPlayers)
-
-  const counts = {
-    matched: playerResults.filter((r) => r.status === 'match').length,
-    ocrOnly: playerResults.filter((r) => r.status === 'ocr-only').length,
-    rosterOnly: playerResults.filter((r) => r.status === 'roster-only').length,
-  }
-
-  return {
-    ocrTeamName,
-    rosterTeamName,
-    playerResults,
-    counts,
-  }
-}
-
-/**
- * Calculate overall match score for a team comparison
- */
-export function calculateMatchScore(result: TeamComparisonResult): number {
-  const total = result.counts.matched + result.counts.ocrOnly + result.counts.rosterOnly
-  if (total === 0) {
-    return 0
-  }
-  return Math.round((result.counts.matched / total) * MAX_CONFIDENCE)
 }

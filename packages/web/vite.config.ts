@@ -648,9 +648,7 @@ export default defineConfig(({ mode }) => {
           'src/common/utils/date-helpers.ts',
           'src/common/utils/error-helpers.ts',
           // Index files that only re-export (barrel files)
-          'src/common/services/badge/index.ts',
           'src/common/services/transport/index.ts',
-          'src/common/services/notifications/index.ts',
         ],
         thresholds: {
           // Prevent coverage regressions - enforce minimum coverage

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 
 import { useCurrentMinute } from '@volleykit/shared/hooks'
+import { isGameReportEligible, isValidationEligible } from '@volleykit/shared/utils'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { Assignment } from '@/api/client'
@@ -21,7 +22,6 @@ import { useCalendarAssignments, type CalendarAssignment } from './useCalendarAs
 import { useCalendarAssociationFilter } from './useCalendarAssociationFilter'
 import { useDailyGameBadge } from './useDailyGameBadge'
 import { createAssignmentActions } from '../utils/assignment-actions'
-import { isGameReportEligible, isValidationEligible } from '../utils/assignment-helpers'
 
 /**
  * Discriminated union for items that can be displayed in the assignments list.

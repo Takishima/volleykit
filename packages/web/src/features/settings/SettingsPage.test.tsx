@@ -21,7 +21,7 @@ vi.mock('@/common/hooks/useTranslation', () => ({
     locale: 'en',
   }),
 }))
-vi.mock('@/common/hooks/useTravelTime', () => ({
+vi.mock('@/common/hooks/useTravelTimeSource', () => ({
   useTravelTimeAvailable: () => false,
 }))
 

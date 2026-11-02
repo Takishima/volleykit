@@ -16,21 +16,6 @@ vi.mock('@/common/hooks/useTranslation', () => ({
   }),
 }))
 
-// Mock formatTravelTime from useTravelTime hook
-vi.mock('@/common/hooks/useTravelTime', () => ({
-  formatTravelTime: (minutes: number) => {
-    if (minutes < 60) {
-      return `${minutes}'`
-    }
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    if (remainingMinutes === 0) {
-      return `${hours}h`
-    }
-    return `${hours}h${remainingMinutes}'`
-  },
-}))
-
 /** Deliberately not a Tailwind utility: the test checks the class is forwarded, not what it styles */
 const CUSTOM_CLASS = 'custom-class'
 

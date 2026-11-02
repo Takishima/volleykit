@@ -4,7 +4,6 @@ import { TRAVEL_TIME_STORAGE_KEY, TRAVEL_TIME_CACHE_TTL } from './cache'
 import {
   getCachedTravelTime,
   setCachedTravelTime,
-  removeCachedTravelTime,
   clearTravelTimeCache,
   getTravelTimeCacheStats,
   buildCacheKey,
@@ -113,22 +112,6 @@ describe('persistence', () => {
 
       const cached = getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
       expect(cached).toEqual(mockResult)
-    })
-  })
-
-  describe('removeCachedTravelTime', () => {
-    it('removes a specific cached entry', () => {
-      setCachedTravelTime('hall-123', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
-      setCachedTravelTime('hall-456', '47.377,8.542', 'weekday', mockResult, 'publicTransport')
-
-      removeCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
-
-      expect(
-        getCachedTravelTime('hall-123', '47.377,8.542', 'weekday', 'publicTransport')
-      ).toBeNull()
-      expect(getCachedTravelTime('hall-456', '47.377,8.542', 'weekday', 'publicTransport')).toEqual(
-        mockResult
-      )
     })
   })
 

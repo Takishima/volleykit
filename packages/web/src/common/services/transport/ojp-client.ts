@@ -24,16 +24,6 @@ import { TransportApiError, DEFAULT_MAX_BIKE_DISTANCE_KM } from './types'
 import type { OjpTrip } from './ojp-trip-helpers'
 import type { Coordinates, TravelTimeResult, TravelTimeOptions } from './types'
 
-// Re-export trip helpers and types for consumers
-export {
-  selectBestTrip,
-  extractOriginStation,
-  extractDestinationStation,
-  extractFinalWalkingMinutes,
-  calculateActualArrivalTime,
-} from './ojp-trip-helpers'
-export type { OjpTrip } from './ojp-trip-helpers'
-
 // =============================================================================
 // SDK Lazy Loading & Rate Limiting
 // =============================================================================

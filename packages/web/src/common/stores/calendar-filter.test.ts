@@ -88,48 +88,6 @@ describe('useCalendarFilterStore', () => {
     })
   })
 
-  describe('resetFilter', () => {
-    it('resets selected association to ALL_ASSOCIATIONS', () => {
-      const { setSelectedAssociation, resetFilter } = useCalendarFilterStore.getState()
-
-      // Set a specific association
-      setSelectedAssociation('SV')
-      expect(useCalendarFilterStore.getState().selectedAssociation).toBe('SV')
-
-      // Reset the filter
-      resetFilter()
-
-      const { selectedAssociation } = useCalendarFilterStore.getState()
-      expect(selectedAssociation).toBe(ALL_ASSOCIATIONS)
-    })
-
-    it('preserves the associations list', () => {
-      const { setSelectedAssociation, setAssociations, resetFilter } =
-        useCalendarFilterStore.getState()
-
-      // Set up initial state
-      setAssociations(['SV', 'SVRZ', 'SVRBA'])
-      setSelectedAssociation('SVRZ')
-
-      // Reset the filter
-      resetFilter()
-
-      // Associations should be preserved
-      const { associations } = useCalendarFilterStore.getState()
-      expect(associations).toEqual(['SV', 'SVRZ', 'SVRBA'])
-    })
-
-    it('works when already at ALL_ASSOCIATIONS', () => {
-      const { resetFilter } = useCalendarFilterStore.getState()
-
-      // Should not throw when already at default
-      resetFilter()
-
-      const { selectedAssociation } = useCalendarFilterStore.getState()
-      expect(selectedAssociation).toBe(ALL_ASSOCIATIONS)
-    })
-  })
-
   describe('ALL_ASSOCIATIONS constant', () => {
     it('is exported as __all__', () => {
       expect(ALL_ASSOCIATIONS).toBe('__all__')

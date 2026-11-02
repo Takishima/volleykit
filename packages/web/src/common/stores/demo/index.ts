@@ -20,7 +20,6 @@ import {
   generateMockNominationLists,
   type DemoAssociationCode,
 } from '../demo-generators'
-import { createAssignmentsSlice } from './assignments'
 import { createCompensationsSlice } from './compensations'
 import { createExchangesSlice } from './exchanges'
 import { createNominationsSlice } from './nominations'
@@ -37,11 +36,27 @@ export type { DemoState, PendingScorerData, AssignmentCompensationEdit } from '.
 
 export { DEMO_USER_PERSON_IDENTITY } from './types'
 
+/** Freshly generated demo data for one association, replacing all derived state. */
+function freshDemoData(associationCode: DemoAssociationCode) {
+  const data = generateDummyData(associationCode)
+  return {
+    assignments: data.assignments,
+    compensations: data.compensations,
+    exchanges: data.exchanges,
+    exchangedAssignments: {},
+    nominationLists: generateMockNominationLists(),
+    possiblePlayers: data.possiblePlayers,
+    scorers: data.scorers,
+    activeAssociationCode: associationCode,
+    generatedAt: Date.now(),
+  }
+}
+
 export const useDemoStore = create<DemoState>()(
   persist(
     (set, get, api) => ({
       // Combine all slices
-      ...createAssignmentsSlice(set, get, api),
+      assignments: [],
       ...createCompensationsSlice(set, get, api),
       ...createExchangesSlice(set, get, api),
       ...createNominationsSlice(set, get, api),
@@ -63,19 +78,10 @@ export const useDemoStore = create<DemoState>()(
           return
         }
 
-        const data = generateDummyData(associationCode)
         set({
-          assignments: data.assignments,
-          compensations: data.compensations,
-          exchanges: data.exchanges,
-          exchangedAssignments: {},
-          nominationLists: generateMockNominationLists(),
-          possiblePlayers: data.possiblePlayers,
-          scorers: data.scorers,
-          activeAssociationCode: associationCode,
+          ...freshDemoData(associationCode),
           userRefereeLevel: DEMO_USER_REFEREE_LEVEL,
           userRefereeLevelGradationValue: DEMO_USER_REFEREE_LEVEL_GRADATION_VALUE,
-          generatedAt: Date.now(),
         })
       },
 
@@ -98,38 +104,15 @@ export const useDemoStore = create<DemoState>()(
         }),
 
       refreshData: () =>
-        set(() => {
-          const currentAssociation = get().activeAssociationCode ?? 'SV'
-          const newData = generateDummyData(currentAssociation)
-          return {
-            assignments: newData.assignments,
-            compensations: newData.compensations,
-            exchanges: newData.exchanges,
-            exchangedAssignments: {},
-            nominationLists: generateMockNominationLists(),
-            possiblePlayers: newData.possiblePlayers,
-            scorers: newData.scorers,
-            validatedGames: {},
-            pendingScorers: {},
-            assignmentCompensations: {},
-            generatedAt: Date.now(),
-          }
+        set({
+          ...freshDemoData(get().activeAssociationCode ?? 'SV'),
+          validatedGames: {},
+          pendingScorers: {},
+          assignmentCompensations: {},
         }),
 
-      setActiveAssociation: (associationCode: DemoAssociationCode) => {
-        const data = generateDummyData(associationCode)
-        set({
-          assignments: data.assignments,
-          compensations: data.compensations,
-          exchanges: data.exchanges,
-          exchangedAssignments: {},
-          nominationLists: generateMockNominationLists(),
-          possiblePlayers: data.possiblePlayers,
-          scorers: data.scorers,
-          activeAssociationCode: associationCode,
-          generatedAt: Date.now(),
-        })
-      },
+      setActiveAssociation: (associationCode: DemoAssociationCode) =>
+        set(freshDemoData(associationCode)),
     }),
     {
       name: 'volleykit-demo',

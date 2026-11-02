@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { getDayType, hashLocation, getHallCacheKey } from './cache'
+import { getDayType, hashLocation } from './cache'
 
 describe('getDayType', () => {
   it("returns 'weekday' for Monday", () => {
@@ -64,32 +64,5 @@ describe('hashLocation', () => {
     const bern = { latitude: 46.948, longitude: 7.4474 }
 
     expect(hashLocation(zurich)).not.toBe(hashLocation(bern))
-  })
-})
-
-describe('getHallCacheKey', () => {
-  it('returns hallId when provided', () => {
-    const result = getHallCacheKey('hall-123', {
-      latitude: 47.3769,
-      longitude: 8.5417,
-    })
-    expect(result).toBe('hall-123')
-  })
-
-  it('returns coordinate hash when no hallId', () => {
-    const coords = { latitude: 47.3769, longitude: 8.5417 }
-    const result = getHallCacheKey(undefined, coords)
-    expect(result).toBe('coords:47.377,8.542')
-  })
-
-  it('returns null when neither hallId nor coords provided', () => {
-    const result = getHallCacheKey(undefined, null)
-    expect(result).toBeNull()
-  })
-
-  it('prefers hallId over coordinates', () => {
-    const coords = { latitude: 47.3769, longitude: 8.5417 }
-    const result = getHallCacheKey('hall-456', coords)
-    expect(result).toBe('hall-456')
   })
 })

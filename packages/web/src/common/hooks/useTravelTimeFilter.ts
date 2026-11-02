@@ -2,7 +2,7 @@
  * Hook for filtering exchanges by travel time.
  */
 
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 
 import { useQueries } from '@tanstack/react-query'
 
@@ -24,6 +24,7 @@ import {
 } from '@/common/services/transport'
 import { useAuthStore } from '@/common/stores/auth'
 import { useSettingsStore, getDefaultArrivalBuffer } from '@/common/stores/settings'
+import { resolveTransportEnabled } from '@/common/stores/settings/per-association'
 import { MS_PER_SECOND, MS_PER_MINUTE } from '@/common/utils/constants'
 import { extractCoordinates } from '@/common/utils/geo-location'
 
@@ -82,10 +83,6 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
     (state) => state.transportEnabledByAssociation
   )
   // Select individual properties to prevent infinite re-renders from object reference changes
-  const travelTimeFilterEnabled = useSettingsStore((state) => state.travelTimeFilter.enabled)
-  const maxTravelTimeMinutes = useSettingsStore(
-    (state) => state.travelTimeFilter.maxTravelTimeMinutes
-  )
   const arrivalBufferByAssociation = useSettingsStore(
     (state) => state.travelTimeFilter.arrivalBufferByAssociation
   )
@@ -93,15 +90,11 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
   const { useMock } = useTravelTimeSource()
   const associationCode = useActiveAssociationCode()
 
-  // Check if transport is enabled for current association
-  // Use per-association setting if available, otherwise fall back to global
-  const isTransportEnabled = useMemo(() => {
-    const enabledMap = transportEnabledByAssociation ?? {}
-    if (associationCode && enabledMap[associationCode] !== undefined) {
-      return enabledMap[associationCode]
-    }
-    return transportEnabled
-  }, [associationCode, transportEnabledByAssociation, transportEnabled])
+  const isTransportEnabled = resolveTransportEnabled(
+    transportEnabled,
+    transportEnabledByAssociation,
+    associationCode
+  )
 
   // Get arrival buffer for current association
   const arrivalBufferMinutes = useMemo(() => {
@@ -235,39 +228,14 @@ export function useTravelTimeFilter<T extends GameExchange>(exchanges: T[] | nul
     })
   }, [exchanges, travelTimeMap])
 
-  // Filter function that can be applied to exchanges
-  const filterByTravelTime = useCallback(
-    (exchangeWithTravelTime: ExchangeWithTravelTime<T>): boolean => {
-      // If filtering is disabled, include all
-      if (!travelTimeFilterEnabled) return true
-
-      // If no travel time available, include (conservative approach)
-      if (exchangeWithTravelTime.travelTimeMinutes === null) return true
-
-      // Apply the filter
-      return exchangeWithTravelTime.travelTimeMinutes <= maxTravelTimeMinutes
-    },
-    [travelTimeFilterEnabled, maxTravelTimeMinutes]
-  )
-
-  // Get filtered list
-  const filteredExchanges = useMemo(() => {
-    if (!exchangesWithTravelTime) return null
-    return exchangesWithTravelTime.filter(filterByTravelTime)
-  }, [exchangesWithTravelTime, filterByTravelTime])
-
   // Check if any travel times are loading
   const isLoadingAny = queries.some((q) => q.isLoading)
 
   return {
     /** Exchanges enriched with travel time data */
     exchangesWithTravelTime,
-    /** Exchanges filtered by travel time (if filter is enabled) */
-    filteredExchanges,
     /** Whether any travel time queries are loading */
     isLoading: isLoadingAny,
-    /** Filter function to apply manually */
-    filterByTravelTime,
     /** Whether travel time filtering is available */
     isAvailable: canFetch,
   }

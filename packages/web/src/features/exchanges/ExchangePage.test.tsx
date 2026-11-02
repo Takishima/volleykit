@@ -45,20 +45,14 @@ vi.mock('@/features/assignments/hooks/useCalendarConflicts', () => ({
 }))
 vi.mock('@/features/assignments/utils/conflict-detection', () => ({
   hasMinimumGapFromAssignments: () => true,
-  DEFAULT_SAME_LOCATION_DISTANCE_KM: 5,
 }))
 vi.mock('@/common/hooks/useActiveAssociation', () => ({
   useActiveAssociationCode: () => 'TEST',
 }))
-vi.mock('@/common/hooks/useTravelTime', () => ({
-  useTravelTimeAvailable: () => false,
-}))
 vi.mock('@/common/hooks/useTravelTimeFilter', () => ({
   useTravelTimeFilter: () => ({
     exchangesWithTravelTime: null,
-    filteredExchanges: null,
     isLoading: false,
-    filterByTravelTime: () => true,
     isAvailable: false,
   }),
 }))

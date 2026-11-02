@@ -17,6 +17,10 @@ import { features } from '@/common/config/features'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { useSettingsStore } from '@/common/stores/settings'
+import {
+  resolveMaxDistanceKm,
+  resolveMaxTravelTimeMinutes,
+} from '@/common/stores/settings/per-association'
 import { formatTravelTime, MINUTES_PER_HOUR } from '@/common/utils/format-travel-time'
 
 /** Distance presets for the slider (in kilometers) */
@@ -203,23 +207,12 @@ function ExchangeFilterMenuComponent({
     }))
   )
 
-  // Get per-association distance filter
-  const currentDistanceFilter = useMemo(() => {
-    const filterMap = distanceFilterByAssociation ?? {}
-    if (associationCode && filterMap[associationCode] !== undefined) {
-      return filterMap[associationCode]
-    }
-    return distanceFilter
-  }, [associationCode, distanceFilterByAssociation, distanceFilter])
-
-  // Get per-association max travel time
-  const currentMaxTravelTime = useMemo(() => {
-    const timeMap = travelTimeFilter.maxTravelTimeByAssociation ?? {}
-    if (associationCode && timeMap[associationCode] !== undefined) {
-      return timeMap[associationCode]
-    }
-    return travelTimeFilter.maxTravelTimeMinutes
-  }, [associationCode, travelTimeFilter])
+  const currentMaxDistanceKm = resolveMaxDistanceKm(
+    distanceFilter,
+    distanceFilterByAssociation,
+    associationCode
+  )
+  const currentMaxTravelTime = resolveMaxTravelTimeMinutes(travelTimeFilter, associationCode)
 
   const handleDistanceChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -348,11 +341,11 @@ function ExchangeFilterMenuComponent({
               label={t('exchange.filterByDistance')}
               enabled={distanceFilter.enabled}
               onToggle={() => setDistanceFilterEnabled(!distanceFilter.enabled)}
-              value={`≤${currentDistanceFilter.maxDistanceKm} km`}
+              value={`≤${currentMaxDistanceKm} km`}
             >
               <SliderControl
                 id="max-distance"
-                value={currentDistanceFilter.maxDistanceKm}
+                value={currentMaxDistanceKm}
                 min={DISTANCE_MIN}
                 max={DISTANCE_MAX}
                 step={5}

@@ -149,37 +149,3 @@ export async function getDB(): Promise<IDBPDatabase<VolleyKitDB> | null> {
     return null
   }
 }
-
-/**
- * Get metadata value.
- */
-export async function getMetadata<T>(key: string): Promise<T | undefined> {
-  const db = await getDB()
-  if (!db) return undefined
-
-  try {
-    const record = await db.get(STORES.METADATA, key)
-    return record?.value as T | undefined
-  } catch (error) {
-    logger.warn(`Failed to get metadata '${key}':`, error)
-    return undefined
-  }
-}
-
-/**
- * Set metadata value.
- */
-export async function setMetadata<T>(key: string, value: T): Promise<void> {
-  const db = await getDB()
-  if (!db) return
-
-  try {
-    await db.put(STORES.METADATA, {
-      key,
-      value,
-      updatedAt: Date.now(),
-    })
-  } catch (error) {
-    logger.warn(`Failed to set metadata '${key}':`, error)
-  }
-}

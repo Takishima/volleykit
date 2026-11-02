@@ -11,7 +11,7 @@ import {
   extractFinalWalkingMinutes,
   calculateActualArrivalTime,
   type OjpTrip,
-} from './ojp-client'
+} from './ojp-trip-helpers'
 
 describe('selectBestTrip', () => {
   // Helper to create trip objects

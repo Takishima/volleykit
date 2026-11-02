@@ -9,7 +9,6 @@
  * mock-api.ts and calendar-client.ts respectively.
  */
 /* eslint-disable import-x/order -- Imports are grouped by concern */
-import type { components } from './schema'
 
 import {
   assignmentSchema,
@@ -35,8 +34,7 @@ import { scoreNameMatch } from './search-utils'
 
 import { getCsrfToken } from './form-serialization'
 
-import { BYTES_PER_KB } from '@/common/utils/constants'
-import { MAX_FILE_SIZE_BYTES, ALLOWED_FILE_TYPES, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
+import { assertUploadableFile, DEFAULT_SEARCH_RESULTS_LIMIT } from './constants'
 import { apiRequest, apiRequestFormData, apiRequestVoid } from './transport'
 import {
   ASSIGNMENT_PROPERTIES,
@@ -47,23 +45,91 @@ import {
 
 import type { SearchConfiguration, PersonSearchFilter } from './client'
 
-// Re-import schema types locally
-type Schemas = components['schemas']
-type AssignmentsResponse = Schemas['AssignmentsResponse']
-type CompensationsResponse = Schemas['CompensationsResponse']
-type ExchangesResponse = Schemas['ExchangesResponse']
-type ConvocationCompensationDetailed = Schemas['ConvocationCompensationDetailed']
-type Assignment = Schemas['Assignment']
-type PickExchangeResponse = Schemas['PickExchangeResponse']
-type PossibleNominationsResponse = Schemas['PossibleNominationsResponse']
-type PersonSearchResponse = Schemas['PersonSearchResponse']
-type PersonSearchResult = Schemas['PersonSearchResult']
-type NominationList = Schemas['NominationList']
-type NominationListResponse = Schemas['NominationListResponse']
-type Scoresheet = Schemas['Scoresheet']
-type ScoresheetValidation = Schemas['ScoresheetValidation']
-type FileResource = Schemas['FileResource']
-type RefereeBackupSearchResponse = Schemas['RefereeBackupSearchResponse']
+import type {
+  Schemas,
+  AssignmentsResponse,
+  CompensationsResponse,
+  ExchangesResponse,
+  ConvocationCompensationDetailed,
+  Assignment,
+  PickExchangeResponse,
+  PossibleNominationsResponse,
+  PersonSearchResponse,
+  PersonSearchResult,
+  NominationList,
+  NominationListResponse,
+  Scoresheet,
+  ScoresheetValidation,
+  FileResource,
+  RefereeBackupSearchResponse,
+} from './types'
+
+type PersonPropertyFilter = { propertyName: string; text: string }
+
+interface PersonSearchPaging {
+  offset?: number
+  limit?: number
+}
+
+type CoachIds = { head?: string; firstAssistant?: string; secondAssistant?: string }
+
+interface NominationListBodyInput {
+  nominationListId: string
+  gameId: string
+  teamId: string
+  playerNominationIds: string[]
+  coachIds?: CoachIds
+}
+
+/** One Elasticsearch person search request, validated. */
+async function searchPersonsRequest(
+  propertyFilters: PersonPropertyFilter[],
+  options?: PersonSearchPaging
+): Promise<PersonSearchResponse> {
+  const data = await apiRequest<unknown>(
+    '/sportmanager.core/api%5celasticsearchperson/search',
+    'GET',
+    {
+      searchConfiguration: {
+        propertyFilters,
+        offset: options?.offset ?? 0,
+        limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
+      },
+      propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
+    }
+  )
+  return validateResponse(data, personSearchResponseSchema, 'searchPersons') as PersonSearchResponse
+}
+
+/** Form body shared by nomination-list update and finalize. */
+function buildNominationListBody(input: NominationListBodyInput): Record<string, unknown> {
+  const { nominationListId, gameId, teamId, playerNominationIds, coachIds } = input
+  const body: Record<string, unknown> = {
+    'nominationList[__identity]': nominationListId,
+    'nominationList[game][__identity]': gameId,
+    'nominationList[team][__identity]': teamId,
+    'nominationList[closed]': 'false',
+    'nominationList[isClosedForTeam]': 'true',
+  }
+  playerNominationIds.forEach((id, index) => {
+    body[`nominationList[indoorPlayerNominations][${index}][__identity]`] = id
+  })
+  if (coachIds?.head) {
+    body['nominationList[coachPerson][__identity]'] = coachIds.head
+  }
+  if (coachIds?.firstAssistant) {
+    body['nominationList[firstAssistantCoachPerson][__identity]'] = coachIds.firstAssistant
+  }
+  // secondAssistantCoachPerson: use [__identity] with UUID, or plain field when clearing
+  if (coachIds?.secondAssistant !== undefined) {
+    if (coachIds.secondAssistant) {
+      body['nominationList[secondAssistantCoachPerson][__identity]'] = coachIds.secondAssistant
+    } else {
+      body['nominationList[secondAssistantCoachPerson]'] = ''
+    }
+  }
+  return body
+}
 
 /** Properties requested from the Elasticsearch person search endpoint */
 const PERSON_SEARCH_PROPERTIES = [
@@ -265,53 +331,21 @@ export const api = {
 
     // Association ID search: direct lookup by member number
     if (associationId) {
-      const data = await apiRequest<unknown>(
-        '/sportmanager.core/api%5celasticsearchperson/search',
-        'GET',
-        {
-          searchConfiguration: {
-            propertyFilters: [{ propertyName: 'associationId', text: associationId }],
-            offset: options?.offset ?? 0,
-            limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
-          },
-          propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
-        }
-      )
-      return validateResponse(
-        data,
-        personSearchResponseSchema,
-        'searchPersons'
-      ) as PersonSearchResponse
+      return searchPersonsRequest([{ propertyName: 'associationId', text: associationId }], options)
     }
 
     // When both firstName and lastName are provided, search both orderings
     // in parallel so "Bühler Renee" finds the same results as "Renee Bühler".
     if (firstName && lastName) {
-      const makeRequest = async (fn: string, ln: string) => {
-        const propertyFilters: Array<{ propertyName: string; text: string }> = [
+      const makeRequest = (fn: string, ln: string) => {
+        const propertyFilters: PersonPropertyFilter[] = [
           { propertyName: 'firstName', text: fn },
           { propertyName: 'lastName', text: ln },
         ]
         if (yearOfBirth) {
           propertyFilters.push({ propertyName: 'yearOfBirth', text: yearOfBirth })
         }
-        const data = await apiRequest<unknown>(
-          '/sportmanager.core/api%5celasticsearchperson/search',
-          'GET',
-          {
-            searchConfiguration: {
-              propertyFilters,
-              offset: options?.offset ?? 0,
-              limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
-            },
-            propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
-          }
-        )
-        return validateResponse(
-          data,
-          personSearchResponseSchema,
-          'searchPersons'
-        ) as PersonSearchResponse
+        return searchPersonsRequest(propertyFilters, options)
       }
 
       const [original, swapped] = await Promise.all([
@@ -346,7 +380,7 @@ export const api = {
     }
 
     // Single-term search: search both firstName and lastName fields
-    const propertyFilters: Array<{ propertyName: string; text: string }> = []
+    const propertyFilters: PersonPropertyFilter[] = []
     const singleTerm = firstName ?? lastName
     if (singleTerm) {
       propertyFilters.push(
@@ -354,33 +388,10 @@ export const api = {
         { propertyName: 'lastName', text: singleTerm }
       )
     }
-
     if (yearOfBirth) {
-      propertyFilters.push({
-        propertyName: 'yearOfBirth',
-        text: yearOfBirth,
-      })
+      propertyFilters.push({ propertyName: 'yearOfBirth', text: yearOfBirth })
     }
-
-    const searchConfig: Record<string, unknown> = {
-      propertyFilters,
-      offset: options?.offset ?? 0,
-      limit: options?.limit ?? DEFAULT_SEARCH_RESULTS_LIMIT,
-    }
-
-    const data = await apiRequest<unknown>(
-      '/sportmanager.core/api%5celasticsearchperson/search',
-      'GET',
-      {
-        searchConfiguration: searchConfig,
-        propertyRenderConfiguration: PERSON_SEARCH_PROPERTIES,
-      }
-    )
-    return validateResponse(
-      data,
-      personSearchResponseSchema,
-      'searchPersons'
-    ) as PersonSearchResponse
+    return searchPersonsRequest(propertyFilters, options)
   },
 
   // Game details and scoresheet
@@ -480,33 +491,13 @@ export const api = {
     playerNominationIds: string[],
     coachIds?: { head?: string; firstAssistant?: string; secondAssistant?: string }
   ): Promise<NominationList> {
-    const body: Record<string, unknown> = {
-      'nominationList[__identity]': nominationListId,
-      'nominationList[game][__identity]': gameId,
-      'nominationList[team][__identity]': teamId,
-      'nominationList[closed]': 'false',
-      'nominationList[isClosedForTeam]': 'true',
-    }
-
-    playerNominationIds.forEach((id, index) => {
-      body[`nominationList[indoorPlayerNominations][${index}][__identity]`] = id
+    const body = buildNominationListBody({
+      nominationListId,
+      gameId,
+      teamId,
+      playerNominationIds,
+      coachIds,
     })
-
-    // Add coach assignments
-    if (coachIds?.head) {
-      body['nominationList[coachPerson][__identity]'] = coachIds.head
-    }
-    if (coachIds?.firstAssistant) {
-      body['nominationList[firstAssistantCoachPerson][__identity]'] = coachIds.firstAssistant
-    }
-    // secondAssistantCoachPerson: use [__identity] with UUID, or plain field when clearing
-    if (coachIds?.secondAssistant !== undefined) {
-      if (coachIds.secondAssistant) {
-        body['nominationList[secondAssistantCoachPerson][__identity]'] = coachIds.secondAssistant
-      } else {
-        body['nominationList[secondAssistantCoachPerson]'] = ''
-      }
-    }
 
     const data = await apiRequest<unknown>(
       '/sportmanager.indoorvolleyball/api%5cnominationlist',
@@ -525,36 +516,15 @@ export const api = {
     validationId?: string,
     coachIds?: { head?: string; firstAssistant?: string; secondAssistant?: string }
   ): Promise<NominationListResponse> {
-    const body: Record<string, unknown> = {
-      'nominationList[__identity]': nominationListId,
-      'nominationList[game][__identity]': gameId,
-      'nominationList[team][__identity]': teamId,
-      'nominationList[closed]': 'false',
-      'nominationList[isClosedForTeam]': 'true',
-    }
-
-    playerNominationIds.forEach((id, index) => {
-      body[`nominationList[indoorPlayerNominations][${index}][__identity]`] = id
+    const body = buildNominationListBody({
+      nominationListId,
+      gameId,
+      teamId,
+      playerNominationIds,
+      coachIds,
     })
-
     if (validationId) {
       body['nominationList[nominationListValidation][__identity]'] = validationId
-    }
-
-    // Add coach assignments
-    if (coachIds?.head) {
-      body['nominationList[coachPerson][__identity]'] = coachIds.head
-    }
-    if (coachIds?.firstAssistant) {
-      body['nominationList[firstAssistantCoachPerson][__identity]'] = coachIds.firstAssistant
-    }
-    // secondAssistantCoachPerson: use [__identity] with UUID, or plain field when clearing
-    if (coachIds?.secondAssistant !== undefined) {
-      if (coachIds.secondAssistant) {
-        body['nominationList[secondAssistantCoachPerson][__identity]'] = coachIds.secondAssistant
-      } else {
-        body['nominationList[secondAssistantCoachPerson]'] = ''
-      }
     }
 
     const data = await apiRequest<unknown>(
@@ -681,16 +651,7 @@ export const api = {
   },
 
   async uploadResource(file: File): Promise<FileResource[]> {
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-      throw new Error(
-        `Invalid file type: ${file.type || 'unknown'}. Only JPEG, PNG, or PDF files are allowed.`
-      )
-    }
-
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      const sizeMB = (file.size / (BYTES_PER_KB * BYTES_PER_KB)).toFixed(1)
-      throw new Error(`File too large: ${sizeMB} MB. Maximum size is 10 MB.`)
-    }
+    assertUploadableFile(file)
 
     const formData = new FormData()
     formData.append('scoresheetFile[]', file)

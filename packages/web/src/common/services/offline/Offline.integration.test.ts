@@ -203,7 +203,7 @@ describe('Offline Action Queue', () => {
       expect(useActionQueueStore.getState().pendingCount).toBe(1)
     })
 
-    it('can clear all actions via store', async () => {
+    it('reflects cleared actions after refresh', async () => {
       await createAction('updateCompensation', {
         compensationId: 'comp-1',
         data: { distanceInMetres: 1000 },
@@ -212,7 +212,8 @@ describe('Offline Action Queue', () => {
       await useActionQueueStore.getState().refresh()
       expect(useActionQueueStore.getState().pendingCount).toBe(1)
 
-      await useActionQueueStore.getState().clearAll()
+      await clearAllActions()
+      await useActionQueueStore.getState().refresh()
       expect(useActionQueueStore.getState().pendingCount).toBe(0)
     })
   })

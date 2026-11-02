@@ -18,7 +18,7 @@ import {
 } from './hooks/useAssignmentsPageLogic'
 
 const SportsHallReportWizardModal = lazy(() =>
-  import('@/features/sports-hall-report').then((m) => ({
+  import('@/features/sports-hall-report/components/SportsHallReportWizardModal').then((m) => ({
     default: m.SportsHallReportWizardModal,
   }))
 )

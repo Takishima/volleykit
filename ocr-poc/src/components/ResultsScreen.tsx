@@ -19,7 +19,7 @@ import {
   Code,
 } from 'lucide-react'
 
-import { parseGameSheetWithOCR } from '@/features/ocr/utils/player-list-parser'
+import { parseGameSheetWithOCR } from '@/features/ocr/utils/player-list-parser/ocr-aware-parser'
 import { useAppStore } from '@/stores/appStore'
 
 import type { ParsedTeam } from '@/features/ocr/types'

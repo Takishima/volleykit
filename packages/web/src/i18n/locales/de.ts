@@ -417,10 +417,6 @@ const de: Translations = {
     exchange: 'Tauschbörse',
     settings: 'Einstellungen',
   },
-  notifications: {
-    gameReminder: 'Spielerinnerung',
-    gameReminderBody: 'Dein Spiel {game} beginnt {time} um {gameTime}',
-  },
   settings: {
     title: 'Einstellungen',
     profile: 'Profil',
@@ -428,30 +424,6 @@ const de: Translations = {
     language: 'Sprache',
     preferences: {
       title: 'Einstellungen',
-    },
-    notifications: {
-      title: 'Benachrichtigungen',
-      description: 'Erhalte Erinnerungen vor deinen Spielen.',
-      notSupported: 'Benachrichtigungen werden in diesem Browser nicht unterstützt.',
-      permissionDenied:
-        'Benachrichtigungserlaubnis wurde verweigert. Bitte aktiviere Benachrichtigungen in deinen Browsereinstellungen.',
-      enableNotifications: 'Benachrichtigungen aktivieren',
-      requesting: 'Anfrage läuft...',
-      gameReminders: 'Spielerinnerungen',
-      gameRemindersDescription: 'Erhalte Benachrichtigungen vor deinen geplanten Spielen.',
-      usingBrowser: 'Browser-Benachrichtigungen werden verwendet',
-      usingInApp: 'In-App-Benachrichtigungen werden verwendet',
-      browserDeniedUsingInApp:
-        'Browser-Benachrichtigungserlaubnis wurde verweigert. Stattdessen werden In-App-Benachrichtigungen verwendet.',
-      reminderTimes: 'Erinnere mich',
-      reminderTimesHint: 'Wähle, wann du vor jedem Spiel erinnert werden möchtest.',
-      foregroundNote:
-        'Hinweis: Benachrichtigungen werden nur gesendet, während die App geöffnet ist. Für Offline-Erinnerungen füge Spiele deinem Kalender hinzu.',
-      reminderTime: {
-        '1h': '1 Stunde vorher',
-        '2h': '2 Stunden vorher',
-        '1d': '1 Tag vorher',
-      },
     },
     locationTravel: {
       title: 'Standort & Anreise',

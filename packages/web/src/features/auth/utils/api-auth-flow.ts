@@ -186,7 +186,6 @@ async function handleSuccessfulLoginResult(
     csrfToken: result.csrfToken,
     eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
     groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-    eligibleRoles: activeParty?.eligibleRoles ?? null,
     user,
     activeOccupationId,
     _lastAuthTimestamp: Date.now(),
@@ -350,7 +349,6 @@ export async function performApiLogin(
       csrfToken: existingCsrfToken,
       eligibleAttributeValues: activeParty?.eligibleAttributeValues ?? null,
       groupedEligibleAttributeValues: activeParty?.groupedEligibleAttributeValues ?? null,
-      eligibleRoles: activeParty?.eligibleRoles ?? null,
       user,
       activeOccupationId,
       _lastAuthTimestamp: Date.now(),
@@ -483,7 +481,6 @@ export async function performApiSessionCheck(
           groupedEligibleAttributeValues:
             activeParty?.groupedEligibleAttributeValues ??
             currentState.groupedEligibleAttributeValues,
-          eligibleRoles: activeParty?.eligibleRoles ?? currentState.eligibleRoles,
           user,
           activeOccupationId,
           _lastAuthTimestamp: Date.now(),

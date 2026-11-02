@@ -11,7 +11,7 @@
  * - `description-parsers.ts` - Multi-language field extraction from DESCRIPTION text
  * - `assignment-mapper.ts` - SUMMARY parsing, location processing, confidence calculation
  *
- * This file is the public API facade that re-exports all public functions.
+ * This file is the public entry point: `parseCalendarFeed` combines the submodules.
  *
  * ## Parsing Strategy
  *
@@ -72,10 +72,6 @@ import { extractAssignment } from './assignment-mapper'
 import { parseICalFeed } from './ical-tokenizer'
 
 import type { ICalEvent, ParseResult } from './types'
-
-// Re-export from submodules for backward compatibility
-export { parseICalFeed } from './ical-tokenizer'
-export { extractAssignment } from './assignment-mapper'
 
 /**
  * Parses a complete iCal feed and returns all assignments with metadata.

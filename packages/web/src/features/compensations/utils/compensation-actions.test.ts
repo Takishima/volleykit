@@ -7,12 +7,9 @@ import { objectContaining } from '@/test/matchers'
 import type { Assignment, CompensationRecord } from '@/api/client'
 import { server } from '@/test/msw/server'
 
-import {
-  createCompensationActions,
-  downloadCompensationPDF,
-  isCompensationEditable,
-  isAssignmentCompensationEditable,
-} from './compensation-actions'
+import { createCompensationActions, isCompensationEditable } from './compensation-actions'
+import { isAssignmentCompensationEditable } from './compensation-helpers'
+import { downloadCompensationPDF } from './compensation-pdf'
 
 vi.mock('@/api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/client')>()

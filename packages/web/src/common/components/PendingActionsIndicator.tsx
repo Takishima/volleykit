@@ -15,7 +15,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useNetworkStatus } from '@/common/hooks/useNetworkStatus'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import { useActionQueueStore, initializeActionQueueStore } from '@/common/stores/action-queue'
+import { useActionQueueStore } from '@/common/stores/action-queue'
 import { useAuthStore } from '@/common/stores/auth'
 import { useToastStore } from '@/common/stores/toast'
 import { createLogger } from '@/common/utils/logger'
@@ -31,18 +31,23 @@ function useAutoSync() {
   const isOnline = useNetworkStatus()
   const wasOnlineRef = useRef(isOnline)
   const dataSource = useAuthStore((state) => state.dataSource)
-  const { sync, pendingCount, isSyncing } = useActionQueueStore(
-    useShallow((s) => ({ sync: s.sync, pendingCount: s.pendingCount, isSyncing: s.isSyncing }))
+  const { sync, refresh, pendingCount, isSyncing } = useActionQueueStore(
+    useShallow((s) => ({
+      sync: s.sync,
+      refresh: s.refresh,
+      pendingCount: s.pendingCount,
+      isSyncing: s.isSyncing,
+    }))
   )
   const addToast = useToastStore((s) => s.addToast)
   const { t, tInterpolate } = useTranslation()
 
   // Initialize store on mount
   useEffect(() => {
-    initializeActionQueueStore().catch((error: unknown) =>
+    refresh().catch((error: unknown) =>
       log.error('Failed to initialize action queue store:', error)
     )
-  }, [])
+  }, [refresh])
 
   // Sync when coming back online
   useEffect(() => {

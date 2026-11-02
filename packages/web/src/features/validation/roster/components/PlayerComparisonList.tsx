@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 
 import { Check, AlertTriangle, XCircle, User } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
-import type { PlayerComparisonResult, ComparisonStatus } from '@/features/ocr'
+import type { PlayerComparisonResult, ComparisonStatus } from '@/features/ocr/types'
 
 interface PlayerComparisonListProps {
   results: PlayerComparisonResult[]

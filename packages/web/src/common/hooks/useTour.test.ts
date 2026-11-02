@@ -8,7 +8,6 @@ const mockStartTour = vi.fn()
 const mockNextStep = vi.fn()
 const mockCompleteTour = vi.fn()
 const mockShouldShowTour = vi.fn()
-const mockIsTourActive = vi.fn()
 
 let mockActiveTour: string | null = null
 let mockCurrentStep = 0
@@ -21,7 +20,6 @@ vi.mock('@/common/stores/tour', () => ({
     nextStep: mockNextStep,
     completeTour: mockCompleteTour,
     shouldShowTour: mockShouldShowTour,
-    isTourActive: mockIsTourActive,
   }),
 }))
 
@@ -34,7 +32,6 @@ describe('useTour', () => {
     mockNextStep.mockClear()
     mockCompleteTour.mockClear()
     mockShouldShowTour.mockReturnValue(true)
-    mockIsTourActive.mockReturnValue(false)
   })
 
   afterEach(() => {
@@ -44,12 +41,10 @@ describe('useTour', () => {
 
   describe('initial state', () => {
     it('should return initial state with tour not active', () => {
-      mockIsTourActive.mockReturnValue(false)
       mockShouldShowTour.mockReturnValue(true)
 
       const { result } = renderHook(() => useTour('assignments'))
 
-      expect(result.current.isActive).toBe(false)
       expect(result.current.isTourMode).toBe(false)
       expect(result.current.currentStep).toBe(0)
       expect(result.current.shouldShow).toBe(true)
@@ -57,11 +52,9 @@ describe('useTour', () => {
 
     it('should return isActive true when tour is active', () => {
       mockActiveTour = 'assignments'
-      mockIsTourActive.mockReturnValue(true)
 
       const { result } = renderHook(() => useTour('assignments'))
 
-      expect(result.current.isActive).toBe(true)
       expect(result.current.isTourMode).toBe(true)
     })
 
@@ -77,7 +70,6 @@ describe('useTour', () => {
   describe('showDummyData calculation', () => {
     it('should be true when tour is active', () => {
       mockActiveTour = 'assignments'
-      mockIsTourActive.mockReturnValue(true)
       mockShouldShowTour.mockReturnValue(true)
 
       const { result } = renderHook(() => useTour('assignments'))
@@ -95,7 +87,6 @@ describe('useTour', () => {
 
     it('should be false when tour should show but autoStart is disabled', () => {
       mockShouldShowTour.mockReturnValue(true)
-      mockIsTourActive.mockReturnValue(false)
       mockActiveTour = null
 
       const { result } = renderHook(() => useTour('assignments', { autoStart: false }))
@@ -105,7 +96,6 @@ describe('useTour', () => {
 
     it('should be false when tour is completed and not active', () => {
       mockShouldShowTour.mockReturnValue(false)
-      mockIsTourActive.mockReturnValue(false)
       mockActiveTour = null
 
       const { result } = renderHook(() => useTour('assignments'))
@@ -296,25 +286,21 @@ describe('useTour', () => {
 
   describe('different tour IDs', () => {
     it('should work with different tour IDs', () => {
-      mockIsTourActive.mockImplementation((id: string) => id === 'compensations')
       mockShouldShowTour.mockImplementation((id: string) => id === 'compensations')
       mockActiveTour = 'compensations'
 
       const { result } = renderHook(() => useTour('compensations'))
 
-      expect(result.current.isActive).toBe(true)
       expect(result.current.isTourMode).toBe(true)
       expect(result.current.shouldShow).toBe(true)
     })
 
     it('should not be active for different tour ID', () => {
-      mockIsTourActive.mockReturnValue(false)
       mockShouldShowTour.mockReturnValue(true)
       mockActiveTour = 'compensations'
 
       const { result } = renderHook(() => useTour('assignments'))
 
-      expect(result.current.isActive).toBe(false)
       expect(result.current.isTourMode).toBe(false)
     })
   })

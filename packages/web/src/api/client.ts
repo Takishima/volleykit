@@ -72,27 +72,10 @@ export { noteServerAssociation } from './association-guard'
 // all implementations (real, mock, calendar) conform to the same shape.
 export type ApiClient = typeof api
 
-// Re-export DataSource from auth store for consumers that import from client
-export type { DataSource } from '@/common/stores/auth'
-
-// Import for internal use
 import type { DataSource } from '@/common/stores/auth'
 
-/**
- * Returns the appropriate API client based on the data source.
- *
- * @param dataSource - The data source to use. Accepts either:
- *   - DataSource string: 'api', 'demo', or 'calendar'
- *   - boolean (deprecated): true = demo mode, false = api mode
- *
- * @returns The API client for the specified data source
- */
-export function getApiClient(dataSource: DataSource | boolean): typeof api {
-  // Handle legacy boolean parameter for backwards compatibility
-  if (typeof dataSource === 'boolean') {
-    return dataSource ? mockApi : api
-  }
-
+/** Returns the API client for the given data source. */
+export function getApiClient(dataSource: DataSource): typeof api {
   switch (dataSource) {
     case 'demo':
       return mockApi

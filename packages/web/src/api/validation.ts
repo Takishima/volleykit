@@ -31,13 +31,8 @@ import { logger } from '@/common/utils/logger'
 
 // Re-export all schemas from shared package
 export {
-  // Field schemas
-  dateSchema,
   // Entity schemas
   assignmentSchema,
-  compensationRecordSchema,
-  gameExchangeSchema,
-  personSearchResultSchema,
   // Response schemas
   assignmentsResponseSchema,
   compensationsResponseSchema,

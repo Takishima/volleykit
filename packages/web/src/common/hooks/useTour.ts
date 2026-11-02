@@ -12,9 +12,7 @@ interface UseTourOptions {
 }
 
 interface UseTourReturn {
-  // Whether this specific tour is currently active
-  isActive: boolean
-  // Whether tour mode is active (for showing dummy data)
+  // Whether this tour is currently active (for showing dummy data)
   isTourMode: boolean
   // Whether to show dummy data (true during auto-start delay AND when tour is active)
   // Use this for data filtering to avoid race condition with empty states
@@ -47,13 +45,11 @@ export function useTour(tourId: TourId, options: UseTourOptions = {}): UseTourRe
     nextStep: storeNextStep,
     completeTour,
     shouldShowTour,
-    isTourActive,
   } = useTourStore()
 
   const hasAutoStarted = useRef(false)
   const prevShouldShow = useRef(shouldShowTour(tourId))
 
-  const isActive = isTourActive(tourId)
   const isTourMode = activeTour === tourId
   const shouldShow = shouldShowTour(tourId)
 
@@ -98,7 +94,6 @@ export function useTour(tourId: TourId, options: UseTourOptions = {}): UseTourRe
   }
 
   return {
-    isActive,
     isTourMode,
     showDummyData,
     startTour,

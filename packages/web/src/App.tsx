@@ -60,17 +60,9 @@ const QueryProvider = features.offline
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     )
 
-// Base path for router - Vite sets BASE_URL from the `base` config
-// Remove trailing slash for React Router basename (it adds its own)
-// Handle edge case where BASE_URL is just "/" - use empty string instead
-function getBasename(): string {
-  const baseUrl = import.meta.env.BASE_URL
-  if (baseUrl === '/') {
-    return ''
-  }
-  return baseUrl.replace(/\/$/, '')
-}
-const BASE_PATH = getBasename()
+// Base path for router - Vite sets BASE_URL from the `base` config.
+// React Router adds its own trailing slash, so strip ours ("/" becomes "").
+const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 export default function App() {
   usePreloadLocales()

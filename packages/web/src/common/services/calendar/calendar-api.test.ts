@@ -6,7 +6,6 @@ import { partialMock } from '@/test/partial-mock'
 
 import {
   fetchCalendarAssignments,
-  validateCalendarCode,
   InvalidCalendarCodeError,
   CalendarNotFoundError,
 } from './calendar-api'
@@ -221,104 +220,6 @@ describe('fetchCalendarAssignments', () => {
 
       // Lowercase
       await expect(fetchCalendarAssignments('abcdef')).resolves.toEqual([])
-    })
-  })
-})
-
-describe('validateCalendarCode', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
-  afterEach(() => {
-    vi.resetAllMocks()
-  })
-
-  describe('valid codes', () => {
-    it('returns true when calendar exists', async () => {
-      mockFetch.mockResolvedValueOnce(createMockResponse(SAMPLE_ICAL))
-
-      const isValid = await validateCalendarCode('ABC123')
-
-      expect(isValid).toBe(true)
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/iCal/referee/ABC123'),
-        expect.objectContaining({ method: 'GET' })
-      )
-    })
-
-    it('returns true for empty calendar (valid code with no events)', async () => {
-      mockFetch.mockResolvedValueOnce(createMockResponse(EMPTY_ICAL))
-
-      const isValid = await validateCalendarCode('EMPTY1')
-
-      expect(isValid).toBe(true)
-    })
-
-    it('returns true even for malformed calendar content', async () => {
-      // If the server returns 200 with garbage, it means the code exists
-      mockFetch.mockResolvedValueOnce(createMockResponse('not valid ical content'))
-
-      const isValid = await validateCalendarCode('VALID1')
-
-      expect(isValid).toBe(true)
-    })
-  })
-
-  describe('invalid codes', () => {
-    it('returns false on 404 response', async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse('', { ok: false, status: 404, statusText: 'Not Found' })
-      )
-
-      const isValid = await validateCalendarCode('NOTFND')
-
-      expect(isValid).toBe(false)
-    })
-
-    it('returns false on other error responses', async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse('', { ok: false, status: 500, statusText: 'Server Error' })
-      )
-
-      const isValid = await validateCalendarCode('ERROR1')
-
-      expect(isValid).toBe(false)
-    })
-  })
-
-  describe('error handling', () => {
-    it('throws InvalidCalendarCodeError for invalid code format', async () => {
-      await expect(validateCalendarCode('ABC')).rejects.toThrow(InvalidCalendarCodeError)
-      await expect(validateCalendarCode('TOOLONG7')).rejects.toThrow(InvalidCalendarCodeError)
-      await expect(validateCalendarCode('ABC-12')).rejects.toThrow(InvalidCalendarCodeError)
-
-      // Fetch should not be called
-      expect(mockFetch).not.toHaveBeenCalled()
-    })
-
-    it('re-throws network errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      await expect(validateCalendarCode('ABC123')).rejects.toThrow('Network error')
-    })
-
-    it('re-throws AbortError for cancelled requests', async () => {
-      const abortError = new DOMException('Aborted', 'AbortError')
-      mockFetch.mockRejectedValueOnce(abortError)
-
-      await expect(validateCalendarCode('ABC123')).rejects.toThrow('Aborted')
-    })
-
-    it('passes abort signal to fetch', async () => {
-      mockFetch.mockResolvedValueOnce(createMockResponse(SAMPLE_ICAL))
-      const controller = new AbortController()
-
-      await validateCalendarCode('ABC123', controller.signal)
-
-      const [, options] = mockFetch.mock.calls[0]!
-      assertDefined(options)
-      expect(options.signal).toBe(controller.signal)
     })
   })
 })

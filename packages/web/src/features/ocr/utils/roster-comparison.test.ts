@@ -5,8 +5,6 @@ import {
   calculateNameSimilarity,
   calculateWordOrderIndependentSimilarity,
   compareRosters,
-  compareTeamRosters,
-  calculateMatchScore,
 } from './roster-comparison'
 
 import type { ParsedPlayer } from '../types'
@@ -303,66 +301,5 @@ describe('compareRosters', () => {
       expect(results[0]!.status).toBe('match')
       expect(results[0]!.confidence).toBe(100)
     })
-  })
-})
-
-describe('compareTeamRosters', () => {
-  it('returns complete comparison result', () => {
-    const ocrPlayers: ParsedPlayer[] = [
-      {
-        shirtNumber: 1,
-        firstName: 'Anna',
-        lastName: 'Müller',
-        displayName: 'Anna Müller',
-        rawName: 'MÜLLER ANNA',
-        licenseStatus: 'OK',
-      },
-    ]
-    const rosterPlayers: RosterPlayerForComparison[] = [
-      { id: '1', displayName: 'Anna Müller', firstName: 'Anna', lastName: 'Müller' },
-    ]
-
-    const result = compareTeamRosters('OCR Team', ocrPlayers, 'Roster Team', rosterPlayers)
-
-    expect(result.ocrTeamName).toBe('OCR Team')
-    expect(result.rosterTeamName).toBe('Roster Team')
-    expect(result.counts.matched).toBe(1)
-    expect(result.counts.ocrOnly).toBe(0)
-    expect(result.counts.rosterOnly).toBe(0)
-  })
-})
-
-describe('calculateMatchScore', () => {
-  it('returns 100 for all matched', () => {
-    const result = {
-      ocrTeamName: 'A',
-      rosterTeamName: 'B',
-      playerResults: [],
-      counts: { matched: 6, ocrOnly: 0, rosterOnly: 0 },
-    }
-
-    expect(calculateMatchScore(result)).toBe(100)
-  })
-
-  it('returns 0 for no players', () => {
-    const result = {
-      ocrTeamName: 'A',
-      rosterTeamName: 'B',
-      playerResults: [],
-      counts: { matched: 0, ocrOnly: 0, rosterOnly: 0 },
-    }
-
-    expect(calculateMatchScore(result)).toBe(0)
-  })
-
-  it('calculates correct percentage', () => {
-    const result = {
-      ocrTeamName: 'A',
-      rosterTeamName: 'B',
-      playerResults: [],
-      counts: { matched: 3, ocrOnly: 1, rosterOnly: 2 },
-    }
-
-    expect(calculateMatchScore(result)).toBe(50) // 3/6 = 50%
   })
 })

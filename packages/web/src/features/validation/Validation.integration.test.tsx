@@ -98,7 +98,6 @@ describe('Validation Integration', () => {
       calendarCode: null,
       eligibleAttributeValues: null,
       groupedEligibleAttributeValues: null,
-      eligibleRoles: null,
       _checkSessionPromise: null,
       _lastAuthTimestamp: null,
     })

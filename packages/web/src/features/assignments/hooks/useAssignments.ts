@@ -2,11 +2,12 @@ import { useMemo } from 'react'
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useTodayKey } from '@volleykit/shared/hooks'
+import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '@volleykit/shared/utils'
 import { startOfDay, endOfDay, parseISO, subDays, isWithinInterval } from 'date-fns'
 
 import { getApiClient, type SearchConfiguration, type Assignment } from '@/api/client'
 import { queryKeys } from '@/api/queryKeys'
-import { assignmentListOptions, assignmentDetailOptions } from '@/api/queryOptions'
+import { assignmentListOptions } from '@/api/queryOptions'
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_DATE_RANGE_DAYS,
@@ -22,14 +23,7 @@ import { useDemoStore } from '@/common/stores/demo'
 import type { ValidatedGameData } from '@/common/stores/demo/types'
 import { useAssociationSettings, useActiveSeason } from '@/features/settings/hooks/useSettings'
 
-import { isValidationClosed, DEFAULT_VALIDATION_DEADLINE_HOURS } from '../utils/assignment-helpers'
 import { getDateRangeForPeriod, type DatePeriod } from '../utils/date-range'
-
-// Re-export for backwards compatibility
-export { getDateRangeForPeriod, type DatePeriod } from '../utils/date-range'
-
-// Re-export calendar assignments hook for calendar mode
-export { useCalendarAssignments } from './useCalendarAssignments'
 
 // Stable empty array for React Query selectors to prevent unnecessary re-renders.
 // Using `|| []` creates a new array reference on each render, while this constant
@@ -181,13 +175,6 @@ export function useUpcomingAssignments() {
 }
 
 /**
- * Convenience hook for past assignments.
- */
-export function usePastAssignments() {
-  return useAssignments('past')
-}
-
-/**
  * Hook to fetch assignments where validation period has closed.
  *
  * This fetches past games from the current season and filters them
@@ -329,19 +316,4 @@ export function useValidationClosedAssignments(): UseQueryResult<Assignment[], E
   }
 
   return query
-}
-
-/**
- * Hook to fetch detailed assignment information.
- *
- * @param assignmentId - The assignment ID to fetch, or null to disable the query
- */
-export function useAssignmentDetails(assignmentId: string | null) {
-  const dataSource = useAuthStore((state) => state.dataSource)
-  const apiClient = getApiClient(dataSource)
-
-  return useQuery({
-    ...assignmentDetailOptions(apiClient, assignmentId || ''),
-    enabled: !!assignmentId,
-  })
 }

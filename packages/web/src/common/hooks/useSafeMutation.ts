@@ -3,11 +3,11 @@ import { useCallback, useMemo, useRef } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { useTranslation } from '@/common/hooks/useTranslation'
+import { useAuthStore } from '@/common/stores/auth'
+import { useSettingsStore } from '@/common/stores/settings'
 import { toast } from '@/common/stores/toast'
 import { createLogger, type Logger } from '@/common/utils/logger'
 import type { TranslationKey } from '@/i18n'
-
-import { useSafeModeGuard } from './useSafeModeGuard'
 
 interface SafeMutationGuardOptions {
   /** Context for safe mode logging */
@@ -71,7 +71,8 @@ export function useSafeMutation<TArg, TResult = void>(
   options: UseSafeMutationOptions<TResult>
 ): UseSafeMutationResult<TArg, TResult> {
   const { t } = useTranslation()
-  const { guard, isDemoMode } = useSafeModeGuard()
+  const isDemoMode = useAuthStore((state) => state.dataSource === 'demo')
+  const isSafeModeEnabled = useSettingsStore((state) => state.isSafeModeEnabled)
   const isExecutingRef = useRef(false)
 
   // Destructure options for stable dependency array
@@ -110,11 +111,11 @@ export function useSafeMutation<TArg, TResult = void>(
 
   const execute = useCallback(
     async (arg: TArg): Promise<TResult | undefined> => {
-      // Safe mode guard check
-      if (safeGuard) {
-        if (guard(safeGuard)) {
-          return undefined
-        }
+      // Safe mode blocks writes against the real API; demo mode only touches local data.
+      if (safeGuard && !isDemoMode && isSafeModeEnabled) {
+        log.debug(`[${safeGuard.context}] ${safeGuard.action} blocked by safe mode`)
+        toast.warning(t('settings.safeModeBlocked'))
+        return undefined
       }
 
       // Race condition protection
@@ -134,7 +135,7 @@ export function useSafeMutation<TArg, TResult = void>(
         isExecutingRef.current = false
       }
     },
-    [safeGuard, guard, log, mutation]
+    [safeGuard, isDemoMode, isSafeModeEnabled, log, mutation, t]
   )
 
   return { execute, isExecuting: mutation.isPending }

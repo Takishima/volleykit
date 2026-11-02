@@ -4,9 +4,9 @@ import {
   dateSchema,
   compensationRecordSchema,
   personSearchResultSchema,
-  personSearchResponseSchema,
-  validateResponse,
-} from './validation'
+} from '@volleykit/shared/api'
+
+import { personSearchResponseSchema, validateResponse } from './validation'
 
 describe('dateSchema', () => {
   it('accepts ISO date format', () => {

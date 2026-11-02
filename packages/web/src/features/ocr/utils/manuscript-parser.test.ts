@@ -1,19 +1,18 @@
 import { describe, it, expect } from 'vitest'
 
+import { parseManuscriptSheet } from './manuscript-parser'
 import {
-  parseManuscriptSheet,
+  splitConcatenatedNames,
+  splitConcatenatedDates,
+} from './manuscript-parser/concatenated-data'
+import { normalizeName, parsePlayerName, parseOfficialName } from './manuscript-parser/name-parsing'
+import {
   correctDigits,
   correctLetters,
   extractShirtNumber,
-  normalizeName,
-  parsePlayerName,
-  parseOfficialName,
-  isSwissTabularFormat,
-  splitConcatenatedNames,
-  splitConcatenatedDates,
-  splitConcatenatedNumbers,
-  extractSwissTeamNames,
-} from './manuscript-parser'
+} from './manuscript-parser/ocr-corrections'
+import { isSwissTabularFormat } from './manuscript-parser/table-detection'
+import { extractSwissTeamNames } from './manuscript-parser/team-name-extraction'
 
 describe('OCR Error Correction', () => {
   describe('correctDigits', () => {
@@ -288,48 +287,6 @@ MANNSCHAFT B VBC Basel
   })
 })
 
-describe('parseGameSheetWithType', () => {
-  // Import at test time to avoid circular dependency issues
-  it('routes to manuscript parser when type is manuscript', async () => {
-    const { parseGameSheetWithType } = await import('./player-list-parser')
-
-    const ocrText = `Team A VBC Test
-1 MÜLLER ANNA`
-
-    const result = parseGameSheetWithType(ocrText, { type: 'manuscript' })
-
-    expect(result.teamA.players).toHaveLength(1)
-    expect(result.teamA.players[0]!.lastName).toBe('Müller')
-  })
-
-  it('routes to electronic parser by default', async () => {
-    const { parseGameSheetWithType } = await import('./player-list-parser')
-
-    const ocrText = `VBC Heimteam\tVBC Gastteam
-N.\tName of the player\tLicense\tN.\tName of the player\tLicense
-1\tMÜLLER ANNA\tOK\t3\tSCHMIDT LISA\tOK`
-
-    const result = parseGameSheetWithType(ocrText)
-
-    expect(result.teamA.players).toHaveLength(1)
-    expect(result.teamA.players[0]!.lastName).toBe('Müller')
-    expect(result.teamB.players).toHaveLength(1)
-  })
-
-  it('routes to electronic parser when type is electronic', async () => {
-    const { parseGameSheetWithType } = await import('./player-list-parser')
-
-    const ocrText = `VBC Heimteam\tVBC Gastteam
-N.\tName of the player\tLicense\tN.\tName of the player\tLicense
-1\tMÜLLER ANNA\tOK\t3\tSCHMIDT LISA\tOK`
-
-    const result = parseGameSheetWithType(ocrText, { type: 'electronic' })
-
-    expect(result.teamA.name).toBe('VBC Heimteam')
-    expect(result.teamB.name).toBe('VBC Gastteam')
-  })
-})
-
 // =============================================================================
 // Swiss Tabular Format Tests
 // =============================================================================
@@ -429,51 +386,6 @@ describe('Concatenated Data Splitting', () => {
 
     it('returns empty array for empty input', () => {
       expect(splitConcatenatedDates('')).toEqual([])
-    })
-  })
-
-  describe('splitConcatenatedNumbers', () => {
-    it('splits jersey numbers preferring single digits', () => {
-      const numbers = splitConcatenatedNumbers('5139')
-      // All single digits when no ambiguity
-      expect(numbers).toEqual([5, 1, 3, 9])
-    })
-
-    it('handles sequences with zeros', () => {
-      // Zeros are skipped as they're invalid jersey numbers
-      const numbers = splitConcatenatedNumbers('102030')
-      expect(numbers).toContain(1)
-      expect(numbers).toContain(2)
-      expect(numbers).toContain(3)
-    })
-
-    it('handles expected count hint to prefer single digits', () => {
-      // With expected count of 5, should take all single digits
-      const numbers = splitConcatenatedNumbers('12345', 5)
-      expect(numbers).toHaveLength(5)
-      expect(numbers).toEqual([1, 2, 3, 4, 5])
-    })
-
-    it('returns empty array for empty input', () => {
-      expect(splitConcatenatedNumbers('')).toEqual([])
-    })
-
-    it('handles typical volleyball numbers', () => {
-      // Common volleyball jersey numbers
-      const numbers = splitConcatenatedNumbers('135789')
-      expect(numbers).toEqual([1, 3, 5, 7, 8, 9])
-    })
-
-    it('handles consecutive two-digit-looking numbers', () => {
-      // Edge case: 1011121314 could be interpreted multiple ways
-      // With single-digit preference, should split as: 1, 0(skip), 1, 1, 1, 2, 1, 3, 1, 4
-      // But zeros are skipped, so we get: 1, 1, 1, 1, 2, 1, 3, 1, 4
-      const numbers = splitConcatenatedNumbers('1011121314')
-      // Since we prefer single digits, each digit 1-9 is taken individually
-      expect(numbers.length).toBeGreaterThan(5)
-      expect(numbers[0]).toBe(1) // First digit
-      // Zeros are skipped as invalid jersey numbers
-      expect(numbers).not.toContain(0)
     })
   })
 })

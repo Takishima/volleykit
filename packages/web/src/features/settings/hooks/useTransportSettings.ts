@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { queryKeys } from '@/api/queryKeys'
 import { useActiveAssociationCode } from '@/common/hooks/useActiveAssociation'
 import { useTravelModeSettings } from '@/common/hooks/useTravelModeSettings'
-import { useTravelTimeAvailable } from '@/common/hooks/useTravelTime'
+import { useTravelTimeAvailable } from '@/common/hooks/useTravelTimeSource'
 import {
   clearTravelTimeCache,
   getTravelTimeCacheStats,
@@ -22,9 +22,13 @@ import {
   MAX_ARRIVAL_BUFFER_MINUTES,
   DEFAULT_MAX_DISTANCE_KM,
   DEFAULT_MAX_TRAVEL_TIME_MINUTES,
-  type DistanceFilter,
   type SbbDestinationType,
 } from '@/common/stores/settings'
+import {
+  resolveMaxDistanceKm,
+  resolveMaxTravelTimeMinutes,
+  resolveTransportEnabled,
+} from '@/common/stores/settings/per-association'
 
 const DEBOUNCE_MS = 300
 
@@ -87,33 +91,19 @@ export function useTransportSettings() {
   // Incremented by handleClearCache to trigger a re-render so cacheEntryCount is recomputed.
   const [, setCacheVersion] = useState(0)
 
-  // Get current transport enabled state for this association
-  const isTransportEnabled = useMemo(() => {
-    const enabledMap = transportEnabledByAssociation ?? {}
-    if (associationCode && enabledMap[associationCode] !== undefined) {
-      return enabledMap[associationCode]
-    }
-    return transportEnabled
-  }, [associationCode, transportEnabledByAssociation, transportEnabled])
-
-  // Get current distance filter for this association
-  const currentDistanceFilter: DistanceFilter = useMemo(() => {
-    const filterMap = distanceFilterByAssociation ?? {}
-    if (associationCode && filterMap[associationCode] !== undefined) {
-      return filterMap[associationCode]
-    }
-    // Use distanceFilter or default if not set
-    return distanceFilter ?? { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM }
-  }, [associationCode, distanceFilterByAssociation, distanceFilter])
-
-  // Get current max travel time for this association
-  const currentMaxTravelTime = useMemo(() => {
-    const timeMap = travelTimeFilter?.maxTravelTimeByAssociation ?? {}
-    if (associationCode && timeMap[associationCode] !== undefined) {
-      return timeMap[associationCode]
-    }
-    return travelTimeFilter?.maxTravelTimeMinutes ?? DEFAULT_MAX_TRAVEL_TIME_MINUTES
-  }, [associationCode, travelTimeFilter])
+  const isTransportEnabled = resolveTransportEnabled(
+    transportEnabled,
+    transportEnabledByAssociation,
+    associationCode
+  )
+  const currentMaxDistanceKm = resolveMaxDistanceKm(
+    distanceFilter ?? { enabled: false, maxDistanceKm: DEFAULT_MAX_DISTANCE_KM },
+    distanceFilterByAssociation,
+    associationCode
+  )
+  const currentMaxTravelTime = travelTimeFilter
+    ? resolveMaxTravelTimeMinutes(travelTimeFilter, associationCode)
+    : DEFAULT_MAX_TRAVEL_TIME_MINUTES
 
   // Get current arrival buffer for this association from store
   const storeArrivalBuffer = useMemo(() => {
@@ -125,7 +115,7 @@ export function useTransportSettings() {
 
   // Local state for immediate input feedback (debounced before persisting to store)
   const [localArrivalBuffer, setLocalArrivalBuffer] = useState(storeArrivalBuffer)
-  const [localMaxDistance, setLocalMaxDistance] = useState(currentDistanceFilter.maxDistanceKm)
+  const [localMaxDistance, setLocalMaxDistance] = useState(currentMaxDistanceKm)
   const [localMaxTravelTime, setLocalMaxTravelTime] = useState(currentMaxTravelTime)
   const [localMaxBikeDistance, setLocalMaxBikeDistance] = useState(maxBikeDistanceKm)
 
@@ -136,7 +126,7 @@ export function useTransportSettings() {
   if (prevAssociation !== associationCode) {
     setPrevAssociation(associationCode)
     setLocalArrivalBuffer(storeArrivalBuffer)
-    setLocalMaxDistance(currentDistanceFilter.maxDistanceKm)
+    setLocalMaxDistance(currentMaxDistanceKm)
     setLocalMaxTravelTime(currentMaxTravelTime)
   }
 
