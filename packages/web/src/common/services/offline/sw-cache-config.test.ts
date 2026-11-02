@@ -10,8 +10,8 @@ import {
 const PROXY = 'https://api.volleykit.ch'
 const DIRECT = 'https://volleymanager.volleyball.ch'
 
-const proxyPattern = buildCacheableApiUrlPattern(PROXY)
-const directPattern = buildCacheableApiUrlPattern(DIRECT, true)
+const proxyPattern = buildCacheableApiUrlPattern([PROXY])
+const directPattern = buildCacheableApiUrlPattern([DIRECT], true)
 
 /** Real request paths from docs/api and src/api/real-api.ts */
 const CACHEABLE_PATHS = [
@@ -62,7 +62,7 @@ describe('buildCacheableApiUrlPattern', () => {
   })
 
   it('reduces a full endpoint URL to its origin', () => {
-    const pattern = buildCacheableApiUrlPattern(`${PROXY}/ocr`)
+    const pattern = buildCacheableApiUrlPattern([`${PROXY}/ocr`])
     expect(pattern.test(`${PROXY}${CACHEABLE_PATHS[0]}`)).toBe(true)
   })
 

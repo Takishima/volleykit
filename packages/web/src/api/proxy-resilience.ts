@@ -8,6 +8,8 @@
  * Fallback URLs are configured via VITE_FALLBACK_PROXY_URLS (comma-separated).
  */
 
+import { parseProxyUrls } from '@/common/config/proxy-urls'
+
 const STORAGE_KEY = 'volleykit-active-proxy-url'
 const FAILURE_COUNT_KEY = 'volleykit-proxy-failure-count'
 const ROTATION_TIMESTAMP_KEY = 'volleykit-proxy-rotation-timestamp'
@@ -22,14 +24,10 @@ const PRIMARY_RETRY_TTL_MS = TEN_MINUTES * SECONDS_PER_MINUTE * MS_PER_SECOND
  * Build the ordered list of proxy URLs: primary + fallbacks.
  */
 function getProxyUrls(): string[] {
-  const primary = import.meta.env.VITE_API_PROXY_URL || ''
-  const fallbacksRaw = import.meta.env.VITE_FALLBACK_PROXY_URLS || ''
-  const fallbacks = fallbacksRaw
-    .split(',')
-    .map((u) => u.trim())
-    .filter(Boolean)
-  // Deduplicate while preserving order
-  return [...new Set([primary, ...fallbacks])].filter(Boolean)
+  return parseProxyUrls(
+    import.meta.env.VITE_API_PROXY_URL,
+    import.meta.env.VITE_FALLBACK_PROXY_URLS
+  )
 }
 
 /**
