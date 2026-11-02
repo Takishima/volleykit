@@ -39,4 +39,11 @@ describe('parseProxyUrls', () => {
     expect(parseProxyUrls(undefined, undefined)).toEqual([])
     expect(parseProxyUrls('', '')).toEqual([])
   })
+
+  it('throws naming the offending entry when a URL cannot be parsed', () => {
+    expect(() => parseProxyUrls('not a url', FALLBACK_A)).toThrow('Invalid proxy URL "not a url"')
+    expect(() => parseProxyUrls(PRIMARY, `${FALLBACK_A},//broken`)).toThrow(
+      'Invalid proxy URL "//broken"'
+    )
+  })
 })
