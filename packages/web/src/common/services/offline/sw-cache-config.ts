@@ -49,14 +49,22 @@ const PACKAGE_SEPARATOR_PATTERN = '(?:\\/|%5c|\\\\)'
 const CACHEABLE_API_PATH_PATTERN = `(?:${CACHEABLE_API_PACKAGES.map(escapeRegExp).join('|')})${PACKAGE_SEPARATOR_PATTERN}`
 
 /**
- * Build the Workbox `urlPattern` for one API origin.
+ * Build the Workbox `urlPattern` for one or more API origins.
  *
- * @param originUrl - Origin URL, e.g. `https://api.volleykit.ch` (a path is ignored)
+ * @param originUrls - Origin URLs, e.g. `https://api.volleykit.ch` (a path is ignored);
+ *   several origins share one pattern so primary and fallback proxies fill the same cache
  * @param allowApiPrefix - Accept an optional `/api/` segment after the origin (direct access)
  */
-export function buildCacheableApiUrlPattern(originUrl: string, allowApiPrefix = false): RegExp {
-  const origin = escapeRegExp(new URL(originUrl).origin)
+export function buildCacheableApiUrlPattern(
+  originUrls: readonly string[],
+  allowApiPrefix = false
+): RegExp {
+  const origins = [...new Set(originUrls.map((url) => new URL(url).origin))]
+  if (origins.length === 0) {
+    throw new Error('buildCacheableApiUrlPattern: at least one origin is required')
+  }
+  const originAlternation = origins.map(escapeRegExp).join('|')
   const apiPrefix = allowApiPrefix ? '(?:api\\/)?' : ''
   // eslint-disable-next-line security/detect-non-literal-regexp -- assembled from build-time constants only, never from user input
-  return new RegExp(`^${origin}\\/${apiPrefix}${CACHEABLE_API_PATH_PATTERN}`, 'i')
+  return new RegExp(`^(?:${originAlternation})\\/${apiPrefix}${CACHEABLE_API_PATH_PATTERN}`, 'i')
 }

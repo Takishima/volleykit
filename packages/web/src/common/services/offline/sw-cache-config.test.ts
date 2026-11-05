@@ -10,8 +10,8 @@ import {
 const PROXY = 'https://api.volleykit.ch'
 const DIRECT = 'https://volleymanager.volleyball.ch'
 
-const proxyPattern = buildCacheableApiUrlPattern(PROXY)
-const directPattern = buildCacheableApiUrlPattern(DIRECT, true)
+const proxyPattern = buildCacheableApiUrlPattern([PROXY])
+const directPattern = buildCacheableApiUrlPattern([DIRECT], true)
 
 /** Real request paths from docs/api and src/api/real-api.ts */
 const CACHEABLE_PATHS = [
@@ -62,8 +62,29 @@ describe('buildCacheableApiUrlPattern', () => {
   })
 
   it('reduces a full endpoint URL to its origin', () => {
-    const pattern = buildCacheableApiUrlPattern(`${PROXY}/ocr`)
+    const pattern = buildCacheableApiUrlPattern([`${PROXY}/ocr`])
     expect(pattern.test(`${PROXY}${CACHEABLE_PATHS[0]}`)).toBe(true)
+  })
+
+  describe('with several proxy origins', () => {
+    const FALLBACK = 'https://volleykit-proxy.takishima.workers.dev'
+    const multiPattern = buildCacheableApiUrlPattern([PROXY, FALLBACK, `${PROXY}/`])
+
+    it.each([PROXY, FALLBACK])('caches JSON API routes on %s', (origin) => {
+      expect(multiPattern.test(`${origin}${CACHEABLE_PATHS[0]}`)).toBe(true)
+    })
+
+    it.each([PROXY, FALLBACK])('still refuses session routes on %s', (origin) => {
+      expect(multiPattern.test(`${origin}${NON_CACHEABLE_PATHS[0]}`)).toBe(false)
+    })
+
+    it('does not match an origin outside the list', () => {
+      expect(multiPattern.test(`https://other.example${CACHEABLE_PATHS[0]}`)).toBe(false)
+    })
+
+    it('rejects an empty origin list', () => {
+      expect(() => buildCacheableApiUrlPattern([])).toThrow('at least one origin')
+    })
   })
 })
 

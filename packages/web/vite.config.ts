@@ -12,6 +12,7 @@ import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import packageJson from './package.json' with { type: 'json' }
+import { parseProxyUrls } from './src/common/config/proxy-urls'
 import { STATIC_REMOTE_ORIGINS, VOLLEYMANAGER_ORIGIN } from './src/common/config/remote-origins'
 import {
   API_CACHE_NAME,
@@ -262,10 +263,6 @@ function versionFilePlugin(
   }
 }
 
-// Target API server for development proxy
-/** Production CORS proxy origin, used when VITE_API_PROXY_URL is not set at build time */
-const DEFAULT_API_PROXY_ORIGIN = 'https://api.volleykit.ch'
-
 /**
  * Plugin that injects a Content-Security-Policy <meta> tag into the built index.html.
  * GitHub Pages cannot send response headers, so the policy has to ship in the document.
@@ -326,8 +323,13 @@ export default defineConfig(({ mode }) => {
   // Get git hash for version tracking (used in PWA update detection)
   const gitHash = getGitHash()
 
-  // Proxy origin shared by the CSP allowlist and the service worker cache pattern
-  const apiProxyOrigin = process.env.VITE_API_PROXY_URL || DEFAULT_API_PROXY_ORIGIN
+  // Every proxy the client may talk to (primary plus failover fallbacks), parsed by the
+  // same function proxy-resilience.ts uses at runtime, so the CSP allowlist and the
+  // service worker cache pattern cover exactly the proxies a failover can reach.
+  const apiProxyUrls = parseProxyUrls(
+    process.env.VITE_API_PROXY_URL,
+    process.env.VITE_FALLBACK_PROXY_URLS
+  )
 
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
   if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
@@ -482,7 +484,7 @@ export default defineConfig(({ mode }) => {
             runtimeCaching: [
               {
                 // Cache direct API responses (development/direct access)
-                urlPattern: buildCacheableApiUrlPattern(VOLLEYMANAGER_ORIGIN, true),
+                urlPattern: buildCacheableApiUrlPattern([VOLLEYMANAGER_ORIGIN], true),
                 handler: 'NetworkFirst',
                 options: {
                   cacheName: API_CACHE_NAME,
@@ -496,23 +498,28 @@ export default defineConfig(({ mode }) => {
                   },
                 },
               },
-              {
-                // Cache CORS proxy responses (production)
-                // Uses same strategy as direct API for consistency
-                urlPattern: buildCacheableApiUrlPattern(apiProxyOrigin),
-                handler: 'NetworkFirst',
-                options: {
-                  cacheName: PROXY_API_CACHE_NAME,
-                  networkTimeoutSeconds: 3,
-                  expiration: {
-                    maxEntries: 500,
-                    maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-                  },
-                  cacheableResponse: {
-                    statuses: [200],
-                  },
-                },
-              },
+              // Cache CORS proxy responses (production), primary and fallback proxies alike.
+              // Uses same strategy as direct API for consistency. Omitted when no proxy is
+              // configured: the runtime has nothing to call, so there is nothing to cache.
+              ...(apiProxyUrls.length > 0
+                ? [
+                    {
+                      urlPattern: buildCacheableApiUrlPattern(apiProxyUrls),
+                      handler: 'NetworkFirst' as const,
+                      options: {
+                        cacheName: PROXY_API_CACHE_NAME,
+                        networkTimeoutSeconds: 3,
+                        expiration: {
+                          maxEntries: 500,
+                          maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+                        },
+                        cacheableResponse: {
+                          statuses: [200],
+                        },
+                      },
+                    },
+                  ]
+                : []),
               // Google Fonts caching rule removed — no external fonts are loaded.
               // All fonts are system defaults (Tailwind). This eliminates a dependency
               // on fonts.googleapis.com/fonts.gstatic.com that could be blocked by
@@ -556,8 +563,7 @@ export default defineConfig(({ mode }) => {
       spaFallbackPlugin(basePath),
       cspPlugin(
         collectRemoteOrigins(STATIC_REMOTE_ORIGINS, [
-          process.env.VITE_API_PROXY_URL,
-          process.env.VITE_FALLBACK_PROXY_URLS,
+          ...apiProxyUrls,
           process.env.VITE_OCR_ENDPOINT,
         ])
       ),
