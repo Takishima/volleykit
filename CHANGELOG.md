@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.35.1
+
+### Patch Changes
+
+- [#1210](https://github.com/Takishima/volleykit/pull/1210) [`82d08e6`](https://github.com/Takishima/volleykit/commit/82d08e6ef218dc99d5378b1a0c25ae31c7ee0914) Thanks [@Takishima](https://github.com/Takishima)! - Fixed exchange distance and travel-time filters ignoring the per-association
+  limits set in the filter menu. The list now filters with the same threshold the
+  slider shows.
+
+- [#1211](https://github.com/Takishima/volleykit/pull/1211) [`eb4e82a`](https://github.com/Takishima/volleykit/commit/eb4e82a4fa45187e8094d65fb2fdcc2aca48fe97) Thanks [@Takishima](https://github.com/Takishima)! - Keep caching API responses for offline use after the app fails over to a fallback proxy.
+
+- [#1208](https://github.com/Takishima/volleykit/pull/1208) [`aa4c665`](https://github.com/Takishima/volleykit/commit/aa4c665b45c5e4f4153292ec3427ffd7b7db4799) Thanks [@Takishima](https://github.com/Takishima)! - Security hardening: ship a Content-Security-Policy with the app shell, only cache JSON API routes in the service worker and drop them on logout, and never persist the iOS session token in plaintext. iOS PWA users whose session token was stored in plaintext by an earlier version are logged out once and need to sign in again.
+
+- [#1210](https://github.com/Takishima/volleykit/pull/1210) [`82d08e6`](https://github.com/Takishima/volleykit/commit/82d08e6ef218dc99d5378b1a0c25ae31c7ee0914) Thanks [@Takishima](https://github.com/Takishima)! - Removed dead code paths in the web app: unused notification services and the
+  matching settings slice, the ineffective cache warming hook, unused components
+  and hooks that were only reachable from feature barrel files, and duplicated
+  request/body construction in the API clients. No user-facing behavior changes.
+
 ## 1.35.0
 
 ### Minor Changes
