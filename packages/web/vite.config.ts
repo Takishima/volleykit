@@ -8,7 +8,7 @@ import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 import packageJson from './package.json' with { type: 'json' }
@@ -323,16 +323,19 @@ export default defineConfig(({ mode }) => {
   // Get git hash for version tracking (used in PWA update detection)
   const gitHash = getGitHash()
 
+  // Resolve VITE_* variables the same way the runtime's import.meta.env does: from the
+  // .env* files for this mode, overlaid by process.env (so CI/workflow variables still
+  // win). Reading process.env alone would skip .env.local, leaving a locally configured
+  // proxy out of the CSP allowlist and the service worker cache pattern.
+  const env = loadEnv(mode, process.cwd(), 'VITE_')
+
   // Every proxy the client may talk to (primary plus failover fallbacks), parsed by the
   // same function proxy-resilience.ts uses at runtime, so the CSP allowlist and the
   // service worker cache pattern cover exactly the proxies a failover can reach.
-  const apiProxyUrls = parseProxyUrls(
-    process.env.VITE_API_PROXY_URL,
-    process.env.VITE_FALLBACK_PROXY_URLS
-  )
+  const apiProxyUrls = parseProxyUrls(env.VITE_API_PROXY_URL, env.VITE_FALLBACK_PROXY_URLS)
 
   // Warn if proxy URL is not configured for production (runtime check in client.ts handles the actual failure)
-  if (mode === 'production' && !process.env.VITE_API_PROXY_URL) {
+  if (mode === 'production' && !env.VITE_API_PROXY_URL) {
     console.warn(
       '\x1b[33m⚠ Warning: VITE_API_PROXY_URL is not set for production build.\n' +
         '  API calls will fail unless configured. Set it to your Cloudflare Worker URL.\x1b[0m'
@@ -340,7 +343,7 @@ export default defineConfig(({ mode }) => {
   }
 
   // Normalize base path for deployment
-  const rawBasePath = process.env.VITE_BASE_PATH
+  const rawBasePath = env.VITE_BASE_PATH
   const basePath = normalizeBasePath(rawBasePath)
 
   // Detect if this is a PR preview build (path contains /pr-{number}/)
@@ -562,19 +565,11 @@ export default defineConfig(({ mode }) => {
         }),
       spaFallbackPlugin(basePath),
       cspPlugin(
-        collectRemoteOrigins(STATIC_REMOTE_ORIGINS, [
-          ...apiProxyUrls,
-          process.env.VITE_OCR_ENDPOINT,
-        ])
+        collectRemoteOrigins(STATIC_REMOTE_ORIGINS, [...apiProxyUrls, env.VITE_OCR_ENDPOINT])
       ),
       // Generate version.json for PWA update detection (skip for PR previews)
       !isPrPreview &&
-        versionFilePlugin(
-          packageJson.version,
-          gitHash,
-          basePath,
-          process.env.VITE_API_PROXY_URL || ''
-        ),
+        versionFilePlugin(packageJson.version, gitHash, basePath, env.VITE_API_PROXY_URL || ''),
       // Bundle analyzer - generates stats.html after build
       visualizer({
         filename: 'stats.html',
