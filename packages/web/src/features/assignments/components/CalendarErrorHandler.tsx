@@ -7,8 +7,8 @@ import { useShallow } from 'zustand/react/shallow'
 import { queryKeys } from '@/api/queryKeys'
 import { useAuthStore } from '@/common/stores/auth'
 
-import { CalendarErrorModal } from './CalendarErrorModal'
 import { useCalendarErrorHandler } from '../hooks/useCalendarErrorHandler'
+import { CalendarErrorModal } from './CalendarErrorModal'
 
 interface CalendarErrorHandlerProps {
   children: ReactNode

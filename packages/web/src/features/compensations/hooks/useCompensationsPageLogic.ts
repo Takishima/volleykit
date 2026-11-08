@@ -11,9 +11,9 @@ import { groupByWeek, getSeasonDateRange } from '@/common/utils/date-helpers'
 import { TOUR_DUMMY_COMPENSATION } from '@/features/compensations/compensations'
 import type { SwipeConfig } from '@/types/swipe'
 
+import { createCompensationActions, isCompensationEditable } from '../utils/compensation-actions'
 import { useCompensationActions } from './useCompensationActions'
 import { useCompensations } from './useCompensations'
-import { createCompensationActions, isCompensationEditable } from '../utils/compensation-actions'
 
 type FilterType = 'pendingPast' | 'pendingFuture' | 'closed'
 type TranslationFn = typeof import('@/i18n').t

@@ -12,8 +12,8 @@ import { useAuthStore } from '@volleykit/shared/stores'
 
 import { setSessionToken, setCsrfToken, clearTokens, getSessionToken } from '../api'
 import { API_BASE_URL, SESSION_TOKEN_HEADER } from '../constants'
-import { onUserLogout as cleanupDepartureReminders } from './departure-reminder'
 import { secureStorage } from '../platform/secureStorage'
+import { onUserLogout as cleanupDepartureReminders } from './departure-reminder'
 import { useActionQueueStore } from './offline/action-queue-store'
 
 /**

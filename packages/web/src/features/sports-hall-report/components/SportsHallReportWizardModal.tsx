@@ -9,11 +9,11 @@ import { createLogger } from '@/common/utils/logger'
 import type { JerseyAdvertisingOptions } from '@/common/utils/pdf-form-filler'
 import type { Language } from '@/common/utils/pdf-report-data'
 
+import { useNonConformantWizard } from '../hooks/useNonConformantWizard'
+import { usePdfGeneration } from '../hooks/usePdfGeneration'
 import { HappyPathContent } from './HappyPathContent'
 import { NonConformantOverlay } from './NonConformantOverlay'
 import { SignatureCanvas } from './SignatureCanvas'
-import { useNonConformantWizard } from '../hooks/useNonConformantWizard'
-import { usePdfGeneration } from '../hooks/usePdfGeneration'
 
 const log = createLogger('SportsHallReportWizardModal')
 

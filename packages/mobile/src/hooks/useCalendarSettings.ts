@@ -20,8 +20,8 @@ import { useTranslation } from '@volleykit/shared/i18n'
 import { useAuthStore } from '@volleykit/shared/stores'
 
 import { CALENDAR_SETTINGS_KEY } from '../constants'
-import { useCalendarSync } from './useCalendarSync'
 import { calendar } from '../platform/calendar'
+import { useCalendarSync } from './useCalendarSync'
 
 import type { CalendarInfo, CalendarSyncMode, CalendarSettings } from '../types/calendar'
 

@@ -15,20 +15,21 @@
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
-    "@tailwindcss/vite": "^4.3.3",
-    "astro": "7.4.2",
-    "tailwindcss": "^4.3.3"
+    "@tailwindcss/vite": "^4.3.5",
+    "astro": "7.4.7",
+    "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.6",
+    "@astrojs/check": "^0.9.12",
+    "@emnapi/runtime": "^1.11.3",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.13.0",
-    "eslint-plugin-astro": "^1.5.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-better-tailwindcss": "^4.10.0",
-    "knip": "^6.43.0",
-    "pagefind": "^1.5.2",
+    "knip": "^6.44.2",
+    "pagefind": "^1.6.0",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.72.1"
   }
 }

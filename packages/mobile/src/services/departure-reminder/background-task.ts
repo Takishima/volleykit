@@ -7,6 +7,10 @@
 
 import * as TaskManager from 'expo-task-manager'
 
+import { location } from '../../platform/location'
+import { storage } from '../../platform/storage'
+import { departureRemindersStore } from '../../stores/departureReminders'
+import { departureReminderSettingsStore } from '../../stores/departureReminderSettings'
 import { scheduleReminderNotification, cancelReminderNotification } from './notification-scheduler'
 import { calculateRoute, isOjpConfigured, RouteCalculationError } from './route-calculator'
 import {
@@ -15,10 +19,6 @@ import {
   clusterNearbyVenues,
   type AssignmentWithVenue,
 } from './venue-proximity'
-import { location } from '../../platform/location'
-import { storage } from '../../platform/storage'
-import { departureRemindersStore } from '../../stores/departureReminders'
-import { departureReminderSettingsStore } from '../../stores/departureReminderSettings'
 
 import type { Coordinates, DepartureReminder, VenueCluster } from '../../types/departureReminder'
 

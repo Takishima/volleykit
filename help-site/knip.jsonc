@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": ["src/**/*.{ts,astro}"],
+  "ignoreBinaries": ["prettier"],
+  "ignoreDependencies": [
+    "prettier-plugin-astro",
+    "tailwindcss",
+    "@tailwindcss/typography",
+    // Pins the peer that @astrojs/check > @astrojs/language-server >
+    // @astrojs/astro2tsx > @napi-rs/wasm-runtime leaves open. Without it pnpm
+    // auto-resolves @emnapi/runtime to the 2.0.0 beta that rolldown's wasm
+    // binding ships, which is incompatible with astro2tsx's @emnapi/core 1.x
+    // and makes `astro check` fail to load @astrojs/check. Drop once
+    // @astrojs/astro2tsx depends on @emnapi/runtime directly.
+    "@emnapi/runtime"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "duplicates": "off"
+  }
+}

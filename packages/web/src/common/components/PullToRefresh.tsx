@@ -4,9 +4,9 @@ import { ArrowDown } from 'lucide-react'
 
 import { useTranslation } from '@/common/hooks/useTranslation'
 
-import { LoadingState } from './LoadingSpinner'
 import { usePullToRefresh } from '../hooks/usePullToRefresh'
 import { usePwaStandalone } from '../hooks/usePwaStandalone'
+import { LoadingState } from './LoadingSpinner'
 
 interface PullToRefreshProps {
   /** Callback to execute when refresh is triggered */

@@ -2,8 +2,8 @@ import { ChevronDown, ChevronUp } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ParsedGameSheet, OCRResult } from '@/features/ocr/types'
 
-import { OCRImageOverlay } from './OCRImageOverlay'
 import { RawTeamData } from '../../roster/components/RawTeamData'
+import { OCRImageOverlay } from './OCRImageOverlay'
 
 interface RawOcrDataPanelProps {
   data: ParsedGameSheet

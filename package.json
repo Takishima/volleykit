@@ -24,29 +24,20 @@
   "devDependencies": {
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
-    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-query": "^5.107.1",
     "@types/react": "^19.3.0",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.92.0",
     "prettier": "^3.9.10",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "typescript": "~6.0.3",
     "typescript7": "npm:typescript@7.0.2",
-    "zustand": "^5.0.16"
+    "zustand": "^5.1.0"
   },
   "pnpm": {
     "overrides": {
-      "react": "^19.3.1",
-      "@types/react": "^19.3.0",
-      "serialize-javascript@<7.0.5": "^7.0.5",
-      "esbuild@>=0.27.3 <0.28.1": "^0.28.1",
-      "sharp@<0.35.0": "^0.35.0",
-      "uuid@<11.1.1": "^11.1.1",
       "ojp-sdk-next>axios": "^1.18.0",
-      "ojp-sdk-next>fast-xml-parser": "^5.11.1",
-      "undici@<7.30.1": "^7.30.1",
-      "node-forge@<1.4.2": "^1.4.2",
-      "follow-redirects@<1.16.2": "^1.16.2"
+      "ojp-sdk-next>fast-xml-parser": "^5.11.1"
     },
     "onlyBuiltDependencies": [
       "esbuild",

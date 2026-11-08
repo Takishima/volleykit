@@ -11,8 +11,8 @@ import { ModalHeader } from '@/common/components/ModalHeader'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import { logger } from '@/common/utils/logger'
 
-import { CompensationForm } from './CompensationForm'
 import { useCompensationForm } from '../hooks/useCompensationForm'
+import { CompensationForm } from './CompensationForm'
 
 interface EditCompensationModalProps {
   assignment?: Assignment

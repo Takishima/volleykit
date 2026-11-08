@@ -18,9 +18,9 @@ import { HttpStatus } from '@volleykit/shared/api'
 import { MS_PER_MINUTE, MS_PER_DAY } from '@volleykit/shared/utils'
 
 import { SessionMonitorProvider, useSessionMonitorContext, ApiClientProvider } from '../contexts'
-import { NetworkProvider } from './NetworkProvider'
 import { secureStorage } from '../platform/secureStorage'
 import { storage } from '../platform/storage'
+import { NetworkProvider } from './NetworkProvider'
 
 interface AppProvidersProps {
   children: ReactNode

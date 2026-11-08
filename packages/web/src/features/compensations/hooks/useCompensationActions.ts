@@ -7,8 +7,8 @@ import { useTranslation } from '@/common/hooks/useTranslation'
 import { useAuthStore } from '@/common/stores/auth'
 import { toast } from '@/common/stores/toast'
 
-import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
 import { downloadCompensationPDF } from '../utils/compensation-pdf'
+import { useIndoorRefereeProfile } from './useIndoorRefereeProfile'
 
 interface UseCompensationActionsResult {
   editCompensationModal: {

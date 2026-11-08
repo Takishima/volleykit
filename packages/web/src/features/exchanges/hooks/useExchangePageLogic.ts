@@ -12,11 +12,11 @@ import { groupByWeek } from '@/common/utils/date-helpers'
 import type { SwipeConfig } from '@/types/swipe'
 
 import { TOUR_DUMMY_EXCHANGE } from '../exchange'
+import { createExchangeActions, resolveSwipeConfig } from '../utils/exchange-actions'
 import { useExchangeActions } from './useExchangeActions'
 import { useExchangeFilters, type ExchangeWithDistance } from './useExchangeFilters'
 import { useGameExchanges, type ExchangeStatus } from './useExchanges'
 import { usePerAssociationFlag } from './usePerAssociationFlag'
-import { createExchangeActions, resolveSwipeConfig } from '../utils/exchange-actions'
 
 export function useExchangePageLogic() {
   const [statusFilter, setStatusFilter] = useState<ExchangeStatus>('open')

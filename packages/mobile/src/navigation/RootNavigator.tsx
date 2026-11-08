@@ -12,7 +12,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useAuth } from '@volleykit/shared/hooks'
 import { useTranslation } from '@volleykit/shared/i18n'
 
-import { TabNavigator } from './TabNavigator'
 import { BiometricPrompt } from '../components/BiometricPrompt'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { ToastContainer } from '../components/Toast'
@@ -26,6 +25,7 @@ import { DepartureReminderSettingsScreen } from '../screens/DepartureReminderSet
 import { LoadingScreen } from '../screens/LoadingScreen'
 import { LoginScreen } from '../screens/LoginScreen'
 import { login } from '../services/authService'
+import { TabNavigator } from './TabNavigator'
 
 import type { RootStackParamList } from './types'
 
