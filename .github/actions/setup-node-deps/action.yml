@@ -59,22 +59,22 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: node_modules
-        key: root-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('pnpm-lock.yaml') }}
+        key: root-node-modules-v5-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('pnpm-lock.yaml') }}
         restore-keys: |
-          root-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-          root-node-modules-v4-${{ runner.os }}-main-
-          root-node-modules-v4-${{ runner.os }}-
+          root-node-modules-v5-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          root-node-modules-v5-${{ runner.os }}-main-
+          root-node-modules-v5-${{ runner.os }}-
     # Cache workspace node_modules (for any local-only modules)
     - name: Cache node_modules
       id: cache-node-modules
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ${{ inputs.working-directory }}/node_modules
-        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('pnpm-lock.yaml') }}
+        key: ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v5-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-${{ hashFiles('pnpm-lock.yaml') }}
         restore-keys: |
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-main-
-          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v4-${{ runner.os }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v5-${{ runner.os }}-${{ github.head_ref || github.ref_name }}-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v5-${{ runner.os }}-main-
+          ${{ steps.cache-prefix.outputs.prefix }}-node-modules-v5-${{ runner.os }}-
     # Install from root to handle workspaces correctly.
     # When frozen-lockfile is 'false', always install so the lockfile is
     # reconciled with package.json even if a stale node_modules cache was hit.

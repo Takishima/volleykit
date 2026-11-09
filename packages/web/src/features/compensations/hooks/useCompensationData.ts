@@ -12,11 +12,11 @@ import { useDemoStore, type AssignmentCompensationEdit } from '@/common/stores/d
 import { formatDistanceKm } from '@/common/utils/distance'
 import { logger } from '@/common/utils/logger'
 
-import { COMPENSATION_ERROR_KEYS, type CompensationErrorKey } from './useCompensations'
 import {
   findCompensationInCache,
   findOtherEditableCompensationsAtSameHall,
 } from '../utils/compensation-cache'
+import { COMPENSATION_ERROR_KEYS, type CompensationErrorKey } from './useCompensations'
 
 /** State setters interface for data fetching helpers */
 interface FormStateSetters {

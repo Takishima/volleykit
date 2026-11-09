@@ -3,7 +3,6 @@ import { type ReactNode, useState, useRef, useCallback, useEffect, useMemo } fro
 import { useSwipeGesture } from '@/common/hooks/useSwipeGesture'
 import { useTranslation } from '@/common/hooks/useTranslation'
 
-import { SwipeableCardActions } from './SwipeableCardActions'
 import {
   type SwipeConfig,
   type SwipeAction,
@@ -15,6 +14,7 @@ import {
   ACTION_BUTTON_GAP,
   DRAWER_PADDING,
 } from '../../types/swipe'
+import { SwipeableCardActions } from './SwipeableCardActions'
 
 // Layout constants for action buttons (others imported from types/swipe.ts)
 const MAX_DRAWER_WIDTH_RATIO = 0.8

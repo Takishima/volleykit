@@ -11,8 +11,8 @@ import type {
   NonConformantSignatures,
 } from '@/common/utils/pdf-form-filler'
 
-import { usePdfGeneration } from './usePdfGeneration'
 import { extractReportInfo } from '../utils/extractReportInfo'
+import { usePdfGeneration } from './usePdfGeneration'
 
 const log = createLogger('useNonConformantWizard')
 

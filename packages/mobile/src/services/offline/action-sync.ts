@@ -8,6 +8,7 @@
  * - Session expiry detection
  */
 
+import { realApiClient } from '../../api/realClient'
 import {
   getPendingActions,
   markActionSyncing,
@@ -15,7 +16,6 @@ import {
   deleteAction,
 } from './action-store'
 import { MAX_RETRY_COUNT, RETRY_DELAY_BASE_MS } from './action-types'
-import { realApiClient } from '../../api/realClient'
 
 import type { OfflineAction } from './action-types'
 

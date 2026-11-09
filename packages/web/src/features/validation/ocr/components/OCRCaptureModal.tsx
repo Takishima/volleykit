@@ -4,9 +4,9 @@ import { Camera, Image, X, AlertCircle } from '@/common/components/icons'
 import { useTranslation } from '@/common/hooks/useTranslation'
 import type { ScoresheetType } from '@/features/ocr/utils/scoresheet-detector'
 
+import { calculateGuideCropArea, cropCanvasToArea } from '../../utils/image-crop'
 import { ImageCropEditor } from './ImageCropEditor'
 import { ScoresheetGuide } from './ScoresheetGuide'
-import { calculateGuideCropArea, cropCanvasToArea } from '../../utils/image-crop'
 
 const MAX_FILE_SIZE_MB = 10
 const BYTES_PER_KB = 1024

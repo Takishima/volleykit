@@ -16,12 +16,12 @@ import {
 } from '@/features/referee-backup/hooks/useMyOnCallAssignments'
 import type { SwipeConfig } from '@/types/swipe'
 
+import { createAssignmentActions } from '../utils/assignment-actions'
 import { useAssignmentActions } from './useAssignmentActions'
 import { useUpcomingAssignments, useValidationClosedAssignments } from './useAssignments'
 import { useCalendarAssignments, type CalendarAssignment } from './useCalendarAssignments'
 import { useCalendarAssociationFilter } from './useCalendarAssociationFilter'
 import { useDailyGameBadge } from './useDailyGameBadge'
-import { createAssignmentActions } from '../utils/assignment-actions'
 
 /**
  * Discriminated union for items that can be displayed in the assignments list.

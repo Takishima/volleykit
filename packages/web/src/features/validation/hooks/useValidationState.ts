@@ -9,6 +9,7 @@ import { useAuthStore } from '@/common/stores/auth'
 import type { PendingScorerData } from '@/common/stores/demo'
 import type { RosterPanelModifications } from '@/features/validation/roster/components/RosterVerificationPanel'
 
+import { hasRosterModifications } from '../api/api-helpers'
 import {
   type ValidationState,
   type PanelCompletionStatus,
@@ -17,7 +18,6 @@ import {
   createInitialState,
 } from './types'
 import { useValidationActions } from './useValidationActions'
-import { hasRosterModifications } from '../api/api-helpers'
 
 // Re-export types for consumers
 export type { UseValidationStateResult } from './types'

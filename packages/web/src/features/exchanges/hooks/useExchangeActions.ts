@@ -4,8 +4,8 @@ import type { GameExchange } from '@/api/client'
 import { useModalState } from '@/common/hooks/useModalState'
 import { useSafeMutation } from '@/common/hooks/useSafeMutation'
 
-import { useApplyForExchange, useRemoveOwnExchange } from './useExchanges'
 import { getConvocationIdFromExchange } from '../utils/exchange-actions'
+import { useApplyForExchange, useRemoveOwnExchange } from './useExchanges'
 
 interface UseExchangeActionsResult {
   takeOverModal: {
