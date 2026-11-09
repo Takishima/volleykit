@@ -16,19 +16,19 @@
   "dependencies": {
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
-    "astro": "7.4.2",
+    "astro": "7.4.4",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "eslint-plugin-astro": "^1.5.0",
     "eslint-plugin-better-tailwindcss": "^4.10.0",
-    "knip": "^6.43.0",
-    "pagefind": "^1.5.2",
+    "knip": "^6.44.1",
+    "pagefind": "^1.6.0",
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.72.1"
   }
 }
