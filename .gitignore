@@ -53,7 +53,10 @@ result
 *.har
 
 # Claude Code (track settings.json, ignore local settings and state)
-.claude/settings.local.json
+# Local settings can capture approved commands verbatim, including inline
+# secrets. Match at any depth: sessions started in a subpackage write there.
+**/.claude/settings.local.json
+CLAUDE.local.md
 .claude/.state/
 .claude/.install-marker
 
