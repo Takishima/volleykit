@@ -280,6 +280,9 @@ export function useLoginPageLogic() {
     if (errorKey === 'auth.calendarValidationFailed') {
       return t('auth.calendarValidationFailed')
     }
+    if (errorKey === 'auth.regionNotAvailable') {
+      return t('auth.regionNotAvailable')
+    }
     if (isLockedOut && lockoutCountdown) {
       return `${t('auth.accountLocked')} - ${t('auth.lockoutRemainingTime')} ${lockoutCountdown} ${t('auth.lockoutSeconds')}`
     }

@@ -335,6 +335,12 @@ export async function validateCalendarCode(
       return { valid: false, error: 'auth.calendarNotFound' }
     }
 
+    // The proxy only answers its own origin with 403 when the request comes
+    // from a country outside its allowlist (see the worker's country lock).
+    if (response.status === HttpStatus.FORBIDDEN) {
+      return { valid: false, error: 'auth.regionNotAvailable' }
+    }
+
     return { valid: false, error: 'auth.calendarValidationFailed' }
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {

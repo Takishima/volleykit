@@ -3959,9 +3959,10 @@ describe('Country Lock', () => {
       }
     }
 
-    function createRequest(path: string, country?: string) {
+    function createRequest(path: string, country?: string, init: RequestInit = {}) {
       const request = new Request(`https://proxy.example.com${path}`, {
         headers: { Origin: ORIGIN },
+        ...init,
       })
       // Node's Request has no `cf`; Cloudflare's edge attaches it in production.
       return country ? Object.assign(request, { cf: { country } }) : request
@@ -3981,6 +3982,34 @@ describe('Country Lock', () => {
         // CORS headers let the web app read the status
         expect(response.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
         // Nothing may reach an upstream
+        expect(fetchSpy).not.toHaveBeenCalled()
+        fetchSpy.mockRestore()
+      }
+    )
+
+    it('omits CORS headers when the origin is not allowed', async () => {
+      const { default: worker } = await import('./index')
+      const request = createRequest('/health', 'US', {
+        headers: { Origin: 'https://malicious.com' },
+      })
+
+      const response = await worker.fetch(request, createMockEnv('CH,LI'))
+
+      expect(response.status).toBe(403)
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
+    })
+
+    it.each(['/health', '/iCal/referee/ABC123', '/indoor/api/foo'])(
+      'answers the CORS preflight for %s from a blocked country without reaching an upstream',
+      async (path) => {
+        const { default: worker } = await import('./index')
+        const fetchSpy = vi.spyOn(globalThis, 'fetch')
+        const request = createRequest(path, 'US', { method: 'OPTIONS' })
+
+        const response = await worker.fetch(request, createMockEnv('CH,LI'))
+
+        expect(response.status).toBe(204)
+        expect(response.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
         expect(fetchSpy).not.toHaveBeenCalled()
         fetchSpy.mockRestore()
       }

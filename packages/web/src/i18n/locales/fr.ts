@@ -181,6 +181,7 @@ const fr: Translations = {
     invalidCalendarCode: 'Code de calendrier invalide. Veuillez entrer un code à 6 caractères.',
     calendarNotFound: 'Calendrier introuvable. Veuillez vérifier votre URL ou code de calendrier.',
     calendarValidationFailed: 'Impossible de valider le calendrier. Veuillez réessayer.',
+    regionNotAvailable: 'VolleyKit est accessible uniquement depuis la Suisse et le Liechtenstein.',
     fullLogin: 'Connexion complète',
     calendarMode: 'Mode Calendrier',
     calendarInputLabel: 'Collez votre URL ou code de calendrier',

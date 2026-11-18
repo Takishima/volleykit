@@ -11,6 +11,7 @@
 
 import { HttpStatus } from './constants'
 import { errorResponse } from './error-response'
+import { isAllowedOrigin, parseAllowedOrigins } from './origin-validation'
 
 /** Message returned when the request comes from a country outside the allowlist */
 const GEO_BLOCKED_MESSAGE = 'Forbidden: Not available in your region'
@@ -43,10 +44,15 @@ export function isCountryAllowed(country: unknown, allowedCountries: string[]): 
 
 /**
  * Build the 403 response for a geo-blocked request.
- * The request's Origin is echoed in the CORS headers so the web app can read
+ * CORS headers are added only for an allowed origin, so the web app can read
  * the status instead of seeing an opaque network error.
  */
-export function geoBlockedResponse(request: Request): Response {
-  const origin = request.headers.get('Origin') ?? undefined
-  return errorResponse(HttpStatus.FORBIDDEN, GEO_BLOCKED_MESSAGE, origin)
+export function geoBlockedResponse(request: Request, allowedOrigins: string | undefined): Response {
+  const origin = request.headers.get('Origin')
+  const isKnownOrigin = isAllowedOrigin(origin, parseAllowedOrigins(allowedOrigins ?? ''))
+  return errorResponse(
+    HttpStatus.FORBIDDEN,
+    GEO_BLOCKED_MESSAGE,
+    isKnownOrigin && origin ? origin : undefined
+  )
 }

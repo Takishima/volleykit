@@ -15,6 +15,8 @@ const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === 'true'
  * third-party access to VolleyManager, so only calendar mode can work.
  * The full login code is kept so it can be revived by building with
  * `VITE_FULL_LOGIN_ENABLED=true` once access is authorized again.
+ *
+ * A function rather than a module constant so tests can stub the env var.
  */
 function isFullLoginEnabled(): boolean {
   return import.meta.env.VITE_FULL_LOGIN_ENABLED === 'true'

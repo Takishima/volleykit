@@ -95,6 +95,8 @@ export class LoginPage {
    * page is already in calendar mode.
    */
   async switchToCalendarMode() {
+    // isVisible() does not wait, so let the login card render first
+    await expect(this.demoButton).toBeVisible()
     if (await this.calendarModeTab.isVisible()) {
       await this.calendarModeTab.click()
     }
