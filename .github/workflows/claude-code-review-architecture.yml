@@ -19,6 +19,9 @@ permissions:
 
 jobs:
   architecture-review:
+    # Dependabot runs get no secrets and the action rejects bot actors, so
+    # the review can only fail there. Skip it; CI still gates the bump.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write

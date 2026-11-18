@@ -135,7 +135,12 @@ jobs:
           #   has no patched release: the advisory lists every published version
           #   as vulnerable (latest braces 3.0.3). Drop once a fixed version ships
           #   and expo picks it up.
-          IGNORED_ADVISORIES="GHSA-vfj7-8cjw-p6xm"
+          # - GHSA-fc5q-39xc-vjpf (picomatch ReDoS on repeated extglobs, via
+          #   help-site > astro/vite) has no patched release: the advisory lists
+          #   every published version as vulnerable (latest picomatch 4.0.7).
+          #   Build-time only, globs are not attacker-controlled. Drop once a
+          #   fixed version ships.
+          IGNORED_ADVISORIES="GHSA-vfj7-8cjw-p6xm GHSA-fc5q-39xc-vjpf"
           # pnpm audit emits the npm v6 report shape: advisories keyed by id, each
           # carrying github_advisory_id, module_name and the dependency paths.
           # pnpm audit exits non-zero whenever it finds something, so the exit code
