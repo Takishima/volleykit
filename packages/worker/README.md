@@ -34,6 +34,7 @@ Configure in `wrangler.toml` or Cloudflare Dashboard:
 
 - [ ] `ALLOWED_ORIGINS` - Set to your production domain(s)
 - [ ] `TARGET_HOST` - Set to `https://volleymanager.volleyball.ch`
+- [ ] `ALLOWED_COUNTRIES` - Comma-separated ISO country codes allowed to use the proxy (default `CH,LI`; other countries get a 403, leave empty to disable)
 
 ### 2. Rate Limiting (Configured)
 

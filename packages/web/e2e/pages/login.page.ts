@@ -90,10 +90,14 @@ export class LoginPage {
   }
 
   /**
-   * Switch to calendar mode tab on the login page.
+   * Switch to calendar mode on the login page.
+   * The mode tabs only exist when full login is enabled; without them the
+   * page is already in calendar mode.
    */
   async switchToCalendarMode() {
-    await this.calendarModeTab.click()
+    if (await this.calendarModeTab.isVisible()) {
+      await this.calendarModeTab.click()
+    }
     await expect(this.calendarInput).toBeVisible()
   }
 

@@ -50,37 +50,14 @@ test.describe('Calendar Mode', () => {
   })
 
   test.describe('Login Page Tab Rendering', () => {
-    test('displays both login mode tabs', async () => {
-      await expect(loginPage.calendarModeTab).toBeVisible()
-      await expect(loginPage.fullLoginTab).toBeVisible()
+    test('hides the full login tab while full login is disabled', async () => {
+      await expect(loginPage.calendarModeTab).toBeHidden()
+      await expect(loginPage.fullLoginTab).toBeHidden()
     })
 
-    test('defaults to calendar mode tab', async () => {
-      // Calendar input should be visible by default (calendar mode is the default)
-      await expect(loginPage.calendarInput).toBeVisible()
-      await expect(loginPage.usernameInput).toBeHidden()
-    })
-
-    test('can switch to full login tab', async () => {
-      await loginPage.switchToFullLogin()
-
-      // Username/password should now be visible
-      await expect(loginPage.usernameInput).toBeVisible()
-      await expect(loginPage.passwordInput).toBeVisible()
-
-      // Calendar input should be hidden
-      await expect(loginPage.calendarInput).toBeHidden()
-    })
-
-    test('can switch back to calendar mode tab', async () => {
-      await loginPage.switchToFullLogin()
-      await loginPage.switchToCalendarMode()
-
-      // Calendar input should be visible again
+    test('shows calendar mode only', async () => {
       await expect(loginPage.calendarInput).toBeVisible()
       await expect(loginPage.calendarLoginButton).toBeVisible()
-
-      // Username/password should be hidden
       await expect(loginPage.usernameInput).toBeHidden()
     })
 

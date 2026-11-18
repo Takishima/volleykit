@@ -49,6 +49,11 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ALLOWED_ORIGINS = "https://takishima.github.io,https://volleykit.ch,https://www.volleykit.ch"
 TARGET_HOST = "https://volleymanager.volleyball.ch"
+# ALLOWED_COUNTRIES: Comma-separated ISO 3166-1 alpha-2 country codes allowed
+#   to use the proxy. Requests from any other country (or from an IP Cloudflare
+#   cannot geolocate) get a 403. Remove or leave empty to disable the country lock.
+#   - /robots.txt and /version stay reachable from everywhere
+ALLOWED_COUNTRIES = "CH,LI"
 # CUSTOM_USER_AGENT: Override the default User-Agent sent to the upstream API.
 # Uncomment and set this if the upstream blocks the default VolleyKit User-Agent.
 # Default: "VolleyKit/1.0 (PWA; https://github.com/Takishima/volleykit)"
