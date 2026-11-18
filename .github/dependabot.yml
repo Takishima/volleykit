@@ -106,3 +106,9 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+    groups:
+      # init/autobuild/analyze must run the same version: bumped one at a
+      # time, the CodeQL job fails with a config-version mismatch.
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
