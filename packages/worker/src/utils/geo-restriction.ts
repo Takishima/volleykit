@@ -9,13 +9,11 @@
  * country passes the check.
  */
 
-import { corsHeaders, securityHeaders } from './headers'
+import { HttpStatus } from './constants'
+import { errorResponse } from './error-response'
 
 /** Message returned when the request comes from a country outside the allowlist */
 const GEO_BLOCKED_MESSAGE = 'Forbidden: Not available in your region'
-
-/** HTTP status for geo-blocked requests */
-const GEO_BLOCKED_STATUS = 403
 
 /**
  * Parse the ALLOWED_COUNTRIES env var into upper-case ISO 3166-1 alpha-2 codes.
@@ -49,13 +47,6 @@ export function isCountryAllowed(country: unknown, allowedCountries: string[]): 
  * the status instead of seeing an opaque network error.
  */
 export function geoBlockedResponse(request: Request): Response {
-  const origin = request.headers.get('Origin')
-  return new Response(JSON.stringify({ error: GEO_BLOCKED_MESSAGE }), {
-    status: GEO_BLOCKED_STATUS,
-    headers: {
-      'Content-Type': 'application/json',
-      ...securityHeaders(),
-      ...(origin ? corsHeaders(origin) : {}),
-    },
-  })
+  const origin = request.headers.get('Origin') ?? undefined
+  return errorResponse(HttpStatus.FORBIDDEN, GEO_BLOCKED_MESSAGE, origin)
 }
