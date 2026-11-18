@@ -10,7 +10,20 @@ import { useLoginPageLogic } from './hooks/useLoginPageLogic'
 // Demo-only mode restricts the app to demo mode (used in PR preview deployments)
 const DEMO_MODE_ONLY = import.meta.env.VITE_DEMO_MODE_ONLY === 'true'
 
+/**
+ * Full (username/password) login is switched off: Swiss Volley blocked
+ * third-party access to VolleyManager, so only calendar mode can work.
+ * The full login code is kept so it can be revived by building with
+ * `VITE_FULL_LOGIN_ENABLED=true` once access is authorized again.
+ *
+ * A function rather than a module constant so tests can stub the env var.
+ */
+function isFullLoginEnabled(): boolean {
+  return import.meta.env.VITE_FULL_LOGIN_ENABLED === 'true'
+}
+
 export function LoginPage() {
+  const showLoginModeTabs = isFullLoginEnabled() && !DEMO_MODE_ONLY
   const {
     loginMode,
     setLoginMode,
@@ -64,8 +77,9 @@ export function LoginPage() {
 
         {/* Login form */}
         <div className="card p-6">
-          {/* Login mode tabs - hidden in demo-only mode since only calendar is allowed */}
-          {!DEMO_MODE_ONLY && (
+          {/* Login mode tabs - hidden while full login is disabled and in demo-only mode,
+              since only calendar is allowed then */}
+          {showLoginModeTabs && (
             <div
               className="flex mb-6 bg-surface-subtle dark:bg-surface-subtle-dark rounded-lg p-1"
               role="tablist"
@@ -106,7 +120,7 @@ export function LoginPage() {
             </div>
           )}
 
-          {/* Full Login Panel - only shown when tab is selected (tabs hidden in demo-only mode) */}
+          {/* Full Login Panel - only reachable through the tabs above */}
           {loginMode === 'full' && (
             <div id="full-login-panel" role="tabpanel" aria-labelledby="full-login-tab">
               {/* method="post" and action are defensive fallback if native submission somehow occurs.

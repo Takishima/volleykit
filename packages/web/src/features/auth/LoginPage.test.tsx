@@ -66,8 +66,37 @@ describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    // Full login is disabled by default; these tests cover the retained code path.
+    vi.stubEnv('VITE_FULL_LOGIN_ENABLED', 'true')
+
     mockAuthStoreState()
     mockDemoStoreState()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  describe('Full Login Disabled (default)', () => {
+    beforeEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('hides the login mode tabs', () => {
+      render(<LoginPage />)
+
+      expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('full-login-tab')).not.toBeInTheDocument()
+    })
+
+    it('offers calendar mode and demo mode only', () => {
+      render(<LoginPage />)
+
+      expect(screen.getByTestId('calendar-input')).toBeInTheDocument()
+      expect(screen.getByTestId('demo-button')).toBeInTheDocument()
+      expect(screen.queryByTestId('username-input')).not.toBeInTheDocument()
+      expect(screen.queryByTestId('password-input')).not.toBeInTheDocument()
+    })
   })
 
   describe('Form Rendering', () => {

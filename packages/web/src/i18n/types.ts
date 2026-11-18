@@ -78,6 +78,7 @@ export interface Translations {
     invalidCalendarCode: string
     calendarNotFound: string
     calendarValidationFailed: string
+    regionNotAvailable: string
     fullLogin: string
     calendarMode: string
     calendarInputLabel: string

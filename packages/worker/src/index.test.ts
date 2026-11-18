@@ -59,6 +59,7 @@ import {
   isAllowedOrigin,
   isAllowedPath,
   isAuthRequest,
+  isCountryAllowed,
   isDynamicContent,
   isFailedLoginResponse,
   isPathSafe,
@@ -66,6 +67,7 @@ import {
   isValidAuthLockoutState,
   isValidICalCode,
   noCacheHeaders,
+  parseAllowedCountries,
   parseAllowedOrigins,
   recordFailedAttempt,
   requiresApiPrefix,
@@ -3911,5 +3913,146 @@ describe('API Prefix Handling', () => {
     expect(capturedUrl).not.toContain('/api/sportmanager.security/')
 
     vi.unstubAllGlobals()
+  })
+})
+
+describe('Country Lock', () => {
+  describe('parseAllowedCountries', () => {
+    it('returns an empty list when unset or empty', () => {
+      expect(parseAllowedCountries(undefined)).toEqual([])
+      expect(parseAllowedCountries('')).toEqual([])
+      expect(parseAllowedCountries(' , ')).toEqual([])
+    })
+
+    it('trims and upper-cases country codes', () => {
+      expect(parseAllowedCountries('ch, li ,De')).toEqual(['CH', 'LI', 'DE'])
+    })
+  })
+
+  describe('isCountryAllowed', () => {
+    it('allows every country when no restriction is configured', () => {
+      expect(isCountryAllowed('US', [])).toBe(true)
+      expect(isCountryAllowed(undefined, [])).toBe(true)
+    })
+
+    it('allows only listed countries', () => {
+      expect(isCountryAllowed('CH', ['CH', 'LI'])).toBe(true)
+      expect(isCountryAllowed('li', ['CH', 'LI'])).toBe(true)
+      expect(isCountryAllowed('US', ['CH', 'LI'])).toBe(false)
+      expect(isCountryAllowed('T1', ['CH', 'LI'])).toBe(false)
+    })
+
+    it('fails closed when the country is unknown', () => {
+      expect(isCountryAllowed(undefined, ['CH'])).toBe(false)
+    })
+  })
+
+  describe('worker integration', () => {
+    const ORIGIN = 'https://example.com'
+
+    function createMockEnv(allowedCountries?: string) {
+      return {
+        ALLOWED_ORIGINS: ORIGIN,
+        TARGET_HOST: 'https://volleymanager.volleyball.ch',
+        RATE_LIMITER: { limit: vi.fn().mockResolvedValue({ success: true }) },
+        ALLOWED_COUNTRIES: allowedCountries,
+      }
+    }
+
+    function createRequest(path: string, country?: string, init: RequestInit = {}) {
+      const request = new Request(`https://proxy.example.com${path}`, {
+        headers: { Origin: ORIGIN },
+        ...init,
+      })
+      // Node's Request has no `cf`; Cloudflare's edge attaches it in production.
+      return country ? Object.assign(request, { cf: { country } }) : request
+    }
+
+    it.each(['/health', '/ocr', '/ojp', '/iCal/referee/ABC123', '/indoor/api/foo'])(
+      'blocks %s from a country outside the allowlist',
+      async (path) => {
+        const { default: worker } = await import('./index')
+        const fetchSpy = vi.spyOn(globalThis, 'fetch')
+
+        const response = await worker.fetch(createRequest(path, 'US'), createMockEnv('CH,LI'))
+
+        expect(response.status).toBe(403)
+        const body: JsonBody = await response.json()
+        expect(body.error).toBe('Forbidden: Not available in your region')
+        // CORS headers let the web app read the status
+        expect(response.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
+        // Nothing may reach an upstream
+        expect(fetchSpy).not.toHaveBeenCalled()
+        fetchSpy.mockRestore()
+      }
+    )
+
+    it('omits CORS headers when the origin is not allowed', async () => {
+      const { default: worker } = await import('./index')
+      const request = createRequest('/health', 'US', {
+        headers: { Origin: 'https://malicious.com' },
+      })
+
+      const response = await worker.fetch(request, createMockEnv('CH,LI'))
+
+      expect(response.status).toBe(403)
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
+    })
+
+    it.each(['/health', '/iCal/referee/ABC123', '/indoor/api/foo'])(
+      'answers the CORS preflight for %s from a blocked country without reaching an upstream',
+      async (path) => {
+        const { default: worker } = await import('./index')
+        const fetchSpy = vi.spyOn(globalThis, 'fetch')
+        const request = createRequest(path, 'US', { method: 'OPTIONS' })
+
+        const response = await worker.fetch(request, createMockEnv('CH,LI'))
+
+        expect(response.status).toBe(204)
+        expect(response.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
+        expect(fetchSpy).not.toHaveBeenCalled()
+        fetchSpy.mockRestore()
+      }
+    )
+
+    it('blocks requests whose country is unknown', async () => {
+      const { default: worker } = await import('./index')
+
+      const response = await worker.fetch(createRequest('/health'), createMockEnv('CH,LI'))
+
+      expect(response.status).toBe(403)
+    })
+
+    // /health reports 503 here because no Mistral key is configured; what
+    // matters is that the request got past the country lock to the handler.
+    it('serves requests from an allowed country', async () => {
+      const { default: worker } = await import('./index')
+
+      const response = await worker.fetch(createRequest('/health', 'CH'), createMockEnv('CH,LI'))
+
+      expect(response.status).not.toBe(403)
+      const body: JsonBody = await response.json()
+      expect(body.services?.proxy).toBe('ok')
+    })
+
+    it('serves every country when ALLOWED_COUNTRIES is unset', async () => {
+      const { default: worker } = await import('./index')
+
+      const response = await worker.fetch(createRequest('/health', 'US'), createMockEnv())
+
+      expect(response.status).not.toBe(403)
+      const body: JsonBody = await response.json()
+      expect(body.services?.proxy).toBe('ok')
+    })
+
+    it('keeps /robots.txt and /version reachable from blocked countries', async () => {
+      const { default: worker } = await import('./index')
+
+      const robots = await worker.fetch(createRequest('/robots.txt', 'US'), createMockEnv('CH'))
+      const version = await worker.fetch(createRequest('/version', 'US'), createMockEnv('CH'))
+
+      expect(robots.status).toBe(200)
+      expect(version.status).toBe(200)
+    })
   })
 })

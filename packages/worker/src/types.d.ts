@@ -28,6 +28,7 @@ export interface Env {
   TARGET_HOST: string
   RATE_LIMITER: RateLimiter
   KILL_SWITCH?: string // Set to "true" to disable the proxy
+  ALLOWED_COUNTRIES?: string // Comma-separated ISO country codes allowed to use the proxy (unset = no restriction)
   CUSTOM_USER_AGENT?: string // Override default User-Agent for upstream requests
   MISTRAL_API_KEY?: string // API key for Mistral OCR
   OJP_API_KEY?: string // API key for Swiss public transport OJP 2.0 API

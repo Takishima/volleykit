@@ -17,6 +17,9 @@ import { securityHeaders } from './middleware'
 import { validateOriginAndPreflight } from './middleware'
 import {
   KILL_SWITCH_RETRY_AFTER_SECONDS,
+  geoBlockedResponse,
+  isCountryAllowed,
+  parseAllowedCountries,
   parseAllowedOrigins,
   validateAllowedOrigins,
 } from './utils'
@@ -69,6 +72,17 @@ export default {
           },
         }
       )
+    }
+
+    // Country lock - only serve requests from the countries in ALLOWED_COUNTRIES.
+    // Placed before every handler that reaches an upstream (proxy, iCal, OCR, OJP).
+    // CORS preflights are let through: they never reach an upstream, and a
+    // non-2xx preflight would hide the 403 of the real request from the browser.
+    if (
+      request.method !== 'OPTIONS' &&
+      !isCountryAllowed(request.cf?.country, parseAllowedCountries(env.ALLOWED_COUNTRIES))
+    ) {
+      return geoBlockedResponse(request, env.ALLOWED_ORIGINS)
     }
 
     // Health check endpoint

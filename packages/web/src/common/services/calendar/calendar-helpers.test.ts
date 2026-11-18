@@ -245,6 +245,20 @@ describe('validateCalendarCode', () => {
       })
     })
 
+    it('returns regionNotAvailable when the proxy geo-blocks the request with 403', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 403,
+      })
+
+      const result = await validateCalendarCode('ABC123')
+
+      expect(result).toEqual({
+        valid: false,
+        error: 'auth.regionNotAvailable',
+      })
+    })
+
     it('returns calendarValidationFailed for other error status codes', async () => {
       mockFetch.mockResolvedValue({
         ok: false,

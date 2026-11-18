@@ -309,9 +309,8 @@ test.describe('Help Site Screenshots', () => {
       await page.goto('/login')
       await page.waitForLoadState('networkidle')
 
-      // Switch to full login tab to show username/password fields
-      await page.getByTestId('full-login-tab').click()
-      await expect(page.getByTestId('username-input')).toBeVisible()
+      // Full login is disabled, so the login page shows calendar mode only
+      await expect(page.getByTestId('calendar-input')).toBeVisible()
 
       // Small delay to ensure UI is fully rendered
       await page.waitForTimeout(PWA_DISMISS_DELAY_MS)
