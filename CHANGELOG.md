@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.36.0
+
+### Minor Changes
+
+- [#1231](https://github.com/Takishima/volleykit/pull/1231) [`1580e6c`](https://github.com/Takishima/volleykit/commit/1580e6c2de7448839b63a4e624e0ed9674b1e609) Thanks [@Takishima](https://github.com/Takishima)! - Removed the username/password login from the login page (calendar mode and demo mode remain) after Swiss Volley blocked third-party access to VolleyManager, and restricted the proxy worker to requests from Switzerland and Liechtenstein
+
 ## 1.35.1
 
 ### Patch Changes
